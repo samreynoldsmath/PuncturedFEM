@@ -6,39 +6,54 @@
     | |  | |_| | | | | (__| |_| |_| | | |  __/ (_| | |   | |___| |  | |
     \_|   \__,_|_| |_|\___|\__|\__,_|_|  \___|\__,_\_|   \____/\_|  |_/
 
-
 https://github.com/samreynoldsmath/PuncturedFEM
 
-PuncturedFEM v0.1.0
+Description
 -----------------
+A finite element method on meshes with curvilinear and multiply connected cells.
 
-    Copyright (C) 2022 Samuel E. Reynolds and Jeffrey S. Ovall.
+Disclaimer
+-----------------
+This code is intended to serve as a prototype, and has not necessarily been
+optimized for performance.
 
-    This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+Dependencies
+-----------------
+This project is written in Python 3.10 and uses the following packages:
 
-    This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+    copy
+    matplotlib
+    numpy
+    scipy
 
-    You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
+Contact
+-----------------
+* Jeffrey Ovall:     jovall@pdx.edu
+* Samuel Reynolds:   sreyn@proton.me
 
-Affiliation:
+Affiliation
 -----------------
     Fariborz Maseeh Department of Mathematics and Statistics
     Portland State University
     Portland, Oregon, USA
 
-Contact:
+Funding
 -----------------
-    Sam:    sreyn@proton.me
-    Jeff:   jovall@pdx.edu
+Funding for this project was provided by the National Science Foundation through
+NSF grant DMS-2012285 and NSF RTG grant DMS-2136228.
 
-Description:
 -----------------
-    This MATLAB code implements a finite element method using mesh cells that are permitted to be "punctured," i.e. multiply-connected, and have an arbitrary number of curvilinear edges. Global domains are assumed to be bounded, open, and connected subsets of R^2.
+Copyright (C) 2022 - 2023 Jeffrey S. Ovall and Samuel E. Reynolds.
 
-Disclaimer:
------------------
-    1. This code is intended to serve as a prototype, and has not necessarily been optimized for performance.
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option)
+any later version.
 
-Bug reporting:
------------------
-    Please report bugs and other issues to Sam though GitHub (or by email).
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <https://www.gnu.org/licenses/>.
