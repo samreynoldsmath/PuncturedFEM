@@ -1,5 +1,14 @@
-[2023 Feb 15] 0.2.0 -- Python overhaul
--------------------
+[2023 Feb 25] 0.2.1 -- Local functions
+---
+* Added **/poly** subpackage
+  * `monomial` and `polynomial` objects
+* Added **locfun/** subpackage
+  * `locfun` object holds all data for local function $v\in V_p(K)$
+* Added `ext_pt` field to `cell` object, which is an exterior point such that centering the origin at `ext_pt` placing the cell strictly in the first quadrant
+
+
+[2023 Feb 16] 0.2.0 -- Python overhaul
+---
 * MATLAB code rewritten in Python to increase accessibility
 * Examples presented with Jupyter Notebook
     - **ex0-mesh-building**:
@@ -27,7 +36,7 @@
   - **test_fft_deriv** for FFT differentiation
 
 [2022 Aug 02] 0.1.0 -- Initial commit
--------------------
+---
 Only a simple diffusion operator (the Laplacian) is currently supported.
 Dirichlet and mixed Dirichlet-Neumann boundary conditions are available,
 but are assumed to be homogeneous. Used to run a simple "pegboard" example.

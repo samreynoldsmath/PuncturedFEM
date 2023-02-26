@@ -1,7 +1,25 @@
 # Punctured FEM: To-do List
 
 ---
-## v0.2: Python overhaul
+## Features Wishlist
+- [ ] Nonhomogeneous Dirichlet/Neumann boundary conditions
+- [ ] Different material properties across regions
+- [ ] Different polynomial degree on different cells/edges
+- [ ] $H$(div) and $H$(curl) spaces
+- [ ] Automatic mesh generation/refinement
+- [ ] Surface elements
+- [ ] 3D
+
+---
+## Applications Wishlist
+- [ ] Eigenvalue problems
+- [ ] Time-dependent problems
+- [ ] Stokes flow
+- [ ] Maxwell's equations
+- [ ] Shape optimization
+
+---
+## v0.2.0: Python overhaul
 
 ### Quadrature
   - [x] trapezoid
@@ -62,7 +80,6 @@
   - [x] simply-connected cells: FFT anti-derivative
   - [x] multiply-connected cells: solve Robin problem
     - [x] center at point outside domain
-  - [ ] unit tests
 ### Examples: Jupyter notebooks
 - [x] **ex0**: Edge and cell tutorial
 - [x] **ex1**: D2N map and anti-Laplacians
@@ -70,43 +87,59 @@
   - [x] Computation of $L^2$ inner product
 
 ---
-## v0.3: Bilinear form update
+## v0.2.1: Local functions
 
 ### Polynomials
-  - [ ] `poly` class definition
-    - [ ] initialize to zero polynomial
-    - [ ] index management
-    - [ ] origin recentering
-    - [ ] printing
-    - [ ] evaluation
-  - [ ] arithmetic operations
-    - [ ] addition
-    - [ ] multiplication
-  - [ ] calculus operations
-    - [ ] gradient
-    - [ ] laplacian
-    - [ ] anti-laplacian
-  - [ ] `polyvec` class: polynomial vectors
-    - [ ] divergence
-### Trace object
-  - [ ] abstraction of Dirichlet trace, normal and tangential derivatives
+  - [x] `multi_index` objects
+  - [x] `monomial` objects
+  - [x] `polynomial` objects
+    - [x] printing
+    - [x] evaluation
+  - [x] arithmetic operations
+    - [x] addition
+    - [x] multiplication
+  - [x] calculus operations
+    - [x] gradient
+    - [x] laplacian
+    - [x] anti-laplacian
 ### Local function object (elements of $V_p(K)$)
-  - [ ] Dirichlet trace
-  - [ ] Laplacian polynomial
-  - [ ] harmonic part
-  - [ ] conjugable part
-  - [ ] conjugate
-  - [ ] logarithmic coefficients
-  - [ ] tangential derivative
-  - [ ] normal derivative
-  - [ ] method to obtain interior value (w/ Cauchy's integral formula)
+  - [x] Dirichlet trace
+  - [x] Laplacian polynomial
+  - [x] harmonic part $\phi$
+  - [x] conjugate $\widehat\psi$
+  - [x] logarithmic coefficients
+  - [x] weighted normal derivative
+    - [x] harmonic part wnd
+    - [x] polynomial part wnd
+### Cells
+  - [x] shift to first quadrant
+
+---
+## v0.2.2: Interior values
+
+### Unit tests
+  - [ ] anti-Laplacians
+  - [ ] polynomials
+  - [ ] interior values
 ### Interior values
   - [ ] generate points for evaluation
   - [ ] reduced interior domain
   - [ ] find points inside a closed contour
+  - [ ] Cauchy's integral formula
+    - [ ] values
+    - [ ] gradient
+  - [ ] plots
   - [ ] write to file
   - [ ] load from file
-  - [ ] plots
+### Cells
+  - [ ] boundary plotting method wrapper
+  - [ ] contour orientation check (using rotation index computed from curvature)
+### Local functions
+  - [ ] contour plotting method wrapper
+
+---
+## v0.2.3: Bilinear forms
+
 ### Bilinear form
   - [ ] $L^2$ inner products: $\int_K v \, w ~dx$
   - [ ] advection terms :$\int_K (b \cdot \nabla v) \, w ~dx$
@@ -115,24 +148,13 @@
     - [ ] special case for $H^1$ semi-inner product ($A = I$)
   - [ ] special cases for harmonic functions and polynomials
 ### Examples: Jupyter notebooks
-  - [ ] **ex1**: rework with `local_function` object
-    - [ ] Interior values
+  - [ ] **ex2**: bilinear form evaluation
 
 ---
-## v0.4: Local function space update
+## v0.2.4: Nystrom Solver Optimization
 
 ### Quadrature
   - [ ] Simpson's rule
-### Edge function space
-  - [ ] special case for closed contours
-  - [ ] barycentric coordinates (?)
-  - [ ] arbitrary polynomial degree (integrated Legendre polynomials)
-  - [ ] redundancy elimination
-### Local function space
-  - [ ] vertex functions
-  - [ ] edge functions
-  - [ ] bubble functions
-  - [ ] local stiffness and mass matrices
 ### Nyström Solver
   - [ ] set up and solve both types of systems with consolidated overhead
     - [ ] abstraction of Dirchlet, Neumann, and Robin boundary value problems
@@ -144,11 +166,22 @@
     - [ ] `gmres` flag
     - [ ] condition number
     - [ ] singular values
-### Examples: Jupyter notebooks
-  - [ ] Local function spaces
 
 ---
-## v0.5: Mesh update
+## v0.2.6: Local Function Spaces
+### Edge function space
+  - [ ] special case for closed contours
+  - [ ] barycentric coordinates (?)
+  - [ ] arbitrary polynomial degree (integrated Legendre polynomials)
+  - [ ] redundancy elimination
+### Local function space
+  - [ ] vertex functions
+  - [ ] edge functions
+  - [ ] bubble functions
+  - [ ] local stiffness and mass matrices
+
+---
+## v0.3: Meshes
 
 ### Mesh
   - [ ] mesh encoding
@@ -159,27 +192,7 @@
   - [ ] solver
   - [ ] plots
 ### Examples: Jupyter notebooks
-  - [ ] Local function spaces
   - [ ] Mesh tutorial
   - [ ] Pegboard mesh: cells with 1, 4, 16 holes
   - [ ] Modified pegboard: shuriken and bean punctures
   - [ ] Nested annuli mesh
-
----
-## Features Wishlist
-- [ ] Nonhomogeneous Dirichlet/Neumann boundary conditions
-- [ ] Different material properties across regions
-- [ ] Different polynomial degree on different cells/edges
-- [ ] $H$(div) and $H$(curl) spaces
-- [ ] Automatic mesh generation/refinement
-- [ ] Surface elements
-- [ ] 3D
-
----
-## Applications Wishlist
-- [ ] Eigenvalue problems
-- [ ] Time-dependent problems
-- [ ] Inverse scattering
-- [ ] Stokes flow
-- [ ] Maxwell's equations
-- [ ] Shape optimization

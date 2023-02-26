@@ -9,19 +9,17 @@ from . import trace2tangential
 
 def get_harmonic_conjugate(K: mesh.cell, phi, debug=False):
 
-	dphi_ds = trace2tangential.get_weighted_tangential_derivative_from_trace(K, phi)
+	phi_wtd = \
+		trace2tangential.get_weighted_tangential_derivative_from_trace(K, phi)
 
 	if K.num_holes == 0:
 		# simply-connected
-		psi_hat = get_harmonic_conjugate_simply_connected(
-			K, dphi_ds, debug
-		)
+		psi_hat = get_harmonic_conjugate_simply_connected(K, phi_wtd, debug)
 		return psi_hat, []
 	else:
 		# multiply-connected
-		psi_hat, a = get_harmonic_conjugate_multiply_connected(
-			K, phi, dphi_ds, debug
-		)
+		psi_hat, a = \
+			get_harmonic_conjugate_multiply_connected(K, phi, phi_wtd, debug)
 		return psi_hat, a
 
 def get_harmonic_conjugate_simply_connected(K: mesh.cell, dphi_ds, debug=False):

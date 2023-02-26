@@ -184,12 +184,13 @@ class cell(contour):
 
 	def _find_ext_pt(self):
 		"""
-		Automatically find a point that is not in the domain and not in a hole
+		Find point to center origin such that cell lies strictly in the
+		fist quadrant
 		"""
-		c = contour(edge_list=[
-			self.edge_list[i] for i in self.contour_idx[0]
-		])
-		self.ext_pt = c.get_ext_pt_simple_contour()
+		x1, x2 = self.get_boundary_points()
+		x1_min = np.min(x1)
+		x2_min = np.min(x2)
+		self.ext_pt = np.array([x1_min, x2_min])
 
 	def __repr__(self) -> str:
 		msg = ''
