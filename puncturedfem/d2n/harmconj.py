@@ -14,53 +14,13 @@ def get_harmonic_conjugate(K: mesh.cell, phi, debug=False):
 
 	if K.num_holes == 0:
 		# simply-connected
-		psi_hat = get_harmonic_conjugate_simply_connected(K, phi_wtd, debug)
+		psi_hat = nystrom.neumann.solve_neumann_zero_average(K, -phi_wtd)
 		return psi_hat, []
 	else:
 		# multiply-connected
 		psi_hat, a = \
 			get_harmonic_conjugate_multiply_connected(K, phi, phi_wtd, debug)
 		return psi_hat, a
-
-def get_harmonic_conjugate_simply_connected(K: mesh.cell, dphi_ds, debug=False):
-
-	# single and double layer operators
-	T1 = nystrom.single_layer.single_layer_mat(K)
-	T2 = nystrom.double_layer.double_layer_mat(K)
-
-	# RHS
-	b = - T1 @ dphi_ds
-
-	T2_sum = np.sum(T2, 1)
-
-	#
-	integrator_mat = get_integrator(K)
-
-	# total number of points on the boundary
-	N = K.num_pts
-
-	# define linear operator functionality
-	def linop4harmconj(psi_hat):
-		y = apply_T2(psi_hat, T2, T2_sum, K.closest_vert_idx)
-		y += integrator_mat @ psi_hat
-		return y
-
-	# define linear operator object
-	A = LinearOperator(
-		dtype = float,
-		shape = (N, N),
-		matvec = linop4harmconj
-	)
-
-	# solve Nystrom system
-	psi_hat, flag = gmres(A, b, atol=1e-12, tol=1e-12)
-
-	# DEBUG
-	if debug:
-		print('gmres flag: get_harmonic_conjugate_simply_connected = ',flag)
-		print(f'Condition number = {get_cond_num(A)}')
-
-	return psi_hat
 
 def get_harmonic_conjugate_multiply_connected(
 	K: mesh.cell, phi, dphi_ds, debug=False):
@@ -88,9 +48,8 @@ def get_harmonic_conjugate_multiply_connected(
 	Sn_lam = Sn @ lam_trace
 
 	#
-	integrator_mat = get_integrator(K)
-
 	T2_sum = np.sum(T2, 1)
+	integrator_mat = K.get_integrator()
 
 	# array sizes
 	N = K.num_pts
@@ -105,7 +64,8 @@ def get_harmonic_conjugate_multiply_connected(
 		psi_hat = x[:N]
 		a = x[N:]
 		y = np.zeros((N + m,))
-		y[:N] = apply_T2(psi_hat, T2, T2_sum, K.closest_vert_idx)
+		y[:N] = nystrom.apply_double_layer.apply_T2(\
+			psi_hat, T2, T2_sum, K.closest_vert_idx)
 		y[:N] += integrator_mat @ psi_hat
 		y[:N] -= T1_dlam_dt @ a
 		y[N:] = - St @ psi_hat + Sn_lam @ a
@@ -129,40 +89,6 @@ def get_harmonic_conjugate_multiply_connected(
 		print(f'Condition number = {get_cond_num(A)}')
 
 	return psi_hat, a
-
-def apply_T2(psi_hat, T2, T2_sum, closest_vert_idx):
-	corner_values = psi_hat[closest_vert_idx]
-	return 0.5 * (psi_hat - corner_values) \
-		+ T2 @ psi_hat \
-		- corner_values * T2_sum
-
-def get_integrator(K):
-	one = lambda x: 1
-	A = K.evaluate_function_on_boundary(one)
-	A = K.multiply_by_dx_norm(A)
-	for i in range(K.num_edges):
-		h = 2 * np.pi / (K.edge_list[i].num_pts - 1)
-		A[K.vert_idx[i]:K.vert_idx[i + 1]] *= h
-	return A
-
-def get_integrator_on_outer(K):
-	one = lambda x: 1
-	A = K.evaluate_function_on_boundary(one)
-	A = K.multiply_by_dx_norm(A)
-	c = K.contour_idx[0]
-	for i in c:
-		h = 2 * np.pi / (K.edge_list[i].num_pts - 1)
-		A[K.vert_idx[i]:K.vert_idx[i + 1]] *= h
-	return A
-
-def get_integrator_unweigted(K):
-	one = lambda x: 1
-	A = K.evaluate_function_on_boundary(one)
-	# A = K.multiply_by_dx_norm(A)
-	for i in range(K.num_edges):
-		h = 2 * np.pi / (K.edge_list[i].num_pts - 1)
-		A[K.vert_idx[i]:K.vert_idx[i + 1]] *= h
-	return A
 
 def get_Su(K, dlam_du_wgt):
 	Su = np.zeros((K.num_holes, K.num_pts))

@@ -6,13 +6,17 @@ from . import edge
 class contour:
 
 	__slots__ = (
+		'id',
 		'edge_list',
 		'num_edges',
 		'num_pts',
 		'vert_idx',
 	)
 
-	def __init__(self, edge_list: list[edge.edge]) -> None:
+	def __init__(self, edge_list: list[edge.edge], id='') -> None:
+
+		# optional identifier
+		self.id = id
 
 		# save edge list
 		self.edge_list = edge_list
@@ -25,9 +29,9 @@ class contour:
 
 	### methods for evaluating traces
 
-	def evaluate_function_on_boundary(self, fun):
+	def evaluate_function_on_contour(self, fun):
 		"""
-		Return fun(x) for each sampled point on boundary
+		Return fun(x) for each sampled point on contour
 		"""
 		y = np.zeros((self.num_pts,))
 		for j in range(self.num_edges):
@@ -40,9 +44,9 @@ class contour:
 		Returns the x1 and x2 coordinates of the boundary points
 		"""
 		x1_fun = lambda x: x[0]
-		x1 = self.evaluate_function_on_boundary(x1_fun)
+		x1 = self.evaluate_function_on_contour(x1_fun)
 		x2_fun = lambda x: x[1]
-		x2 = self.evaluate_function_on_boundary(x2_fun)
+		x2 = self.evaluate_function_on_contour(x2_fun)
 		return x1, x2
 
 	def dot_with_tangent(self, v1, v2):
@@ -71,25 +75,43 @@ class contour:
 					* self.edge_list[j].unit_normal[1, :-1]
 		return y
 
-	def integrate_over_contour(self, vals):
-		y = self.multiply_by_dx_norm(vals)
-		for i in range(self.num_edges):
-			h = 2 * np.pi / (self.edge_list[i].num_pts - 1)
-			y[self.vert_idx[i]:self.vert_idx[i + 1]] *= h
-		return np.sum(y)
-
-	def multiply_by_dx_norm(self, f):
+	def multiply_by_dx_norm(self, vals):
 		"""
-		Returns the dot product (v1, v2) * unit_tangent
+		Returns f multiplied against the norm of the derivative of
+		the curve parameterization
 		"""
-		if len(f) != self.num_pts:
-			raise Exception('f must be same length as boundary')
+		if len(vals) != self.num_pts:
+			raise Exception('vals must be same length as boundary')
 		y = np.zeros((self.num_pts,))
 		for j in range(self.num_edges):
 			y[self.vert_idx[j]:self.vert_idx[j+1]] \
-				= f[self.vert_idx[j]:self.vert_idx[j+1]] \
+				= vals[self.vert_idx[j]:self.vert_idx[j+1]] \
 					* self.edge_list[j].dx_norm[:-1]
 		return y
+
+	def integrate_over_contour(self, vals):
+		y = self.multiply_by_dx_norm(vals)
+		return self.integrate_over_contour_preweighted(y)
+
+	def integrate_over_contour_preweighted(self, vals):
+		if len(vals) != self.num_pts:
+			raise Exception('vals must be same length as boundary')
+		y = np.zeros((self.num_pts,))
+		for i in range(self.num_edges):
+			h = 2 * np.pi / (self.edge_list[i].num_pts - 1)
+			y[self.vert_idx[i]:self.vert_idx[i + 1]] = \
+				h * vals[self.vert_idx[i]:self.vert_idx[i + 1]]
+		return np.sum(y)
+
+	def get_integrator(self):
+		one = lambda x: 1
+		A = self.evaluate_function_on_contour(one)
+		A = self.multiply_by_dx_norm(A)
+		for i in range(self.num_edges):
+			h = 2 * np.pi / (self.edge_list[i].num_pts - 1)
+			A[self.vert_idx[i]:self.vert_idx[i + 1]] *= h
+		return A
+
 
 	### methods for interior points
 
@@ -212,68 +234,6 @@ class contour:
 		int_pt[0] = x[ii, jj]
 		int_pt[1] = y[ii, jj]
 		return int_pt
-
-	def get_ext_pt_simple_contour(self):
-		"""
-		Returns an exterior point.
-
-		Uses a brute force search. There is likely a more efficient way.
-		"""
-
-		# find region of interest
-		xmin, xmax, ymin, ymax = self._get_bounding_box()
-
-		# expand the region of interest
-		xmin -= 1
-		xmax += 1
-		ymin -= 1
-		ymax += 1
-
-		# set minimum desired distance to the boundary
-		TOL = 1e-2 * np.min([xmax - xmin, ymax - ymin])
-
-		# search from M by N rectangular grid points
-		M = 9
-		N = 9
-
-		d = 0.0
-
-		while d < TOL:
-			# set up grid
-			x_coord = np.linspace(xmin, xmax, M)
-			y_coord = np.linspace(ymin, ymax, N)
-			x, y = np.meshgrid(x_coord, y_coord)
-
-			# determine which points are in the interior
-			is_inside = self.is_in_interior(x, y)
-
-			# for each exterior point in grid, compute distance to the boundary
-			dist = np.zeros(x.shape)
-			for i in range(M):
-				for j in range(N):
-					if not is_inside[i, j]:
-						dist[i, j] = self._get_distance_to_boundary( \
-							x[i, j], y[i, j]
-						)
-
-			# pick a point farthest from the boundary
-			k = np.argmax(dist, keepdims=True)
-			ii = k // M
-			jj = k % M
-			d = dist[ii, jj]
-
-			# if the best candidate is too close to the boundary,
-			# refine grid and search again
-			M = 4 * (M // 2) + 1
-			N = 4 * (N // 2) + 1
-
-			if M * N > 1_000_000:
-				raise Exception('Unable to locate an exterior point')
-
-		ext_pt = np.zeros((2,))
-		ext_pt[0] = x[ii, jj]
-		ext_pt[1] = y[ii, jj]
-		return ext_pt
 
 	def __repr__(self) -> str:
 		msg = 'contour object\n'

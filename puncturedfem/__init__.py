@@ -4,6 +4,7 @@ PuncturedFEM
 
 from . import antilap
 from . import d2n
+from . import locfun
 from . import mesh
 from . import nystrom
 from . import poly

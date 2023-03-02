@@ -43,7 +43,7 @@ class locfun:
 		self.compute_polynomial_part_trace(K)
 		self.compute_polynomial_part_weighted_normal_derivative(K)
 		self.compute_harmonic_conjugate(K)
-		self.compute_harmonic_conjugate_weighted_normal_derivative(K)
+		self.compute_harmonic_weighted_normal_derivative(K)
 		self.compute_anti_laplacian_harmonic_part(K)
 
 	### Dirichlet trace ########################################################
@@ -92,7 +92,7 @@ class locfun:
 		x1, x2 = K.get_boundary_points()
 		g1, g2 = self.poly_part.grad()
 		P_nd = K.dot_with_normal(g1.eval(x1, x2), g2.eval(x1, x2))
-		self.poly_part_wnd= K.multiply_by_dx_norm(P_nd)
+		self.poly_part_wnd = K.multiply_by_dx_norm(P_nd)
 
 	### harmonic conjugate #####################################################
 	def set_harmonic_conjugate(self, hc_vals) -> None:
@@ -116,13 +116,13 @@ class locfun:
 	# no compute method, this is handled by compute_harmonic_conjugate()
 
 	### weighted normal derivative of harmonic part ############################
-	def set_harmonic_conjugate_weighted_normal_derivative(self, hc_wnd) -> None:
+	def set_harmonic_weighted_normal_derivative(self, hc_wnd) -> None:
 		self.harm_part_wnd = hc_wnd
 
-	def get_harmonic_conjugate_weighted_normal_derivative(self):
+	def get_harmonic_weighted_normal_derivative(self):
 		return self.harm_part_wnd
 
-	def compute_harmonic_conjugate_weighted_normal_derivative(self, K) -> None:
+	def compute_harmonic_weighted_normal_derivative(self, K) -> None:
 		self.harm_part_wnd = \
 		d2n.trace2tangential.get_weighted_tangential_derivative_from_trace(
 			K, self.conj_trace)
@@ -132,18 +132,71 @@ class locfun:
 
 	### anti-Laplacian #########################################################
 	def set_anti_laplacian_harmonic_part(self, anti_laplacian_vals) -> None:
-		self.antilap = anti_laplacian_vals
+		self.antilap_trace = anti_laplacian_vals
 
 	def get_anti_laplacian_harmonic_part(self):
-		return self.antilap
+		return self.antilap_trace
 
 	def compute_anti_laplacian_harmonic_part(self, K) -> None:
 		lam = d2n.log_terms.get_log_trace(K)
 		psi = self.trace - self.poly_part_trace - lam @ self.log_coef
-		self.antilap, self.antilap_wnd = \
-			antilap.antilap.get_anti_laplacian_harmonic(K, psi, self.conj_trace)
-		LAM = antilap.log_antilap.get_log_antilap(K)
-		LAM_wnd = \
-			antilap.log_antilap.get_log_antilap_weighted_normal_derivative(K)
-		self.antilap_trace += LAM @ self.log_coef
-		self.antilap_wnd += LAM_wnd @ self.log_coef
+		self.antilap_trace, self.antilap_wnd = \
+			antilap.antilap.get_anti_laplacian_harmonic( \
+			K, psi=psi, psi_hat=self.conj_trace, a=self.log_coef)
+
+	### H^1 semi-inner product #################################################
+	def compute_h1(self, other, K):
+		"""
+		Returns the H^1 semi-inner product
+			\int_K grad(self) * grad(other) dx
+		"""
+
+		# polynomial part
+		Px, Py = self.poly_part.grad()
+		Qx, Qy = other.poly_part.grad()
+		gradP_gradQ = Px * Qx + Py * Qy
+		val = gradP_gradQ.integrate_over_cell(K)
+
+		# remaining terms
+		integrand = other.trace * self.harm_part_wnd \
+			+ self.poly_part_trace * other.harm_part_wnd
+		val += K.integrate_over_boundary_preweighted(integrand)
+
+		return val
+
+
+	### L^2 inner product ######################################################
+	def compute_l2(self, other, K: cell):
+		"""
+		Returns the L^2 inner product
+			\int_K (self) * (other) dx
+		"""
+
+		x1, x2 = K.get_boundary_points()
+
+		# P * Q
+		PQ = self.poly_part * other.poly_part
+		val = PQ.integrate_over_cell(K)
+
+		# phi * psi
+		integrand = (other.trace - other.poly_part_trace) * self.antilap_wnd \
+			- self.antilap_trace * other.harm_part_wnd
+
+		# phi * Q
+		R = other.poly_part.anti_laplacian()
+		R_trace = R.eval(x1, x2)
+		R_wnd = R.get_weighted_normal_derivative(K)
+		integrand += (self.trace - self.poly_part_trace) * R_wnd \
+			- R_trace * self.harm_part_wnd
+
+		# psi * P
+		R = self.poly_part.anti_laplacian()
+		R_trace = R.eval(x1, x2)
+		R_wnd = R.get_weighted_normal_derivative(K)
+		integrand += (other.trace - other.poly_part_trace) * R_wnd\
+			- R_trace * other.harm_part_wnd
+
+		# integrate over boundary
+		val += K.integrate_over_boundary_preweighted(integrand)
+
+		return val

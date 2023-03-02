@@ -10,13 +10,12 @@ class cell(contour):
 		'closest_vert_idx',
 		'contour_idx',
 		'hole_int_pts',
-		'ext_pt'
 	)
 
-	def __init__(self, edge_list: list[edge]):
+	def __init__(self, edge_list: list[edge], id=''):
 
 		# call initialization of contour object
-		super().__init__(edge_list)
+		super().__init__(edge_list, id)
 
 		# identify closed contours
 		self._find_closed_contours()
@@ -31,11 +30,25 @@ class cell(contour):
 		# find point in interior of each puncture automatically
 		self._find_hole_int_pts()
 
-		# find a point that is exterior to domain and not in a hole
-		self._find_ext_pt()
+		# TODO check orientation
+
+	def evaluate_function_on_boundary(self, fun):
+		return super().evaluate_function_on_contour(fun)
 
 	def integrate_over_boundary(self, vals):
-		return self.integrate_over_contour(vals)
+		return super().integrate_over_contour(vals)
+
+	def integrate_over_boundary_preweighted(self, vals):
+		return super().integrate_over_contour_preweighted(vals)
+
+	def integrate_over_specific_contour(self, vals, contour_j):
+		c_idx = self.contour_idx[contour_j]
+		c = contour(edge_list=[self.edge_list[i] for i in c_idx])
+		vals_on_c = np.zeros((c.num_pts,))
+		for i in range(c.num_edges):
+			vals_on_c[c.vert_idx[i]:c.vert_idx[i + 1]] = \
+				vals[self.vert_idx[c_idx[i]]:self.vert_idx[c_idx[i] + 1]]
+		return c.integrate_over_contour(vals_on_c)
 
 	def _find_closed_contours(self):
 		"""
@@ -182,23 +195,13 @@ class cell(contour):
 			])
 			self.hole_int_pts[:, j] = c._get_int_pt_simple_contour()
 
-	def _find_ext_pt(self):
-		"""
-		Find point to center origin such that cell lies strictly in the
-		fist quadrant
-		"""
-		x1, x2 = self.get_boundary_points()
-		x1_min = np.min(x1)
-		x2_min = np.min(x2)
-		self.ext_pt = np.array([x1_min, x2_min])
-
 	def __repr__(self) -> str:
-		msg = ''
+		msg = 'cell object\n'
+		msg += f'id: {self.id}'
 		msg += f'num_edges: \t\t{self.num_edges}\n'
 		msg += f'num_holes: \t\t{self.num_holes}\n'
 		msg += f'num_pts: \t\t{self.num_pts}\n'
 		msg += f'contours: \t\t{self.contour_idx}\n'
-		msg += f'ext_pt: \t\t[{self.ext_pt[0]}, {self.ext_pt[1]}]\n'
 		if self.num_holes > 0:
 			msg += f'hole_int_pts (x): \t{self.hole_int_pts[0, :]}\n'
 			msg += f'hole_int_pts (y): \t{self.hole_int_pts[1, :]}\n'

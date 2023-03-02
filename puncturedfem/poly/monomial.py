@@ -1,3 +1,4 @@
+import numpy as np
 from .multi_index import multi_index_2
 
 class monomial:
@@ -6,7 +7,9 @@ class monomial:
 		c (x, y) ^ (alpha_1, alpha_2) = c (x ^ alpha_1) * (y ^ alpha_2)
 	"""
 
-	def __init__(self, alpha: multi_index_2, coef: float=0.0) -> None:
+	def __init__(self, alpha: multi_index_2=None, coef: float=0.0) -> None:
+		if alpha is None:
+			alpha = multi_index_2()
 		self.set_coef(coef)
 		self.set_multidx(alpha)
 
@@ -28,7 +31,7 @@ class monomial:
 		self.set_multidx(alpha)
 
 	def eval(self, x: float, y: float):
-		val = self.coef
+		val = self.coef * np.ones(np.shape(x))
 		if self.alpha.x > 0:
 			val *= x ** self.alpha.x
 		if self.alpha.y > 0:

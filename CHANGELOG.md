@@ -1,3 +1,18 @@
+[2023 Mar 01] 0.2.2 -- Anti-Laplacians
+---
+* Added `compute_h1()` and `compute_l2()` methods to `locfun`
+* Added `integrate_over_cell()` method to `polynomial`
+* Added methods to `contour` and `cell` to integrate over the boundary without multiplying by the norm of the derivative (i.e. 'preweighted' integrands)
+* Monomials now default to zero monomial
+* Fixed evaluation of zero `monomial` and zero `polynomial` to return same size as input
+* Removed `ext_pt` field from `cell`
+* Added `id` field to `contour`
+* Added `get_integrator()` method to `contour` (`cell` inherits)
+* Added `neumann` module to `nystrom` for solving Neumann problem
+  * Modified `harmconj` module accordingly
+* Completely overhauled anti-Laplacian calculation for punctured cells
+* **ex1**: "Square with circular hole" updated
+
 [2023 Feb 25] 0.2.1 -- Local functions
 ---
 * Added **/poly** subpackage

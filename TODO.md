@@ -115,8 +115,26 @@
   - [x] shift to first quadrant
 
 ---
-## v0.2.2: Interior values
+## v0.2.2: Anti-Laplacians
 
+### Anti-Laplacians
+  - [x] determine rational function coefficients
+  - [x] set and solve systems for $\rho,\widehat\rho$
+### Examples:
+  - [x] **ex1**: Square with circular hole (update)
+  - [ ] **ex2**: Pac-Man
+  - [ ] **ex3**: Ghost
+
+---
+## v0.2.3: Interior values
+
+### Organization
+  - [ ] Consolidate `locfun`
+    - [ ] `antilap`
+    - [ ] `d2n`
+    - [ ] `nystrom`
+    - [ ] `poly`
+  - [ ] Cosolidate `quad` under `mesh` (maybe...)
 ### Unit tests
   - [ ] anti-Laplacians
   - [ ] polynomials
@@ -138,7 +156,25 @@
   - [ ] contour plotting method wrapper
 
 ---
-## v0.2.3: Bilinear forms
+## v0.2.4: Nystrom Solver Optimization
+
+### Quadrature
+  - [ ] Simpson's rule
+### Nyström Solver
+  - [ ] set up and solve both types of systems with consolidated overhead
+    - [ ] abstraction of Dirchlet, Neumann, and Robin boundary value problems
+    - [ ] `set_up_right_hand_side` abstract method
+    - [ ] `set_up_linear_operator` abstract method
+    - [ ] precompute double and single layer operators
+  - [ ] trigonometric interpolation
+  - [ ] multiprocessing for batch computation
+  - [ ] debug options
+    - [ ] `gmres` flag
+    - [ ] condition number
+    - [ ] singular values
+
+---
+## v0.2.5: Bilinear forms
 
 ### Bilinear form
   - [ ] $L^2$ inner products: $\int_K v \, w ~dx$
@@ -149,23 +185,6 @@
   - [ ] special cases for harmonic functions and polynomials
 ### Examples: Jupyter notebooks
   - [ ] **ex2**: bilinear form evaluation
-
----
-## v0.2.4: Nystrom Solver Optimization
-
-### Quadrature
-  - [ ] Simpson's rule
-### Nyström Solver
-  - [ ] set up and solve both types of systems with consolidated overhead
-    - [ ] abstraction of Dirchlet, Neumann, and Robin boundary value problems
-    - [ ] `set_up_right_hand_side` abstract method
-    - [ ] `set_up_linear_operator` abstract method
-  - [ ] trigonometric interpolation
-  - [ ] multiprocessing for batch computation
-  - [ ] debug options
-    - [ ] `gmres` flag
-    - [ ] condition number
-    - [ ] singular values
 
 ---
 ## v0.2.6: Local Function Spaces

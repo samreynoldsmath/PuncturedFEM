@@ -1,3 +1,4 @@
+import numpy as np
 from .monomial import monomial
 
 class polynomial:
@@ -81,7 +82,7 @@ class polynomial:
 		self.monos = []
 
 	def eval(self, x: float, y: float) -> float:
-		val = 0
+		val = np.zeros(np.shape(x))
 		for m in self.monos:
 			val += m.eval(x, y)
 		return val
@@ -138,6 +139,29 @@ class polynomial:
 			new += P_alpha
 
 		return new
+
+	def integrate_over_cell(self, K):
+		""""
+		Returns the value of
+			\int_K (self) dx
+		by reducing this volumetric integral to one on the boundary via
+		the Divergence Theorem
+		"""
+		x1, x2 = K.get_boundary_points()
+		xn = K.dot_with_normal(x1, x2)
+		val = 0
+		for m in self.monos:
+			integrand = xn * m.eval(x1, x2) / (2 + m.alpha.order)
+			val += K.integrate_over_boundary(integrand)
+		return val
+
+	def get_weighted_normal_derivative(self, K):
+		x1, x2 = K.get_boundary_points()
+		gx, gy = self.grad()
+		gx_trace = gx.eval(x1, x2)
+		gy_trace = gy.eval(x1, x2)
+		nd = K.dot_with_normal(gx_trace, gy_trace)
+		return K.multiply_by_dx_norm(nd)
 
 	def __repr__(self) -> str:
 		self.sort()
