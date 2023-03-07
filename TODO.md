@@ -122,23 +122,14 @@
   - [x] set and solve systems for $\rho,\widehat\rho$
 ### Examples:
   - [x] **ex1**: Square with circular hole (update)
-  - [ ] **ex2**: Pac-Man
-  - [ ] **ex3**: Ghost
 
 ---
-## v0.2.3: Interior values
+## v0.2.3: Pac-Man & Ghost
+  - [x] **ex2**: Pac-Man
+  - [x] **ex3**: Ghost
 
-### Organization
-  - [ ] Consolidate `locfun`
-    - [ ] `antilap`
-    - [ ] `d2n`
-    - [ ] `nystrom`
-    - [ ] `poly`
-  - [ ] Cosolidate `quad` under `mesh` (maybe...)
-### Unit tests
-  - [ ] anti-Laplacians
-  - [ ] polynomials
-  - [ ] interior values
+---
+## v0.2.x
 ### Interior values
   - [ ] generate points for evaluation
   - [ ] reduced interior domain
@@ -149,14 +140,31 @@
   - [ ] plots
   - [ ] write to file
   - [ ] load from file
-### Cells
-  - [ ] boundary plotting method wrapper
-  - [ ] contour orientation check (using rotation index computed from curvature)
 ### Local functions
   - [ ] contour plotting method wrapper
 
 ---
-## v0.2.4: Nystrom Solver Optimization
+## v0.2.x: Refactor
+
+### Unit tests
+  - [ ] anti-Laplacians
+  - [ ] polynomials
+  - [ ] $H^1$ semi-inner products
+  - [ ] $L^2$ inner products
+  - [ ] interior values
+### Refactor
+  - [ ] Consolidate `locfun`
+    - [ ] `antilap`
+    - [ ] `d2n`
+    - [ ] `nystrom`
+    - [ ] `poly`
+  - [ ] Cosolidate `quad` under `mesh` (maybe...)
+### Cells
+  - [ ] boundary plotting method wrapper
+  - [ ] contour orientation check (using rotation index computed from curvature)
+
+---
+## v0.2.x: Nystrom Solver Optimization
 
 ### Quadrature
   - [ ] Simpson's rule
@@ -174,7 +182,7 @@
     - [ ] singular values
 
 ---
-## v0.2.5: Bilinear forms
+## v0.2.x: Bilinear forms
 
 ### Bilinear form
   - [ ] $L^2$ inner products: $\int_K v \, w ~dx$
@@ -187,7 +195,7 @@
   - [ ] **ex2**: bilinear form evaluation
 
 ---
-## v0.2.6: Local Function Spaces
+## v0.2.x: Local Function Spaces
 ### Edge function space
   - [ ] special case for closed contours
   - [ ] barycentric coordinates (?)

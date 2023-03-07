@@ -1,3 +1,9 @@
+[2023 Mar 06] 0.2.3 -- Pac-Man & Ghost
+---
+* Added **ex1b-pacman.ipynb**
+* Added **ex1c-ghost.ipynb**
+* Updated **ex1a-square-hole.ipynb** with more accurate reference values
+
 [2023 Mar 01] 0.2.2 -- Anti-Laplacians
 ---
 * Added `compute_h1()` and `compute_l2()` methods to `locfun`
