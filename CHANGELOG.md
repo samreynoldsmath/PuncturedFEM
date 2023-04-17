@@ -1,3 +1,11 @@
+[2023 Apr 17] 0.2.4 -- Interior values
+---
+* Added `intval` module to `locfun` for computing interior values
+* Added `get_conjugable_part()` method to `locfun` that returns the trace of $\psi$
+* Renamed `is_in_interior()` method for `contour` to `is_in_interior_contour()`
+* Added `is_in_interior_cell()` method to `cell`
+* Added interior value demo to Punctured Square, Pac-Man, and Ghost examples
+
 [2023 Mar 06] 0.2.3 -- Pac-Man & Ghost
 ---
 * Added **ex1b-pacman.ipynb**

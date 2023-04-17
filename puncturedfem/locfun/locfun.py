@@ -101,10 +101,10 @@ class locfun:
 	def get_harmonic_conjugate(self):
 		return self.conj_trace
 
-	def compute_harmonic_conjugate(self, K) -> None:
+	def compute_harmonic_conjugate(self, K, debug=False) -> None:
 		phi_trace = self.trace - self.poly_part_trace
 		self.conj_trace, self.log_coef = \
-			d2n.harmconj.get_harmonic_conjugate(K, phi_trace)
+			d2n.harmconj.get_harmonic_conjugate(K, phi_trace, debug=debug)
 
 	### logarithmic coefficients ###############################################
 	def set_logarithmic_coefficients(self, log_coef) -> None:
@@ -130,6 +130,11 @@ class locfun:
 		lam_wnd = d2n.log_terms.get_dlam_dn_wgt(K, lam_x1, lam_x2)
 		self.harm_part_wnd += lam_wnd @ self.log_coef
 
+	### harmonic conjugable part psi ###########################################
+	def get_conjugable_part(self, K: cell):
+		lam = d2n.log_terms.get_log_trace(K)
+		return self.trace - self.poly_part_trace - lam @ self.log_coef
+
 	### anti-Laplacian #########################################################
 	def set_anti_laplacian_harmonic_part(self, anti_laplacian_vals) -> None:
 		self.antilap_trace = anti_laplacian_vals
@@ -137,9 +142,8 @@ class locfun:
 	def get_anti_laplacian_harmonic_part(self):
 		return self.antilap_trace
 
-	def compute_anti_laplacian_harmonic_part(self, K) -> None:
-		lam = d2n.log_terms.get_log_trace(K)
-		psi = self.trace - self.poly_part_trace - lam @ self.log_coef
+	def compute_anti_laplacian_harmonic_part(self, K: cell) -> None:
+		psi = self.get_conjugable_part(K)
 		self.antilap_trace, self.antilap_wnd = \
 			antilap.antilap.get_anti_laplacian_harmonic( \
 			K, psi=psi, psi_hat=self.conj_trace, a=self.log_coef)

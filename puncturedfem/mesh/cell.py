@@ -50,6 +50,17 @@ class cell(contour):
 				vals[self.vert_idx[c_idx[i]]:self.vert_idx[c_idx[i] + 1]]
 		return c.integrate_over_contour(vals_on_c)
 
+	def is_in_interior_cell(self, y1, y2):
+		c_outer_idx = self.contour_idx[0]
+		c_outer = contour(edge_list=[self.edge_list[i] for i in c_outer_idx])
+		is_inside = c_outer.is_in_interior_contour(y1, y2)
+		for j in range(self.num_holes):
+			c_idx = self.contour_idx[j + 1]
+			c = contour(edge_list=[self.edge_list[i] for i in c_idx])
+			is_in_hole = c.is_in_interior_contour(y1, y2)
+			is_inside = np.logical_and(is_inside, np.logical_not(is_in_hole))
+		return is_inside
+
 	def _find_closed_contours(self):
 		"""
 		for each edge, finds the index of which closed contour
@@ -145,7 +156,7 @@ class cell(contour):
 					cj = contour(edge_list=edge_list_j)
 					# check if cj is contained in ci
 					x1, x2 = cj.get_boundary_points()
-					is_inside = ci.is_in_interior(x1, x2)
+					is_inside = ci.is_in_interior_contour(x1, x2)
 					if all(is_inside):
 						outer_boundary_idx = i
 		# swap contour_idx[0] and the outer boundary index

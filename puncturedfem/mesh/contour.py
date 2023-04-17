@@ -115,7 +115,7 @@ class contour:
 
 	### methods for interior points
 
-	def is_in_interior(self, x, y):
+	def is_in_interior_contour(self, x, y):
 		"""
 		Returns True if the point (x,y) lies in the interior of the
 		contour specified by edge_list, and returns false otherwise.
@@ -205,7 +205,7 @@ class contour:
 			x, y = np.meshgrid(x_coord, y_coord)
 
 			# determine which points are in the interior
-			is_inside = self.is_in_interior(x, y)
+			is_inside = self.is_in_interior_contour(x, y)
 
 			# for each interior point in grid, compute distance to the boundary
 			dist = np.zeros(x.shape)

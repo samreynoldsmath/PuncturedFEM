@@ -108,8 +108,8 @@ def get_cond_num(A):
 	for j in range(n):
 		Amat[:, j] = A(I[:, j])
 
-	Amat = (Amat[:-2,:-2])
-	n -= 2
+	# Amat = (Amat[:-2,:-2])
+	# n -= 2
 
 	cond = np.linalg.cond(Amat)
 	print('condition number = %.4e'%(cond))
@@ -147,6 +147,11 @@ def get_cond_num(A):
 			leg.append('%.4e'%(s[k]))
 			plt.plot(vh[k,:])
 	plt.legend(leg)
+
+	plt.figure()
+	plt.title('Matrix operator for harmonic conjugate')
+	plt.imshow(Amat)
+	plt.colorbar()
 
 	plt.show()
 

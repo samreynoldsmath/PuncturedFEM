@@ -129,19 +129,14 @@
   - [x] **ex3**: Ghost
 
 ---
-## v0.2.x
+## v0.2.4: Interior values
 ### Interior values
-  - [ ] generate points for evaluation
-  - [ ] reduced interior domain
-  - [ ] find points inside a closed contour
-  - [ ] Cauchy's integral formula
-    - [ ] values
-    - [ ] gradient
-  - [ ] plots
-  - [ ] write to file
-  - [ ] load from file
-### Local functions
-  - [ ] contour plotting method wrapper
+  - [x] generate points for evaluation
+  - [x] find points inside a closed contour
+  - [x] Cauchy's integral formula
+    - [x] values
+    - [x] gradient
+  - [x] plots
 
 ---
 ## v0.2.x: Refactor
