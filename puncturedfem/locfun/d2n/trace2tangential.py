@@ -1,9 +1,10 @@
 import numpy as np
 
-from .. import mesh
+from ...mesh.cell import cell
+from ...mesh.contour import contour
 from . import fft_deriv
 
-def get_weighted_tangential_derivative_from_trace(K: mesh.cell, f):
+def get_weighted_tangential_derivative_from_trace(K: cell, f):
 	"""
 	Returns df / ds = \nabla f(x(t)) \cdot x'(t) by computing the derivative
 	of f(x(t)) with respect to the scalar parameter t, where x(t)
@@ -16,7 +17,7 @@ def get_weighted_tangential_derivative_from_trace(K: mesh.cell, f):
 	for c_idx in K.contour_idx:
 
 		# create contour object
-		c = mesh.contour.contour([K.edge_list[i] for i in c_idx])
+		c = contour([K.edge_list[i] for i in c_idx])
 
 		# get values of f on c
 		fc = np.zeros((c.num_pts,))

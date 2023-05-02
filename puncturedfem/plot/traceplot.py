@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .. import quad
-from .. import mesh
+# from .. import quad
+from ..mesh.cell import cell
 
-def trace(f_trace_list, fmt, legend, title, K: mesh.cell.cell, quad_list):
+def plot_trace(f_trace_list, fmt, legend, title, K: cell, quad_list):
 
 	t = _get_trace_param_cell_boundary(K, quad_list)
 
@@ -22,7 +22,7 @@ def trace(f_trace_list, fmt, legend, title, K: mesh.cell.cell, quad_list):
 
 	return None
 
-def trace_log(f_trace_list, fmt, legend, title, K: mesh.cell.cell, quad_list):
+def plot_trace_log(f_trace_list, fmt, legend, title, K: cell, quad_list):
 
 	t = _get_trace_param_cell_boundary(K, quad_list)
 
@@ -49,7 +49,7 @@ def _make_quad_dict(quad_list):
 		quad_dict[q.type] = q
 	return quad_dict
 
-def _get_trace_param_cell_boundary(K: mesh.cell.cell, quad_list):
+def _get_trace_param_cell_boundary(K: cell, quad_list):
 
 	quad_dict = _make_quad_dict(quad_list)
 

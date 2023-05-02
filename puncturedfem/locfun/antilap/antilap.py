@@ -1,5 +1,5 @@
 import numpy as np
-from ..mesh.cell import cell
+from ...mesh.cell import cell
 from ..d2n.fft_deriv import fft_antiderivative
 from ..d2n.log_terms import get_log_grad
 from . import log_antilap

@@ -1,3 +1,22 @@
+[2023 May 01] 0.2.5 -- API & polynomial overhaul
+---
+* Moved examples to a dedicated `examples` directory
+  * Added "Examples used in publications" to `README`
+* Introduced API for more convenient user experience
+  * Users call `pf.thing` rather than `pf.foo.bar.baz.thing`
+  * Updated all examples to reflect API change
+  * Restructured `puncturedfem` directory
+* Polynomial overhaul
+  * Changed initialization method to something sensible
+  * `set()` method behaves as a re-initializer
+  * Added support for polynomial-scalar addition for `+`,`+=`,`-`,`-=` operators
+  * Added support for `*=` operator
+  * Moved `integrate_over_cell()` method to `locfun.int_poly`
+* Unit tests
+  * Relocated `test` to parent directory
+  * Polynomials: `test_poly.py`
+  * Local functions: `test_locfun.py`
+
 [2023 Apr 17] 0.2.4 -- Interior values
 ---
 * Added `intval` module to `locfun` for computing interior values

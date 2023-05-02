@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..mesh import *
+from ...mesh.cell import cell
 
 def shifted_coordinates(x, xi):
 	x_xi = np.array([x[0] - xi[0], x[1] - xi[1]])

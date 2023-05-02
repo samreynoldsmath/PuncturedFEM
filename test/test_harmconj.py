@@ -3,10 +3,14 @@
 	python3 -m unittest
 """
 import unittest
+import sys
+import os
+sys.path.append(os.path.abspath('../puncturedfem'))
+
 import numpy as np
-from ..quad.quad import quad
-from ..mesh import edge, cell
-from .. import d2n
+from puncturedfem import quad
+from puncturedfem.mesh import edge, cell
+from puncturedfem.locfun.d2n.harmconj import get_harmonic_conjugate
 
 class TestHarmonicConjugate(unittest.TestCase):
 
@@ -20,8 +24,7 @@ class TestHarmonicConjugate(unittest.TestCase):
 	def run_all_tests_for_cell(self, K):
 		for pair_id in range(self.num_conj_pairs):
 			phi, phi_hat = self.harmonic_conjugate_pair(K, pair_id)
-			phi_hat_computed, log_coeff = \
-				 d2n.harmconj.get_harmonic_conjugate(K, phi)
+			phi_hat_computed, log_coeff = get_harmonic_conjugate(K, phi)
 			max_phi_hat_error = \
 				self.compute_harmonic_conjugate_error(phi_hat, phi_hat_computed)
 			self.assertTrue(max_phi_hat_error < 1e-4)

@@ -1,22 +1,37 @@
 import numpy as np
 from .monomial import monomial
+from .multi_index import multi_index_2
 
 class polynomial:
 	"""
 	Treated as a list of monomial objects
 	"""
 
-	def __init__(self, monos: list[monomial]=None) -> None:
-		"""
-		Initialize polynomial object
-		"""
-		if monos is None:
-			monos = []
-		self.monos = monos
+	def __init__(self, coef_multidx_pairs=None):
+		self.set(coef_multidx_pairs)
+
+	def set(self, coef_multidx_pairs=None):
+		self.monos = []
+		if coef_multidx_pairs is None:
+			return
+		for triple in coef_multidx_pairs:
+			if len(triple) != 3:
+				raise Exception(
+					'Every multi-index / coefficient pair must consist of' +
+					'\n\t[0]:\tthe coefficient' +
+					'\n\t[1]:\tthe exponent on x_1' +
+					'\n\t[2]:\tthe exponent on x_2'
+				)
+			c = float(triple[0])
+			alpha = multi_index_2([triple[1], triple[2]])
+			m = monomial(alpha, c)
+			self.add_monomial(m)
 		self.consolidate()
 
 	def copy(self):
-		return polynomial(self.monos)
+		new = polynomial()
+		new.add_monomials(self.monos)
+		return new
 
 	def add_monomial(self, m: monomial) -> None:
 		"""
@@ -24,6 +39,11 @@ class polynomial:
 		"""
 		if not m.is_zero():
 			self.monos.append(m)
+
+	def add_monomials(self, monos: list[monomial]=None) -> None:
+		for m in monos:
+			self.add_monomial(m)
+		self.consolidate()
 
 	def remove_zeros(self):
 		"""
@@ -65,6 +85,7 @@ class polynomial:
 		m.set_multidx_from_id(id)
 		m.set_coef(coef)
 		self.add_monomial(m)
+		self.consolidate()
 
 	def add_monomials_with_ids(self, coef_list: list[float],
 			id_list: list[int]) -> None:
@@ -73,6 +94,7 @@ class polynomial:
 				'number of coefficients and multi-indices must be equal')
 		for i in range(len(coef_list)):
 			self.add_monomial_with_id(coef_list[i], id_list[i])
+		self.consolidate()
 
 	def is_zero(self) -> bool:
 		self.consolidate()
@@ -122,7 +144,8 @@ class polynomial:
 			pk = p1.copy()
 
 			# Delta ^ k (x ^ 2 + y ^ 2) ^ alpha
-			Lk = polynomial([m])
+			Lk = polynomial()
+			Lk.add_monomial(m)
 
 			# first term: k = 0
 			scale = 0.25 / (1 + m.alpha.order)
@@ -139,21 +162,6 @@ class polynomial:
 			new += P_alpha
 
 		return new
-
-	def integrate_over_cell(self, K):
-		""""
-		Returns the value of
-			\int_K (self) dx
-		by reducing this volumetric integral to one on the boundary via
-		the Divergence Theorem
-		"""
-		x1, x2 = K.get_boundary_points()
-		xn = K.dot_with_normal(x1, x2)
-		val = 0
-		for m in self.monos:
-			integrand = xn * m.eval(x1, x2) / (2 + m.alpha.order)
-			val += K.integrate_over_boundary(integrand)
-		return val
 
 	def get_weighted_normal_derivative(self, K):
 		x1, x2 = K.get_boundary_points()
@@ -173,6 +181,9 @@ class polynomial:
 		return msg
 
 	def __eq__(self, other: object) -> bool:
+		"""
+		Tests equality between self and other
+		"""
 		if not isinstance(other, polynomial):
 			raise TypeError('Cannot compare polynomial to non-polynomial')
 		if len(self.monos) != len(other.monos):
@@ -186,26 +197,60 @@ class polynomial:
 
 	def __add__(self, other):
 		"""
-		Defines the addition operation self + other
+		Defines the addition operation self + other,
+		where other is either another polynomial or a scalar
 		"""
-		if not isinstance(other, polynomial):
-			raise TypeError('Cannot add polynomial to non-polynomial')
-		new = polynomial()
-		for m in self.monos:
-			new.add_monomial(m)
-		for m in other.monos:
-			new.add_monomial(m)
+		if isinstance(other, polynomial):
+			new = polynomial()
+			for m in self.monos:
+				new.add_monomial(m)
+			for m in other.monos:
+				new.add_monomial(m)
+		elif isinstance(other, int) or isinstance(other, float):
+			new = polynomial()
+			for m in self.monos:
+				new.add_monomial(m)
+			constant = monomial()
+			constant.set_multidx_from_id(0)
+			constant.set_coef(other)
+			new.add_monomial(constant)
+		else:
+			raise TypeError(
+				'Addition with a polynomial must be with a scalar or' +
+				' with another polynomial')
+		new.consolidate()
 		return new
+
+	def __radd__(self, other):
+		"""
+		Defines the addition operator other + self,
+		where other is either another polynomial or a scalar
+		"""
+		if isinstance(other, int) or isinstance(other, float):
+			return self + other
+		else:
+			raise TypeError(
+				'Addition with a polynomial must be with a scalar or' +
+				' with another polynomial')
 
 	def __iadd__(self, other):
 		"""
 		Defines the increment operation self += other
+		where other is either another polynomial or a scalar
 		"""
-		if not isinstance(other, polynomial):
-			raise TypeError('Cannot add polynomial to non-polynomial')
-		for m in other.monos:
-			self.add_monomial(m)
-		self.consolidate()
+		if isinstance(other, polynomial):
+			for m in other.monos:
+				self.add_monomial(m)
+			self.consolidate()
+		elif isinstance(other, int) or isinstance(other, float):
+			constant = monomial()
+			constant.set_multidx_from_id(0)
+			constant.set_coef(other)
+			self.add_monomial(constant)
+			self.consolidate()
+		else:
+			raise TypeError('Can only add polynomials to other polynomials' +
+		   ' or scalars')
 		return self
 
 	def __mul__(self, other):

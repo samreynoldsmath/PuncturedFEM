@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from .. import mesh
 
-def edges(edge_list,
+def plot_edges(edge_list,
 		orientation=False,
 		axis_arg='equal',
 		grid_arg='minor'):
@@ -22,7 +22,7 @@ def edges(edge_list,
 
 	return None
 
-def boundary(K: mesh.cell.cell,
+def plot_boundary(K: mesh.cell.cell,
 		orientation=False,
 		hole_int_pts=False,
 		axis_arg='equal',

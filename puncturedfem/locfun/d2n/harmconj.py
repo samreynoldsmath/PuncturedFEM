@@ -1,13 +1,13 @@
 import numpy as np
 from scipy.sparse.linalg import gmres, LinearOperator
 
-from .. import mesh
+from ...mesh.cell import cell
 from .. import nystrom
 
 from . import log_terms
 from . import trace2tangential
 
-def get_harmonic_conjugate(K: mesh.cell, phi, debug=False):
+def get_harmonic_conjugate(K: cell, phi, debug=False):
 
 	phi_wtd = \
 		trace2tangential.get_weighted_tangential_derivative_from_trace(K, phi)
@@ -23,7 +23,7 @@ def get_harmonic_conjugate(K: mesh.cell, phi, debug=False):
 		return psi_hat, a
 
 def get_harmonic_conjugate_multiply_connected(
-	K: mesh.cell, phi, dphi_ds, debug=False):
+	K: cell, phi, dphi_ds, debug=False):
 
 	# get single and double layer operator matrices
 	T1 = nystrom.single_layer.single_layer_mat(K)

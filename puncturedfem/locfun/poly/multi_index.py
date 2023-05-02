@@ -40,6 +40,7 @@ class multi_index_2:
 
 	def __eq__(self, other) -> bool:
 		if type(other) != multi_index_2:
+			print(type(other))
 			raise TypeError('Comparison of multi-index to object' +
 			' of different type')
 		return self.id == other.id

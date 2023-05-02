@@ -1,7 +1,8 @@
-from .. import d2n
-from .. import antilap
+from . import d2n
+from . import antilap
+from .int_poly import integrate_poly_over_cell
 from ..mesh.cell import cell
-from ..poly.poly import polynomial
+from .poly.poly import polynomial
 
 class locfun:
 	"""
@@ -159,7 +160,7 @@ class locfun:
 		Px, Py = self.poly_part.grad()
 		Qx, Qy = other.poly_part.grad()
 		gradP_gradQ = Px * Qx + Py * Qy
-		val = gradP_gradQ.integrate_over_cell(K)
+		val = integrate_poly_over_cell(gradP_gradQ, K)
 
 		# remaining terms
 		integrand = other.trace * self.harm_part_wnd \
@@ -180,7 +181,7 @@ class locfun:
 
 		# P * Q
 		PQ = self.poly_part * other.poly_part
-		val = PQ.integrate_over_cell(K)
+		val = integrate_poly_over_cell(PQ, K)
 
 		# phi * psi
 		integrand = (other.trace - other.poly_part_trace) * self.antilap_wnd \

@@ -1,7 +1,8 @@
 import numpy as np
 
-from ..quad import *
-from ..mesh import *
+# from ...mesh.quad import quad
+from ...mesh.cell import cell
+from ...mesh.edge import edge
 
 def double_layer_mat(K: cell):
 	"""

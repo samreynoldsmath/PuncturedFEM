@@ -1,8 +1,8 @@
 import numpy as np
 
-from ..quad.quad import quad
-from ..mesh.cell import cell
-from ..mesh.edge import edge
+from ...mesh.quad.quad import quad
+from ...mesh.cell import cell
+from ...mesh.edge import edge
 
 def single_layer_mat(K: cell):
 	"""

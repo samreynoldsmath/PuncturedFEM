@@ -1,7 +1,7 @@
 import copy
 import numpy as np
 
-from .. import quad
+from .quad.quad import quad
 
 class edge:
 
@@ -17,7 +17,7 @@ class edge:
         'curvature',
     )
 
-    def __init__(self, etype: str, q: quad.quad, id: any = [], **kwargs):
+    def __init__(self, etype: str, q: quad, id: any = [], **kwargs):
 
         # optional identifier (for use in global mesh)
         self.id = id

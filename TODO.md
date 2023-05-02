@@ -20,7 +20,6 @@
 
 ---
 ## v0.2.0: Python overhaul
-
 ### Quadrature
   - [x] trapezoid
   - [x] Kress
@@ -88,7 +87,6 @@
 
 ---
 ## v0.2.1: Local functions
-
 ### Polynomials
   - [x] `multi_index` objects
   - [x] `monomial` objects
@@ -116,7 +114,6 @@
 
 ---
 ## v0.2.2: Anti-Laplacians
-
 ### Anti-Laplacians
   - [x] determine rational function coefficients
   - [x] set and solve systems for $\rho,\widehat\rho$
@@ -139,28 +136,44 @@
   - [x] plots
 
 ---
-## v0.2.x: Refactor
-
+## v0.2.5: API & polynomial overhaul
+### API overhaul
+- [x] Users call `pf.thing` rather than `pf.foo.bar.baz.thing`
+  - [x] Modify `__init__` files
+  - [x] Modify examples
+- [x] Group examples into `/examples` directory
+- [x] Move tests to parent directory
+- [x] Consolidate `locfun`
+  - [x] `antilap`
+  - [x] `d2n`
+  - [x] `nystrom`
+  - [x] `poly`
+- [x] Consolidate `quad` under `mesh`
+- [x] Less confusing `polynomial` initialization
 ### Unit tests
-  - [ ] anti-Laplacians
-  - [ ] polynomials
-  - [ ] $H^1$ semi-inner products
-  - [ ] $L^2$ inner products
-  - [ ] interior values
-### Refactor
-  - [ ] Consolidate `locfun`
-    - [ ] `antilap`
-    - [ ] `d2n`
-    - [ ] `nystrom`
-    - [ ] `poly`
-  - [ ] Cosolidate `quad` under `mesh` (maybe...)
-### Cells
-  - [ ] boundary plotting method wrapper
-  - [ ] contour orientation check (using rotation index computed from curvature)
+  - [x] polynomials
+  - [x] $H^1$ semi-inner products and $L^2$ inner products
 
 ---
-## v0.2.x: Nystrom Solver Optimization
+## v0.2.x: Local function spaces
+### Edge function space
+  - [ ] special case for closed contours
+  - [ ] barycentric coordinates (?)
+  - [ ] integrated Legendre polynomials
+  - [ ] arbitrary polynomial degree (integrated Legendre polynomials)
+  - [ ] redundancy elimination
+### Local function space
+  - [ ] vertex functions
+  - [ ] edge functions
+  - [ ] bubble functions
+  - [ ] local stiffness and mass matrices
 
+---
+## v0.2.x: Nyström Solver Optimization
+### Refactor
+- [ ] Consolidate logartihmic and rational functions into a module
+- [ ] Function `plot_interior_values()`
+  - [ ] Update examples
 ### Quadrature
   - [ ] Simpson's rule
 ### Nyström Solver
@@ -177,34 +190,11 @@
     - [ ] singular values
 
 ---
-## v0.2.x: Bilinear forms
+## v0.3.0: Meshes
 
-### Bilinear form
-  - [ ] $L^2$ inner products: $\int_K v \, w ~dx$
-  - [ ] advection terms :$\int_K (b \cdot \nabla v) \, w ~dx$
-  - [ ] diffusion terms:
-    - [ ] $\int_K (A \nabla v) \cdot \nabla w ~dx$
-    - [ ] special case for $H^1$ semi-inner product ($A = I$)
-  - [ ] special cases for harmonic functions and polynomials
-### Examples: Jupyter notebooks
-  - [ ] **ex2**: bilinear form evaluation
-
----
-## v0.2.x: Local Function Spaces
-### Edge function space
-  - [ ] special case for closed contours
-  - [ ] barycentric coordinates (?)
-  - [ ] arbitrary polynomial degree (integrated Legendre polynomials)
-  - [ ] redundancy elimination
-### Local function space
-  - [ ] vertex functions
-  - [ ] edge functions
-  - [ ] bubble functions
-  - [ ] local stiffness and mass matrices
-
----
-## v0.3: Meshes
-
+### Cells
+  - [ ] boundary plotting method wrapper
+  - [ ] contour orientation check (using rotation index computed from curvature)
 ### Mesh
   - [ ] mesh encoding
   - [ ] write to file
@@ -218,3 +208,20 @@
   - [ ] Pegboard mesh: cells with 1, 4, 16 holes
   - [ ] Modified pegboard: shuriken and bean punctures
   - [ ] Nested annuli mesh
+
+---
+## v0.x.x: Bilinear forms
+
+### Advection terms
+  - [ ] $\int_K (b \cdot \nabla v) \, w ~dx$
+### Diffusion terms:
+  - [ ] $\int_K (A \nabla v) \cdot \nabla w ~dx$
+  - [ ] special case for $H^1$ semi-inner product ($A = I$)
+  - [ ] special cases for harmonic functions and polynomials
+
+---
+## v0.x.x: Interior value interpolation
+
+### Interpolation
+  - [ ] Determine interior points close to boundary
+  - [ ] Use boundary data to interpolate

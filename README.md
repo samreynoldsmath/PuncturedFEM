@@ -12,6 +12,14 @@ Description
 -----------------
 A finite element method on meshes with curvilinear and multiply connected cells.
 
+Examples used in publications
+-----------------
+"Evaluation of inner products of implicitly-defined finite element functions
+on multiply connected mesh cells," J. S. Ovall and S. E. Reynolds, in review.
+* `examples/ex1a-square-hole.ipynb`: Example 4.1 (Punctured Square)
+* `examples/ex1b-pacman.ipynb`: Example 4.2 (Pac-Man)
+* `examples/ex1c-ghost.ipynb`: Example 4.3 (Ghost)
+
 Disclaimer
 -----------------
 This code is intended to serve as a prototype, and has not necessarily been

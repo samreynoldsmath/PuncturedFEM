@@ -1,9 +1,9 @@
 import numpy as np
 
-from .. import mesh
+from ...mesh.cell import cell
 from .. import d2n
 
-def get_log_antilap(K: mesh.cell):
+def get_log_antilap(K: cell):
 	"""
 	Returns traces of an anti-Laplacian of logarithmic terms on the boundary
 		\Lambda(x) = \frac14 |x|^2 (\ln|x|-1)
@@ -21,7 +21,7 @@ def get_log_antilap(K: mesh.cell):
 
 	return LAM_trace
 
-def get_log_antilap_weighted_normal_derivative(K: mesh.cell):
+def get_log_antilap_weighted_normal_derivative(K: cell):
 	"""
 	Returns traces of an anti-Laplacian of logarithmic terms on the boundary:
 		\Lambda(x) = \frac14 |x|^2 (\ln|x|-1)

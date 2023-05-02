@@ -3,8 +3,12 @@
 	python3 -m unittest
 """
 import unittest
+import sys
+import os
+sys.path.append(os.path.abspath('../puncturedfem'))
+
 import numpy as np
-from .. import d2n
+from puncturedfem.locfun.d2n.fft_deriv import fft_antiderivative, fft_derivative
 
 class TestFFTDerivative(unittest.TestCase):
 
@@ -23,7 +27,7 @@ class TestFFTDerivative(unittest.TestCase):
 			x_fun, dx_fun = self.get_function_pair(pair_id)
 			x_val = x_fun(self.t)
 			dx_val = dx_fun(self.t)
-			dx_computed = d2n.fft_deriv.fft_derivative(x_val, self.L)
+			dx_computed = fft_derivative(x_val, self.L)
 			dx_error = np.abs(dx_val - dx_computed)
 			max_dx_error = np.max(dx_error)
 			self.assertTrue(max_dx_error < self.TOL)
@@ -33,7 +37,7 @@ class TestFFTDerivative(unittest.TestCase):
 			x_fun, dx_fun = self.get_function_pair(pair_id)
 			x_val = x_fun(self.t)
 			dx_val = dx_fun(self.t)
-			x_computed = d2n.fft_deriv.fft_antiderivative(dx_val, self.L)
+			x_computed = fft_antiderivative(dx_val, self.L)
 			x_computed += x_val[0] - x_computed[0]
 			x_error = np.abs(x_val - x_computed)
 			max_x_error = np.max(x_error)

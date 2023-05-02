@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse.linalg import gmres, LinearOperator
 
-from ..mesh.cell import cell
+from ...mesh.cell import cell
 from . import single_layer, double_layer, apply_double_layer
 
 def solve_neumann_zero_average(K: cell, u_wnd):
