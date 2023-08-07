@@ -1,15 +1,16 @@
 # SPECIFIC FILES
-scratch.nb
 test/test_template.py
 
 # FOLDER TYPES
+**/scratch/
 **/__pycache__/
 **/.ipynb_checkpoints/
-**/.vscode
-**/.VSCodeCounter
+**/.vscode/
+**/.VSCodeCounter/
 
 # FILE TYPES
 *.html
 *.pdf
 *.png
 *.eps
+*DEP.py

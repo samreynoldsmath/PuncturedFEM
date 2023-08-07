@@ -1,5 +1,5 @@
-from .poly.poly import polynomial
-from ..mesh.cell import cell
+from .poly import polynomial
+from ...mesh.cell import cell
 
 def integrate_poly_over_cell(p: polynomial, K: cell):
 		""""

@@ -56,11 +56,12 @@ def _get_trace_param_cell_boundary(K: cell, quad_list):
 	t = np.zeros((K.num_pts,))
 	t0 = 0
 	idx_start = 0
-	for e in K.edge_list:
-		t[idx_start:(idx_start + e.num_pts - 1)] = \
-			t0 + quad_dict[e.qtype].t[:-1]
-		idx_start += e.num_pts - 1
-		t0 += 2 * np.pi
+	for c in K.components:
+		for e in c.edges:
+			t[idx_start:(idx_start + e.num_pts - 1)] = \
+				t0 + quad_dict[e.quad_type].t[:-1]
+			idx_start += e.num_pts - 1
+			t0 += 2 * np.pi
 
 	return t
 

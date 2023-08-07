@@ -14,10 +14,12 @@ def get_log_trace(K: cell):
 	lam_trace = np.zeros((K.num_pts, K.num_holes))
 	for j in range(K.num_holes):
 
-		xi = K.hole_int_pts[:,j]
+		# xi = K.hole_int_pts[:,j]
+		xi = K.components[j + 1].interior_point
+		xi = np.array([xi.x, xi.y])
 
 		def lam(x):
-			x_xi, x_xi_norm_sq = shifted_coordinates(x, xi)
+			_, x_xi_norm_sq = shifted_coordinates(x, xi)
 			return 0.5 * np.log(x_xi_norm_sq)
 
 		lam_trace[:, j] = K.evaluate_function_on_boundary(lam)
@@ -33,7 +35,9 @@ def get_log_grad(K: cell):
 
 	for j in range(K.num_holes):
 
-		xi = K.hole_int_pts[:,j]
+		# xi = K.hole_int_pts[:,j]
+		xi = K.components[j + 1].interior_point
+		xi = np.array([xi.x, xi.y])
 
 		def lam_x1(x):
 			x_xi, x_xi_norm_sq = shifted_coordinates(x, xi)
@@ -48,7 +52,7 @@ def get_log_grad(K: cell):
 
 	return lam_x1_trace, lam_x2_trace
 
-def get_dlam_dt_wgt(K, lam_x1_trace, lam_x2_trace):
+def get_dlam_dt_wgt(K: cell, lam_x1_trace: np.array, lam_x2_trace: np.array):
 	"""
 	Returns weighted tangential derivative of logarthmic terms
 	"""
@@ -59,7 +63,7 @@ def get_dlam_dt_wgt(K, lam_x1_trace, lam_x2_trace):
 		dlam_dt_wgt[:, j] = K.multiply_by_dx_norm(dlam_dt_wgt[:, j])
 	return dlam_dt_wgt
 
-def get_dlam_dn_wgt(K, lam_x1_trace, lam_x2_trace):
+def get_dlam_dn_wgt(K: cell, lam_x1_trace: np.array, lam_x2_trace: np.array):
 	"""
 	Returns weighted normal derivative of logarthmic terms
 	"""

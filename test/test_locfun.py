@@ -13,13 +13,8 @@ import numpy as np
 class TestLocalFunction(unittest.TestCase):
 
 	def setUp(self) -> None:
-		self.n = 32
-		self.tol = 1e-6
-
-	def tearDown(self) -> None:
-		self.K = []
-		self.v = []
-		self.w = []
+		self.n = 64
+		self.tol = 1e-10
 
 	def test_punctured_square(self):
 		"""
@@ -27,42 +22,8 @@ class TestLocalFunction(unittest.TestCase):
 		examples/ex1a-square-hole.ipynb
 		"""
 
-		# define quadrature schemes
-		q_trap = pf.quad(qtype='trap', n=self.n)
-		q_kress = pf.quad(qtype='kress', n=self.n)
-
-		# initialize list of edges as empty list
-		edge_list = []
-
-		# bottom: (0,0) to (1,0)
-		e = pf.edge(etype='line', q=q_kress)
-		e.join_points([0,0], [1,0])
-		edge_list.append(e)
-
-		# right: (1,0) to (1,1)
-		e = pf.edge(etype='line', q=q_kress)
-		e.join_points([1,0], [1,1])
-		edge_list.append(e)
-
-		# top: (1,1) to (0,1)
-		e = pf.edge(etype='line', q=q_kress)
-		e.join_points([1,1], [0,1])
-		edge_list.append(e)
-
-		# left: (0,1) to (0,0)
-		e = pf.edge(etype='line', q=q_kress)
-		e.join_points([0,1], [0,0])
-		edge_list.append(e)
-
-		# inner circular boundary
-		e = pf.edge(etype='circle', q=q_trap)
-		e.reverse_orientation()
-		e.dialate(0.25)
-		e.translate([0.5, 0.5])
-		edge_list.append(e)
-
-		# define mesh cell
-		K = pf.cell(edge_list=edge_list)
+		K = self.build_punctured_square()
+		solver = pf.nystrom_solver(K)
 
 		# get the coordinates of sampled boundary points
 		x1, x2 = K.get_boundary_points()
@@ -82,8 +43,9 @@ class TestLocalFunction(unittest.TestCase):
 		v_laplacian = pf.polynomial([ [12.0, 1, 1] ])
 
 		# create local function object
-		v = pf.locfun(v_trace, v_laplacian)
-		v.compute_all(K)
+		v = pf.locfun(solver=solver, lap_poly=v_laplacian, has_poly_trace=False)
+		v.set_trace_values(v_trace)
+		v.compute_all()
 
 		# trace of w
 		w_trace = (x1 - 0.5) / ((x1 - 0.5) ** 2 + (x2 - 0.5) ** 2) + \
@@ -93,21 +55,53 @@ class TestLocalFunction(unittest.TestCase):
 		w_laplacian = pf.polynomial([ [8.0, 1, 0] ])
 
 		# declare w as local function object
-		w = pf.locfun(w_trace, w_laplacian)
-		w.compute_all(K)
+		w = pf.locfun(solver=solver, lap_poly=w_laplacian, has_poly_trace=False)
+		w.set_trace_values(w_trace)
+		w.compute_all()
 
 		# compute L^2 inner product
 		l2_vw_exact = 1.39484950156676
-		l2_vw_computed = v.compute_l2(w, K)
+		l2_vw_computed = v.get_l2_inner_prod(w)
 		l2_error = abs(l2_vw_computed - l2_vw_exact)
 
 		# compare to exact values
 		h1_vw_exact = 4.46481780319135
-		h1_vw_computed = v.compute_h1(w, K)
+		h1_vw_computed = v.get_h1_semi_inner_prod(w)
 		h1_error = abs(h1_vw_computed - h1_vw_exact)
 
 		self.assertTrue(l2_error < self.tol)
 		self.assertTrue(h1_error < self.tol)
+
+	def build_punctured_square(self):
+
+		q_trap = pf.quad(qtype='trap', n=self.n)
+		q_kress = pf.quad(qtype='kress', n=self.n)
+		quad_dict = {'kress': q_kress, 'trap': q_trap}
+
+		# define vertices
+		verts: list[pf.vert] = []
+		verts.append(pf.vert(x=0.0, y=0.0))
+		verts.append(pf.vert(x=1.0, y=0.0))
+		verts.append(pf.vert(x=1.0, y=1.0))
+		verts.append(pf.vert(x=0.0, y=1.0))
+		verts.append(pf.vert(x=0.5, y=0.5))	# center of circle
+
+		# define edges
+		edges: list[pf.edge] = []
+		edges.append(pf.edge(verts[0], verts[1], pos_cell_idx=0))
+		edges.append(pf.edge(verts[1], verts[2], pos_cell_idx=0))
+		edges.append(pf.edge(verts[2], verts[3], pos_cell_idx=0))
+		edges.append(pf.edge(verts[3], verts[0], pos_cell_idx=0))
+		edges.append(pf.edge(verts[4], verts[4], neg_cell_idx=0,
+				curve_type='circle', quad_type='trap', radius=0.25))
+
+		# define mesh cell
+		K = pf.cell(id=0, edges=edges)
+
+		# parameterize edges
+		K.parameterize(quad_dict)
+
+		return K
 
 	def build_pacman(self):
 		pass

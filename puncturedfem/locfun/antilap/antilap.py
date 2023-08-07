@@ -3,7 +3,9 @@ from ...mesh.cell import cell
 from ..d2n.fft_deriv import fft_antiderivative
 from ..d2n.log_terms import get_log_grad
 from . import log_antilap
-from .. import nystrom
+from ..nystrom import nystrom_solver
+
+# TODO initialize solver in locfunspace and pass it to antilap
 
 def get_anti_laplacian_harmonic(K: cell, psi, psi_hat, a):
 	"""
@@ -63,8 +65,14 @@ def _antilap_multiply_connected(K: cell, psi, psi_hat, a):
 	b = np.zeros((K.num_holes,))
 	c = np.zeros((K.num_holes,))
 	for j in range(K.num_holes):
-		b[j] = K.integrate_over_specific_contour(F_hat_t, j + 1) / (-2 * np.pi)
-		c[j] = K.integrate_over_specific_contour(F_t, j + 1) / (2 * np.pi)
+		k = K.component_start_idx[j + 1]
+		kp1 = K.component_start_idx[j + 2]
+		F_hat_t_j = F_hat_t[k:kp1]
+		F_t_j = F_t[k:kp1]
+		b[j] = K.components[j + 1].integrate_over_closed_contour(F_hat_t_j)
+		c[j] = K.components[j + 1].integrate_over_closed_contour(F_t_j)
+	b /= (-2 * np.pi)
+	c /= (2 * np.pi)
 
 	# compute \mu_j and \hat\mu_j
 	mu, mu_hat = get_log_grad(K)
@@ -81,11 +89,13 @@ def _antilap_multiply_connected(K: cell, psi, psi_hat, a):
 	rho_hat_wnd_0 = K.multiply_by_dx_norm(rho_hat_nd_0)
 
 	# solve for rho_0 and rho_hat_0
-	rho_0 = nystrom.neumann.solve_neumann_zero_average(K, rho_wnd_0)
-	rho_hat_0 = nystrom.neumann.solve_neumann_zero_average(K, rho_hat_wnd_0)
+	solver = nystrom_solver(K)
+	rho_0 = solver.solve_neumann_zero_average(rho_wnd_0)
+	rho_hat_0 = solver.solve_neumann_zero_average(rho_hat_wnd_0)
 
 	# compute anti-Laplacian of psi_0
 	x1, x2 = K.get_boundary_points()
+
 	PHI = 0.25 * (x1 * rho_0 + x2 * rho_hat_0)
 	PHI_x1 = 0.25 * (rho_0     + x1 * psi_0 + x2 * psi_hat_0)
 	PHI_x2 = 0.25 * (rho_hat_0 + x2 * psi_0 - x1 * psi_hat_0)
@@ -94,9 +104,10 @@ def _antilap_multiply_connected(K: cell, psi, psi_hat, a):
 
 	# compute M = sum_j M_j
 	for j in range(K.num_holes):
-		xi = K.hole_int_pts[:, j]
-		x_xi_1 = x1 - xi[0]
-		x_xi_2 = x2 - xi[1]
+		# xi = K.hole_int_pts[:, j]
+		xi = K.components[j + 1].interior_point
+		x_xi_1 = np.array(x1 - xi.x)
+		x_xi_2 = np.array(x2 - xi.y)
 		x_xi_norm_sq = x_xi_1 ** 2 + x_xi_2 ** 2
 		log_x_xi_norm = 0.5 * np.log(x_xi_norm_sq)
 		PHI += 0.5 * (b[j] * x_xi_1 + c[j] * x_xi_2) * log_x_xi_norm
@@ -112,15 +123,3 @@ def _antilap_multiply_connected(K: cell, psi, psi_hat, a):
 	PHI_wnd += log_antilap.get_log_antilap_weighted_normal_derivative(K) @ a
 
 	return PHI, PHI_wnd
-
-def _rational_function_coefficients(K: cell, F_t, F_hat_t):
-	# TODO
-	pass
-
-def _antilap_rational_terms(K:cell, b, c):
-	# TODO
-	pass
-
-def _antilap_log_terms(K: cell):
-	# TODO
-	pass

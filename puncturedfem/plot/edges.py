@@ -22,7 +22,7 @@ def plot_edges(edge_list,
 
 	return None
 
-def plot_boundary(K: mesh.cell.cell,
+def plot_boundary(K: mesh.cell,
 		orientation=False,
 		hole_int_pts=False,
 		axis_arg='equal',

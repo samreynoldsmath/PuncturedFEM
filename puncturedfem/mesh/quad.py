@@ -74,7 +74,7 @@ class quad:
                 "Kress parameter p must be an integer at least 2"
             )
 
-        self.type += f'_{p}'
+        # self.type += f'_{p}'
 
         s = self.t / np.pi - 1
         s2 = s * s

@@ -11,10 +11,12 @@ def get_log_antilap(K: cell):
 	LAM_trace = np.zeros((K.num_pts, K.num_holes))
 	for j in range(K.num_holes):
 
-		xi = K.hole_int_pts[:,j]
+		# xi = K.hole_int_pts[:,j]
+		xi = K.components[j + 1].interior_point
+		xi = np.array([xi.x, xi.y])
 
 		def LAM(x):
-			x_xi, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x, xi)
+			_, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x, xi)
 			return 0.125 * x_xi_norm_sq * (np.log(x_xi_norm_sq) - 2)
 
 		LAM_trace[:, j] = K.evaluate_function_on_boundary(LAM)
@@ -29,7 +31,9 @@ def get_log_antilap_weighted_normal_derivative(K: cell):
 	dLAM_dn_wgt = np.zeros((K.num_pts, K.num_holes))
 	for j in range(K.num_holes):
 
-		xi = K.hole_int_pts[:,j]
+		# xi = K.hole_int_pts[:,j]
+		xi = K.components[j + 1].interior_point
+		xi = np.array([xi.x, xi.y])
 
 		def LAM_x1(x):
 			x_xi, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x, xi)

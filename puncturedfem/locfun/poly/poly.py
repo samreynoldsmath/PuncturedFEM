@@ -109,6 +109,26 @@ class polynomial:
 			val += m.eval(x, y)
 		return val
 
+	def pow(self, exponent: int):
+		if not isinstance(exponent, int) or exponent < 0:
+			raise ValueError(
+				'Exponent must be nonnegative integer'
+			)
+		new = polynomial([[1.0, 0, 0]])
+		for _ in range(exponent):
+			new *= self
+		return new
+
+	def compose(self, q1, q2):
+		new = polynomial()
+		for m in self.monos:
+			temp = q1.pow(m.alpha.x)
+			temp *= q2.pow(m.alpha.y)
+			# temp = q1.pow(m.alpha[0])
+			# temp *= q2.pow(m.alpha[1])
+			new += m.coef * temp
+		return new
+
 	def partial_deriv(self, var: str):
 		new = polynomial()
 		for m in self.monos:
@@ -280,12 +300,23 @@ class polynomial:
 		Defines the multiplication operator other * self,
 		where other is either another polynomial or a scalar
 		"""
-		if isinstance(other, int) or isinstance(other, float):
+		if isinstance(other, polynomial):
+			return self * other
+		elif isinstance(other, int) or isinstance(other, float):
 			return self * other
 		else:
 			raise TypeError(
 				'Multiplication by polynomial must be by a scalar or' +
 				' by another polynomial')
+
+	def __truediv__(self, other):
+		"""
+		Defines division by a scalar
+		"""
+		if isinstance(other, int) or isinstance(other, float):
+			return self * (1 / other)
+		else:
+			raise TypeError('Division of a polynomial must be by a scalar')
 
 	def __neg__(self):
 		return -1 * self
