@@ -1,3 +1,11 @@
+## [2023 Sep 19] 0.3.1 -- Style
+- Reformatted with `black` and `isort`
+- Linted with `flake8` and `pylint` (ongoing)
+- Type-checked with `mypy` (ongoing)
+- Added `requirements.txt` and `requirements-dev.txt`
+- Added `CHECKLIST.md`
+- Added `setup.cnf`, `myproject.toml`
+
 ## [2023 Aug 07] 0.3.0 -- Meshes
 ### Major changes
 * Added local function spaces (`locfunspace`) to `locfun/`

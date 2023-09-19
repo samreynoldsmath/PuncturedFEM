@@ -5,9 +5,9 @@ from .quad import quad
 from .vert import vert
 
 __all__ = [
-	'cell',
-	'edge',
-	'planar_mesh',
-	'quad',
-	'vert',
+    "cell",
+    "edge",
+    "planar_mesh",
+    "quad",
+    "vert",
 ]

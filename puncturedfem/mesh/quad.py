@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class quad:
     """
     quad: 1-dimensional quadrature object
@@ -16,23 +17,17 @@ class quad:
         Kress parameter defaults to p = 7.
     """
 
-    __slots__ = (
-        'type',
-        'n',
-        'h',
-        't',
-        'wgt'
-    )
+    __slots__ = ("type", "n", "h", "t", "wgt")
 
-    def __init__(self, qtype: str='trap', n: int=16, p: int=7):
+    def __init__(self, qtype: str = "trap", n: int = 16, p: int = 7):
         self.type = qtype
         self.n = n
         self.h = np.pi / n
         self.t = np.linspace(0, 2 * np.pi, 2 * n + 1)
-        if self.type == 'kress':
+        if self.type == "kress":
             self.kress(p)
             return None
-        if self.type == 'mart' or type == 'martensen':
+        if self.type == "mart" or type == "martensen":
             self.martensen()
             return None
         else:
@@ -40,7 +35,7 @@ class quad:
             return None
 
     def __repr__(self) -> str:
-        """"
+        """ "
         Print method
         """
         msg = f"quad object \n\ttype\t{self.type} \n\tn\t{self.n}"
@@ -70,22 +65,20 @@ class quad:
         """
 
         if p < 2:
-            raise Exception(
-                "Kress parameter p must be an integer at least 2"
-            )
+            raise Exception("Kress parameter p must be an integer at least 2")
 
         # self.type += f'_{p}'
 
         s = self.t / np.pi - 1
         s2 = s * s
         c = (0.5 - 1 / p) * s * s2 + s / p + 0.5
-        cp = c ** p
+        cp = c**p
         denom = cp + (1 - c) ** p
 
         self.t = (2 * np.pi) * cp / denom
-        self.wgt = ( 3 * (p - 2) * s2 + 2 ) \
-            * ( c * (1 - c) ) ** (p-1) \
-            / denom ** 2
+        self.wgt = (
+            (3 * (p - 2) * s2 + 2) * (c * (1 - c)) ** (p - 1) / denom**2
+        )
 
         return None
 

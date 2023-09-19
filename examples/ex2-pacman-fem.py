@@ -43,8 +43,6 @@
 # In[1]:
 
 
-# imports
-
 import sys
 import os
 
@@ -101,9 +99,9 @@ T = pf.meshlib.pacman_subdiv(verbose=verbose)
 
 
 # TODO: this should really be done automatically
-q_trap = pf.quad(qtype='trap', n=n)
-q_kress = pf.quad(qtype='kress', n=n)
-quad_dict = {'kress': q_kress, 'trap': q_trap}
+q_trap = pf.quad(qtype="trap", n=n)
+q_kress = pf.quad(qtype="kress", n=n)
+quad_dict = {"kress": q_kress, "trap": q_trap}
 
 
 # The global function space `V` is built from the mesh `T`, along with the `deg`
@@ -135,9 +133,9 @@ V = pf.global_function_space(T=T, deg=deg, quad_dict=quad_dict, verbose=verbose)
 
 
 B = pf.bilinear_form(
-	diffusion_constant=1.0,
-	reaction_constant=1.0,
-	rhs_poly=pf.polynomial([[1.0, 0, 0]])
+    diffusion_constant=1.0,
+    reaction_constant=1.0,
+    rhs_poly=pf.polynomial([[1.0, 0, 0]]),
 )
 print(B)
 
@@ -171,7 +169,7 @@ S.assemble(verbose=verbose)
 
 plt.figure()
 plt.spy(S.glob_mat)
-plt.grid('minor')
+plt.grid("minor")
 plt.show()
 
 
@@ -198,11 +196,11 @@ S.solve()
 
 
 S.plot_solution(
-	  title='solution',
-	  show_fig=True,
-	  save_fig=False,
-	  filename='out/png/solution_heat.png',
-	  fill=True
+    title="solution",
+    show_fig=True,
+    save_fig=False,
+    filename="out/png/solution_heat.png",
+    fill=True,
 )
 
 
@@ -215,22 +213,22 @@ S.plot_solution(
 
 # decide if to use a progress bar
 if verbose:
-	print('Plotting basis functions...')
-	basis_idx_list = tqdm(range(S.num_funs))
+    print("Plotting basis functions...")
+    basis_idx_list = tqdm(range(S.num_funs))
 else:
-	basis_idx_list = range(S.num_funs)
+    basis_idx_list = range(S.num_funs)
 
 # plot each basis function
 for idx in basis_idx_list:
-	u = np.zeros(V.num_funs)
-	u[idx] = 1.0
-	S.plot_linear_combo(
-		  u,
-		  show_fig=True,
-		  save_fig=False,
-		  filename='out/png/basis_fun_%d.png'%idx,
-		  fill=True,
-	)
+    u = np.zeros(V.num_funs)
+    u[idx] = 1.0
+    S.plot_linear_combo(
+        u,
+        show_fig=True,
+        save_fig=False,
+        filename="out/png/basis_fun_%d.png" % idx,
+        fill=True,
+    )
 
 
 # 

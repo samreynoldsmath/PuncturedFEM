@@ -1,319 +1,324 @@
 import numpy as np
-from scipy.sparse.linalg import gmres, LinearOperator
+from scipy.sparse.linalg import LinearOperator, gmres
 
-from .d2n.trace2tangential import get_weighted_tangential_derivative_from_trace
-from .d2n import log_terms
 from ..mesh.cell import cell
 from ..mesh.closed_contour import closed_contour
 from ..mesh.edge import edge
 from ..mesh.quad import quad
+from .d2n import log_terms
+from .d2n.trace2tangential import get_weighted_tangential_derivative_from_trace
+
 
 class nystrom_solver:
-	"""Set up and solve a Nyström system for a given cell"""
-	# TODO add batch processing for multiple locfuns
-	# TODO use multiprocessing to speed up computation
+    """Set up and solve a Nyström system for a given cell"""
 
-	K: cell
-	single_layer_mat: np.ndarray
-	double_layer_mat: np.ndarray
-	single_layer_op: LinearOperator
-	double_layer_op: LinearOperator
-	double_layer_sum: np.ndarray
-	lam_trace: np.ndarray
-	lam_x1_trace: np.ndarray
-	lam_x2_trace: np.ndarray
-	dlam_dt_wgt: np.ndarray
-	dlam_dn_wgt: np.ndarray
-	T1_dlam_dt: np.ndarray
-	Sn_lam: np.ndarray
+    # TODO add batch processing for multiple locfuns
+    # TODO use multiprocessing to speed up computation
 
-	def __init__(self, K: cell, verbose=False) -> None:
-		if verbose:
-			msg = 'Setting up Nyström solver... ' + \
-				'%d sampled points on %d edge'%(K.num_pts, K.num_edges)
-			if K.num_edges > 1:
-				msg += 's'
-			print(msg)
-		if not isinstance(K, cell):
-			raise TypeError('K must be a cell')
-		self.K = K
-		self.build_single_layer_mat()
-		self.build_double_layer_mat()
-		self.build_single_and_double_layer_ops()
-		if self.K.num_holes > 0:
-			self.compute_log_terms()
+    K: cell
+    single_layer_mat: np.ndarray
+    double_layer_mat: np.ndarray
+    single_layer_op: LinearOperator
+    double_layer_op: LinearOperator
+    double_layer_sum: np.ndarray
+    lam_trace: np.ndarray
+    lam_x1_trace: np.ndarray
+    lam_x2_trace: np.ndarray
+    dlam_dt_wgt: np.ndarray
+    dlam_dn_wgt: np.ndarray
+    T1_dlam_dt: np.ndarray
+    Sn_lam: np.ndarray
 
-	def build_single_and_double_layer_ops(self) -> None:
-		self.double_layer_sum = np.sum(self.double_layer_mat, 1)
-		self.single_layer_op = LinearOperator(
-			dtype = float,
-			shape = (self.K.num_pts, self.K.num_pts),
-			matvec = self.linop4singlelayer
-		)
-		self.double_layer_op = LinearOperator(
-			dtype = float,
-			shape = (self.K.num_pts, self.K.num_pts),
-			matvec = self.linop4doublelayer
-		)
+    def __init__(self, K: cell, verbose=False) -> None:
+        if verbose:
+            msg = (
+                "Setting up Nyström solver... "
+                + "%d sampled points on %d edge"
+                % (
+                    K.num_pts,
+                    K.num_edges,
+                )
+            )
+            if K.num_edges > 1:
+                msg += "s"
+            print(msg)
+        if not isinstance(K, cell):
+            raise TypeError("K must be a cell")
+        self.K = K
+        self.build_single_layer_mat()
+        self.build_double_layer_mat()
+        self.build_single_and_double_layer_ops()
+        if self.K.num_holes > 0:
+            self.compute_log_terms()
 
-	### SOLVERS ################################################################
+    def build_single_and_double_layer_ops(self) -> None:
+        self.double_layer_sum = np.sum(self.double_layer_mat, 1)
+        self.single_layer_op = LinearOperator(
+            dtype=float,
+            shape=(self.K.num_pts, self.K.num_pts),
+            matvec=self.linop4singlelayer,
+        )
+        self.double_layer_op = LinearOperator(
+            dtype=float,
+            shape=(self.K.num_pts, self.K.num_pts),
+            matvec=self.linop4doublelayer,
+        )
 
-	def solve_neumann_zero_average(self, u_wnd: np.ndarray) -> np.ndarray:
-		"""Solve the Neumann problem with zero average on the boundary"""
+    # SOLVERS ################################################################
 
-		# RHS
-		b = self.single_layer_op(u_wnd)
+    def solve_neumann_zero_average(self, u_wnd: np.ndarray) -> np.ndarray:
+        """Solve the Neumann problem with zero average on the boundary"""
 
-		# define linear operator for Neumann problem
-		def A_fun(u):
-			y = self.double_layer_op(u)
-			y += self.K.integrate_over_boundary(u)
-			return y
+        # RHS
+        b = self.single_layer_op(u_wnd)
 
-		# build linear operator object
-		A = LinearOperator(
-			dtype = float,
-			shape = (self.K.num_pts, self.K.num_pts),
-			matvec = A_fun
-		)
+        # define linear operator for Neumann problem
+        def A_fun(u):
+            y = self.double_layer_op(u)
+            y += self.K.integrate_over_boundary(u)
+            return y
 
-		# solve Nystrom system using GMRES
-		u, flag = gmres(A, b, atol=1e-12, tol=1e-12)
+        # build linear operator object
+        A = LinearOperator(
+            dtype=float, shape=(self.K.num_pts, self.K.num_pts), matvec=A_fun
+        )
 
-		# check for convergence
-		if flag > 0:
-			print(f'Something went wrong: GMRES returned flag = {flag}')
+        # solve Nystrom system using GMRES
+        u, flag = gmres(A, b, atol=1e-12, tol=1e-12)
 
-		return u
+        # check for convergence
+        if flag > 0:
+            print(f"Something went wrong: GMRES returned flag = {flag}")
 
-	def get_harmonic_conjugate(self, phi: np.ndarray):
-		"""Obtain a harmonic conjugate of phi on K"""
+        return u
 
-		# weighted tangential derivative of phi
-		phi_wtd = get_weighted_tangential_derivative_from_trace(self.K, phi)
+    def get_harmonic_conjugate(self, phi: np.ndarray):
+        """Obtain a harmonic conjugate of phi on K"""
 
-		# simply/multiply connected cases handled separately
-		if self.K.num_holes == 0: # simply connected
-			return self.solve_neumann_zero_average(-phi_wtd), []
-		elif self.K.num_holes > 0: # multiply connected
-			return self.get_harmonic_conjugate_multiply_connected(phi, phi_wtd)
-		else:
-			raise Exception('K.num_holes < 0')
+        # weighted tangential derivative of phi
+        phi_wtd = get_weighted_tangential_derivative_from_trace(self.K, phi)
 
-	def get_harmonic_conjugate_multiply_connected(self,
-					       phi: np.ndarray, dphi_dt_wgt: np.ndarray):
+        # simply/multiply connected cases handled separately
+        if self.K.num_holes == 0:  # simply connected
+            return self.solve_neumann_zero_average(-phi_wtd), []
+        elif self.K.num_holes > 0:  # multiply connected
+            return self.get_harmonic_conjugate_multiply_connected(phi, phi_wtd)
+        else:
+            raise Exception("K.num_holes < 0")
 
-		# array sizes
-		N = self.K.num_pts
-		m = self.K.num_holes
+    def get_harmonic_conjugate_multiply_connected(
+        self, phi: np.ndarray, dphi_dt_wgt: np.ndarray
+    ):
+        # array sizes
+        N = self.K.num_pts
+        m = self.K.num_holes
 
-		# block RHS
-		b = np.zeros((N + m,))
-		b[:N] = self.single_layer_op(-dphi_dt_wgt)
-		b[N:] = self.Sn(phi)
+        # block RHS
+        b = np.zeros((N + m,))
+        b[:N] = self.single_layer_op(-dphi_dt_wgt)
+        b[N:] = self.Sn(phi)
 
-		# define linear operator for harmonic conjugate
-		def linop4harmconj(x):
-			psi_hat = x[:N]
-			a = x[N:]
-			y = np.zeros((N + m,))
-			y[:N] = self.double_layer_op(psi_hat)
-			y[:N] += self.K.integrate_over_boundary(psi_hat)
-			y[:N] -= self.T1_dlam_dt @ a
-			y[N:] = - self.St(psi_hat) + self.Sn_lam @ a
-			return y
+        # define linear operator for harmonic conjugate
+        def linop4harmconj(x):
+            psi_hat = x[:N]
+            a = x[N:]
+            y = np.zeros((N + m,))
+            y[:N] = self.double_layer_op(psi_hat)
+            y[:N] += self.K.integrate_over_boundary(psi_hat)
+            y[:N] -= self.T1_dlam_dt @ a
+            y[N:] = -self.St(psi_hat) + self.Sn_lam @ a
+            return y
 
-		# build linear operator object
-		A = LinearOperator(
-			dtype = float,
-			shape = (N + m, N + m),
-			matvec = linop4harmconj
-		)
+        # build linear operator object
+        A = LinearOperator(
+            dtype=float, shape=(N + m, N + m), matvec=linop4harmconj
+        )
 
-		# solve Nystrom system
-		x, flag = gmres(A, b, atol=1e-12, tol=1e-12)
-		psi_hat = x[:N]
-		a = x[N:]
+        # solve Nystrom system
+        x, flag = gmres(A, b, atol=1e-12, tol=1e-12)
+        psi_hat = x[:N]
+        a = x[N:]
 
-		# check for convergence
-		if flag > 0:
-			print(f'Something went wrong: GMRES returned flag = {flag}')
+        # check for convergence
+        if flag > 0:
+            print(f"Something went wrong: GMRES returned flag = {flag}")
 
-		return psi_hat, a
+        return psi_hat, a
 
-	### LOGARITHMIC TERMS #####################################################
-	def compute_log_terms(self) -> None:
+    # LOGARITHMIC TERMS #####################################################
+    def compute_log_terms(self) -> None:
+        # traces and gradients of logarithmic corrections
+        self.lam_trace = log_terms.get_log_trace(self.K)
+        self.lam_x1_trace, self.lam_x2_trace = log_terms.get_log_grad(self.K)
 
-		# traces and gradients of logarithmic corrections
-		self.lam_trace = log_terms.get_log_trace(self.K)
-		self.lam_x1_trace, self.lam_x2_trace = log_terms.get_log_grad(self.K)
+        # tangential and normal derivatives of logarithmic terms
+        self.dlam_dt_wgt = log_terms.get_dlam_dt_wgt(
+            self.K, self.lam_x1_trace, self.lam_x2_trace
+        )
+        self.dlam_dn_wgt = log_terms.get_dlam_dn_wgt(
+            self.K, self.lam_x1_trace, self.lam_x2_trace
+        )
 
-		# tangential and normal derivatives of logarithmic terms
-		self.dlam_dt_wgt = log_terms.get_dlam_dt_wgt(self.K,
-					  self.lam_x1_trace, self.lam_x2_trace)
-		self.dlam_dn_wgt = log_terms.get_dlam_dn_wgt(self.K,
-					  self.lam_x1_trace, self.lam_x2_trace)
+        # single layer operator applied to tangential derviatives of log terms
+        self.T1_dlam_dt = np.zeros((self.K.num_pts, self.K.num_holes))
+        for i in range(self.K.num_holes):
+            self.T1_dlam_dt[:, i] = self.single_layer_op(self.dlam_dt_wgt[:, i])
 
-		# single layer operator applied to tangential derviatives of log terms
-		self.T1_dlam_dt = np.zeros((self.K.num_pts, self.K.num_holes))
-		for i in range(self.K.num_holes):
-			self.T1_dlam_dt[:, i] = self.single_layer_op(self.dlam_dt_wgt[:, i])
+        # H1 seminorms of logarithmic terms
+        self.Sn_lam = np.zeros((self.K.num_holes, self.K.num_holes))
+        for i in range(self.K.num_holes):
+            self.Sn_lam[:, i] = self.Sn(self.lam_trace[:, i])
 
-		# H1 seminorms of logarithmic terms
-		self.Sn_lam = np.zeros((self.K.num_holes,self.K.num_holes))
-		for i in range(self.K.num_holes):
-			self.Sn_lam[:, i] = self.Sn(self.lam_trace[:, i])
+    def Su(self, vals: np.ndarray, dlam_du_wgt: np.ndarray) -> np.ndarray:
+        out = np.zeros((self.K.num_holes,))
+        for i in range(self.K.num_holes):
+            out[i] = self.K.integrate_over_boundary_preweighted(
+                vals * dlam_du_wgt[:, i]
+            )
+        return out
 
-	def Su(self, vals: np.ndarray, dlam_du_wgt: np.ndarray) -> np.ndarray:
-		out = np.zeros((self.K.num_holes,))
-		for i in range(self.K.num_holes):
-			out[i] = self.K.integrate_over_boundary_preweighted(
-				vals * dlam_du_wgt[:, i]
-			)
-		return out
+    def Sn(self, vals: np.ndarray) -> np.ndarray:
+        return self.Su(vals, self.dlam_dn_wgt)
 
-	def Sn(self, vals: np.ndarray) -> np.ndarray:
-		return self.Su(vals, self.dlam_dn_wgt)
+    def St(self, vals: np.ndarray) -> np.ndarray:
+        return self.Su(vals, self.dlam_dt_wgt)
 
-	def St(self, vals: np.ndarray) -> np.ndarray:
-		return self.Su(vals, self.dlam_dt_wgt)
+    # SINGLE LAYER OPERATOR ###################################################
 
-	### SINGLE LAYER OPERATOR ###################################################
+    def linop4singlelayer(self, u: np.ndarray) -> np.ndarray:
+        return self.single_layer_mat @ u
 
-	def linop4singlelayer(self, u: np.ndarray) -> np.ndarray:
-		return self.single_layer_mat @ u
+    def build_single_layer_mat(self) -> None:
+        self.single_layer_mat = np.zeros((self.K.num_pts, self.K.num_pts))
+        for i in range(self.K.num_holes + 1):
+            ii1 = self.K.component_start_idx[i]
+            ii2 = self.K.component_start_idx[i + 1]
+            for j in range(self.K.num_holes + 1):
+                jj1 = self.K.component_start_idx[j]
+                jj2 = self.K.component_start_idx[j + 1]
+                self.single_layer_mat[
+                    ii1:ii2, jj1:jj2
+                ] = self.single_layer_component_block(i, j)
 
-	def build_single_layer_mat(self) -> None:
-		self.single_layer_mat = np.zeros((self.K.num_pts, self.K.num_pts))
-		for i in range(self.K.num_holes + 1):
-			ii1 = self.K.component_start_idx[i]
-			ii2 = self.K.component_start_idx[i + 1]
-			for j in range(self.K.num_holes + 1):
-				jj1 = self.K.component_start_idx[j]
-				jj2 = self.K.component_start_idx[j + 1]
-				self.single_layer_mat[ii1:ii2, jj1:jj2] = \
-					self.single_layer_component_block(i, j)
+    def single_layer_component_block(self, i: int, j: int) -> np.ndarray:
+        B_comp = np.zeros(
+            (self.K.components[i].num_pts, self.K.components[j].num_pts)
+        )
+        for k in range(self.K.components[i].num_edges):
+            kk1 = self.K.components[i].vert_idx[k]
+            kk2 = self.K.components[i].vert_idx[k + 1]
+            e = self.K.components[i].edges[k]
+            # Martensen quadrature
+            nm = (self.K.components[i].edges[k].num_pts - 1) // 2
+            qm = quad(qtype="mart", n=nm)
+            for ell in range(self.K.components[j].num_edges):
+                ll1 = self.K.components[j].vert_idx[ell]
+                ll2 = self.K.components[j].vert_idx[ell + 1]
+                f = self.K.components[j].edges[ell]
+                B_comp[kk1:kk2, ll1:ll2] = self.single_layer_edge_block(
+                    e, f, qm
+                )
+        return B_comp
 
-	def single_layer_component_block(self, i: int, j: int) -> np.ndarray:
-		B_comp = np.zeros((
-			self.K.components[i].num_pts,
-			self.K.components[j].num_pts))
-		for k in range(self.K.components[i].num_edges):
-			kk1 = self.K.components[i].vert_idx[k]
-			kk2 = self.K.components[i].vert_idx[k + 1]
-			e = self.K.components[i].edges[k]
-			# Martensen quadrature
-			nm = (self.K.components[i].edges[k].num_pts - 1) // 2
-			qm = quad(qtype='mart', n=nm)
-			for l in range(self.K.components[j].num_edges):
-				ll1 = self.K.components[j].vert_idx[l]
-				ll2 = self.K.components[j].vert_idx[l + 1]
-				f = self.K.components[j].edges[l]
-				B_comp[kk1:kk2, ll1:ll2] = \
-					self.single_layer_edge_block(e, f, qm)
-		return B_comp
+    def single_layer_edge_block(self, e: edge, f: edge, qm: quad) -> np.ndarray:
+        # allocate block
+        B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
 
-	def single_layer_edge_block(self, e: edge, f: edge, qm: quad) -> np.ndarray:
+        # trapezoid weight: pi in integrand cancels
+        h = -0.5 / (f.num_pts - 1)
 
-		# allocate block
-		B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
+        # adapt quadrature to accomodate both trapezoid and Kress
+        if f.quad_type[0:5] == "kress":
+            j_start = 1
+        else:
+            j_start = 0
 
-		# trapezoid weight: pi in integrand cancels
-		h = -0.5 / (f.num_pts - 1)
+        if e == f:  # Kress and Martensen
+            for i in range(e.num_pts - 1):
+                for j in range(j_start, f.num_pts - 1):
+                    ij = abs(i - j)
+                    if ij == 0:
+                        B_edge[i, i] = 2 * np.log(e.dx_norm[i])
+                    else:
+                        xy = e.x[:, i] - f.x[:, j]
+                        xy2 = np.dot(xy, xy)
+                        B_edge[i, j] = np.log(xy2 / qm.t[ij])
+                    B_edge[i, j] *= h
+                    B_edge[i, j] += qm.wgt[ij]
 
-		# adapt quadrature to accomodate both trapezoid and Kress
-		if f.quad_type[0:5] == 'kress':
-			j_start = 1
-		else:
-			j_start = 0
+        else:  # different edges: Kress only
+            for i in range(e.num_pts - 1):
+                for j in range(j_start, f.num_pts - 1):
+                    xy = e.x[:, i] - f.x[:, j]
+                    xy2 = np.dot(xy, xy)
+                    B_edge[i, j] = np.log(xy2) * h
 
-		if e == f: # Kress and Martensen
+        return B_edge
 
-			for i in range(e.num_pts - 1):
-				for j in range(j_start,f.num_pts - 1):
-					ij = abs(i-j)
-					if ij == 0:
-						B_edge[i, i] =  2 * np.log(e.dx_norm[i])
-					else:
-						xy = e.x[:,i] - f.x[:,j]
-						xy2 = np.dot(xy, xy)
-						B_edge[i, j] = np.log(xy2 / qm.t[ij])
-					B_edge[i, j] *= h
-					B_edge[i, j] += qm.wgt[ij]
+    # DOUBLE LAYER OPERATOR ##################################################
 
-		else: # different edges: Kress only
+    def linop4doublelayer(self, u: np.ndarray) -> np.ndarray:
+        corner_values = u[self.K.closest_vert_idx]
+        res = 0.5 * (u - corner_values)
+        res += self.double_layer_mat @ u
+        res -= corner_values * self.double_layer_sum
+        return res
 
-			for i in range(e.num_pts - 1):
-				for j in range(j_start, f.num_pts - 1):
-					xy = e.x[:,i] - f.x[:,j]
-					xy2 = np.dot(xy, xy)
-					B_edge[i, j] = np.log(xy2) * h
+    def build_double_layer_mat(self) -> None:
+        self.double_layer_mat = np.zeros((self.K.num_pts, self.K.num_pts))
+        for i in range(self.K.num_holes + 1):
+            ii1 = self.K.component_start_idx[i]
+            ii2 = self.K.component_start_idx[i + 1]
+            for j in range(self.K.num_holes + 1):
+                jj1 = self.K.component_start_idx[j]
+                jj2 = self.K.component_start_idx[j + 1]
+                self.double_layer_mat[
+                    ii1:ii2, jj1:jj2
+                ] = self.double_layer_component_block(
+                    self.K.components[i], self.K.components[j]
+                )
 
-		return B_edge
+    def double_layer_component_block(
+        self, ci: closed_contour, cj: closed_contour
+    ) -> np.ndarray:
+        B_comp = np.zeros((ci.num_pts, cj.num_pts))
+        for k in range(ci.num_edges):
+            kk1 = ci.vert_idx[k]
+            kk2 = ci.vert_idx[k + 1]
+            for ell in range(cj.num_edges):
+                ll1 = cj.vert_idx[ell]
+                ll2 = cj.vert_idx[ell + 1]
+                B_comp[kk1:kk2, ll1:ll2] = self.double_layer_edge_block(
+                    ci.edges[k], cj.edges[ell]
+                )
+        return B_comp
 
-	### DOUBLE LAYER OPERATOR ##################################################
+    def double_layer_edge_block(self, e: edge, f: edge) -> np.ndarray:
+        # allocate block
+        B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
 
-	def linop4doublelayer(self, u: np.ndarray) -> np.ndarray:
-		corner_values = u[self.K.closest_vert_idx]
-		res = 0.5 * (u - corner_values)
-		res += self.double_layer_mat @ u
-		res -= corner_values * self.double_layer_sum
-		return res
+        # trapezoid step size
+        h = 1 / (f.num_pts - 1)
 
-	def build_double_layer_mat(self) -> None:
-		self.double_layer_mat = np.zeros((self.K.num_pts, self.K.num_pts))
-		for i in range(self.K.num_holes + 1):
-			ii1 = self.K.component_start_idx[i]
-			ii2 = self.K.component_start_idx[i + 1]
-			for j in range(self.K.num_holes + 1):
-				jj1 = self.K.component_start_idx[j]
-				jj2 = self.K.component_start_idx[j + 1]
-				self.double_layer_mat[ii1:ii2, jj1:jj2] = \
-					self.double_layer_component_block(
-						self.K.components[i], self.K.components[j]
-					)
+        # check if edges are the same edge
+        same_edge = e == f
 
-	def double_layer_component_block(self,
-				  ci: closed_contour, cj: closed_contour) -> np.ndarray:
-		B_comp = np.zeros((ci.num_pts, cj.num_pts))
-		for k in range(ci.num_edges):
-			kk1 = ci.vert_idx[k]
-			kk2 = ci.vert_idx[k + 1]
-			for l in range(cj.num_edges):
-				ll1 = cj.vert_idx[l]
-				ll2 = cj.vert_idx[l + 1]
-				B_comp[kk1:kk2, ll1:ll2] = \
-					self.double_layer_edge_block(ci.edges[k], cj.edges[l])
-		return B_comp
+        # adapt quadrature to accomodate both trapezoid and Kress
+        if f.quad_type[0:5] == "kress":
+            j_start = 1
+        else:
+            j_start = 0
 
-	def double_layer_edge_block(self, e: edge, f: edge) -> np.ndarray:
+        #
+        for i in range(e.num_pts - 1):
+            for j in range(j_start, f.num_pts - 1):
+                if same_edge and i == j:
+                    B_edge[i, i] = 0.5 * e.curvature[i]
+                else:
+                    xy = e.x[:, i] - f.x[:, j]
+                    xy2 = np.dot(xy, xy)
+                    B_edge[i, j] = np.dot(xy, f.unit_normal[:, j]) / xy2
 
-		# allocate block
-		B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
+                B_edge[i, j] *= f.dx_norm[j] * h
 
-		# trapezoid step size
-		h = 1 / (f.num_pts - 1)
-
-		# check if edges are the same edge
-		same_edge = e == f
-
-		# adapt quadrature to accomodate both trapezoid and Kress
-		if f.quad_type[0:5] == 'kress':
-			j_start = 1
-		else:
-			j_start = 0
-
-		#
-		for i in range(e.num_pts - 1):
-			for j in range(j_start, f.num_pts - 1):
-
-				if same_edge and i == j:
-					B_edge[i, i] = 0.5 * e.curvature[i]
-				else:
-					xy = e.x[:, i] - f.x[:, j]
-					xy2 = np.dot(xy, xy)
-					B_edge[i, j] = np.dot(xy, f.unit_normal[:, j]) / xy2
-
-				B_edge[i, j] *= f.dx_norm[j] * h
-
-		return B_edge
+        return B_edge

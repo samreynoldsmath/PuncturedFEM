@@ -52,9 +52,9 @@ import matplotlib.pyplot as plt
 
 # define quadrature schemes
 n = 64
-q_trap = pf.quad(qtype='trap', n=n)
-q_kress = pf.quad(qtype='kress', n=n)
-quad_dict = {'kress': q_kress, 'trap': q_trap}
+q_trap = pf.quad(qtype="trap", n=n)
+q_kress = pf.quad(qtype="kress", n=n)
+quad_dict = {"kress": q_kress, "trap": q_trap}
 
 # define vertices
 verts: list[pf.vert] = []
@@ -62,7 +62,7 @@ verts.append(pf.vert(x=0.0, y=0.0))
 verts.append(pf.vert(x=1.0, y=0.0))
 verts.append(pf.vert(x=1.0, y=1.0))
 verts.append(pf.vert(x=0.0, y=1.0))
-verts.append(pf.vert(x=0.5, y=0.5))	# center of circle
+verts.append(pf.vert(x=0.5, y=0.5))  # center of circle
 
 # define edges
 edges: list[pf.edge] = []
@@ -70,8 +70,16 @@ edges.append(pf.edge(verts[0], verts[1], pos_cell_idx=0))
 edges.append(pf.edge(verts[1], verts[2], pos_cell_idx=0))
 edges.append(pf.edge(verts[2], verts[3], pos_cell_idx=0))
 edges.append(pf.edge(verts[3], verts[0], pos_cell_idx=0))
-edges.append(pf.edge(verts[4], verts[4], neg_cell_idx=0,
-         curve_type='circle', quad_type='trap', radius=0.25))
+edges.append(
+    pf.edge(
+        verts[4],
+        verts[4],
+        neg_cell_idx=0,
+        curve_type="circle",
+        quad_type="trap",
+        radius=0.25,
+    )
+)
 
 # define mesh cell
 K = pf.cell(id=0, edges=edges)
@@ -124,9 +132,12 @@ xi = [0.5, 0.5]
 x1, x2 = K.get_boundary_points()
 
 # define trace of v
-v_trace = np.exp(x1) * np.cos(x2) + \
-    0.5 * a_exact * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) + \
-    x1 ** 3 * x2 + x1 * x2 ** 3
+v_trace = (
+    np.exp(x1) * np.cos(x2)
+    + 0.5 * a_exact * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2)
+    + x1**3 * x2
+    + x1 * x2**3
+)
 
 
 # ### Define a Polynomial Laplacian
@@ -142,7 +153,7 @@ v_trace = np.exp(x1) * np.cos(x2) + \
 
 
 # create polynomial object
-v_laplacian = pf.polynomial([ [12.0, 1, 1] ])
+v_laplacian = pf.polynomial([[12.0, 1, 1]])
 
 
 # ### Define a Local Function
@@ -244,8 +255,8 @@ v.compute_harmonic_conjugate()
 # In[8]:
 
 
-print('Computed logarithmic coefficient = ', v.log_coef[0])
-print('Error = ', abs(v.log_coef[0] - a_exact))
+print("Computed logarithmic coefficient = ", v.log_coef[0])
+print("Error = ", abs(v.log_coef[0] - a_exact))
 
 
 # ### Error in Harmonic Conjugate Trace  
@@ -269,11 +280,17 @@ psi_hat_computed = v.get_harmonic_conjugate()
 psi_hat_exact = np.exp(x1) * np.sin(x2)
 
 # plot harmonic conjugate
-quad_list = [q_trap, q_kress,]
-f_trace_list = [psi_hat_exact, psi_hat_computed,]
-fmt = ('g--', 'k.')
-legend = ('exact','computed')
-title = 'Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$'
+quad_list = [
+    q_trap,
+    q_kress,
+]
+f_trace_list = [
+    psi_hat_exact,
+    psi_hat_computed,
+]
+fmt = ("g--", "k.")
+legend = ("exact", "computed")
+title = "Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$"
 pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 
 
@@ -293,16 +310,23 @@ pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 
 # average square distance between values
 boundary_length = K.integrate_over_boundary(np.ones((K.num_pts,)))
-integrated_difference = \
-    K.integrate_over_boundary(psi_hat_exact - psi_hat_computed)
-c = - integrated_difference / boundary_length
+integrated_difference = K.integrate_over_boundary(
+    psi_hat_exact - psi_hat_computed
+)
+c = -integrated_difference / boundary_length
 
 # plot harmonic conjugate
-quad_list = [q_trap, q_kress,]
-f_trace_list = [psi_hat_exact, psi_hat_computed - c ,]
-fmt = ('g--', 'k.')
-legend = ('exact','computed')
-title = 'Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$'
+quad_list = [
+    q_trap,
+    q_kress,
+]
+f_trace_list = [
+    psi_hat_exact,
+    psi_hat_computed - c,
+]
+fmt = ("g--", "k.")
+legend = ("exact", "computed")
+title = "Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$"
 pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 
 
@@ -315,10 +339,12 @@ pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 psi_hat_error = np.abs(psi_hat_exact - psi_hat_computed + c)
 
 # plot harmonic conjugate error
-f_trace_list = [psi_hat_error,]
-fmt = ('k.',)
-legend = ('error',)
-title = 'Harmonic conjugate error'
+f_trace_list = [
+    psi_hat_error,
+]
+fmt = ("k.",)
+legend = ("error",)
+title = "Harmonic conjugate error"
 pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
 
 
@@ -329,9 +355,9 @@ pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
 
 
 max_hc_error = max(psi_hat_error)
-l2_hc_error = np.sqrt(K.integrate_over_boundary(psi_hat_error ** 2))
-print('Max pointwise error = %.4e'%max_hc_error)
-print('L^2 norm of error = %.4e'%l2_hc_error)
+l2_hc_error = np.sqrt(K.integrate_over_boundary(psi_hat_error**2))
+print("Max pointwise error = %.4e" % max_hc_error)
+print("L^2 norm of error = %.4e" % l2_hc_error)
 
 
 # ### Compute the Normal Derivative
@@ -405,10 +431,12 @@ v.compute_harmonic_weighted_normal_derivative()
 
 
 # define the components of the gradient of phi
-phi_x1 = np.exp(x1) * np.cos(x2) + \
-    a_exact * (x1 - xi[0]) / ((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2)
-phi_x2 = -np.exp(x1) * np.sin(x2) + \
-    a_exact * (x2 - xi[1]) / ((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2)
+phi_x1 = np.exp(x1) * np.cos(x2) + a_exact * (x1 - xi[0]) / (
+    (x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2
+)
+phi_x2 = -np.exp(x1) * np.sin(x2) + a_exact * (x2 - xi[1]) / (
+    (x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2
+)
 
 # compute exact weighted normal derivative
 phi_nd = K.dot_with_normal(phi_x1, phi_x2)
@@ -421,18 +449,26 @@ phi_wnd_computed = v.get_harmonic_weighted_normal_derivative()
 wnd_error = np.abs(phi_wnd_computed - phi_wnd_exact)
 
 # plot exact and computed weighted normal derivatives
-quad_list = [q_trap, q_kress,]
-f_trace_list = [phi_wnd_exact, phi_wnd_computed,]
-fmt = ('g--', 'k.')
-legend = ('exact','computed')
-title = 'Weighted normal derivative'
+quad_list = [
+    q_trap,
+    q_kress,
+]
+f_trace_list = [
+    phi_wnd_exact,
+    phi_wnd_computed,
+]
+fmt = ("g--", "k.")
+legend = ("exact", "computed")
+title = "Weighted normal derivative"
 pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 
 # plot errors
-f_trace_list = [wnd_error,]
-fmt = ('k.',)
-legend = ('error',)
-title = 'Weighted normal derivative error'
+f_trace_list = [
+    wnd_error,
+]
+fmt = ("k.",)
+legend = ("error",)
+title = "Weighted normal derivative error"
 pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
 
 
@@ -444,9 +480,9 @@ pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
 
 # compute and print errors
 max_wnd_error = max(wnd_error)
-l2_wnd_error = np.sqrt(K.integrate_over_boundary(wnd_error ** 2))
-print('Max pointwise error = %.4e'%max_wnd_error)
-print('L^2 norm of wnd error = %.4e'%l2_wnd_error)
+l2_wnd_error = np.sqrt(K.integrate_over_boundary(wnd_error**2))
+print("Max pointwise error = %.4e" % max_wnd_error)
+print("L^2 norm of wnd error = %.4e" % l2_wnd_error)
 
 
 # ### Find an Anti-Laplacian
@@ -488,18 +524,23 @@ v.compute_anti_laplacian_harmonic_part()
 
 
 # an exact anti-Laplacian
-PHI_exact = 0.25 * np.exp(x1) * (x1 * np.cos(x2) + x2 * np.sin(x2)) + \
-	a_exact * 0.25 * ((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) * ( \
-    0.5 * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) - 1)
+PHI_exact = 0.25 * np.exp(x1) * (
+    x1 * np.cos(x2) + x2 * np.sin(x2)
+) + a_exact * 0.25 * ((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) * (
+    0.5 * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) - 1
+)
 
 # computed anti-Laplacian
 PHI_computed = v.get_anti_laplacian_harmonic_part()
 
-quad_list = [q_trap, q_kress,]
+quad_list = [
+    q_trap,
+    q_kress,
+]
 f_trace_list = [PHI_exact, PHI_computed]
-fmt = ('g--', 'k.')
-legend = ('exact','computed')
-title = 'Anti-Laplacian'
+fmt = ("g--", "k.")
+legend = ("exact", "computed")
+title = "Anti-Laplacian"
 pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 
 
@@ -526,8 +567,8 @@ pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 PHI_diff = PHI_exact - PHI_computed
 
 X = np.zeros((K.num_pts, 2))
-X[:,0] = x1
-X[:,1] = x2
+X[:, 0] = x1
+X[:, 1] = x2
 XX = np.transpose(X) @ X
 Xy = np.transpose(X) @ PHI_diff
 aa = np.linalg.solve(XX, Xy)
@@ -535,18 +576,26 @@ PHI_diff_fit = X @ aa
 
 PHI_diff_error = np.abs(PHI_diff_fit - PHI_diff)
 
-quad_list = [q_trap, q_kress,]
+quad_list = [
+    q_trap,
+    q_kress,
+]
 f_trace_list = [PHI_diff_fit, PHI_diff]
-fmt = ('b--','k.')
-legend = ('least squares best linear fit', 'exact - computed')
-title = 'Anti-Laplacian difference'
+fmt = ("b--", "k.")
+legend = ("least squares best linear fit", "exact - computed")
+title = "Anti-Laplacian difference"
 pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 
-quad_list = [q_trap, q_kress,]
-f_trace_list = [PHI_diff_error,]
-fmt = ('k.',)
-legend = ('exact - computed - linear fit',)
-title = 'Anti-Laplacian error'
+quad_list = [
+    q_trap,
+    q_kress,
+]
+f_trace_list = [
+    PHI_diff_error,
+]
+fmt = ("k.",)
+legend = ("exact - computed - linear fit",)
+title = "Anti-Laplacian error"
 pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
 
 
@@ -557,9 +606,9 @@ pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
 
 
 max_PHI_error = max(PHI_diff_error)
-l2_PHI_error = np.sqrt(K.integrate_over_boundary(PHI_diff_error ** 2))
-print('Max pointwise error = %.4e'%max_PHI_error)
-print('L^2 norm of error = %.4e'%l2_PHI_error)
+l2_PHI_error = np.sqrt(K.integrate_over_boundary(PHI_diff_error**2))
+print("Max pointwise error = %.4e" % max_PHI_error)
+print("L^2 norm of error = %.4e" % l2_PHI_error)
 
 
 # Before we use $v$ for computations, we need to compute the trace and 
@@ -594,11 +643,12 @@ v.compute_polynomial_part_weighted_normal_derivative()
 
 
 # trace of w
-w_trace = (x1 - 0.5) / ((x1 - 0.5) ** 2 + (x2 - 0.5) ** 2) + \
-    x1 ** 3 + x1 * x2 ** 2
+w_trace = (
+    (x1 - 0.5) / ((x1 - 0.5) ** 2 + (x2 - 0.5) ** 2) + x1**3 + x1 * x2**2
+)
 
 # define a monomial term by specifying its multi-index and coefficient
-w_laplacian = pf.polynomial([ [8.0, 1, 0] ])
+w_laplacian = pf.polynomial([[8.0, 1, 0]])
 
 # declare w as local function object
 w = pf.locfun(solver, lap_poly=w_laplacian, has_poly_trace=False)
@@ -623,7 +673,7 @@ w.compute_all()
 
 
 h1_vw_computed = v.get_h1_semi_inner_prod(w)
-print('H^1 semi-inner product (vw) = ', h1_vw_computed)
+print("H^1 semi-inner product (vw) = ", h1_vw_computed)
 
 
 # In exact arithmetic, the $H^1$ semi-inner product is symmetric.
@@ -633,7 +683,7 @@ print('H^1 semi-inner product (vw) = ', h1_vw_computed)
 
 
 h1_wv_computed = w.get_h1_semi_inner_prod(v)
-print('H^1 semi-inner product (wv) = ', h1_wv_computed)
+print("H^1 semi-inner product (wv) = ", h1_wv_computed)
 
 
 # Here's the difference between the two:
@@ -641,7 +691,7 @@ print('H^1 semi-inner product (wv) = ', h1_wv_computed)
 # In[25]:
 
 
-print('Difference in computed H^1 = ', abs(h1_vw_computed - h1_wv_computed))
+print("Difference in computed H^1 = ", abs(h1_vw_computed - h1_wv_computed))
 
 
 # Finally, let's compare this to the value obtained with *Mathematica*:
@@ -657,8 +707,8 @@ print('Difference in computed H^1 = ', abs(h1_vw_computed - h1_wv_computed))
 
 
 h1_vw_exact = 4.46481780319135
-print('H^1 error (vw) = ', abs(h1_vw_computed - h1_vw_exact))
-print('H^1 error (wv) = ', abs(h1_wv_computed - h1_vw_exact))
+print("H^1 error (vw) = ", abs(h1_vw_computed - h1_vw_exact))
+print("H^1 error (wv) = ", abs(h1_wv_computed - h1_vw_exact))
 
 
 # ## $L^2$ Inner Product
@@ -675,13 +725,13 @@ print('H^1 error (wv) = ', abs(h1_wv_computed - h1_vw_exact))
 
 
 l2_vw_computed = v.get_l2_inner_prod(w)
-print('L^2 inner product (vw) = ',l2_vw_computed)
+print("L^2 inner product (vw) = ", l2_vw_computed)
 l2_wv_computed = w.get_l2_inner_prod(v)
-print('L^2 inner product (wv) = ', l2_wv_computed)
-print('Difference in computed L^2 = ', abs(l2_vw_computed - l2_wv_computed))
+print("L^2 inner product (wv) = ", l2_wv_computed)
+print("Difference in computed L^2 = ", abs(l2_vw_computed - l2_wv_computed))
 l2_vw_exact = 1.39484950156676
-print('L^2 error (vw) = ', abs(l2_vw_computed - l2_vw_exact))
-print('L^2 error (wv) = ', abs(l2_wv_computed - l2_vw_exact))
+print("L^2 error (vw) = ", abs(l2_vw_computed - l2_vw_exact))
+print("L^2 error (wv) = ", abs(l2_wv_computed - l2_vw_exact))
 
 
 # ## Convergence Studies
@@ -704,17 +754,17 @@ print('L^2 error (wv) = ', abs(l2_wv_computed - l2_vw_exact))
 
 print(q_kress.n)
 
-print('')
+print("")
 
-print('log coef error = %.4e'%abs(v.log_coef[0] - a_exact))
-print('L^2 norm of hc error = %.4e'%l2_hc_error)
-print('L^2 norm of wnd error = %.4e'%l2_wnd_error)
-print('L^2 norm of antilap error = %.4e'%l2_PHI_error)
+print("log coef error = %.4e" % abs(v.log_coef[0] - a_exact))
+print("L^2 norm of hc error = %.4e" % l2_hc_error)
+print("L^2 norm of wnd error = %.4e" % l2_wnd_error)
+print("L^2 norm of antilap error = %.4e" % l2_PHI_error)
 
-print('')
+print("")
 
-print('H^1 error (vw) = %.4e'%abs(h1_vw_computed - h1_vw_exact))
-print('L^2 error (vw) = %.4e'%abs(l2_vw_computed - l2_vw_exact))
+print("H^1 error (vw) = %.4e" % abs(h1_vw_computed - h1_vw_exact))
+print("L^2 error (vw) = %.4e" % abs(l2_vw_computed - l2_vw_exact))
 
 
 # ## Bonus: Find Interior Values
@@ -745,7 +795,7 @@ v_x2_computed = v.int_grad2
 plt.figure()
 plt.contourf(y1, y2, v_computed, levels=50)
 plt.colorbar()
-plt.title('Interior values of $v$')
+plt.title("Interior values of $v$")
 plt.show()
 
 
@@ -756,16 +806,19 @@ plt.show()
 # In[30]:
 
 
-v_exact = np.exp(y1) * np.cos(y2) + \
-    0.5 * a_exact * np.log((y1 - xi[0]) ** 2 + (y2 - xi[1]) ** 2) + \
-    y1 ** 3 * y2 + y1 * y2 ** 3
+v_exact = (
+    np.exp(y1) * np.cos(y2)
+    + 0.5 * a_exact * np.log((y1 - xi[0]) ** 2 + (y2 - xi[1]) ** 2)
+    + y1**3 * y2
+    + y1 * y2**3
+)
 
 v_error = np.log10(np.abs(v_computed - v_exact))
 
 plt.figure()
 plt.contourf(y1, y2, v_error, levels=50)
 plt.colorbar()
-plt.title('Interior errors ($\log_{10}$)')
+plt.title("Interior errors ($\log_{10}$)")
 plt.show()
 
 
@@ -774,31 +827,37 @@ plt.show()
 # In[31]:
 
 
-v_x1_exact = np.exp(y1) * np.cos(y2) + \
-    a_exact * (y1 - xi[0]) / ((y1 - xi[0]) ** 2 + (y2 - xi[1]) ** 2) + \
-    3 * y1 ** 2 * y2 + y2 ** 3
+v_x1_exact = (
+    np.exp(y1) * np.cos(y2)
+    + a_exact * (y1 - xi[0]) / ((y1 - xi[0]) ** 2 + (y2 - xi[1]) ** 2)
+    + 3 * y1**2 * y2
+    + y2**3
+)
 
 v_x1_error = np.log10(np.abs(v_x1_computed - v_x1_exact))
 
 plt.figure()
 plt.contourf(y1, y2, v_x1_error, levels=50)
 plt.colorbar()
-plt.title('Gradient errors in $x_1$ ($\log_{10}$)')
+plt.title("Gradient errors in $x_1$ ($\log_{10}$)")
 plt.show()
 
 
 # In[32]:
 
 
-v_x2_exact = -np.exp(y1) * np.sin(y2) + \
-    a_exact * (y2 - xi[1]) / ((y1 - xi[0]) ** 2 + (y2 - xi[1]) ** 2) + \
-    y1 ** 3 + 3 * y1 * y2 ** 2
+v_x2_exact = (
+    -np.exp(y1) * np.sin(y2)
+    + a_exact * (y2 - xi[1]) / ((y1 - xi[0]) ** 2 + (y2 - xi[1]) ** 2)
+    + y1**3
+    + 3 * y1 * y2**2
+)
 
 v_x2_error = np.log10(np.abs(v_x2_computed - v_x2_exact))
 
 plt.figure()
 plt.contourf(y1, y2, v_x2_error, levels=50)
 plt.colorbar()
-plt.title('Gradient errors in $x_2$ ($\log_{10}$)')
+plt.title("Gradient errors in $x_2$ ($\log_{10}$)")
 plt.show()
 

@@ -19,11 +19,13 @@ A finite element method on meshes with curvilinear and multiply connected cells.
   * [Example 4.3 (Ghost)](examples/ex1c-ghost.ipynb)
 
 ## Dependencies
-This project is written in Python 3.10 and uses the following packages:
+This project is written in Python 3.11 and uses the following packages:
 * [matplotlib](https://matplotlib.org/)
 * [numpy](https://numpy.org/)
 * [scipy](https://www.scipy.org/)
+* [jupyter](https://jupyter.org/) (optional)
 * [tqdm](https://tqdm.github.io/) (optional)
+See [requirements.txt](requirements.txt) for a complete list of dependencies.
 
 ## Authors
 [Jeffrey S. Ovall](https://sites.google.com/pdx.edu/jeffovall)

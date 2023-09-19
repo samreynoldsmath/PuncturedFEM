@@ -23,9 +23,9 @@ import matplotlib.pyplot as plt
 
 # define quadrature schemes
 n = 64
-q_trap = pf.quad(qtype='trap', n=n)
-q_kress = pf.quad(qtype='kress', n=n)
-quad_dict = {'kress': q_kress, 'trap': q_trap}
+q_trap = pf.quad(qtype="trap", n=n)
+q_kress = pf.quad(qtype="kress", n=n)
+quad_dict = {"kress": q_kress, "trap": q_trap}
 
 # define vertices
 verts = []
@@ -37,11 +37,26 @@ verts.append(pf.vert(x=-0.1, y=0.5))
 # define edges
 edges = []
 edges.append(pf.edge(verts[0], verts[1], pos_cell_idx=0))
-edges.append(pf.edge(verts[1], verts[2], pos_cell_idx=0,
-		     curve_type='circular_arc_deg', theta0=300))
+edges.append(
+    pf.edge(
+        verts[1],
+        verts[2],
+        pos_cell_idx=0,
+        curve_type="circular_arc_deg",
+        theta0=300,
+    )
+)
 edges.append(pf.edge(verts[2], verts[0], pos_cell_idx=0))
-edges.append(pf.edge(verts[3], verts[3], neg_cell_idx=0, 
-		     curve_type='circle', radius=0.25, quad_type='trap'))
+edges.append(
+    pf.edge(
+        verts[3],
+        verts[3],
+        neg_cell_idx=0,
+        curve_type="circle",
+        radius=0.25,
+        quad_type="trap",
+    )
+)
 
 # define mesh cell
 K = pf.cell(id=0, edges=edges)
@@ -75,12 +90,12 @@ solver = pf.nystrom_solver(K, verbose=True)
 x1, x2 = K.get_boundary_points()
 
 # convert to polar
-r = np.sqrt(x1 ** 2 + x2 ** 2)
+r = np.sqrt(x1**2 + x2**2)
 th = np.arctan2(x2, x1) % (2 * np.pi)
 
 # Dirichlet trace of v
 alpha = 1 / 2
-v_trace = r ** alpha * np.sin(alpha * th)
+v_trace = r**alpha * np.sin(alpha * th)
 
 # Laplacian of v (harmonic function)
 v_lap = pf.polynomial()
@@ -99,11 +114,16 @@ v.compute_all()
 # In[3]:
 
 
-quad_list = [q_trap, q_kress,]
-f_trace_list = [v.harm_part_wnd,]
-fmt = ('k.',)
-legend = ('wnd',)
-title = 'Weighted normal derivative'
+quad_list = [
+    q_trap,
+    q_kress,
+]
+f_trace_list = [
+    v.harm_part_wnd,
+]
+fmt = ("k.",)
+legend = ("wnd",)
+title = "Weighted normal derivative"
 pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 
 
@@ -121,11 +141,11 @@ pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 
 
 h1_norm_sq_computed = v.get_h1_semi_inner_prod(v)
-print('Computed square H^1 seminorm = ', h1_norm_sq_computed)
+print("Computed square H^1 seminorm = ", h1_norm_sq_computed)
 
 h1_norm_sq_exact = 1.20953682240855912
 h1_norm_sq_error = abs(h1_norm_sq_computed - h1_norm_sq_exact)
-print('Error in square H^1 seminorm = %.4e'%(h1_norm_sq_error))
+print("Error in square H^1 seminorm = %.4e" % (h1_norm_sq_error))
 
 
 # ### $L^2$ norm
@@ -142,11 +162,11 @@ print('Error in square H^1 seminorm = %.4e'%(h1_norm_sq_error))
 
 
 l2_norm_sq_computed = v.get_l2_inner_prod(v)
-print('Computed square L^2 seminorm = ', l2_norm_sq_computed)
+print("Computed square L^2 seminorm = ", l2_norm_sq_computed)
 
 l2_norm_sq_exact = 0.977934314921439713
 l2_norm_sq_error = abs(l2_norm_sq_computed - l2_norm_sq_exact)
-print('Error in square L^2 seminorm = %.4e'%l2_norm_sq_error)
+print("Error in square L^2 seminorm = %.4e" % l2_norm_sq_error)
 
 
 # ### Convergence
@@ -180,20 +200,20 @@ v_x2_computed = v.int_grad2
 plt.figure()
 plt.contourf(y1, y2, v_computed, levels=50)
 plt.colorbar()
-plt.title('Interior values of $v$')
+plt.title("Interior values of $v$")
 
 plt.figure()
 plt.contourf(y1, y2, v_x1_computed, levels=50)
 plt.colorbar()
-plt.title('First component of grad $v$')
+plt.title("First component of grad $v$")
 
 plt.figure()
 plt.contourf(y1, y2, v_x2_computed, levels=50)
 plt.colorbar()
-plt.title('Second component of grad $v$')
+plt.title("Second component of grad $v$")
 
 # convert to polar
-r = np.sqrt(y1 ** 2 + y2 ** 2)
+r = np.sqrt(y1**2 + y2**2)
 th = np.arctan2(y2, y1) % (2 * np.pi)
 
 # exact values
@@ -202,7 +222,7 @@ sin_th = np.sin(th)
 cos_ath = np.cos(alpha * th)
 sin_ath = np.sin(alpha * th)
 
-v_exact = r ** alpha * sin_ath
+v_exact = r**alpha * sin_ath
 v_x1_exact = alpha * r ** (alpha - 1) * (cos_th * sin_ath - sin_th * cos_ath)
 v_x2_exact = alpha * r ** (alpha - 1) * (sin_th * sin_ath + cos_th * cos_ath)
 
@@ -211,21 +231,21 @@ v_error = np.log10(np.abs(v_computed - v_exact))
 plt.figure()
 plt.contourf(y1, y2, v_error, levels=50)
 plt.colorbar()
-plt.title('Interior errors ($\log_{10}$)')
+plt.title("Interior errors ($\log_{10}$)")
 
 # first component of gradient errors
 v_x1_error = np.log10(np.abs(v_x1_computed - v_x1_exact))
 plt.figure()
 plt.contourf(y1, y2, v_x1_error, levels=50)
 plt.colorbar()
-plt.title('Gradient errors in $x_1$ ($\log_{10}$)')
+plt.title("Gradient errors in $x_1$ ($\log_{10}$)")
 
 # second component of gradient errors
 v_x2_error = np.log10(np.abs(v_x2_computed - v_x2_exact))
 plt.figure()
 plt.contourf(y1, y2, v_x2_error, levels=50)
 plt.colorbar()
-plt.title('Gradient errors in $x_2$ ($\log_{10}$)')
+plt.title("Gradient errors in $x_2$ ($\log_{10}$)")
 
 plt.show()
 
