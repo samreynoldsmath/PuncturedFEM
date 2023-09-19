@@ -1,15 +1,5 @@
 # Punctured FEM: To-do List
 
-## v0.3.1: Style
-- [x] PEP8 compliance with `black`
-  - [x] source code
-  - [x] examples
-  - [x] tests
-
-
-## v0.3.2: PyTest
-- [ ] replace `unittest` with `pytest`
-
 
 ## v0.3.x: Documentation and type hints
 - [ ] write docstrings

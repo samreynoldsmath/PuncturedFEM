@@ -6,6 +6,12 @@ python_version = 3.11
 install-types = true
 check-untyped-defs = true
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+    # "ignore::UserWarning",
+]
+
 [tool.pylint."messages control"]
 max-line-length = 80
 disable = [
@@ -16,7 +22,9 @@ disable = [
     "wrong-import-order",               # isort and black handles this
     "wrong-import-position",            # isort and black handles this
     "duplicate-code",                   # mesh/edge libraries have similar code
-    "fixme",                            # ignore TODO comments
+
+    # reenable to find TODO comments
+    "fixme",
 
     # TODO: reenable these warnings
     "missing-function-docstring",
@@ -32,4 +40,5 @@ disable = [
     "consider-merging-isinstance",
     "consider-using-enumerate",
     "redefined-builtin",
-    ]
+
+]

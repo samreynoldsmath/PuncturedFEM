@@ -1,3 +1,9 @@
+## [2023 Sep 19] 0.3.2 -- PyTest support
+- added support for `pytest`
+- added `pytest` and dependencies to `requirements-dev.txt`
+- added `pytest` parameters to `myproject.toml`
+
+
 ## [2023 Sep 19] 0.3.1 -- Style
 - Reformatted with `black` and `isort`
 - Linted with `flake8` and `pylint` (ongoing)

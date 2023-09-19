@@ -1,7 +1,7 @@
 import numpy as np
 
 from .closed_contour import closed_contour
-from .edge import NotParameterizedError, edge
+from .edge import edge, NotParameterizedError
 
 
 class cell:
@@ -169,7 +169,7 @@ class cell:
         """
         raise NotImplementedError()
 
-    # PARAMETERIZATON ########################################################
+    # PARAMETERIZATION #######################################################
     def is_parameterized(self) -> bool:
         return all([c.is_parameterized() for c in self.components])
 
@@ -385,10 +385,12 @@ class cell:
 
     def integrate_over_boundary_preweighted(self, vals_dx_norm) -> float:
         """Integrate vals over the boundary without multiplying by dx_norm"""
-        # if not self.is_parameterized():
-        #     raise NotParameterizedError('integrating over boundary')
-        # if len(vals_dx_norm) != self.num_pts:
-        #     raise Exception('vals must be same length as boundary')
+        if not self.is_parameterized():
+            raise NotParameterizedError('integrating over boundary')
+        if len(vals_dx_norm) != self.num_pts:
+            raise Exception('vals must be same length as boundary')
+
+        # NOTE: this is more memory efficient, but less stable
         # res = 0
         # for c, i in zip(self.components, range(self.num_holes + 1)):
         #     j = self.component_start_idx[i]
@@ -397,15 +399,11 @@ class cell:
         #         vals_dx_norm[j:jp1])
         # return res
 
-        # TODO: fix this hack
-        # numpy.sum() is more stable, but this uses more memory
-
-        from numpy import pi
-
+        # NOTE: numpy.sum() is more stable, but this uses more memory
         y = np.zeros((self.num_pts,))
         for i in range(self.num_holes + 1):
             c = self.components[i]
-            h = 2 * pi * c.num_edges / c.num_pts
+            h = 2 * np.pi * c.num_edges / c.num_pts
             j = self.component_start_idx[i]
             jp1 = self.component_start_idx[i + 1]
             y[j:jp1] = h * vals_dx_norm[j:jp1]
