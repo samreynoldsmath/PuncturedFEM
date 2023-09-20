@@ -25,6 +25,7 @@ This project is written in Python 3.11 and uses the following packages:
 * [scipy](https://www.scipy.org/)
 * [jupyter](https://jupyter.org/) (optional)
 * [tqdm](https://tqdm.github.io/) (optional)
+
 See [requirements.txt](requirements.txt) for a complete list of dependencies.
 
 ## Authors

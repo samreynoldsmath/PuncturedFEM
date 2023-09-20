@@ -1,18 +1,23 @@
-## [2023 Sep 19] 0.3.2 -- PyTest support
+## [2023 Sep 20] v0.3.3: Flake8 config
+- rename `setup.cgf` to `.flake8` (until `flake8` supports `pyproject.toml`)
+- update `devtools/convert_examples.sh` to support being executed from any directory
+
+
+## [2023 Sep 19] v0.3.2: PyTest support
 - added support for `pytest`
 - added `pytest` and dependencies to `requirements-dev.txt`
-- added `pytest` parameters to `myproject.toml`
+- added `pytest` parameters to `pyproject.toml`
 
 
-## [2023 Sep 19] 0.3.1 -- Style
+## [2023 Sep 19] v0.3.1: Style
 - Reformatted with `black` and `isort`
 - Linted with `flake8` and `pylint` (ongoing)
 - Type-checked with `mypy` (ongoing)
 - Added `requirements.txt` and `requirements-dev.txt`
 - Added `CHECKLIST.md`
-- Added `setup.cnf`, `myproject.toml`
+- Added `setup.cnf`, `pyproject.toml`
 
-## [2023 Aug 07] 0.3.0 -- Meshes
+## [2023 Aug 07] v0.3.0: Meshes
 ### Major changes
 * Added local function spaces (`locfunspace`) to `locfun/`
   * Class containing a basis of the local Poisson space $V_p(K)$
@@ -69,7 +74,7 @@
 * Added `ex2-pacman-fem` example
 * Updated tests and examples
 
-## [2023 May 01] 0.2.5 -- API & polynomial overhaul
+## [2023 May 01] v0.2.5: API & polynomial overhaul
 * Moved examples to a dedicated `examples` directory
   * Added "Examples used in publications" to `README`
 * Introduced API for more convenient user experience
@@ -87,19 +92,19 @@
   * Polynomials: `test_poly.py`
   * Local functions: `test_locfun.py`
 
-## [2023 Apr 17] 0.2.4 -- Interior values
+## [2023 Apr 17] v0.2.4: Interior values
 * Added `intval` module to `locfun` for computing interior values
 * Added `get_conjugable_part()` method to `locfun` that returns the trace of $\psi$
 * Renamed `is_in_interior()` method for `contour` to `is_in_interior_contour()`
 * Added `is_in_interior_cell()` method to `cell`
 * Added interior value demo to Punctured Square, Pac-Man, and Ghost examples
 
-## [2023 Mar 06] 0.2.3 -- Pac-Man & Ghost
+## [2023 Mar 06] v0.2.3: Pac-Man & Ghost
 * Added **ex1b-pacman.ipynb**
 * Added **ex1c-ghost.ipynb**
 * Updated **ex1a-square-hole.ipynb** with more accurate reference values
 
-## [2023 Mar 01] 0.2.2 -- Anti-Laplacians
+## [2023 Mar 01] v0.2.2: Anti-Laplacians
 * Added `compute_h1()` and `compute_l2()` methods to `locfun`
 * Added `integrate_over_cell()` method to `polynomial`
 * Added methods to `contour` and `cell` to integrate over the boundary without multiplying by the norm of the derivative (i.e. 'preweighted' integrands)
@@ -113,14 +118,14 @@
 * Completely overhauled anti-Laplacian calculation for punctured cells
 * **ex1**: "Square with circular hole" updated
 
-## [2023 Feb 25] 0.2.1 -- Local functions
+## [2023 Feb 25] v0.2.1: Local functions
 * Added **/poly** subpackage
   * `monomial` and `polynomial` objects
 * Added **locfun/** subpackage
   * `locfun` object holds all data for local function $v\in V_p(K)$
 * Added `ext_pt` field to `cell` object, which is an exterior point such that centering the origin at `ext_pt` placing the cell strictly in the first quadrant
 
-## [2023 Feb 16] 0.2.0 -- Python overhaul
+## [2023 Feb 16] v0.2.0: Python overhaul
 * MATLAB code rewritten in Python to increase accessibility
 * Examples presented with Jupyter Notebook
     - **ex0-mesh-building**:
@@ -147,7 +152,7 @@
   - **test_harmconj** for harmonic conjugates
   - **test_fft_deriv** for FFT differentiation
 
-## [2022 Aug 02] 0.1.0 -- Initial commit
+## [2022 Aug 02] v0.1.0: Initial commit
 Only a simple diffusion operator (the Laplacian) is currently supported.
 Dirichlet and mixed Dirichlet-Neumann boundary conditions are available,
 but are assumed to be homogeneous. Used to run a simple "pegboard" example.

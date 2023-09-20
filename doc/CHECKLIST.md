@@ -9,10 +9,10 @@
   - [ ] source code
   - [ ] tests
   - [ ] examples
-- [ ] all tests pass
-- [ ] convert Juptyer notebooks to Python scripts
+- [ ] all tests pass: `pytest -v test`
+- [ ] convert Juptyer notebooks: `./devtools/convert_examples.sh`
 - [ ] all examples work
 
 ## After commit
-- [ ] update tag
-- [ ] push to GitHub
+- [ ] update tag: `git tag -a vX.X.X -m "description"`
+- [ ] push to GitHub with tags: `git push --tags`

@@ -1,16 +1,14 @@
 [tool.black]
 line-length = 80
 
-[mypy]
-python_version = 3.11
-install-types = true
-check-untyped-defs = true
+[tool.mypy]
+install_types = true
+# check_untyped_defs = true
+# disallow_untyped_defs = true
+# disallow_incomplete_defs = true
 
 [tool.pytest.ini_options]
-filterwarnings = [
-    "error",
-    # "ignore::UserWarning",
-]
+filterwarnings = ["error"]
 
 [tool.pylint."messages control"]
 max-line-length = 80
@@ -41,4 +39,4 @@ disable = [
     "consider-using-enumerate",
     "redefined-builtin",
 
-]
+    ]
