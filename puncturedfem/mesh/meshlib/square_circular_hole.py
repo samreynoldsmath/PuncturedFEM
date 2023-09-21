@@ -11,7 +11,7 @@ def square_circular_hole(verbose: bool = True) -> planar_mesh:
 # VERTICES ###################################################################
 
 
-def get_verts():
+def get_verts() -> list[vert]:
     verts: list[vert] = []
     verts.append(vert(x=0.0, y=0.0))
     verts.append(vert(x=2.0, y=0.0))
@@ -21,7 +21,7 @@ def get_verts():
     return verts
 
 
-def get_edges(verts):
+def get_edges(verts: list[vert]) -> list[edge]:
     edges: list[edge] = []
     edges.append(edge(verts[0], verts[1], pos_cell_idx=0))
     edges.append(edge(verts[1], verts[2], pos_cell_idx=0))

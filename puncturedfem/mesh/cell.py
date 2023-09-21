@@ -1,7 +1,9 @@
+from typing import Callable
+
 import numpy as np
 
 from .closed_contour import closed_contour
-from .edge import edge, NotParameterizedError
+from .edge import NotParameterizedError, edge
 
 
 class cell:
@@ -13,7 +15,7 @@ class cell:
     num_edges: int
     num_pts: int
     component_start_idx: list[int]
-    closest_vert_idx: list[int]
+    closest_vert_idx: np.ndarray
     edge_orients: list[int]
     int_mesh_size: tuple[int, int]
     int_x1: np.ndarray
@@ -36,7 +38,7 @@ class cell:
             raise ValueError(f"id = {id} invalid, must be a positive integer")
         self.id = id
 
-    def find_edge_orientations(self, edges: list[edge]) -> list[int]:
+    def find_edge_orientations(self, edges: list[edge]) -> None:
         self.edge_orients = []
         for e in edges:
             if self.id == e.pos_cell_idx:
@@ -48,8 +50,8 @@ class cell:
 
     # LOCAL EDGE MANAGEMENT ##################################################
 
-    def find_num_edges(self) -> int:
-        self.num_edges = int(sum([c.num_edges for c in self.components]))
+    def find_num_edges(self) -> None:
+        self.num_edges = sum(c.num_edges for c in self.components)
 
     def get_edges(self) -> list[edge]:
         edges = []
@@ -58,7 +60,7 @@ class cell:
                 edges.append(e)
         return edges
 
-    def get_edge_endpoint_incidence(self, edges: list[edge]):
+    def get_edge_endpoint_incidence(self, edges: list[edge]) -> np.ndarray:
         """
         Returns incidence array: for each edge i, point to an edge j
         whose starting point is the terminal point of edge i
@@ -158,7 +160,7 @@ class cell:
                 )
             )
 
-    def find_hole_interior_points(self):
+    def find_hole_interior_points(self) -> None:
         """
         Automatically find a point in the interior of each hole.
 
@@ -171,7 +173,7 @@ class cell:
 
     # PARAMETERIZATION #######################################################
     def is_parameterized(self) -> bool:
-        return all([c.is_parameterized() for c in self.components])
+        return all(c.is_parameterized() for c in self.components)
 
     def parameterize(self, quad_dict: dict) -> None:
         """Parameterize each edge"""
@@ -187,13 +189,13 @@ class cell:
         for c in self.components:
             c.deparameterize()
         self.num_pts = 0
-        self.component_start_idx = None
+        self.component_start_idx = []
 
     def find_num_pts(self) -> None:
         """Record the total number of sampled points on the boundary"""
         if not self.is_parameterized():
             raise NotParameterizedError("finding num_pts")
-        self.num_pts = sum([c.num_pts for c in self.components])
+        self.num_pts = sum(c.num_pts for c in self.components)
 
     def find_component_start_idx(self) -> None:
         """Find the index of sampled points corresponding to each component"""
@@ -206,7 +208,7 @@ class cell:
             idx += c.num_pts
         self.component_start_idx.append(idx)
 
-    def find_outer_boundary(self):
+    def find_outer_boundary(self) -> None:
         """Find the outer boundary of the cell"""
         if not self.is_parameterized():
             raise NotParameterizedError("finding outer boundary")
@@ -241,13 +243,13 @@ class cell:
         if not self.is_parameterized():
             raise NotParameterizedError("getting bounding box")
         x1, x2 = self.get_boundary_points()
-        xmin = min(x1)
-        xmax = max(x1)
-        ymin = min(x2)
-        ymax = max(x2)
+        xmin: float = min(x1)
+        xmax: float = max(x1)
+        ymin: float = min(x2)
+        ymax: float = max(x2)
         return xmin, xmax, ymin, ymax
 
-    def is_in_interior(self, x: np.ndarray, y: np.ndarray) -> np.ndarray[bool]:
+    def is_in_interior(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
         Returns a boolean array indicating whether each point is in the interior
         """
@@ -270,7 +272,9 @@ class cell:
             dist = min(dist, self.components[i].get_distance_to_boundary(x, y))
         return dist
 
-    def generate_interior_points(self, rows=101, cols=101, tol=0.02):
+    def generate_interior_points(
+        self, rows: int = 101, cols: int = 101, tol: float = 0.02
+    ) -> None:
         """
         Returns (x, y, is_inside) where x,y are a meshgrid covering the
         cell K, and is_inside is a boolean array that is True for
@@ -304,7 +308,7 @@ class cell:
                         self.is_inside[i, j] = False
 
     # FUNCTION EVALUATION ####################################################
-    def evaluate_function_on_boundary(self, fun: callable):
+    def evaluate_function_on_boundary(self, fun: Callable) -> np.ndarray:
         """Return fun(x) for each sampled point on contour"""
         if not self.is_parameterized():
             raise NotParameterizedError("evaluating function on boundary")
@@ -315,7 +319,7 @@ class cell:
             vals[j:jp1] = self.components[i].evaluate_function_on_contour(fun)
         return vals
 
-    def get_boundary_points(self) -> tuple[np.array, np.array]:
+    def get_boundary_points(self) -> tuple[np.ndarray, np.ndarray]:
         """Returns the x1 and x2 coordinates of the boundary points"""
         if not self.is_parameterized():
             raise NotParameterizedError("getting boundary points")
@@ -327,7 +331,7 @@ class cell:
             x1[j:jp1], x2[j:jp1] = self.components[i].get_sampled_points()
         return x1, x2
 
-    def dot_with_tangent(self, v1, v2):
+    def dot_with_tangent(self, v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
         """Returns the dot product (v1, v2) * unit_tangent"""
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with tangent")
@@ -342,7 +346,7 @@ class cell:
             )
         return res
 
-    def dot_with_normal(self, v1, v2):
+    def dot_with_normal(self, v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
         """Returns the dot product (v1, v2) * unit_normal"""
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with normal")
@@ -357,7 +361,7 @@ class cell:
             )
         return res
 
-    def multiply_by_dx_norm(self, vals):
+    def multiply_by_dx_norm(self, vals: np.ndarray) -> np.ndarray:
         """
         Returns f multiplied against the norm of the derivative of
         the curve parameterization
@@ -376,19 +380,21 @@ class cell:
         return vals_dx_norm
 
     # INTEGRATION ############################################################
-    def integrate_over_boundary(self, vals) -> float:
+    def integrate_over_boundary(self, vals: np.ndarray) -> float:
         """Integrate vals over the boundary"""
         if not self.is_parameterized():
             raise NotParameterizedError("integrating over boundary")
         vals_dx_norm = self.multiply_by_dx_norm(vals)
         return self.integrate_over_boundary_preweighted(vals_dx_norm)
 
-    def integrate_over_boundary_preweighted(self, vals_dx_norm) -> float:
+    def integrate_over_boundary_preweighted(
+        self, vals_dx_norm: np.ndarray
+    ) -> float:
         """Integrate vals over the boundary without multiplying by dx_norm"""
         if not self.is_parameterized():
-            raise NotParameterizedError('integrating over boundary')
+            raise NotParameterizedError("integrating over boundary")
         if len(vals_dx_norm) != self.num_pts:
-            raise Exception('vals must be same length as boundary')
+            raise Exception("vals must be same length as boundary")
 
         # NOTE: this is more memory efficient, but less stable
         # res = 0
@@ -407,4 +413,4 @@ class cell:
             j = self.component_start_idx[i]
             jp1 = self.component_start_idx[i + 1]
             y[j:jp1] = h * vals_dx_norm[j:jp1]
-        return np.sum(y)
+        return float(np.sum(y))

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from numpy import empty, log, nan, ndarray, pi, zeros
 
 from ..solver.globkey import global_key
@@ -47,9 +49,9 @@ class locfun:
         self,
         solver: nystrom_solver,
         lap_poly: polynomial = polynomial(),  # TODO maybe should be None?
-        poly_trace: piecewise_polynomial = None,
+        poly_trace: Optional[piecewise_polynomial] = None,
         has_poly_trace: bool = True,
-        id: global_key = None,
+        id: Optional[global_key] = None,
     ) -> None:
         self.set_id(id)
         self.set_solver(solver)
@@ -57,7 +59,7 @@ class locfun:
         self.set_poly_trace(poly_trace)
         self.has_poly_trace = has_poly_trace
 
-    def set_id(self, id: global_key) -> None:
+    def set_id(self, id: Optional[global_key]) -> None:
         if id is None:
             return
         if not isinstance(id, global_key):
@@ -87,17 +89,19 @@ class locfun:
         """
         Deletes all large ndarrays (to save memory)
         """
-        self.trace = None
-        self.poly_part_trace = None
-        self.poly_part_wnd = None
-        self.conj_trace = None
-        self.log_coef = None
-        self.harm_part_wnd = None
-        self.antilap_trace = None
-        self.antilap_wnd = None
+        self.trace = zeros((0,))
+        self.poly_part_trace = zeros((0,))
+        self.poly_part_wnd = zeros((0,))
+        self.conj_trace = zeros((0,))
+        self.log_coef = zeros((0,))
+        self.harm_part_wnd = zeros((0,))
+        self.antilap_trace = zeros((0,))
+        self.antilap_wnd = zeros((0,))
 
     # Piecewise polynomial Dirichlet trace ###################################
-    def set_poly_trace(self, poly_trace: piecewise_polynomial) -> None:
+    def set_poly_trace(
+        self, poly_trace: Optional[piecewise_polynomial]
+    ) -> None:
         if poly_trace is None:
             self.poly_trace = piecewise_polynomial(
                 num_polys=self.solver.K.num_edges
@@ -111,11 +115,11 @@ class locfun:
             )
         self.poly_trace = poly_trace
 
-    def get_poly_trace(self) -> list[polynomial]:
+    def get_poly_trace(self) -> piecewise_polynomial:
         return self.poly_trace
 
     # Dirichlet trace values #################################################
-    def set_trace_values(self, vals) -> None:
+    def set_trace_values(self, vals: ndarray) -> None:
         self.trace = vals
 
     def get_trace_values(self) -> ndarray:
@@ -205,7 +209,7 @@ class locfun:
         )
 
     # logarithmic coefficients ###############################################
-    def set_logarithmic_coefficients(self, log_coef: list[float]) -> None:
+    def set_logarithmic_coefficients(self, log_coef: ndarray) -> None:
         self.log_coef = log_coef
 
     def get_logarithmic_coefficients(self) -> ndarray:
@@ -254,11 +258,14 @@ class locfun:
         )
 
     # H^1 semi-inner product #################################################
-    def get_h1_semi_inner_prod(self, other) -> float:
+    def get_h1_semi_inner_prod(self, other: object) -> float:
         """
         Returns the H^1 semi-inner product
                 int_K grad(self) * grad(other) dx
         """
+
+        if not isinstance(other, locfun):
+            raise TypeError("other must be a locfun")
 
         # polynomial part
         Px, Py = self.poly_part.grad()
@@ -276,11 +283,14 @@ class locfun:
         return val
 
     # L^2 inner product ######################################################
-    def get_l2_inner_prod(self, other) -> float:
+    def get_l2_inner_prod(self, other: object) -> float:
         """
         Returns the L^2 inner product
                 int_K (self) * (other) dx
         """
+
+        if not isinstance(other, locfun):
+            raise TypeError("other must be a locfun")
 
         x1, x2 = self.solver.K.get_boundary_points()
 

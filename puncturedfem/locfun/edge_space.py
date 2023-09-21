@@ -68,7 +68,7 @@ class edge_space:
                 global_key("edge", edge_idx=self.e.id, edge_space_idx=k)
             )
 
-    def build_spanning_set(self):
+    def build_spanning_set(self) -> None:
         """
         Spanning set of P_p(e) using traces of
                 L_m(x_1) * L_n(x_2) - a * ell_0 - b * ell_1
@@ -89,29 +89,29 @@ class edge_space:
         self.edge_fun_traces[linear_fun_idx[0]] = polynomial(
             [
                 # 1 + x + y
-                [1.0, 0, 0],
-                [1.0, 1, 0],
-                [1.0, 0, 1],
+                (1.0, 0, 0),
+                (1.0, 1, 0),
+                (1.0, 0, 1),
             ]
         )
         self.edge_fun_traces[linear_fun_idx[1]] = polynomial(
             [
                 # 1 - x - y
-                [1.0, 0, 0],
-                [-1.0, 1, 0],
-                [-1.0, 0, 1],
+                (+1.0, 0, 0),
+                (-1.0, 1, 0),
+                (-1.0, 0, 1),
             ]
         )
         self.edge_fun_traces[linear_fun_idx[2]] = polynomial(
             [
                 # x - y
-                [1.0, 1, 0],
-                [-1.0, 0, 1],
+                (+1.0, 1, 0),
+                (-1.0, 0, 1),
             ]
         )
 
         # transform coordinates to bounding box
-        self.transorm_coordinates_to_bounding_box()
+        self.transform_coordinates_to_bounding_box()
 
         # different cases for closed loops and edges with distinct endpoints
         if not self.e.is_loop:
@@ -146,7 +146,7 @@ class edge_space:
             # add linear function vanishing at endpoints to edge function list
             self.edge_fun_traces.append(ell[2])
 
-    def transorm_coordinates_to_bounding_box(self) -> None:
+    def transform_coordinates_to_bounding_box(self) -> None:
         # get bounding box
         xmin, xmax, ymin, ymax = self.e.get_bounding_box()
 
@@ -161,21 +161,21 @@ class edge_space:
         # define affine change of coordinates
         qx = polynomial(
             [
-                [-tx / sx, 0, 0],
-                [1 / sx, 1, 0],
+                (-tx / sx, 0, 0),
+                (1 / sx, 1, 0),
             ]
         )
 
         qy = polynomial(
             [
-                [-ty / sy, 0, 0],
-                [1 / sy, 0, 1],
+                (-ty / sy, 0, 0),
+                (1 / sy, 0, 1),
             ]
         )
 
         # map Legendre tensor products from square to bounding box
-        for j in range(len(self.edge_fun_traces)):
-            self.edge_fun_traces[j] = self.edge_fun_traces[j].compose(qx, qy)
+        for j, f in enumerate(self.edge_fun_traces):
+            self.edge_fun_traces[j] = f.compose(qx, qy)
 
     def reduce_to_basis(self) -> None:
         M = self.get_gram_matrix()
@@ -185,7 +185,7 @@ class edge_space:
             basis.append(self.edge_fun_traces[k])
         self.edge_fun_traces = basis
 
-    def get_gram_matrix(self, precond=True) -> None:
+    def get_gram_matrix(self, precond: bool = True) -> np.ndarray:
         # compute inner products
         m = len(self.edge_fun_traces)
         M = np.zeros((m, m))
@@ -206,7 +206,7 @@ class edge_space:
 
         return M
 
-    def diagonal_rescale(self, M) -> None:
+    def diagonal_rescale(self, M: np.ndarray) -> np.ndarray:
         m = np.shape(M)[0]
         for i in range(m):
             for j in range(i + 1, m):
@@ -216,7 +216,7 @@ class edge_space:
             M[i, i] = 1
         return M
 
-    def eliminate_zeros(self, M, tol=1e-12) -> None:
+    def eliminate_zeros(self, M: np.ndarray, tol: float = 1e-12) -> np.ndarray:
         m = np.shape(M)[0]
         idx = []
         for i in range(m):
@@ -230,13 +230,15 @@ class edge_space:
                 N[j, i] = N[i, j]
         return N
 
-    def get_basis_index_set(self, M, tol=1e-12) -> None:
-        idx = []
+    def get_basis_index_set(
+        self, M: np.ndarray, tol: float = 1e-12
+    ) -> list[int]:
+        idx: list[int] = []
         if np.shape(M)[0] == 0:
             return idx
-        k = np.argmax(np.diag(M))
+        k = int(np.argmax(np.diag(M)))
         while M[k, k] > tol:
             idx.append(k)
             M -= np.outer(M[:, k], M[:, k]) / M[k, k]
-            k = np.argmax(np.diag(M))
+            k = int(np.argmax(np.diag(M)))
         return sorted(idx)

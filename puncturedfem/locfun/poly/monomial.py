@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Optional
+
 import numpy as np
 
 from .multi_index import multi_index_2
@@ -9,22 +13,27 @@ class monomial:
             c (x, y) ^ (alpha_1, alpha_2) = c (x ^ alpha_1) * (y ^ alpha_2)
     """
 
-    def __init__(self, alpha: multi_index_2 = None, coef: float = 0.0) -> None:
+    alpha: multi_index_2
+    coef: float
+
+    def __init__(
+        self, alpha: Optional[multi_index_2] = None, coef: float = 0.0
+    ) -> None:
         if alpha is None:
             alpha = multi_index_2()
         self.set_coef(coef)
         self.set_multidx(alpha)
 
-    def copy(self):
+    def copy(self) -> monomial:
         return monomial(self.alpha, self.coef)
 
-    def is_zero(self, tol=1e-12) -> bool:
+    def is_zero(self, tol: float = 1e-12) -> bool:
         return abs(self.coef) < tol
 
     def set_coef(self, coef: float) -> None:
         self.coef = coef
 
-    def set_multidx(self, alpha: multi_index_2):
+    def set_multidx(self, alpha: multi_index_2) -> None:
         self.alpha = alpha
 
     def set_multidx_from_id(self, id: int) -> None:
@@ -32,7 +41,7 @@ class monomial:
         alpha.set_from_id(id)
         self.set_multidx(alpha)
 
-    def eval(self, x: float, y: float):
+    def eval(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         val = self.coef * np.ones(np.shape(x))
         if self.alpha.x > 0:
             val *= x**self.alpha.x
@@ -40,7 +49,7 @@ class monomial:
             val *= y**self.alpha.y
         return val
 
-    def partial_deriv(self, var: str):
+    def partial_deriv(self, var: str) -> monomial:
         if var == "x":
             if self.alpha.x == 0:
                 # constant wrt x
@@ -63,7 +72,7 @@ class monomial:
             raise Exception('var must be one of the strings "x" or "y"')
         return monomial(alpha=beta, coef=b)
 
-    def grad(self):
+    def grad(self) -> tuple[monomial, monomial]:
         gx = self.partial_deriv("x")
         gy = self.partial_deriv("y")
         return gx, gy
@@ -90,7 +99,7 @@ class monomial:
 
         return msg
 
-    def __eq__(self, other, tol=1e-12) -> bool:
+    def __eq__(self, other: object, tol: float = 1e-12) -> bool:
         """
         Returns True iff self == other
         """
@@ -100,7 +109,7 @@ class monomial:
         same_coef = abs(self.coef - other.coef) < tol
         return same_id and same_coef
 
-    def __gt__(self, other) -> bool:
+    def __gt__(self, other: object) -> bool:
         """
         Returns True iff self.id > other.id
         """
@@ -108,7 +117,7 @@ class monomial:
             raise TypeError("Comparison of monomial to non-monomial object")
         return self.alpha.id > other.alpha.id
 
-    def __add__(self, other):
+    def __add__(self, other: object) -> monomial:
         if not isinstance(other, monomial):
             raise TypeError("Cannot add monomial to non-monomial object")
         if not self.alpha == other.alpha:
@@ -118,7 +127,7 @@ class monomial:
             )
         return monomial(self.alpha, self.coef + other.coef)
 
-    def __mul__(self, other):
+    def __mul__(self, other: object) -> monomial:
         """
         Defines the operation self * other
         where other is either a monomial object or a scalar
@@ -128,31 +137,29 @@ class monomial:
             b = self.coef * other.coef
             beta = self.alpha + other.alpha
             return monomial(beta, b)
-        elif isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             # scalar multiplication
             b = self.coef * other
             beta = self.alpha.copy()
             return monomial(beta, b)
-        else:
-            raise TypeError(
-                "Multiplication by monomial must be by a scalar or"
-                + " by another monomial"
-            )
+        raise TypeError(
+            "Multiplication by monomial must be by a scalar or"
+            + " by another monomial"
+        )
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: object) -> monomial:
         """
         Defines the operation: other * self
         where other is either a monomial object or a scalar
         """
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             return self * other
-        else:
-            raise TypeError(
-                "Multiplication by monomial must be by a scalar or"
-                + " by another monomial"
-            )
+        raise TypeError(
+            "Multiplication by monomial must be by a scalar or"
+            + " by another monomial"
+        )
 
-    def __neg__(self):
+    def __neg__(self) -> None:
         """
         Defines negation operation: -self
         """

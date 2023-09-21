@@ -1,3 +1,5 @@
+from typing import Optional
+
 from numpy import ndarray, zeros
 
 from ...mesh.cell import cell
@@ -13,10 +15,13 @@ class piecewise_polynomial:
     id: int  # used to associate function with an edge or vertex
 
     def __init__(
-        self, num_polys: int = 1, polys: list[polynomial] = None, id: int = 0
+        self,
+        num_polys: int = 1,
+        polys: Optional[list[polynomial]] = None,
+        id: int = 0,
     ) -> None:
         self.set_id(id)
-        self.set_num_polys(num_polys)
+        self.set_num_polys(num_polys)  # TODO: this isn't safe
         self.set_polys(polys)
 
     def set_id(self, id: int) -> None:
@@ -30,10 +35,10 @@ class piecewise_polynomial:
         if not isinstance(num_polys, int):
             raise TypeError("num_polys must be a integer")
         if num_polys < 1:
-            raise ValueError("num_polys must be positve")
+            raise ValueError("num_polys must be positive")
         self.num_polys = num_polys
 
-    def set_polys(self, polys: list[polynomial] = None) -> None:
+    def set_polys(self, polys: Optional[list[polynomial]] = None) -> None:
         if polys is None:
             self.polys = [polynomial() for _ in range(self.num_polys)]
         else:

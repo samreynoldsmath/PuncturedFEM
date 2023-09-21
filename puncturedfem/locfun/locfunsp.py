@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 from ..mesh.cell import cell
 from ..solver.globkey import global_key
 from .edge_space import edge_space
@@ -71,13 +73,11 @@ class locfunspace:
     def find_interior_values(self, verbose: bool = True) -> None:
         if verbose:
             print("Finding interior values...")
-            from tqdm import tqdm  # type: ignore
-
-            basis = tqdm(self.get_basis())
+            for v in tqdm(self.get_basis()):
+                v.compute_interior_values()
         else:
-            basis = self.get_basis()
-        for v in basis:
-            v.compute_interior_values()
+            for v in self.get_basis():
+                v.compute_interior_values()
 
     # BUILD FUNCTIONS ########################################################
 
@@ -106,13 +106,11 @@ class locfunspace:
     def compute_all_sequential(self, verbose: bool = True) -> None:
         if verbose:
             print("Computing function metadata...")
-            from tqdm import tqdm  # type: ignore
-
-            basis = tqdm(self.get_basis())
+            for v in tqdm(self.get_basis()):
+                v.compute_all()
         else:
-            basis = self.get_basis()
-        for v in basis:
-            v.compute_all()
+            for v in self.get_basis():
+                v.compute_all()
 
     def compute_all_parallel(
         self, verbose: bool = True, processes: int = 1
@@ -149,8 +147,7 @@ class locfunspace:
         self.vert_funs = []
         for vert_id in vert_ids:
             v = locfun(solver=self.solver, id=vert_id)
-            for j in range(len(edge_spaces)):
-                b = edge_spaces[j]
+            for j, b in enumerate(edge_spaces):
                 for k in range(b.num_vert_funs):
                     if b.vert_fun_global_keys[k].vert_idx == vert_id.vert_idx:
                         v.poly_trace.polys[j] = b.vert_fun_traces[k]

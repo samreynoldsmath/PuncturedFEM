@@ -10,8 +10,8 @@ def legendre_polynomials(deg: int) -> list[polynomial]:
     where p_j is the jth Legendre polynomial
     """
     polys = []
-    polys.append(polynomial([[1.0, 0, 0]]))
-    polys.append(polynomial([[1.0, 1, 0]]))
+    polys.append(polynomial([(1.0, 0, 0)]))
+    polys.append(polynomial([(1.0, 1, 0)]))
     for n in range(2, deg + 1):
         pn = (
             (2 * n - 1) * polys[1] * polys[n - 1] - (n - 1) * polys[n - 2]
@@ -57,7 +57,7 @@ def integrated_legendre_tensor_products(deg: int) -> list[polynomial]:
     return pq
 
 
-def swap_coordinates_of_poly_argument(p: polynomial):
+def swap_coordinates_of_poly_argument(p: polynomial) -> polynomial:
     """
     Returns the polynomial q(x,y) = p(y,x)
     """
@@ -66,5 +66,5 @@ def swap_coordinates_of_poly_argument(p: polynomial):
         coef = mono.coef
         alpha_0 = mono.alpha.x
         alpha_1 = mono.alpha.y
-        q += polynomial([[coef, alpha_1, alpha_0]])
+        q += polynomial([(coef, alpha_1, alpha_0)])
     return q

@@ -12,7 +12,7 @@ class planar_mesh:
     vert_idx_list: list[int]
     cell_idx_list: list[int]
 
-    def __init__(self, edges: list[edge], verbose=True) -> None:
+    def __init__(self, edges: list[edge], verbose: bool = True) -> None:
         if verbose:
             print("Building planar mesh...")
         self.edges = []
@@ -27,9 +27,9 @@ class planar_mesh:
 
     def __str__(self) -> str:
         s = "planar_mesh:"
-        s += "\n\tnum_verts: %d" % self.num_verts
-        s += "\n\tnum_edges: %d" % self.num_edges
-        s += "\n\tnum_cells: %d" % self.num_cells
+        s += f"\n\tnum_verts: {self.num_verts}"
+        s += f"\n\tnum_edges: {self.num_edges}"
+        s += f"\n\tnum_cells: {self.num_cells}"
         return s
 
     # EDGES ##################################################################
@@ -86,7 +86,7 @@ class planar_mesh:
             raise Exception("cell_idx is not in cell_idx_list")
         edges = []
         for e in self.edges:
-            if e.pos_cell_idx == cell_idx or e.neg_cell_idx == cell_idx:
+            if cell_idx in (e.pos_cell_idx, e.neg_cell_idx):
                 edges.append(e)
         return cell(id=cell_idx, edges=edges)
 
@@ -97,7 +97,7 @@ class planar_mesh:
 
     def vert_is_on_boundary(self, vert_idx: int) -> bool:
         for e in self.edges:
-            if e.anchor.id == vert_idx or e.endpnt.id == vert_idx:
+            if vert_idx in (e.anchor.id, e.endpnt.id):
                 if e.pos_cell_idx < 0 or e.neg_cell_idx < 0:
                     return True
         return False

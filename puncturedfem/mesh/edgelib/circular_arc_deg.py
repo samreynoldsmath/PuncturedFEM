@@ -2,10 +2,12 @@
 Parameterization of a circular arc from (1,0) to (cos(theta0), sin(theta0))
 """
 
+from typing import Any
+
 import numpy as np
 
 
-def unpack(kwargs):
+def unpack(kwargs: Any) -> float:
     theta0 = kwargs["theta0"]
     if theta0 <= 0 or theta0 > 360:
         raise ValueError(
@@ -15,7 +17,7 @@ def unpack(kwargs):
     return omega
 
 
-def _x(t, **kwargs):
+def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     omega = unpack(kwargs)
     x = np.zeros((2, len(t)))
     x[0, :] = np.cos(omega * t)
@@ -23,7 +25,7 @@ def _x(t, **kwargs):
     return x
 
 
-def _dx(t, **kwargs):
+def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     omega = unpack(kwargs)
     dx = np.zeros((2, len(t)))
     dx[0, :] = -omega * np.sin(omega * t)
@@ -31,7 +33,7 @@ def _dx(t, **kwargs):
     return dx
 
 
-def _ddx(t, **kwargs):
+def DDX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     omega = unpack(kwargs)
     ddx = np.zeros((2, len(t)))
     ddx[0, :] = -omega * omega * np.cos(omega * t)

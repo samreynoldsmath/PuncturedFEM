@@ -5,8 +5,8 @@ from . import fft_deriv
 
 
 def get_weighted_tangential_derivative_from_trace(
-    K: cell, f_vals: np.array
-) -> np.array:
+    K: cell, f_vals: np.ndarray
+) -> np.ndarray:
     """
     Returns df / ds = nabla f(x(t)) * x'(t) by computing the derivative
     of f(x(t)) with respect to the scalar parameter t, where x(t)

@@ -9,7 +9,9 @@ from . import log_antilap
 # TODO initialize solver in locfunspace and pass it to antilap
 
 
-def get_anti_laplacian_harmonic(K: cell, psi, psi_hat, a):
+def get_anti_laplacian_harmonic(
+    K: cell, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns the trace and weighted normal derivative of an anti-Laplacian of a
     harmonic function
@@ -27,7 +29,9 @@ def get_anti_laplacian_harmonic(K: cell, psi, psi_hat, a):
     return PHI, PHI_wnd
 
 
-def _antilap_simply_connected(K: cell, phi, phi_hat):
+def _antilap_simply_connected(
+    K: cell, phi: np.ndarray, phi_hat: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     # length of interval of integration in parameter space
     interval_length = 2 * np.pi * K.num_edges
 
@@ -58,7 +62,9 @@ def _antilap_simply_connected(K: cell, phi, phi_hat):
     return PHI, PHI_wnd
 
 
-def _antilap_multiply_connected(K: cell, psi, psi_hat, a):
+def _antilap_multiply_connected(
+    K: cell, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     # compute F * t and \hat F * t
     F_t = K.dot_with_tangent(psi, -psi_hat)
     F_hat_t = K.dot_with_tangent(psi_hat, psi)

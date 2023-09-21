@@ -1,3 +1,25 @@
+# Punctured FEM: Change Log
+
+
+## [2023 Sep 20] v0.3.4: Type hints and clean up
+- use generators where appropriate
+- fix imports
+- use f-strings
+- fix spelling errors
+- use `enumerate` in loops where appropriate
+- fix superfluous `return` statements
+- fix unnecessary `else` statements
+- change underscore methods in `edgelib` to capitalized
+  - update `edge` class to reflect change
+  - update `ex0` example to reflect change
+- add type hints
+  - functions
+  - methods
+  - classes
+- fix other `pylint` and `mypy` errors
+- update `pyproject.toml`
+
+
 ## [2023 Sep 20] v0.3.3: Flake8 config
 - rename `setup.cgf` to `.flake8` (until `flake8` supports `pyproject.toml`)
 - update `devtools/convert_examples.sh` to support being executed from any directory

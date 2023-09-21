@@ -4,10 +4,12 @@ The center of the circle lies at (1/2, H). The points on the circle below
 the x2 axis are discarded.
 """
 
+from typing import Any
+
 import numpy as np
 
 
-def unpack(kwargs):
+def unpack(kwargs: Any) -> tuple[float, float, float, float]:
     H = kwargs["H"]
     R = np.sqrt(0.25 + H**2)
     t0 = np.arcsin(H / R)
@@ -15,7 +17,7 @@ def unpack(kwargs):
     return H, R, t0, omega
 
 
-def _x(t, **kwargs):
+def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     H, R, t0, omega = unpack(kwargs)
     theta = t0 + np.pi + omega * t
     x = np.zeros((2, len(t)))
@@ -24,7 +26,7 @@ def _x(t, **kwargs):
     return x
 
 
-def _dx(t, **kwargs):
+def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     H, R, t0, omega = unpack(kwargs)
     theta = t0 + np.pi + omega * t
     dx = np.zeros((2, len(t)))
@@ -33,7 +35,7 @@ def _dx(t, **kwargs):
     return dx
 
 
-def _ddx(t, **kwargs):
+def DDX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     H, R, t0, omega = unpack(kwargs)
     theta = t0 + np.pi + omega * t
     ddx = np.zeros((2, len(t)))

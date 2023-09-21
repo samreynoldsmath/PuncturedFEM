@@ -1,13 +1,16 @@
+from typing import Any, Callable
+
 import numpy as np
 
 from .bounding_box import get_bounding_box
+from .quad import quad
 from .vert import vert
 
 
 class NotParameterizedError(Exception):
     """Exception raised if edges are not parameterized"""
 
-    def __init__(self, cant_do="calling this method"):
+    def __init__(self, cant_do: str = "calling this method") -> None:
         super().__init__()
         self.message = "Must parameterize edges before " + cant_do
 
@@ -22,7 +25,7 @@ class edge:
     curve_type: str
     curve_opts: dict
     quad_type: str
-    id: any
+    id: Any
     is_on_mesh_boundary: bool
     is_loop: bool
     is_parameterized: bool
@@ -41,8 +44,8 @@ class edge:
         neg_cell_idx: int = -1,
         curve_type: str = "line",
         quad_type: str = "kress",
-        id=None,
-        **curve_opts,
+        id: Any = None,
+        **curve_opts: Any,
     ) -> None:
         self.curve_type = curve_type
         self.quad_type = quad_type
@@ -63,7 +66,7 @@ class edge:
 
     # MESH TOPOLOGY ##########################################################
 
-    def set_id(self, id: any) -> None:
+    def set_id(self, id: Any) -> None:
         if id is None:
             return
         if not isinstance(id, int):
@@ -72,7 +75,7 @@ class edge:
             raise ValueError("id must be nonnegative")
         self.id = id
 
-    def set_verts(self, anchor: int, endpnt: int) -> None:
+    def set_verts(self, anchor: vert, endpnt: vert) -> None:
         self.anchor = anchor
         self.endpnt = endpnt
         self.is_loop = self.anchor == self.endpnt
@@ -89,9 +92,9 @@ class edge:
             self.pos_cell_idx < 0 or self.neg_cell_idx < 0
         )
 
-    # PARAMETERIZATON ########################################################
+    # PARAMETERIZATION #######################################################
 
-    def parameterize(self, quad_dict: dict) -> None:
+    def parameterize(self, quad_dict: dict[str, quad]) -> None:
         q = quad_dict[self.quad_type]
 
         # 2 * n + 1 points sampled per edge
@@ -104,13 +107,13 @@ class edge:
         )
 
         # points on the boundary
-        self.x = gamma._x(q.t, **self.curve_opts)
+        self.x = gamma.X(q.t, **self.curve_opts)
 
         # unweighted square norm of derivative
-        dx = gamma._dx(q.t, **self.curve_opts)
+        dx = gamma.DX(q.t, **self.curve_opts)
         dx2 = dx[0, :] ** 2 + dx[1, :] ** 2
 
-        # norm of derivative (with chainrule)
+        # norm of derivative (with chain rule)
         self.dx_norm = np.sqrt(dx2) * q.wgt
 
         # unit tangent vector
@@ -122,7 +125,7 @@ class edge:
         self.unit_normal[1, :] = -self.unit_tangent[0, :]
 
         # signed curvature
-        ddx = gamma._ddx(q.t, **self.curve_opts)
+        ddx = gamma.DDX(q.t, **self.curve_opts)
         self.curvature = (
             ddx[0, :] * self.unit_normal[0, :]
             + ddx[1, :] * self.unit_normal[1, :]
@@ -141,12 +144,12 @@ class edge:
         self.quad_type = q.type
 
     def deparameterize(self) -> None:
-        self.num_pts = None
-        self.x = None
-        self.unit_tangent = None
-        self.unit_normal = None
-        self.dx_norm = None
-        self.curvature = None
+        self.num_pts = -1
+        self.x = np.zeros((0,))
+        self.unit_tangent = np.zeros((0,))
+        self.unit_normal = np.zeros((0,))
+        self.dx_norm = np.zeros((0,))
+        self.curvature = np.zeros((0,))
         self.is_parameterized = False
 
     def get_sampled_points(self) -> tuple[np.ndarray, np.ndarray]:
@@ -210,7 +213,7 @@ class edge:
 
         # rescale
         alpha = ab_norm / xy_norm
-        self.dialate(alpha)
+        self.dilate(alpha)
 
         # anchor at point a
         self.translate(a)
@@ -228,18 +231,18 @@ class edge:
         self.x[0, :] += a.x
         self.x[1, :] += a.y
 
-    def dialate(self, alpha: float) -> None:
-        """Dialate by a scalar alpha"""
+    def dilate(self, alpha: float) -> None:
+        """Dilate by a scalar alpha"""
 
         # check if edge is parameterized
         if not self.is_parameterized:
-            raise NotParameterizedError("dialating")
+            raise NotParameterizedError("dilating")
 
         # tolerance for floating point comparisons
         TOL = 1e-12
 
         if np.abs(alpha) < TOL:
-            raise Exception("Dialation factor alpha must be nonzero")
+            raise Exception("Dilation factor alpha must be nonzero")
 
         self.x *= alpha
         self.dx_norm *= np.abs(alpha)
@@ -253,7 +256,7 @@ class edge:
             raise NotParameterizedError("rotating")
 
         if theta % 360 == 0:
-            return None
+            return
 
         c = np.cos(theta * np.pi / 180)
         s = np.sin(theta * np.pi / 180)
@@ -279,7 +282,7 @@ class edge:
         A = np.array([[-1, 0], [0, 1]])
         self.apply_orthogonal_transformation(A)
 
-    def apply_orthogonal_transformation(self, A) -> None:
+    def apply_orthogonal_transformation(self, A: np.ndarray) -> None:
         """
         Transforms 2-dimensional space with the linear map
                 x mapsto A * x
@@ -319,7 +322,9 @@ class edge:
 
     # FUNCTION EVALUATION ####################################################
 
-    def evaluate_function(self, fun: callable, ignore_endpoint=False):
+    def evaluate_function(
+        self, fun: Callable, ignore_endpoint: bool = False
+    ) -> np.ndarray:
         """Return fun(x) for each sampled point on edge"""
         if not self.is_parameterized:
             raise NotParameterizedError("evaluating function")
@@ -332,7 +337,9 @@ class edge:
             y[i] = fun(self.x[:, i])
         return y
 
-    def multiply_by_dx_norm(self, vals, ignore_endpoint=True):
+    def multiply_by_dx_norm(
+        self, vals: np.ndarray, ignore_endpoint: bool = True
+    ) -> np.ndarray:
         """
         Returns f multiplied against the norm of the derivative of
         the curve parameterization
@@ -344,12 +351,13 @@ class edge:
             if len(vals) != self.num_pts - 1:
                 raise Exception(msg)
             return vals * self.dx_norm[:-1]
-        else:
-            if len(vals) != self.num_pts:
-                raise Exception(msg)
-            return vals * self.dx_norm
+        if len(vals) != self.num_pts:
+            raise Exception(msg)
+        return vals * self.dx_norm
 
-    def dot_with_tangent(self, v1, v2, ignore_endpoint=True):
+    def dot_with_tangent(
+        self, v1: np.ndarray, v2: np.ndarray, ignore_endpoint: bool = True
+    ) -> np.ndarray:
         """Returns the dot product (v1, v2) * unit_tangent"""
         if not self.is_parameterized:
             raise NotParameterizedError("dotting with tangent")
@@ -361,7 +369,9 @@ class edge:
             raise Exception("vals must be same length as boundary")
         return v1 * self.unit_tangent[0, :-k] + v2 * self.unit_tangent[1, :-k]
 
-    def dot_with_normal(self, v1, v2, ignore_endpoint=True):
+    def dot_with_normal(
+        self, v1: np.ndarray, v2: np.ndarray, ignore_endpoint: bool = True
+    ) -> np.ndarray:
         """Returns the dot product (v1, v2) * unit_normal"""
         if not self.is_parameterized:
             raise NotParameterizedError("dotting with normal")
@@ -375,7 +385,9 @@ class edge:
 
     # INTEGRATION ############################################################
 
-    def integrate_over_edge(self, vals, ignore_endpoint=False):
+    def integrate_over_edge(
+        self, vals: np.ndarray, ignore_endpoint: bool = False
+    ) -> float:
         """Integrate vals * dx_norm over the edge via trapezoidal rule"""
         if not self.is_parameterized:
             raise NotParameterizedError("integrating over edge")
@@ -385,8 +397,8 @@ class edge:
         )
 
     def integrate_over_edge_preweighted(
-        self, vals_dx_norm, ignore_endpoint=False
-    ):
+        self, vals_dx_norm: np.ndarray, ignore_endpoint: bool = False
+    ) -> float:
         """Integrate vals_dx_norm over the edge via trapezoidal rule"""
         if not self.is_parameterized:
             raise NotParameterizedError("integrating over edge")

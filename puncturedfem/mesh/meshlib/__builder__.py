@@ -1,15 +1,20 @@
+from typing import Any, Callable
+
 from ..planar_mesh import planar_mesh
 
 
 def mesh_builder(
-    get_verts: callable, get_edges: callable, verbose: bool = True, **kwargs
+    get_verts: Callable,
+    get_edges: Callable,
+    verbose: bool = True,
+    **kwargs: Any
 ) -> planar_mesh:
     # define vertices
     verts = get_verts(**kwargs)
 
     # TODO: set vertex ids here?
-    for k in range(len(verts)):
-        verts[k].set_id(k)
+    for k, v in enumerate(verts):
+        v.set_id(k)
 
     # define edges
     edges = get_edges(verts, **kwargs)

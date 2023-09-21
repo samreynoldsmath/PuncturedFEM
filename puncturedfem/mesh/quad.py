@@ -19,20 +19,18 @@ class quad:
 
     __slots__ = ("type", "n", "h", "t", "wgt")
 
-    def __init__(self, qtype: str = "trap", n: int = 16, p: int = 7):
+    def __init__(self, qtype: str = "trap", n: int = 16, p: int = 7) -> None:
         self.type = qtype
         self.n = n
         self.h = np.pi / n
         self.t = np.linspace(0, 2 * np.pi, 2 * n + 1)
         if self.type == "kress":
             self.kress(p)
-            return None
+            return
         if self.type == "mart" or type == "martensen":
             self.martensen()
-            return None
-        else:
-            self.trap()
-            return None
+            return
+        self.trap()
 
     def __repr__(self) -> str:
         """ "
@@ -41,7 +39,7 @@ class quad:
         msg = f"quad object \n\ttype\t{self.type} \n\tn\t{self.n}"
         return msg
 
-    def trap(self):
+    def trap(self) -> None:
         """
         Trapezoid rule (default)
 
@@ -50,9 +48,8 @@ class quad:
         contours.
         """
         self.wgt = np.ones((2 * self.n + 1,))
-        return None
 
-    def kress(self, p: int):
+    def kress(self, p: int) -> None:
         """
         Kress quadrature
 
@@ -80,9 +77,7 @@ class quad:
             (3 * (p - 2) * s2 + 2) * (c * (1 - c)) ** (p - 1) / denom**2
         )
 
-        return None
-
-    def martensen(self):
+    def martensen(self) -> None:
         """
         Martensen quadrature
 
@@ -98,5 +93,3 @@ class quad:
 
         self.t = 2 * np.sin(self.t / 2)
         self.t *= self.t
-
-        return None

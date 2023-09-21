@@ -29,15 +29,11 @@ class nystrom_solver:
     T1_dlam_dt: np.ndarray
     Sn_lam: np.ndarray
 
-    def __init__(self, K: cell, verbose=False) -> None:
+    def __init__(self, K: cell, verbose: bool = False) -> None:
         if verbose:
             msg = (
                 "Setting up Nyström solver... "
-                + "%d sampled points on %d edge"
-                % (
-                    K.num_pts,
-                    K.num_edges,
-                )
+                + f"{K.num_pts} sampled points on {K.num_edges} edge"
             )
             if K.num_edges > 1:
                 msg += "s"
@@ -73,7 +69,7 @@ class nystrom_solver:
         b = self.single_layer_op(u_wnd)
 
         # define linear operator for Neumann problem
-        def A_fun(u):
+        def A_fun(u: np.ndarray) -> np.ndarray:
             y = self.double_layer_op(u)
             y += self.K.integrate_over_boundary(u)
             return y
@@ -92,7 +88,9 @@ class nystrom_solver:
 
         return u
 
-    def get_harmonic_conjugate(self, phi: np.ndarray):
+    def get_harmonic_conjugate(
+        self, phi: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Obtain a harmonic conjugate of phi on K"""
 
         # weighted tangential derivative of phi
@@ -100,15 +98,14 @@ class nystrom_solver:
 
         # simply/multiply connected cases handled separately
         if self.K.num_holes == 0:  # simply connected
-            return self.solve_neumann_zero_average(-phi_wtd), []
-        elif self.K.num_holes > 0:  # multiply connected
+            return self.solve_neumann_zero_average(-1 * phi_wtd), np.zeros((0,))
+        if self.K.num_holes > 0:  # multiply connected
             return self.get_harmonic_conjugate_multiply_connected(phi, phi_wtd)
-        else:
-            raise Exception("K.num_holes < 0")
+        raise Exception("K.num_holes < 0")
 
     def get_harmonic_conjugate_multiply_connected(
         self, phi: np.ndarray, dphi_dt_wgt: np.ndarray
-    ):
+    ) -> tuple[np.ndarray, np.ndarray]:
         # array sizes
         N = self.K.num_pts
         m = self.K.num_holes
@@ -119,7 +116,7 @@ class nystrom_solver:
         b[N:] = self.Sn(phi)
 
         # define linear operator for harmonic conjugate
-        def linop4harmconj(x):
+        def linop4harmconj(x: np.ndarray) -> np.ndarray:
             psi_hat = x[:N]
             a = x[N:]
             y = np.zeros((N + m,))

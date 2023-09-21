@@ -8,10 +8,12 @@ Note:
     a > 0 is a "generalized teardrop"
 """
 
+from typing import Any
+
 import numpy as np
 
 
-def _x(t, **kwargs):
+def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     a = kwargs["a"]
     r = 1 + a * (1 - t / np.pi) ** 8
 
@@ -21,7 +23,7 @@ def _x(t, **kwargs):
     return x
 
 
-def _dx(t, **kwargs):
+def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     a = kwargs["a"]
     r = 1 + a * (1 - t / np.pi) ** 8
     dr = -(8 * a / np.pi) * (1 - t / np.pi) ** 7
@@ -32,7 +34,7 @@ def _dx(t, **kwargs):
     return dx
 
 
-def _ddx(t, **kwargs):
+def DDX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     a = kwargs["a"]
     r = 1 + a * (1 - t / np.pi) ** 8
     dr = -(8 * a / np.pi) * (1 - t / np.pi) ** 7

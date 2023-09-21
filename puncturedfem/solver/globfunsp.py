@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 from ..locfun.edge_space import edge_space
 from ..locfun.locfunsp import locfunspace
 from ..mesh.planar_mesh import planar_mesh
@@ -66,18 +68,18 @@ class global_function_space:
     # BUILD LOCAL FUNCTION SPACES ############################################
 
     def build_edge_spaces(self, verbose: bool = True) -> None:
+        self.edge_spaces = []
         if verbose:
             print("Building edge spaces...")
-            from tqdm import tqdm  # type: ignore
-
-            edges = tqdm(self.T.edges)
+            for e in tqdm(self.T.edges):
+                e.parameterize(quad_dict=self.quad_dict)
+                self.edge_spaces.append(edge_space(e, self.deg))
+                e.deparameterize()
         else:
-            edges = self.T.edges
-        self.edge_spaces = []
-        for e in edges:
-            e.parameterize(quad_dict=self.quad_dict)
-            self.edge_spaces.append(edge_space(e, self.deg))
-            e.deparameterize()
+            for e in self.T.edges:
+                e.parameterize(quad_dict=self.quad_dict)
+                self.edge_spaces.append(edge_space(e, self.deg))
+                e.deparameterize()
 
     def build_local_function_space(
         self,
@@ -135,7 +137,7 @@ class global_function_space:
 
     # LOCAL-TO-GLOBAL MAPPING ################################################
 
-    def get_global_idx(self, id: global_key, abs_cell_idx) -> int:
+    def get_global_idx(self, id: global_key, abs_cell_idx: int) -> int:
         BUBB_START_IDX = 0
         VERT_START_IDX = self.num_bubb_funs
         EDGE_START_IDX = self.num_bubb_funs + self.num_vert_funs
@@ -169,3 +171,4 @@ class global_function_space:
             return self.T.vert_is_on_boundary(id.vert_idx)
         if id.fun_type == "edge":
             return self.T.edge_is_on_boundary(id.edge_idx)
+        raise ValueError("Invalid function type")

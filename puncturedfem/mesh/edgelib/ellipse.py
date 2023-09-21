@@ -2,24 +2,26 @@
 Parameterization of an ellipse centered at the origin
 """
 
+from typing import Any
+
 import numpy as np
 
 
-def _x(t, **kwargs):
+def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     x = np.zeros((2, len(t)))
     x[0, :] = kwargs["a"] * np.cos(t)
     x[1, :] = kwargs["b"] * np.sin(t)
     return x
 
 
-def _dx(t, **kwargs):
+def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     dx = np.zeros((2, len(t)))
     dx[0, :] = -kwargs["a"] * np.sin(t)
     dx[1, :] = kwargs["b"] * np.cos(t)
     return dx
 
 
-def _ddx(t, **kwargs):
+def DDX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     ddx = np.zeros((2, len(t)))
     ddx[0, :] = -kwargs["a"] * np.cos(t)
     ddx[1, :] = -kwargs["b"] * np.sin(t)

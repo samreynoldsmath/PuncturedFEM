@@ -2,10 +2,12 @@
 Parameterization of the unit circle centered at the origin
 """
 
+from typing import Any
+
 import numpy as np
 
 
-def _x(t, **kwargs):
+def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     if "radius" in kwargs:
         R = kwargs["radius"]
     else:
@@ -16,7 +18,7 @@ def _x(t, **kwargs):
     return x
 
 
-def _dx(t, **kwargs):
+def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     if "radius" in kwargs:
         R = kwargs["radius"]
     else:
@@ -27,7 +29,7 @@ def _dx(t, **kwargs):
     return dx
 
 
-def _ddx(t, **kwargs):
+def DDX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     if "radius" in kwargs:
         R = kwargs["radius"]
     else:

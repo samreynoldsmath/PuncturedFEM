@@ -3,10 +3,12 @@ Teardrop shape
 x(t) = (2 sin(t/2), −β sin t), β = tan(π/(2α)), α = 3/2
 """
 
+from typing import Any
+
 import numpy as np
 
 
-def _x(t, **kwargs):
+def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     alpha = 3 / 2
     beta = np.tan(0.5 * np.pi / alpha)
     x = np.zeros((2, len(t)))
@@ -15,7 +17,7 @@ def _x(t, **kwargs):
     return x
 
 
-def _dx(t, **kwargs):
+def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     alpha = 3 / 2
     beta = np.tan(0.5 * np.pi / alpha)
     dx = np.zeros((2, len(t)))
@@ -24,7 +26,7 @@ def _dx(t, **kwargs):
     return dx
 
 
-def _ddx(t, **kwargs):
+def DDX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
     alpha = 3 / 2
     beta = np.tan(0.5 * np.pi / alpha)
     ddx = np.zeros((2, len(t)))

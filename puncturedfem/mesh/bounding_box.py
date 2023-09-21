@@ -1,7 +1,9 @@
 import numpy as np
 
 
-def get_bounding_box(x, y, tol=1e-12):
+def get_bounding_box(
+    x: np.ndarray, y: np.ndarray, tol: float = 1e-12
+) -> tuple[float, float, float, float]:
     xmin = np.min(x)
     xmax = np.max(x)
     ymin = np.min(y)
@@ -11,7 +13,7 @@ def get_bounding_box(x, y, tol=1e-12):
     d = np.max([dx, dy])
 
     if d < tol:
-        return None
+        return xmin - d / 2, xmax + d / 2, ymin - d / 2, ymax + d / 2
 
     if dx < tol:
         x0 = xmin - d / 2

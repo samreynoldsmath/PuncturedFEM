@@ -1,4 +1,4 @@
-from numpy import array, sqrt, zeros
+from numpy import array, ndarray, sqrt, zeros
 from numpy.linalg import norm
 
 from ...mesh.edge import edge
@@ -21,7 +21,9 @@ def barycentric_coordinates_edge(e: edge) -> list[polynomial]:
     return barycentric_coordinates(z0, z1, z2)
 
 
-def barycentric_coordinates(z0, z1, z2) -> list[polynomial]:
+def barycentric_coordinates(
+    z0: ndarray, z1: ndarray, z2: ndarray
+) -> list[polynomial]:
     """
     Returns the barcentric coordinates ell = [ell0, ell1, ell2]
     where ellj is a polynomial object
@@ -44,8 +46,8 @@ def barycentric_coordinates(z0, z1, z2) -> list[polynomial]:
     h = 2 * sqrt(s * (s - dist[0]) * (s - dist[1]) * (s - dist[2]))
 
     # initialize polynomial objects
-    x = polynomial([[1.0, 1, 0]])
-    y = polynomial([[1.0, 0, 1]])
+    x = polynomial([(1.0, 1, 0)])
+    y = polynomial([(1.0, 0, 1)])
     ell = [polynomial(), polynomial(), polynomial()]
 
     for j in range(3):
@@ -59,14 +61,14 @@ def barycentric_coordinates(z0, z1, z2) -> list[polynomial]:
     return ell
 
 
-def barycentric_products(e: edge, deg: int):
+def barycentric_products(e: edge, deg: int) -> list[ndarray]:
     """
     DEPRECATED
     """
     if deg > 3:
         raise Exception("NOT IMPLEMENTED")
 
-    ell = barycentric_coordinates(z0=e.x[:, 0], z1=e.x[:, -1])
+    ell = barycentric_coordinates_edge(e)
     ell_trace = zeros((3, e.num_pts))
     for j in range(3):
         ell_trace[j, :] = ell[j].eval(x=e.x[0, :], y=e.x[1, :])

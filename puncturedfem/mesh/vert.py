@@ -5,7 +5,7 @@ class vert:
     x: float
     y: float
 
-    def __init__(self, x: float, y: float, id=-1) -> None:
+    def __init__(self, x: float, y: float, id: int = -1) -> None:
         self.set_coord(x, y)
         self.set_id(id)
 

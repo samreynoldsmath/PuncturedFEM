@@ -3,13 +3,15 @@ import numpy as np
 from ...mesh.cell import cell
 
 
-def shifted_coordinates(x, xi):
+def shifted_coordinates(
+    x: np.ndarray, xi: list[float]
+) -> tuple[np.ndarray, float]:
     x_xi = np.array([x[0] - xi[0], x[1] - xi[1]])
     x_xi_norm_sq = x_xi[0] ** 2 + x_xi[1] ** 2
     return x_xi, x_xi_norm_sq
 
 
-def get_log_trace(K: cell):
+def get_log_trace(K: cell) -> np.ndarray:
     """
     Returns traces of logarithmic terms on the boundary
     """
@@ -17,10 +19,9 @@ def get_log_trace(K: cell):
     for j in range(K.num_holes):
         # xi = K.hole_int_pts[:,j]
         xi = K.components[j + 1].interior_point
-        xi = np.array([xi.x, xi.y])
 
-        def lam(x):
-            _, x_xi_norm_sq = shifted_coordinates(x, xi)
+        def lam(x: np.ndarray) -> float:
+            _, x_xi_norm_sq = shifted_coordinates(x, xi=[xi.x, xi.y])
             return 0.5 * np.log(x_xi_norm_sq)
 
         lam_trace[:, j] = K.evaluate_function_on_boundary(lam)
@@ -28,7 +29,7 @@ def get_log_trace(K: cell):
     return lam_trace
 
 
-def get_log_grad(K: cell):
+def get_log_grad(K: cell) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns gradients of logarithmic terms on the boundary
     """
@@ -36,16 +37,15 @@ def get_log_grad(K: cell):
     lam_x2_trace = np.zeros((K.num_pts, K.num_holes))
 
     for j in range(K.num_holes):
-        # xi = K.hole_int_pts[:,j]
         xi = K.components[j + 1].interior_point
-        xi = np.array([xi.x, xi.y])
+        xi_arr = [xi.x, xi.y]
 
-        def lam_x1(x):
-            x_xi, x_xi_norm_sq = shifted_coordinates(x, xi)
+        def lam_x1(x: np.ndarray) -> float:
+            x_xi, x_xi_norm_sq = shifted_coordinates(x, xi_arr)
             return x_xi[0] / x_xi_norm_sq
 
-        def lam_x2(x):
-            x_xi, x_xi_norm_sq = shifted_coordinates(x, xi)
+        def lam_x2(x: np.ndarray) -> float:
+            x_xi, x_xi_norm_sq = shifted_coordinates(x, xi_arr)
             return x_xi[1] / x_xi_norm_sq
 
         lam_x1_trace[:, j] = K.evaluate_function_on_boundary(lam_x1)
@@ -54,7 +54,9 @@ def get_log_grad(K: cell):
     return lam_x1_trace, lam_x2_trace
 
 
-def get_dlam_dt_wgt(K: cell, lam_x1_trace: np.array, lam_x2_trace: np.array):
+def get_dlam_dt_wgt(
+    K: cell, lam_x1_trace: np.ndarray, lam_x2_trace: np.ndarray
+) -> np.ndarray:
     """
     Returns weighted tangential derivative of logarthmic terms
     """
@@ -67,7 +69,9 @@ def get_dlam_dt_wgt(K: cell, lam_x1_trace: np.array, lam_x2_trace: np.array):
     return dlam_dt_wgt
 
 
-def get_dlam_dn_wgt(K: cell, lam_x1_trace: np.array, lam_x2_trace: np.array):
+def get_dlam_dn_wgt(
+    K: cell, lam_x1_trace: np.ndarray, lam_x2_trace: np.ndarray
+) -> np.ndarray:
     """
     Returns weighted normal derivative of logarthmic terms
     """

@@ -1,12 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .. import mesh
+from ..mesh.cell import cell
+from ..mesh.edge import edge
 
 
 def plot_edges(
-    edge_list, orientation=False, axis_arg="equal", grid_arg="minor"
-):
+    edge_list: list[edge],
+    orientation: bool = False,
+    axis_arg: str = "equal",
+    grid_arg: bool = True,
+) -> None:
     plt.figure()
     plt.axis(axis_arg)
     plt.grid(grid_arg)
@@ -19,21 +23,19 @@ def plot_edges(
 
     plt.show()
 
-    return None
-
 
 def plot_boundary(
-    K: mesh.cell,
-    orientation=False,
-    hole_int_pts=False,
-    axis_arg="equal",
-    grid_arg="minor",
-):
+    K: cell,
+    orientation: bool = False,
+    hole_int_pts: bool = False,
+    axis_arg: str = "equal",
+    grid_arg: bool = True,
+) -> None:
     plt.figure()
     plt.axis(axis_arg)
     plt.grid(grid_arg)
 
-    for e in K.edge_list:
+    for e in K.get_edges():
         if orientation:
             _plot_oriented_edge(e)
         else:
@@ -44,14 +46,12 @@ def plot_boundary(
 
     plt.show()
 
-    return None
 
-
-def _plot_edge(e):
+def _plot_edge(e: edge) -> None:
     plt.plot(e.x[0, :], e.x[1, :], "k-")
 
 
-def _plot_oriented_edge(e):
+def _plot_oriented_edge(e: edge) -> None:
     X = e.x[0, :]
     Y = e.x[1, :]
     U = np.roll(X, -1) - X
@@ -61,8 +61,7 @@ def _plot_oriented_edge(e):
     U = U[:-1]
     V = V[:-1]
     plt.quiver(X, Y, U, V, scale=1, angles="xy", scale_units="xy")
-    return None
 
 
-def _plot_hole_interior_points(K):
-    plt.scatter(K.hole_int_pts[0, :], K.hole_int_pts[1, :])
+def _plot_hole_interior_points(K: cell) -> None:
+    plt.scatter(K.int_x1, K.int_x2)

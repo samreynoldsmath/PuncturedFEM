@@ -419,7 +419,7 @@ pf.plot_edges(K.get_edges())
 #    be the name of the curve that will be called during the initialization 
 #    of the edge object. 
 # 2. Import the `numpy` package.
-# 3. In `mycurve.py`, define three functions called `_x()`, `_dx()`, and `_ddx()`.
+# 3. In `mycurve.py`, define three functions called `X()`, `DX()`, and `DDX()`.
 #    These will define $x(t)$, $x'(t)$, and $x''(t)$ respectively.
 # 4. Each of these three functions will return a $2\times (2n+1)$ array,
 #    where $2n+1$ is the number of sampled points specified by the chosen
@@ -438,7 +438,7 @@ pf.plot_edges(K.get_edges())
 # 
 # 	import numpy as np
 # 
-# 	def _x(t, **kwargs):
+# 	def X(t, **kwargs):
 # 
 # 		my_parameter = kwargs['my_parameter']
 # 
@@ -448,7 +448,7 @@ pf.plot_edges(K.get_edges())
 # 
 # 		return x
 # 
-# 	def _dx(t, **kwargs):
+# 	def DX(t, **kwargs):
 # 
 # 		my_parameter = kwargs['my_parameter']
 # 
@@ -458,7 +458,7 @@ pf.plot_edges(K.get_edges())
 # 
 # 		return dx
 # 
-# 	def _ddx(t, **kwargs):
+# 	def DDX(t, **kwargs):
 # 
 # 		my_parameter = kwargs['my_parameter']
 # 

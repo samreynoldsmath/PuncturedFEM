@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
-from numpy import inf, nanmax, nanmin, ndarray, zeros
+from numpy import inf, nanmax, nanmin, ndarray, shape, zeros
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
 
@@ -16,7 +16,7 @@ MAGENTA = "\033[35m"  # Magenta text
 CYAN = "\033[36m"  # Cyan text
 
 
-def print_color(s: str, color) -> None:
+def print_color(s: str, color: str) -> None:
     print(color + s + RESET)
 
 
@@ -32,6 +32,7 @@ class solver:
     rhs_vals: list[float]
     num_funs: int
     interior_values: list[list[ndarray]]
+    soln: ndarray
 
     def __init__(self, V: global_function_space, a: bilinear_form) -> None:
         self.set_global_function_space(V)
@@ -54,7 +55,7 @@ class solver:
 
     # SOLVE LINEAR SYSTEM ####################################################
 
-    def solve(self) -> ndarray:
+    def solve(self) -> None:
         """Solve linear system"""
         self.soln = spsolve(self.glob_mat, self.glob_rhs)
 
@@ -115,7 +116,7 @@ class solver:
 
             # initialize interior values
             self.interior_values[abs_cell_idx] = [
-                None for _ in range(V_K.num_funs)
+                zeros((0,)) for _ in range(V_K.num_funs)
             ]
 
             if verbose:
@@ -124,6 +125,7 @@ class solver:
             # loop over local functions
             loc_basis = V_K.get_basis()
 
+            range_num_funs: range | tqdm[int]
             if verbose:
                 range_num_funs = tqdm(range(V_K.num_funs))
             else:
@@ -213,13 +215,15 @@ class solver:
 
     # PLOT SOLUTION ##########################################################
 
+    # TODO: this belongs in a different module
+
     def plot_solution(
         self,
-        title="",
-        show_fig=True,
-        save_fig=False,
-        filename="solution.pdf",
-        fill=True,
+        title: str = "",
+        show_fig: bool = True,
+        save_fig: bool = False,
+        filename: str = "solution.pdf",
+        fill: bool = True,
     ) -> None:
         self.plot_linear_combo(
             self.soln,
@@ -233,11 +237,11 @@ class solver:
     def plot_linear_combo(
         self,
         u: ndarray,
-        title="",
-        show_fig=True,
-        save_fig=False,
-        filename="solution.pdf",
-        fill=True,
+        title: str = "",
+        show_fig: bool = True,
+        save_fig: bool = False,
+        filename: str = "solution.pdf",
+        fill: bool = True,
     ) -> None:
         if not (show_fig or save_fig):
             return
@@ -302,7 +306,12 @@ class solver:
                     )
         if fill:
             sm = ScalarMappable(norm=plt.Normalize(vmin=vmin, vmax=vmax))
-            plt.colorbar(sm, fraction=0.046, pad=0.04)
+            plt.colorbar(
+                mappable=sm,
+                ax=fig.axes,
+                fraction=0.046,
+                pad=0.04,
+            )
         plt.axis("equal")
         plt.axis("off")
         plt.gca().set_aspect("equal")
@@ -321,10 +330,12 @@ class solver:
 
         plt.close(fig)
 
-    def compute_linear_combo_on_cell(self, cell_idx, coef: ndarray) -> None:
-        vals = 0.0
+    def compute_linear_combo_on_cell(
+        self, cell_idx: int, coef: ndarray
+    ) -> ndarray:
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
         int_vals = self.interior_values[abs_cell_idx]
+        vals = zeros(shape(int_vals[0]))
         for i in range(len(int_vals)):
             vals += int_vals[i] * coef[i]
         return vals

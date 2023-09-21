@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def fft_derivative(f, interval_length):
+def fft_derivative(f: np.ndarray, interval_length: float) -> np.ndarray:
     N = len(f)
     omega = np.fft.fft(f)
     omega *= 1j * N * np.fft.fftfreq(N)
@@ -9,7 +9,7 @@ def fft_derivative(f, interval_length):
     return np.real(np.fft.ifft(omega))
 
 
-def fft_antiderivative(df, interval_length):
+def fft_antiderivative(df: np.ndarray, interval_length: float) -> np.ndarray:
     N = len(df)
     omega = np.fft.fft(df)
     fft_idx = np.fft.fftfreq(len(df))
