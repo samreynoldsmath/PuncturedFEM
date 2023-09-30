@@ -56,8 +56,8 @@ class edge:
         The options for the curve parameterization.
     quad_type : str
         The type of quadrature used to parameterize the edge.
-    id : Any
-        The id of the edge as it appears in the mesh.
+    idx : Any
+        The global index of the edge as it appears in the mesh.
     is_on_mesh_boundary : bool
         True if the edge is on the mesh boundary.
     is_loop : bool
@@ -86,7 +86,7 @@ class edge:
     curve_type: str
     curve_opts: dict
     quad_type: str
-    id: Any
+    idx: Any
     is_on_mesh_boundary: bool
     is_loop: bool
     is_parameterized: bool
@@ -105,7 +105,7 @@ class edge:
         neg_cell_idx: int = -1,
         curve_type: str = "line",
         quad_type: str = "kress",
-        id: Any = None,
+        idx: Any = None,
         **curve_opts: Any,
     ) -> None:
         """
@@ -126,13 +126,13 @@ class edge:
         quad_type : str, optional
             The type of quadrature used to parameterize the edge. Default is
             "kress".
-        id : Any, optional
-            The id of the edge as it appears in the mesh. Default is None.
+        idx : Any, optional
+            The index of the edge as it appears in the mesh. Default is None.
         """
         self.curve_type = curve_type
         self.quad_type = quad_type
         self.curve_opts = curve_opts
-        self.set_id(id)
+        self.set_idx(idx)
         self.set_verts(anchor, endpnt)
         self.set_cells(pos_cell_idx, neg_cell_idx)
         self.is_parameterized = False
@@ -141,7 +141,7 @@ class edge:
         """Return a string representation of the edge"""
         # TODO
         msg = ""
-        msg += f"id:         {self.id}\n"
+        msg += f"idx:         {self.idx}\n"
         msg += f"curve_type: {self.curve_type}\n"
         msg += f"quad_type:  {self.quad_type}\n"
         msg += f"num_pts:    {self.num_pts}\n"
@@ -149,15 +149,15 @@ class edge:
 
     # MESH TOPOLOGY ##########################################################
 
-    def set_id(self, id: Any) -> None:
+    def set_idx(self, idx: Any) -> None:
         """Set the id of the edge"""
-        if id is None:
+        if idx is None:
             return
-        if not isinstance(id, int):
-            raise TypeError("id must be an integer")
-        if id < 0:
-            raise ValueError("id must be nonnegative")
-        self.id = id
+        if not isinstance(idx, int):
+            raise TypeError("idx must be an integer")
+        if idx < 0:
+            raise ValueError("idx must be nonnegative")
+        self.idx = idx
 
     def set_verts(self, anchor: vert, endpnt: vert) -> None:
         """Set the anchor and endpnt vertices of the edge"""

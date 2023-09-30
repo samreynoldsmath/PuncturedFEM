@@ -94,7 +94,7 @@ class locfun:
 
     Attributes
     ----------
-    id : global_key
+    key : global_key
         A unique tag that identifies the local function in the global space.
     trace : ndarray
         Dirichlet trace values on the boundary of K.
@@ -131,7 +131,7 @@ class locfun:
         Second component of the gradient of the local function.
     """
 
-    id: global_key
+    key: global_key
     trace: ndarray
     poly_trace: piecewise_polynomial
     has_poly_trace: bool
@@ -145,7 +145,6 @@ class locfun:
     antilap_trace: ndarray
     antilap_wnd: ndarray
     solver: nystrom_solver
-    # interior_values: interior_value_object
     int_vals: ndarray
     int_grad1: ndarray
     int_grad2: ndarray
@@ -156,7 +155,7 @@ class locfun:
         lap_poly: polynomial = polynomial(),  # TODO maybe should be None?
         poly_trace: Optional[piecewise_polynomial] = None,
         has_poly_trace: bool = True,
-        id: Optional[global_key] = None,
+        key: Optional[global_key] = None,
     ) -> None:
         """
         Constructor for locfun class.
@@ -175,21 +174,21 @@ class locfun:
         id : Optional[global_key], optional
             Global key, by default None
         """
-        self.set_id(id)
+        self.set_key(key)
         self.set_solver(solver)
         self.set_laplacian_polynomial(lap_poly)
         self.set_poly_trace(poly_trace)
         self.has_poly_trace = has_poly_trace
 
-    def set_id(self, id: Optional[global_key]) -> None:
+    def set_key(self, key: Optional[global_key]) -> None:
         """
         Sets the global key for the local function.
         """
-        if id is None:
+        if key is None:
             return
-        if not isinstance(id, global_key):
-            raise TypeError("id must be a global_key")
-        self.id = id
+        if not isinstance(key, global_key):
+            raise TypeError("key must be a global_key")
+        self.key = key
 
     def set_solver(self, solver: nystrom_solver) -> None:
         """

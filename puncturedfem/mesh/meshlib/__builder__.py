@@ -9,11 +9,13 @@ mesh builder functions in the meshlib submodules.
 from typing import Any, Callable
 
 from ..planar_mesh import planar_mesh
+from ..vert import vert
+from ..edge import edge
 
 
 def mesh_builder(
-    get_verts: Callable,
-    get_edges: Callable,
+    get_verts: Callable[..., list[vert]],
+    get_edges: Callable[..., list[edge]],
     verbose: bool = True,
     **kwargs: Any
 ) -> planar_mesh:
@@ -43,7 +45,7 @@ def mesh_builder(
 
     # TODO: set vertex ids here or in planar_mesh constructor?
     for k, v in enumerate(verts):
-        v.set_id(k)
+        v.set_idx(k)
 
     # define edges
     edges = get_edges(verts, **kwargs)

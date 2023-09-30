@@ -22,7 +22,7 @@ class multi_index_2:
     x: int
     y: int
     order: int
-    id: int
+    idx: int
 
     def __init__(self, alpha: Optional[list[int]] = None) -> None:
         """
@@ -58,17 +58,17 @@ class multi_index_2:
         self.x = alpha[0]
         self.y = alpha[1]
         self.order = alpha[0] + alpha[1]
-        self.id = alpha[1] + self.order * (self.order + 1) // 2
+        self.idx = alpha[1] + self.order * (self.order + 1) // 2
 
-    def set_from_id(self, id: int) -> None:
+    def set_from_idx(self, idx: int) -> None:
         """
         Sets the multi-index from its id.
         """
-        t = floor((sqrt(8 * id + 1) - 1) / 2)
+        t = floor((sqrt(8 * idx + 1) - 1) / 2)
         N = t * (t + 1) // 2
         alpha = []
-        alpha.append(t - id + N)
-        alpha.append(id - N)
+        alpha.append(t - idx + N)
+        alpha.append(idx - N)
         self.set(alpha)
 
     def copy(self) -> multi_index_2:
@@ -85,7 +85,7 @@ class multi_index_2:
             raise TypeError(
                 "Comparison of multi-index to object" + " of different type"
             )
-        return self.id == other.id
+        return self.idx == other.idx
 
     def __add__(self, other: object) -> multi_index_2:
         """

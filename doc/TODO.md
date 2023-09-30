@@ -2,7 +2,6 @@
 
 
 ## [yyyy mm dd] v0.3.x: Exceptions and logging
-- rename `id` variables to avoid shadowing built-ins
 - change exceptions to specific error types
 - add logging with `logging` module
 

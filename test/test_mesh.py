@@ -97,7 +97,7 @@ class TestLocalFunction(unittest.TestCase):
         )
 
         # define mesh cell
-        K = pf.cell(id=0, edges=edges)
+        K = pf.cell(idx=0, edges=edges)
 
         # parameterize edges
         K.parameterize(self.quad_dict)
@@ -120,7 +120,7 @@ class TestLocalFunction(unittest.TestCase):
         edges.append(pf.edge(verts[3], verts[0], pos_cell_idx=0))
 
         # define mesh cell
-        K = pf.cell(id=0, edges=edges)
+        K = pf.cell(idx=0, edges=edges)
 
         # parameterize edges
         K.parameterize(self.quad_dict)
@@ -154,7 +154,7 @@ class TestLocalFunction(unittest.TestCase):
         )
 
         # define mesh cell
-        K = pf.cell(id=0, edges=edges)
+        K = pf.cell(idx=0, edges=edges)
 
         # parameterize edges
         K.parameterize(self.quad_dict)

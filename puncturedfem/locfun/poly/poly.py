@@ -120,30 +120,30 @@ class polynomial:
                 self.monos[j] = temp
                 j -= 1
 
-    def add_monomial_with_id(self, coef: float, id: int) -> None:
+    def add_monomial_with_idx(self, coef: float, idx: int) -> None:
         """
-        Adds a monomial with a given multi-index id, defined with a
+        Adds a monomial with a given multi-index idx, defined with a
         'upper triangular' ordering
         """
         m = monomial()
-        m.set_multidx_from_id(id)
+        m.set_multidx_from_idx(idx)
         m.set_coef(coef)
         self.add_monomial(m)
         self.consolidate()
 
-    def add_monomials_with_ids(
-        self, coef_list: list[float], id_list: list[int]
+    def add_monomials_with_idxs(
+        self, coef_list: list[float], idx_list: list[int]
     ) -> None:
         """
         Adds a list of monomials with a given list of multi-index ids,
         defined with a 'upper triangular' ordering
         """
-        if len(coef_list) != len(id_list):
+        if len(coef_list) != len(idx_list):
             raise Exception(
                 "number of coefficients and multi-indices must be equal"
             )
         for i, c in enumerate(coef_list):
-            self.add_monomial_with_id(c, id_list[i])
+            self.add_monomial_with_idx(c, idx_list[i])
         self.consolidate()
 
     def is_zero(self) -> bool:
@@ -228,7 +228,7 @@ class polynomial:
 
         # define |(x, y)|^2 = x^2 + y^2
         p1 = polynomial()
-        p1.add_monomials_with_ids([1, 1], [3, 5])
+        p1.add_monomials_with_idxs([1, 1], [3, 5])
 
         # loop over monomial terms
         for m in self.monos:
@@ -312,7 +312,7 @@ class polynomial:
             for m in self.monos:
                 new.add_monomial(m)
             constant = monomial()
-            constant.set_multidx_from_id(0)
+            constant.set_multidx_from_idx(0)
             constant.set_coef(other)
             new.add_monomial(constant)
         else:
@@ -346,7 +346,7 @@ class polynomial:
             self.consolidate()
         elif isinstance(other, (int, float)):
             constant = monomial()
-            constant.set_multidx_from_id(0)
+            constant.set_multidx_from_idx(0)
             constant.set_coef(other)
             self.add_monomial(constant)
             self.consolidate()

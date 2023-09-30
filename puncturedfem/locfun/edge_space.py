@@ -93,7 +93,7 @@ class edge_space:
         self.vert_fun_global_keys = []
         if self.e.is_loop:
             return
-        for k in [self.e.anchor.id, self.e.endpnt.id]:
+        for k in [self.e.anchor.idx, self.e.endpnt.idx]:
             self.vert_fun_global_keys.append(global_key("vert", vert_idx=k))
 
     def generate_edge_fun_global_keys(self) -> None:
@@ -101,7 +101,7 @@ class edge_space:
         self.edge_fun_global_keys = []
         for k in range(self.num_edge_funs):
             self.edge_fun_global_keys.append(
-                global_key("edge", edge_idx=self.e.id, edge_space_idx=k)
+                global_key("edge", edge_idx=self.e.idx, edge_space_idx=k)
             )
 
     def build_spanning_set(self) -> None:

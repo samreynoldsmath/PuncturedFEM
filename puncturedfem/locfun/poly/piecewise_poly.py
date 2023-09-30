@@ -26,7 +26,7 @@ class piecewise_polynomial:
         self,
         num_polys: int = 1,
         polys: Optional[list[polynomial]] = None,
-        id: int = 0,
+        idx: int = 0,
     ) -> None:
         """
         Constructor for piecewise_polynomial class.
@@ -37,22 +37,22 @@ class piecewise_polynomial:
             Number of polynomials in the piecewise_polynomial. Default is 1.
         polys : list[polynomial], optional
             List of polynomials in the piecewise_polynomial. Default is None.
-        id : int, optional
+        idx : int, optional
             Identifier for the piecewise_polynomial. Default is 0.
         """
-        self.set_id(id)
+        self.set_idx(idx)
         self.set_num_polys(num_polys)  # TODO: this isn't safe
         self.set_polys(polys)
 
-    def set_id(self, id: int) -> None:
+    def set_idx(self, idx: int) -> None:
         """
         Sets the identifier for the piecewise_polynomial.
         """
-        if not isinstance(id, int):
-            raise TypeError("id must be an integer")
-        if id < 0:
-            raise ValueError("id must be nonnegative")
-        self.id = id
+        if not isinstance(idx, int):
+            raise TypeError("idx must be an integer")
+        if idx < 0:
+            raise ValueError("idx must be nonnegative")
+        self.idx = idx
 
     def set_num_polys(self, num_polys: int) -> None:
         """

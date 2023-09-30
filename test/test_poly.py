@@ -29,7 +29,7 @@ class TestTemplate(unittest.TestCase):
 			- y^2
 		"""
         self.p = polynomial(
-            [[1.0, 0, 0], [-5.0, 1, 0], [2.0, 0, 1], [1.0, 2, 0], [-1.0, 0, 2]]
+            [[1.0, 0, 0], [-5.0, 1, 0], [2.0, 0, 1], [1.0, 2, 0], [-1.0, 0, 2]],
         )
 
         self.scalar = 4
@@ -60,7 +60,7 @@ class TestTemplate(unittest.TestCase):
 			+ 5 x*y^2
 		"""
         self.q = polynomial(
-            [[3.0, 0, 0], [-2.0, 1, 0], [1.0, 0, 1], [5.0, 1, 2]]
+            [[3.0, 0, 0], [-2.0, 1, 0], [1.0, 0, 1], [5.0, 1, 2]],
         )
 
         """
@@ -121,7 +121,7 @@ class TestTemplate(unittest.TestCase):
         self.assertTrue(self.p + self.z == self.p)
         self.assertTrue(self.z + self.p == self.p)
 
-    def test_addition_commutivity(self):
+    def test_addition_commutativity(self):
         self.assertTrue(self.p + self.q == self.q + self.p)
 
     def test_addition_with_scalar(self):
@@ -192,9 +192,9 @@ class TestTemplate(unittest.TestCase):
 
     def test_laplacian(self):
         """
-        \Delta p = 0
-        \Delta q = 10 x
-        \Delta (pq) =
+        Delta p = 0
+        Delta q = 10 x
+        Delta (pq) =
                 24
                 + 2 x
                 - 50 x^2
@@ -230,7 +230,7 @@ class TestTemplate(unittest.TestCase):
 
     def test_anti_laplacian(self):
         P = polynomial()
-        P.add_monomials_with_ids(
+        P.add_monomials_with_idxs(
             coef_list=[
                 1 / 4,
                 1 / 4,
@@ -245,7 +245,7 @@ class TestTemplate(unittest.TestCase):
                 -6 / 96,
                 -7 / 96,
             ],
-            id_list=[3, 5, 6, 8, 7, 9, 10, 12, 14, 10, 12, 14],
+            idx_list=[3, 5, 6, 8, 7, 9, 10, 12, 14, 10, 12, 14],
         )
 
         self.assertTrue(self.p.anti_laplacian() == P)

@@ -70,12 +70,12 @@ class monomial:
         """
         self.alpha = alpha
 
-    def set_multidx_from_id(self, id: int) -> None:
+    def set_multidx_from_idx(self, idx: int) -> None:
         """
         Set the multi-index of the monomial to the multi-index with id = id.
         """
         alpha = multi_index_2()
-        alpha.set_from_id(id)
+        alpha.set_from_idx(idx)
         self.set_multidx(alpha)
 
     def eval(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -153,17 +153,17 @@ class monomial:
         """
         if not isinstance(other, monomial):
             raise TypeError("Comparison of monomial to non-monomial object")
-        same_id = self.alpha.id == other.alpha.id
-        same_coef = abs(self.coef - other.coef) < tol
-        return same_id and same_coef
+        if self.alpha.idx != other.alpha.idx:
+            return False
+        return abs(self.coef - other.coef) < tol
 
     def __gt__(self, other: object) -> bool:
         """
-        Returns True iff self.id > other.id
+        Returns True iff self.idx > other.idx
         """
         if not isinstance(other, monomial):
             raise TypeError("Comparison of monomial to non-monomial object")
-        return self.alpha.id > other.alpha.id
+        return self.alpha.idx > other.alpha.idx
 
     def __add__(self, other: object) -> monomial:
         """

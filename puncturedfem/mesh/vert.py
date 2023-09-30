@@ -8,15 +8,24 @@ Module for the vert class, which represents a vertex in a planar mesh.
 
 class vert:
     """
-    Represents a vertex in a planar mesh. Stores the vertex's global id and
+    Represents a vertex in a planar mesh. Stores the vertex's global index and
     coordinates.
+
+    Attributes
+    ----------
+    idx : int
+        The global index of the vertex.
+    x : float
+        The x-coordinate of the vertex.
+    y : float
+        The y-coordinate of the vertex.
     """
 
-    id: int
+    idx: int
     x: float
     y: float
 
-    def __init__(self, x: float, y: float, id: int = -1) -> None:
+    def __init__(self, x: float, y: float, idx: int = -1) -> None:
         """
         Constructor for the vert class.
 
@@ -28,15 +37,15 @@ class vert:
             The y-coordinate of the vertex.
         """
         self.set_coord(x, y)
-        self.set_id(id)
+        self.set_idx(idx)
 
-    def set_id(self, id: int) -> None:
+    def set_idx(self, idx: int) -> None:
         """
         Sets the global vertex index.
         """
-        if not isinstance(id, int):
-            raise TypeError("id must be an integer")
-        self.id = id
+        if not isinstance(idx, int):
+            raise TypeError("idx must be an integer")
+        self.idx = idx
 
     def set_coord(self, x: float, y: float) -> None:
         """

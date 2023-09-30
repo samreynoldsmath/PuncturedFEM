@@ -129,14 +129,14 @@ class global_function_space:
         K.parameterize(quad_dict=self.quad_dict)
         edge_spaces = []
         for e in K.get_edges():
-            b = self.edge_spaces[e.id]
+            b = self.edge_spaces[e.idx]
             edge_spaces.append(b)
         V_K = locfunspace(K, edge_spaces, self.deg, verbose=verbose)
         for v in V_K.get_basis():
-            glob_idx = self.get_global_idx(v.id, abs_cell_idx)
-            v.id.set_glob_idx(glob_idx)
-            self.cell_dofs[abs_cell_idx].append(v.id)
-            v.id.is_on_boundary = self.fun_is_on_boundary(v.id)
+            glob_idx = self.get_global_idx(v.key, abs_cell_idx)
+            v.key.set_glob_idx(glob_idx)
+            self.cell_dofs[abs_cell_idx].append(v.key)
+            v.key.is_on_boundary = self.fun_is_on_boundary(v.key)
         return V_K
 
     # COUNT FUNCTIONS ########################################################
@@ -185,7 +185,7 @@ class global_function_space:
 
     # LOCAL-TO-GLOBAL MAPPING ################################################
 
-    def get_global_idx(self, id: global_key, abs_cell_idx: int) -> int:
+    def get_global_idx(self, key: global_key, abs_cell_idx: int) -> int:
         """
         Returns the global index of a local function.
         """
@@ -193,21 +193,21 @@ class global_function_space:
         VERT_START_IDX = self.num_bubb_funs
         EDGE_START_IDX = self.num_bubb_funs + self.num_vert_funs
         NUM_BUBB_CELL = (self.deg * (self.deg - 1)) // 2
-        if id.fun_type == "bubb":
+        if key.fun_type == "bubb":
             idx = BUBB_START_IDX
             idx += NUM_BUBB_CELL * abs_cell_idx
-            idx += id.bubb_space_idx
+            idx += key.bubb_space_idx
             if not self.is_in_range(idx, BUBB_START_IDX, VERT_START_IDX):
                 raise IndexError("bubble function index out of range")
-        if id.fun_type == "vert":
+        if key.fun_type == "vert":
             idx = VERT_START_IDX
-            idx += self.T.vert_idx_list.index(id.vert_idx)
+            idx += self.T.vert_idx_list.index(key.vert_idx)
             if not self.is_in_range(idx, VERT_START_IDX, EDGE_START_IDX):
                 raise IndexError("vertex function index out of range")
-        if id.fun_type == "edge":
+        if key.fun_type == "edge":
             idx = self.num_bubb_funs + self.num_vert_funs
-            idx += self.edge_fun_cumsum[id.edge_idx]
-            idx += id.edge_space_idx
+            idx += self.edge_fun_cumsum[key.edge_idx]
+            idx += key.edge_space_idx
             if not self.is_in_range(idx, EDGE_START_IDX, self.num_funs):
                 raise IndexError("edge function index out of range")
         return idx
@@ -218,14 +218,14 @@ class global_function_space:
         """
         return lo <= idx < hi
 
-    def fun_is_on_boundary(self, id: global_key) -> bool:
+    def fun_is_on_boundary(self, key: global_key) -> bool:
         """
         Returns True if a global function is on the boundary.
         """
-        if id.fun_type == "bubb":
+        if key.fun_type == "bubb":
             return False
-        if id.fun_type == "vert":
-            return self.T.vert_is_on_boundary(id.vert_idx)
-        if id.fun_type == "edge":
-            return self.T.edge_is_on_boundary(id.edge_idx)
+        if key.fun_type == "vert":
+            return self.T.vert_is_on_boundary(key.vert_idx)
+        if key.fun_type == "edge":
+            return self.T.edge_is_on_boundary(key.edge_idx)
         raise ValueError("Invalid function type")

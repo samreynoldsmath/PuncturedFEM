@@ -133,7 +133,7 @@ class planar_mesh:
     def set_edge_ids(self) -> None:
         """Set the id of each edge in the mesh."""
         for k, e in enumerate(self.edges):
-            e.set_id(k)
+            e.set_idx(k)
 
     # VERTICES ###############################################################
 
@@ -151,7 +151,7 @@ class planar_mesh:
         self.vert_idx_list = []
         for e in self.edges:
             if not e.is_loop:
-                for vert_idx in [e.anchor.id, e.endpnt.id]:
+                for vert_idx in [e.anchor.idx, e.endpnt.idx]:
                     if vert_idx >= 0 and vert_idx not in self.vert_idx_list:
                         self.vert_idx_list.append(vert_idx)
         self.vert_idx_list.sort()
@@ -188,7 +188,7 @@ class planar_mesh:
         for e in self.edges:
             if cell_idx in (e.pos_cell_idx, e.neg_cell_idx):
                 edges.append(e)
-        return cell(id=cell_idx, edges=edges)
+        return cell(idx=cell_idx, edges=edges)
 
     def get_abs_cell_idx(self, cell_idx: int) -> int:
         """
@@ -204,7 +204,7 @@ class planar_mesh:
         domain.
         """
         for e in self.edges:
-            if vert_idx in (e.anchor.id, e.endpnt.id):
+            if vert_idx in (e.anchor.idx, e.endpnt.idx):
                 if e.pos_cell_idx < 0 or e.neg_cell_idx < 0:
                     return True
         return False

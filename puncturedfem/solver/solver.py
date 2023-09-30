@@ -214,7 +214,7 @@ class solver:
                 f_i = self.a.eval_rhs(v)
 
                 # add to global right-hand side vector
-                self.rhs_idx.append(v.id.glob_idx)
+                self.rhs_idx.append(v.key.glob_idx)
                 self.rhs_vals.append(f_i)
 
                 for j in range(i, V_K.num_funs):
@@ -224,31 +224,31 @@ class solver:
                     a_ij = self.a.eval(v, w)
 
                     # add to global stiffness matrix
-                    self.row_idx.append(v.id.glob_idx)
-                    self.col_idx.append(w.id.glob_idx)
+                    self.row_idx.append(v.key.glob_idx)
+                    self.col_idx.append(w.key.glob_idx)
                     self.mat_vals.append(a_ij)
 
                     # symmetry
                     if j > i:
-                        self.row_idx.append(w.id.glob_idx)
-                        self.col_idx.append(v.id.glob_idx)
+                        self.row_idx.append(w.key.glob_idx)
+                        self.col_idx.append(v.key.glob_idx)
                         self.mat_vals.append(a_ij)
 
         # TODO this is a hacky way to impose a zero Dirichlet BC
         for abs_cell_idx in range(self.V.T.num_cells):
             cell_idx = self.V.T.cell_idx_list[abs_cell_idx]
 
-            for id in self.V.cell_dofs[abs_cell_idx]:
-                if id.is_on_boundary:
+            for key in self.V.cell_dofs[abs_cell_idx]:
+                if key.is_on_boundary:
                     # zero rhs entry
                     for k in range(len(self.rhs_idx)):
-                        if self.rhs_idx[k] == id.glob_idx:
+                        if self.rhs_idx[k] == key.glob_idx:
                             self.rhs_vals[k] = 0.0
 
                     # zero mat row, except diagonal
                     for k in range(len(self.row_idx)):
-                        if self.row_idx[k] == id.glob_idx:
-                            if self.col_idx[k] == id.glob_idx:
+                        if self.row_idx[k] == key.glob_idx:
+                            if self.col_idx[k] == key.glob_idx:
                                 self.mat_vals[k] = 1.0
                             else:
                                 self.mat_vals[k] = 0.0

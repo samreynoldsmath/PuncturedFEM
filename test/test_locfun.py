@@ -111,7 +111,7 @@ class TestLocalFunction(unittest.TestCase):
         )
 
         # define mesh cell
-        K = pf.cell(id=0, edges=edges)
+        K = pf.cell(idx=0, edges=edges)
 
         # parameterize edges
         K.parameterize(quad_dict)

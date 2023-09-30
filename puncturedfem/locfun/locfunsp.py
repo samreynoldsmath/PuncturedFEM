@@ -164,10 +164,10 @@ class locfunspace:
         num_bubb = (self.deg * (self.deg - 1)) // 2
         self.bubb_funs = []
         for k in range(num_bubb):
-            v_id = global_key(fun_type="bubb", bubb_space_idx=k)
-            v = locfun(solver=self.solver, id=v_id)
+            v_key = global_key(fun_type="bubb", bubb_space_idx=k)
+            v = locfun(solver=self.solver, key=v_key)
             p = polynomial()
-            p.add_monomial_with_id(coef=1.0, id=k)
+            p.add_monomial_with_idx(coef=1.0, idx=k)
             v.set_laplacian_polynomial(p)
             self.bubb_funs.append(v)
 
@@ -179,19 +179,19 @@ class locfunspace:
         for c in self.solver.K.components:
             for e in c.edges:
                 if not e.is_loop:
-                    vert_idx_set.add(e.anchor.id)
-                    vert_idx_set.add(e.endpnt.id)
-        vert_ids: list[global_key] = []
+                    vert_idx_set.add(e.anchor.idx)
+                    vert_idx_set.add(e.endpnt.idx)
+        vert_keys: list[global_key] = []
         for vert_idx in vert_idx_set:
-            vert_ids.append(global_key(fun_type="vert", vert_idx=vert_idx))
+            vert_keys.append(global_key(fun_type="vert", vert_idx=vert_idx))
 
         # initialize list of vertex functions and set traces
         self.vert_funs = []
-        for vert_id in vert_ids:
-            v = locfun(solver=self.solver, id=vert_id)
+        for vert_key in vert_keys:
+            v = locfun(solver=self.solver, key=vert_key)
             for j, b in enumerate(edge_spaces):
                 for k in range(b.num_vert_funs):
-                    if b.vert_fun_global_keys[k].vert_idx == vert_id.vert_idx:
+                    if b.vert_fun_global_keys[k].vert_idx == vert_key.vert_idx:
                         v.poly_trace.polys[j] = b.vert_fun_traces[k]
             self.vert_funs.append(v)
 
@@ -204,8 +204,8 @@ class locfunspace:
         # loop over edges on cell
         for b in edge_spaces:
             # locate edge within cell
-            glob_edge_idx = b.e.id
-            glob_edge_idx_list = [e.id for e in self.solver.K.get_edges()]
+            glob_edge_idx = b.e.idx
+            glob_edge_idx_list = [e.idx for e in self.solver.K.get_edges()]
             edge_idx = glob_edge_idx_list.index(glob_edge_idx)
 
             # loop over edge functions
@@ -213,7 +213,7 @@ class locfunspace:
                 v_trace = b.edge_fun_traces[k]
 
                 # create harmonic locfun
-                v = locfun(solver=self.solver, id=b.edge_fun_global_keys[k])
+                v = locfun(solver=self.solver, key=b.edge_fun_global_keys[k])
 
                 # set Dirichlet data
                 v.poly_trace.polys[edge_idx] = v_trace

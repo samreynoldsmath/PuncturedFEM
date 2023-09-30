@@ -25,7 +25,7 @@ class cell:
 
     Attributes
     ----------
-    id : int
+    idx : int
         The cell id as it appears in the mesh.
     components : list[closed_contour]
         The boundary components of the cell.
@@ -44,7 +44,7 @@ class cell:
     int_mesh_size : tuple[int, int]
     """
 
-    id: int
+    idx: int
     components: list[closed_contour]
     num_holes: int
     num_edges: int
@@ -57,7 +57,7 @@ class cell:
     int_x2: np.ndarray
     is_inside: np.ndarray
 
-    def __init__(self, id: int, edges: list[edge]) -> None:
+    def __init__(self, idx: int, edges: list[edge]) -> None:
         """
         Constructor for the cell class.
 
@@ -68,7 +68,7 @@ class cell:
         edges : list[edge]
             The edges in the cell.
         """
-        self.set_id(id)
+        self.set_idx(idx)
         self.find_edge_orientations(edges)
         self.components = []
         self.find_boundary_components(edges)
@@ -76,21 +76,21 @@ class cell:
 
     # MESH TOPOLOGY ##########################################################
 
-    def set_id(self, id: int) -> None:
-        """Set the cell id"""
-        if not isinstance(id, int):
-            raise TypeError(f"id = {id} invalid, must be a positive integer")
-        if id < 0:
-            raise ValueError(f"id = {id} invalid, must be a positive integer")
-        self.id = id
+    def set_idx(self, idx: int) -> None:
+        """Set the global cell index"""
+        if not isinstance(idx, int):
+            raise TypeError(f"idx = {idx} invalid, must be a positive integer")
+        if idx < 0:
+            raise ValueError(f"idx = {idx} invalid, must be a positive integer")
+        self.idx = idx
 
     def find_edge_orientations(self, edges: list[edge]) -> None:
         """Find the orientation of each edge in the cell"""
         self.edge_orients = []
         for e in edges:
-            if self.id == e.pos_cell_idx:
+            if self.idx == e.pos_cell_idx:
                 self.edge_orients.append(+1)
-            elif self.id == e.neg_cell_idx:
+            elif self.idx == e.neg_cell_idx:
                 self.edge_orients.append(-1)
             else:
                 self.edge_orients.append(0)
@@ -205,7 +205,7 @@ class cell:
             edge_orients_c = [self.edge_orients[i] for i in c_idx]
             self.components.append(
                 closed_contour(
-                    cell_id=self.id, edges=edges_c, edge_orients=edge_orients_c
+                    cell_id=self.idx, edges=edges_c, edge_orients=edge_orients_c
                 )
             )
 

@@ -27,7 +27,6 @@ disable = [
     "too-many-public-methods",
     "nested-min-max",
     "consider-using-enumerate",
-    "redefined-builtin",
     "broad-exception-raised",
 
     ]

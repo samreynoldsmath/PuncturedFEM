@@ -1,6 +1,10 @@
 # Punctured FEM: Change Log
 
 
+## [2023 Sep 30] v0.3.6: Rename id variables
+- rename `id` variables to either `idx` or `key` to avoid shadowing built-ins
+
+
 ## [2023 Sep 30] v0.3.5: Docstrings
 - write docstrings
   - modules
