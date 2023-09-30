@@ -1,3 +1,11 @@
+"""
+pacman.py
+=========
+
+Module containing the pacman function, which returns a planar mesh with Pac-Man
+and a ghost.
+"""
+
 from numpy import sqrt
 
 from ..edge import edge
@@ -15,6 +23,7 @@ GHOST_Y_SHIFT = 0.5
 
 
 def pacman(verbose: bool = True) -> planar_mesh:
+    """Returns the pacman mesh."""
     return mesh_builder(get_verts, get_edges, verbose=verbose)
 
 
@@ -22,6 +31,9 @@ def pacman(verbose: bool = True) -> planar_mesh:
 
 
 def get_verts() -> list[vert]:
+    """Returns a list of vertices for the mesh."""
+
+    # define vertices
     verts: list[vert] = []
 
     # rectangle corners
@@ -105,6 +117,8 @@ def get_verts() -> list[vert]:
 
 
 def get_edges(verts: list[vert]) -> list[edge]:
+    """Returns a list of edges for the mesh."""
+
     # define edges
     edges = []
 

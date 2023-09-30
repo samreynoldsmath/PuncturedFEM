@@ -1,3 +1,10 @@
+"""
+cell.py
+=======
+
+Module containing the cell class, used to represent a mesh cell.
+"""
+
 from typing import Callable
 
 import numpy as np
@@ -7,7 +14,35 @@ from .edge import NotParameterizedError, edge
 
 
 class cell:
-    """List of edges parameterizing the boundary of a mesh cell"""
+    """
+    Class representing a mesh cell, which may be multiply connected.
+
+    Contains:
+        - parameterization of the boundary
+        - methods to evaluate and integrate functions on the boundary
+        - interior points
+        - relative position of the cell in the mesh (topological info)
+
+    Attributes
+    ----------
+    id : int
+        The cell id as it appears in the mesh.
+    components : list[closed_contour]
+        The boundary components of the cell.
+    num_holes : int
+        The number of holes in the cell.
+    num_edges : int
+        The number of edges on the cell boundary.
+    num_pts : int
+        The number of sampled points on the cell boundary.
+    component_start_idx : list[int]
+        The index of the first sampled point on each boundary component.
+    closest_vert_idx : np.ndarray
+        The index of the closest vertex in the mesh to each sampled point.
+    edge_orients : list[int]
+        The orientation of each edge in the cell (+/- 1).
+    int_mesh_size : tuple[int, int]
+    """
 
     id: int
     components: list[closed_contour]
@@ -23,6 +58,16 @@ class cell:
     is_inside: np.ndarray
 
     def __init__(self, id: int, edges: list[edge]) -> None:
+        """
+        Constructor for the cell class.
+
+        Parameters
+        ----------
+        id : int
+            The cell id.
+        edges : list[edge]
+            The edges in the cell.
+        """
         self.set_id(id)
         self.find_edge_orientations(edges)
         self.components = []
@@ -32,6 +77,7 @@ class cell:
     # MESH TOPOLOGY ##########################################################
 
     def set_id(self, id: int) -> None:
+        """Set the cell id"""
         if not isinstance(id, int):
             raise TypeError(f"id = {id} invalid, must be a positive integer")
         if id < 0:
@@ -39,6 +85,7 @@ class cell:
         self.id = id
 
     def find_edge_orientations(self, edges: list[edge]) -> None:
+        """Find the orientation of each edge in the cell"""
         self.edge_orients = []
         for e in edges:
             if self.id == e.pos_cell_idx:
@@ -51,9 +98,11 @@ class cell:
     # LOCAL EDGE MANAGEMENT ##################################################
 
     def find_num_edges(self) -> None:
+        """Find the number of edges in the cell"""
         self.num_edges = sum(c.num_edges for c in self.components)
 
     def get_edges(self) -> list[edge]:
+        """Returns a list of all edges in the cell"""
         edges = []
         for c in self.components:
             for e in c.edges:
@@ -162,7 +211,7 @@ class cell:
 
     def find_hole_interior_points(self) -> None:
         """
-        Automatically find a point in the interior of each hole.
+        TODO: Automatically find a point in the interior of each hole.
 
         Finds a point by creating a rectangular grid of points and
         eliminating those that are not in the interior. Among those
@@ -173,6 +222,7 @@ class cell:
 
     # PARAMETERIZATION #######################################################
     def is_parameterized(self) -> bool:
+        """Returns True if the cell is parameterized"""
         return all(c.is_parameterized() for c in self.components)
 
     def parameterize(self, quad_dict: dict) -> None:
@@ -186,6 +236,7 @@ class cell:
         self.generate_interior_points()
 
     def deparameterize(self) -> None:
+        """Remove parameterization of each edge"""
         for c in self.components:
             c.deparameterize()
         self.num_pts = 0

@@ -1,3 +1,22 @@
+"""
+trace2tangential.py
+===================
+
+Tangential derivatives of a harmonic function on a simply or multiply connected
+domain, computed from its trace on the boundary.
+
+Routines in this module
+-----------------------
+get_weighted_tangential_derivative_from_trace(K, f_vals)
+
+Notes
+-----
+- The weighted tangential derivative is defined as
+    df_dt_wgt = nabla f(x(tau)) * x'(tau)
+              = (df / dt) |x'(tau)|,
+  where x(tau) is a parameterization of the boundary.
+"""
+
 import numpy as np
 
 from ...mesh.cell import cell

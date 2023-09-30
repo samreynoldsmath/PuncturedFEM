@@ -1,12 +1,22 @@
+"""
+solver.py
+=========
+
+Module containing the solver class, which is a convenience class for solving
+the global linear system.
+"""
+
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
 from numpy import inf, nanmax, nanmin, ndarray, shape, zeros
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
+from tqdm import tqdm
 
 from .bilinear_form import bilinear_form
 from .globfunsp import global_function_space
 
+# TODO: this belongs in a different module, use enum
 RESET = "\033[0m"  # Reset all attributes
 RED = "\033[31m"  # Red text
 GREEN = "\033[32m"  # Green text
@@ -17,10 +27,44 @@ CYAN = "\033[36m"  # Cyan text
 
 
 def print_color(s: str, color: str) -> None:
+    """
+    Print a string in color.
+    """
     print(color + s + RESET)
 
 
 class solver:
+    """
+    Convenience class for solving the global linear system.
+
+    Attributes
+    ----------
+    V : global_function_space
+        Global function space
+    a : bilinear_form
+        Bilinear form
+    glob_mat : csr_matrix
+        Global system matrix
+    glob_rhs : csr_matrix
+        Global right-hand side vector
+    row_idx : list[int]
+        List of row indices
+    col_idx : list[int]
+        List of column indices
+    mat_vals : list[float]
+        List of matrix values
+    rhs_idx : list[int]
+        List of right-hand side indices
+    rhs_vals : list[float]
+        List of right-hand side values
+    num_funs : int
+        Number of global functions
+    interior_values : list[list[ndarray]]
+        List of interior values on each cell
+    soln : ndarray
+        Solution vector
+    """
+
     V: global_function_space
     a: bilinear_form
     glob_mat: csr_matrix
@@ -35,22 +79,45 @@ class solver:
     soln: ndarray
 
     def __init__(self, V: global_function_space, a: bilinear_form) -> None:
+        """
+        Constructor for solver class.
+
+        Parameters
+        ----------
+        V : global_function_space
+            Global function space
+        a : bilinear_form
+            Bilinear form
+        """
         self.set_global_function_space(V)
         self.set_bilinear_form(a)
 
     def __str__(self) -> str:
+        """
+        Return string representation.
+        """
         s = "solver:\n"
-        s += "\tV: %s\n" % self.V
-        s += "\ta: %s\n" % self.a
-        s += "\tnum_funs: %d\n" % self.num_funs
+        s += f"\tV: {self.V}\n"
+        s += f"\ta: {self.a}\n"
+        s += f"\tnum_funs: {self.num_funs}\n"
         return s
 
     # SETTERS ################################################################
 
     def set_global_function_space(self, V: global_function_space) -> None:
+        """
+        Set the global function space.
+        """
+        if not isinstance(V, global_function_space):
+            raise TypeError("V must be a global_function_space")
         self.V = V
 
     def set_bilinear_form(self, a: bilinear_form) -> None:
+        """
+        Set the bilinear form.
+        """
+        if not isinstance(a, bilinear_form):
+            raise TypeError("a must be a bilinear_form")
         self.a = a
 
     # SOLVE LINEAR SYSTEM ####################################################
@@ -60,6 +127,7 @@ class solver:
         self.soln = spsolve(self.glob_mat, self.glob_rhs)
 
     def get_solution(self) -> ndarray:
+        """Return solution vector"""
         if self.soln is None:
             self.solve()
         return self.soln
@@ -75,6 +143,7 @@ class solver:
     def build_values_and_indexes(
         self, verbose: bool = True, processes: int = 1
     ) -> None:
+        """Build values and indexes"""
         if processes == 1:
             self.build_values_and_indexes_sequential(verbose=verbose)
         elif processes > 1:
@@ -87,11 +156,15 @@ class solver:
     def build_values_and_indexes_parallel(
         self, verbose: bool = True, processes: int = 1
     ) -> None:
+        """
+        Build values and indexes in parallel.
+        """
         raise NotImplementedError("Parallel assembly not yet implemented")
 
     def build_values_and_indexes_sequential(self, verbose: bool = True) -> None:
-        if verbose:
-            from tqdm import tqdm  # type: ignore
+        """
+        Build values and indexes sequentially.
+        """
 
         self.rhs_idx = []
         self.rhs_vals = []
@@ -107,7 +180,7 @@ class solver:
 
             if verbose:
                 print_color(
-                    "Cell %6d / %6d" % (abs_cell_idx + 1, self.V.T.num_cells),
+                    f"Cell {abs_cell_idx + 1:6} / {self.V.T.num_cells:6}",
                     GREEN,
                 )
 
@@ -185,10 +258,18 @@ class solver:
                 #     # normalize row
 
     def find_num_funs(self) -> None:
+        """
+        Find the number of global functions and run size checks.
+        """
         self.num_funs = self.V.num_funs
         self.check_sizes()
 
     def check_sizes(self) -> None:
+        """
+        Check that the sizes of the global system matrix and right-hand side
+        vector are correct.
+        """
+
         # rhs
         L = 1 + max(self.rhs_idx)
         if L > self.num_funs:
@@ -225,6 +306,9 @@ class solver:
         filename: str = "solution.pdf",
         fill: bool = True,
     ) -> None:
+        """
+        Plot the solution.
+        """
         self.plot_linear_combo(
             self.soln,
             title=title,
@@ -243,6 +327,9 @@ class solver:
         filename: str = "solution.pdf",
         fill: bool = True,
     ) -> None:
+        """
+        Plot a linear combination of the basis functions.
+        """
         if not (show_fig or save_fig):
             return
         # compute linear combo on each cell, determine range of global values
@@ -333,6 +420,9 @@ class solver:
     def compute_linear_combo_on_cell(
         self, cell_idx: int, coef: ndarray
     ) -> ndarray:
+        """
+        Compute a linear combination of the basis functions on a cell.
+        """
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
         int_vals = self.interior_values[abs_cell_idx]
         vals = zeros(shape(int_vals[0]))
@@ -341,6 +431,9 @@ class solver:
         return vals
 
     def get_coef_on_cell(self, cell_idx: int, u: ndarray) -> ndarray:
+        """
+        Get the coefficients of the basis functions on a cell.
+        """
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
         ids = self.V.cell_dofs[abs_cell_idx]
         coef = zeros(len(ids))

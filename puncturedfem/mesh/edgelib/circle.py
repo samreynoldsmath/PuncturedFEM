@@ -8,6 +8,7 @@ import numpy as np
 
 
 def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization"""
     if "radius" in kwargs:
         R = kwargs["radius"]
     else:
@@ -19,6 +20,7 @@ def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
 
 
 def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization derivative"""
     if "radius" in kwargs:
         R = kwargs["radius"]
     else:
@@ -30,6 +32,7 @@ def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
 
 
 def DDX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization second derivative"""
     if "radius" in kwargs:
         R = kwargs["radius"]
     else:

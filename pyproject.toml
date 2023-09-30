@@ -19,14 +19,15 @@ disable = [
     "fixme",
 
     # TODO: reenable these warnings
-    "missing-function-docstring",
-    "missing-module-docstring",
-    "missing-class-docstring",
-    "broad-exception-raised",
+    "too-many-branches",
+    "too-many-nested-blocks",
     "too-many-arguments",
     "too-many-locals",
     "too-many-instance-attributes",
     "too-many-public-methods",
+    "nested-min-max",
+    "consider-using-enumerate",
     "redefined-builtin",
+    "broad-exception-raised",
 
     ]

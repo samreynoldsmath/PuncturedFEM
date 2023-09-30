@@ -1,3 +1,11 @@
+"""
+piecewise_poly.py
+=================
+
+Module containing the piecewise_polynomial class. It is essentially a wrapper
+for a list of polynomials.
+"""
+
 from typing import Optional
 
 from numpy import ndarray, zeros
@@ -20,11 +28,26 @@ class piecewise_polynomial:
         polys: Optional[list[polynomial]] = None,
         id: int = 0,
     ) -> None:
+        """
+        Constructor for piecewise_polynomial class.
+
+        Parameters
+        ----------
+        num_polys : int, optional
+            Number of polynomials in the piecewise_polynomial. Default is 1.
+        polys : list[polynomial], optional
+            List of polynomials in the piecewise_polynomial. Default is None.
+        id : int, optional
+            Identifier for the piecewise_polynomial. Default is 0.
+        """
         self.set_id(id)
         self.set_num_polys(num_polys)  # TODO: this isn't safe
         self.set_polys(polys)
 
     def set_id(self, id: int) -> None:
+        """
+        Sets the identifier for the piecewise_polynomial.
+        """
         if not isinstance(id, int):
             raise TypeError("id must be an integer")
         if id < 0:
@@ -32,6 +55,9 @@ class piecewise_polynomial:
         self.id = id
 
     def set_num_polys(self, num_polys: int) -> None:
+        """
+        Sets the number of polynomials in the piecewise_polynomial.
+        """
         if not isinstance(num_polys, int):
             raise TypeError("num_polys must be a integer")
         if num_polys < 1:
@@ -39,12 +65,18 @@ class piecewise_polynomial:
         self.num_polys = num_polys
 
     def set_polys(self, polys: Optional[list[polynomial]] = None) -> None:
+        """
+        Sets the list of polynomials in the piecewise_polynomial.
+        """
         if polys is None:
             self.polys = [polynomial() for _ in range(self.num_polys)]
         else:
             self.polys = polys
 
     def eval_on_edges(self, edges: list[edge]) -> ndarray:
+        """
+        Evaluates the piecewise_polynomial on a list of edges.
+        """
         m = len(edges)
         if m != self.num_polys:
             raise Exception("Number of edges must match number of polynomials")
@@ -62,5 +94,8 @@ class piecewise_polynomial:
         return vals
 
     def eval_on_cell_boundary(self, K: cell) -> ndarray:
+        """
+        Evaluates the piecewise_polynomial on the boundary of a cell.
+        """
         edges = K.get_edges()
         return self.eval_on_edges(edges)

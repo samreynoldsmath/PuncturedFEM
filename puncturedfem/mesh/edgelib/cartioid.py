@@ -14,6 +14,7 @@ import numpy as np
 
 
 def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization"""
     a = kwargs["a"]
     r = 1 + a * (1 - t / np.pi) ** 8
 
@@ -24,6 +25,7 @@ def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
 
 
 def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization derivative"""
     a = kwargs["a"]
     r = 1 + a * (1 - t / np.pi) ** 8
     dr = -(8 * a / np.pi) * (1 - t / np.pi) ** 7
@@ -35,6 +37,7 @@ def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
 
 
 def DDX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization second derivative"""
     a = kwargs["a"]
     r = 1 + a * (1 - t / np.pi) ** 8
     dr = -(8 * a / np.pi) * (1 - t / np.pi) ** 7

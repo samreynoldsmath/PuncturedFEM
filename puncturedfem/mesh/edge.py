@@ -1,3 +1,11 @@
+"""
+edge.py
+=======
+
+Module containing the edge class, which represents an oriented edge in the
+plane.
+"""
+
 from typing import Any, Callable
 
 import numpy as np
@@ -16,7 +24,60 @@ class NotParameterizedError(Exception):
 
 
 class edge:
-    """Oriented edge in the plane"""
+    """
+    Oriented joining two vertices of a planar mesh. This class contains both
+    the parameterization of the edge as well as mesh topology information.
+
+    The orientation of the edge is from the anchor vertex to the endpnt vertex.
+    The positive cell is the cell such that the edge is oriented
+    counterclockwise on the boundary of the cell if the edge lies on the outer
+    boundary of the cell. If the edge lies on the inner boundary of the cell,
+    then the edge is oriented clockwise on the boundary of the positive cell.
+    The negative cell is the cell such that the boundary of the negative cell
+    intersects the boundary of the positive cell exactly on this edge.
+
+    Usage
+    -----
+    See examples/ex0-mesh-building.ipynb for examples of how to use this class.
+
+    Attributes
+    ----------
+    anchor : vert
+        The vertex at the start of the edge.
+    endpnt : vert
+        The vertex at the end of the edge.
+    pos_cell_idx : int
+        The index of the positively oriented cell.
+    neg_cell_idx : int
+        The index of the negatively oriented cell.
+    curve_type : str
+        The type of curve used to parameterize the edge.
+    curve_opts : dict
+        The options for the curve parameterization.
+    quad_type : str
+        The type of quadrature used to parameterize the edge.
+    id : Any
+        The id of the edge as it appears in the mesh.
+    is_on_mesh_boundary : bool
+        True if the edge is on the mesh boundary.
+    is_loop : bool
+        True if the edge is a loop.
+    is_parameterized : bool
+        True if the edge is parameterized.
+    num_pts : int
+        The number of points sampled on the edge.
+    x : np.ndarray
+        The sampled points on the edge.
+    unit_tangent : np.ndarray
+        The unit tangent vector at each sampled point on the edge.
+    unit_normal : np.ndarray
+        The unit normal vector at each sampled point on the edge.
+    dx_norm : np.ndarray
+        The norm of the derivative of the parameterization at each sampled
+        point on the edge.
+    curvature : np.ndarray
+        The signed curvature at each sampled point on the edge.
+    """
 
     anchor: vert
     endpnt: vert
@@ -47,6 +108,27 @@ class edge:
         id: Any = None,
         **curve_opts: Any,
     ) -> None:
+        """
+        Constructor for the edge class.
+
+        Parameters
+        ----------
+        anchor : vert
+            The vertex at the start of the edge.
+        endpnt : vert
+            The vertex at the end of the edge.
+        pos_cell_idx : int, optional
+            The index of the positively oriented cell. Default is -1.
+        neg_cell_idx : int, optional
+            The index of the negatively oriented cell. Default is -1.
+        curve_type : str, optional
+            The type of curve used to parameterize the edge. Default is "line".
+        quad_type : str, optional
+            The type of quadrature used to parameterize the edge. Default is
+            "kress".
+        id : Any, optional
+            The id of the edge as it appears in the mesh. Default is None.
+        """
         self.curve_type = curve_type
         self.quad_type = quad_type
         self.curve_opts = curve_opts
@@ -56,6 +138,7 @@ class edge:
         self.is_parameterized = False
 
     def __str__(self) -> str:
+        """Return a string representation of the edge"""
         # TODO
         msg = ""
         msg += f"id:         {self.id}\n"
@@ -67,6 +150,7 @@ class edge:
     # MESH TOPOLOGY ##########################################################
 
     def set_id(self, id: Any) -> None:
+        """Set the id of the edge"""
         if id is None:
             return
         if not isinstance(id, int):
@@ -76,16 +160,23 @@ class edge:
         self.id = id
 
     def set_verts(self, anchor: vert, endpnt: vert) -> None:
+        """Set the anchor and endpnt vertices of the edge"""
         self.anchor = anchor
         self.endpnt = endpnt
         self.is_loop = self.anchor == self.endpnt
 
     def set_cells(self, pos_cell_idx: int, neg_cell_idx: int) -> None:
+        """
+        Set the positively and negatively oriented cells of the edge.
+        """
+
+        # check that cells are distinct
         # TODO this warning should only happen in planar_mesh
         # if pos_cell_idx < 0 and neg_cell_idx < 0:
         #     raise ValueError(
         #         'Edge must be boundary of at least one cell'
         #     )
+
         self.pos_cell_idx = pos_cell_idx
         self.neg_cell_idx = neg_cell_idx
         self.is_on_mesh_boundary = (
@@ -95,6 +186,22 @@ class edge:
     # PARAMETERIZATION #######################################################
 
     def parameterize(self, quad_dict: dict[str, quad]) -> None:
+        """
+        Parameterize the edge using the specified quadrature rule. The
+        parameterization is stored in the following attributes:
+            x : np.ndarray
+                The sampled points on the edge.
+            unit_tangent : np.ndarray
+                The unit tangent vector at each sampled point on the edge.
+            unit_normal : np.ndarray
+                The unit normal vector at each sampled point on the edge.
+            dx_norm : np.ndarray
+                The norm of the derivative of the parameterization at each
+                sampled point on the edge.
+            curvature : np.ndarray
+                The signed curvature at each sampled point on the edge.
+        """
+
         q = quad_dict[self.quad_type]
 
         # 2 * n + 1 points sampled per edge
@@ -144,6 +251,7 @@ class edge:
         self.quad_type = q.type
 
     def deparameterize(self) -> None:
+        """Reset the parameterization of the edge"""
         self.num_pts = -1
         self.x = np.zeros((0,))
         self.unit_tangent = np.zeros((0,))
@@ -153,9 +261,11 @@ class edge:
         self.is_parameterized = False
 
     def get_sampled_points(self) -> tuple[np.ndarray, np.ndarray]:
+        """Return the sampled points on the edge"""
         return self.x[0, :], self.x[1, :]
 
     def get_bounding_box(self) -> tuple[float, float, float, float]:
+        """Return the bounding box of the edge"""
         return get_bounding_box(x=self.x[0, :], y=self.x[1, :])
 
     # TRANSFORMATIONS ########################################################
@@ -164,7 +274,7 @@ class edge:
         """
         Reverse the orientation of this edge using the reparameterization
         x(2 pi - t). The chain rule flips the sign of some derivative-based
-        quanitites.
+        quantities.
         """
 
         # check if edge is parameterized

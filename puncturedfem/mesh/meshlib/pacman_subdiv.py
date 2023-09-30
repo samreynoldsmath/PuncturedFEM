@@ -1,3 +1,12 @@
+"""
+pacman_subdiv.py
+================
+
+Module containing the pacman_subdiv function, which returns a planar mesh
+representing a subdivision of the pacman mesh. The vertical edges have been
+split into two edges each.
+"""
+
 from numpy import sqrt
 
 from ..edge import edge
@@ -15,6 +24,10 @@ GHOST_Y_SHIFT = 0.5
 
 
 def pacman_subdiv(verbose: bool = True) -> planar_mesh:
+    """
+    Returns a planar mesh representing a subdivision of the pacman mesh. The
+    vertical edges have been split into two edges each.
+    """
     return mesh_builder(get_verts, get_edges, verbose=verbose)
 
 
@@ -22,6 +35,9 @@ def pacman_subdiv(verbose: bool = True) -> planar_mesh:
 
 
 def get_verts() -> list[vert]:
+    """Returns a list of vertices for the mesh."""
+
+    # define vertices
     verts: list[vert] = []
 
     # rectangle corners
@@ -109,6 +125,8 @@ def get_verts() -> list[vert]:
 
 
 def get_edges(verts: list[vert]) -> list[edge]:
+    """Returns a list of edges for the mesh."""
+
     # define edges
     edges = []
 

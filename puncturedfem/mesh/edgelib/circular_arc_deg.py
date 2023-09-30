@@ -8,6 +8,11 @@ import numpy as np
 
 
 def unpack(kwargs: Any) -> float:
+    """
+    Extract the angle theta0 from the keyword arguments
+    """
+    if "theta0" not in kwargs:
+        raise ValueError("theta0 must be specified")
     theta0 = kwargs["theta0"]
     if theta0 <= 0 or theta0 > 360:
         raise ValueError(
@@ -18,6 +23,7 @@ def unpack(kwargs: Any) -> float:
 
 
 def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization"""
     omega = unpack(kwargs)
     x = np.zeros((2, len(t)))
     x[0, :] = np.cos(omega * t)
@@ -26,6 +32,7 @@ def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
 
 
 def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization derivative"""
     omega = unpack(kwargs)
     dx = np.zeros((2, len(t)))
     dx[0, :] = -omega * np.sin(omega * t)
@@ -34,6 +41,7 @@ def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
 
 
 def DDX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization second derivative"""
     omega = unpack(kwargs)
     ddx = np.zeros((2, len(t)))
     ddx[0, :] = -omega * omega * np.cos(omega * t)

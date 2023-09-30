@@ -1,3 +1,19 @@
+"""
+log_antilap.py
+==============
+
+Anti-Laplacian of a logarithmic term on am multiply connected domain.
+
+Routines in this module
+-----------------------
+get_log_antilap(K)
+get_log_antilap_weighted_normal_derivative(K)
+
+Notes
+-----
+Assumes that the interior point of each hole has been set to K.hole_int_pts.
+"""
+
 import numpy as np
 
 from ...mesh.cell import cell

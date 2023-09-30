@@ -1,9 +1,33 @@
+"""
+bounding_box.py
+=================
+
+Module for computing the bounding box of a set of points.
+
+Functions
+---------
+get_bounding_box(x, y, tol=1e-12)
+"""
+
 import numpy as np
 
 
 def get_bounding_box(
     x: np.ndarray, y: np.ndarray, tol: float = 1e-12
 ) -> tuple[float, float, float, float]:
+    """
+    Compute the bounding box of a set of points.
+
+    Parameters
+    ----------
+    x : ndarray
+        x-coordinates of the points.
+    y : ndarray
+        y-coordinates of the points.
+    tol : float, optional
+        Tolerance for determining whether the points are all the same.
+    """
+
     xmin = np.min(x)
     xmax = np.max(x)
     ymin = np.min(y)

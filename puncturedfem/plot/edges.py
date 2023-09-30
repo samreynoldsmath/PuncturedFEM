@@ -1,3 +1,10 @@
+"""
+edges.py
+========
+
+Module containing functions for plotting edges in the plane.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -11,6 +18,10 @@ def plot_edges(
     axis_arg: str = "equal",
     grid_arg: bool = True,
 ) -> None:
+    """
+    Plots a list of edges.
+    """
+
     plt.figure()
     plt.axis(axis_arg)
     plt.grid(grid_arg)
@@ -31,6 +42,10 @@ def plot_boundary(
     axis_arg: str = "equal",
     grid_arg: bool = True,
 ) -> None:
+    """
+    Plots the boundary of a cell.
+    """
+
     plt.figure()
     plt.axis(axis_arg)
     plt.grid(grid_arg)
@@ -48,10 +63,16 @@ def plot_boundary(
 
 
 def _plot_edge(e: edge) -> None:
+    """
+    Plots an edge.
+    """
     plt.plot(e.x[0, :], e.x[1, :], "k-")
 
 
 def _plot_oriented_edge(e: edge) -> None:
+    """
+    Plot an oriented edge, with arrows indicating the direction.
+    """
     X = e.x[0, :]
     Y = e.x[1, :]
     U = np.roll(X, -1) - X
@@ -64,4 +85,7 @@ def _plot_oriented_edge(e: edge) -> None:
 
 
 def _plot_hole_interior_points(K: cell) -> None:
+    """
+    Plot the interior point of each hole in a cell.
+    """
     plt.scatter(K.int_x1, K.int_x2)

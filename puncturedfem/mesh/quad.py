@@ -1,3 +1,10 @@
+"""
+quad.py
+=======
+
+Module for the quad class, which represents a 1-dimensional quadrature object.
+"""
+
 import numpy as np
 
 
@@ -17,9 +24,26 @@ class quad:
         Kress parameter defaults to p = 7.
     """
 
-    __slots__ = ("type", "n", "h", "t", "wgt")
+    type: str
+    n: int
+    h: float
+    t: np.ndarray
+    wgt: np.ndarray
 
     def __init__(self, qtype: str = "trap", n: int = 16, p: int = 7) -> None:
+        """
+        Constructor for quad object.
+
+        Parameters
+        ----------
+        qtype : str, optional
+            Label for quadrature variant. Default is "trap".
+        n : int, optional
+            Interval sampled at 2*n points, excluding the last endpoint.
+            Default is 16.
+        p : int, optional
+            Kress parameter. Default is 7.
+        """
         self.type = qtype
         self.n = n
         self.h = np.pi / n

@@ -1,3 +1,16 @@
+"""
+barycentric.py
+==============
+
+Module containing functions for working with barycentric coordinates.
+
+Routines in this module
+-----------------------
+barycentric_coordinates_edge(e)
+barycentric_coordinates(z0, z1, z2)
+barycentric_products(e, deg) # DEPRECATED
+"""
+
 from numpy import array, ndarray, sqrt, zeros
 from numpy.linalg import norm
 
@@ -25,7 +38,7 @@ def barycentric_coordinates(
     z0: ndarray, z1: ndarray, z2: ndarray
 ) -> list[polynomial]:
     """
-    Returns the barcentric coordinates ell = [ell0, ell1, ell2]
+    Returns the barycentric coordinates ell = [ell0, ell1, ell2]
     where ellj is a polynomial object
     """
     z = zeros((3, 2))
@@ -63,7 +76,7 @@ def barycentric_coordinates(
 
 def barycentric_products(e: edge, deg: int) -> list[ndarray]:
     """
-    DEPRECATED
+    TODO: DEPRECATED
     """
     if deg > 3:
         raise Exception("NOT IMPLEMENTED")

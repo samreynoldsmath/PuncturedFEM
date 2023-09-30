@@ -1,3 +1,11 @@
+"""
+poly.py
+=======
+
+Module containing the polynomial class, which is used to represent
+polynomials in two variables, and is basically a list of monomials.
+"""
+
 from __future__ import annotations
 
 from typing import Optional
@@ -19,11 +27,22 @@ class polynomial:
     def __init__(
         self, coef_multidx_pairs: Optional[list[tuple[float, int, int]]] = None
     ) -> None:
+        """
+        Constructor for the polynomial class.
+
+        Parameters
+        ----------
+        coef_multidx_pairs : list[tuple[float, int, int]], optional
+            List of coefficient / multi-index pairs, by default None
+        """
         self.set(coef_multidx_pairs)
 
     def set(
         self, coef_multidx_pairs: Optional[list[tuple[float, int, int]]] = None
     ) -> None:
+        """
+        Sets the polynomial to the list of coefficient / multi-index pairs.
+        """
         self.monos = []
         if coef_multidx_pairs is None:
             return
@@ -42,6 +61,9 @@ class polynomial:
         self.consolidate()
 
     def copy(self) -> polynomial:
+        """
+        Returns a copy of the polynomial.
+        """
         new = polynomial()
         new.add_monomials(self.monos)
         return new
@@ -54,6 +76,9 @@ class polynomial:
             self.monos.append(m)
 
     def add_monomials(self, monos: Optional[list[monomial]] = None) -> None:
+        """
+        Adds a list of monomials to the polynomial
+        """
         if monos is None:
             return
         for m in monos:
@@ -96,6 +121,10 @@ class polynomial:
                 j -= 1
 
     def add_monomial_with_id(self, coef: float, id: int) -> None:
+        """
+        Adds a monomial with a given multi-index id, defined with a
+        'upper triangular' ordering
+        """
         m = monomial()
         m.set_multidx_from_id(id)
         m.set_coef(coef)
@@ -105,6 +134,10 @@ class polynomial:
     def add_monomials_with_ids(
         self, coef_list: list[float], id_list: list[int]
     ) -> None:
+        """
+        Adds a list of monomials with a given list of multi-index ids,
+        defined with a 'upper triangular' ordering
+        """
         if len(coef_list) != len(id_list):
             raise Exception(
                 "number of coefficients and multi-indices must be equal"
@@ -114,27 +147,43 @@ class polynomial:
         self.consolidate()
 
     def is_zero(self) -> bool:
+        """
+        Returns True if the polynomial is zero
+        """
         self.consolidate()
         return len(self.monos) == 0
 
     def set_to_zero(self) -> None:
+        """
+        Sets the polynomial to zero
+        """
         self.monos = []
 
     def eval(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        """
+        Evaluates the polynomial at the point (x, y)
+        """
         val = np.zeros(np.shape(x))
         for m in self.monos:
             val += m.eval(x, y)
         return val
 
     def pow(self, exponent: int) -> polynomial:
+        """
+        Raises the polynomial to a nonnegative integer power
+        """
         if not isinstance(exponent, int) or exponent < 0:
             raise ValueError("Exponent must be nonnegative integer")
         new = polynomial([(1.0, 0, 0)])
+        # TODO: use a binary exponentiation algorithm
         for _ in range(exponent):
             new *= self
         return new
 
     def compose(self, q1: polynomial, q2: polynomial) -> polynomial:
+        """
+        Returns a polynomial new(x, y) = self(q1(x, y), q2(x, y))
+        """
         new = polynomial()
         for m in self.monos:
             temp = q1.pow(m.alpha.x)
@@ -143,6 +192,11 @@ class polynomial:
         return new
 
     def partial_deriv(self, var: str) -> polynomial:
+        """
+        Returns the partial derivative of the polynomial with respect to
+        the variable var
+        """
+        # TODO: use an enum for x and y
         new = polynomial()
         for m in self.monos:
             dm = m.partial_deriv(var)
@@ -150,18 +204,26 @@ class polynomial:
         return new
 
     def grad(self) -> tuple[polynomial, polynomial]:
-        # TODO: use an enum for x and y
+        """
+        Returns the gradient of the polynomial
+        """
         gx = self.partial_deriv("x")
         gy = self.partial_deriv("y")
         return gx, gy
 
     def laplacian(self) -> polynomial:
+        """
+        Returns the Laplacian of the polynomial
+        """
         gx, gy = self.grad()
         gxx = gx.partial_deriv("x")
         gyy = gy.partial_deriv("y")
         return gxx + gyy
 
     def anti_laplacian(self) -> polynomial:
+        """
+        Returns a polynomial anti-Laplacian of the polynomial
+        """
         new = polynomial()
 
         # define |(x, y)|^2 = x^2 + y^2
@@ -197,7 +259,9 @@ class polynomial:
         return new
 
     def get_weighted_normal_derivative(self, K: cell) -> np.ndarray:
-        # TODO: this belongs elsewhere
+        """
+        TODO: this belongs elsewhere
+        """
         x1, x2 = K.get_boundary_points()
         gx, gy = self.grad()
         gx_trace = gx.eval(x1, x2)
@@ -206,6 +270,9 @@ class polynomial:
         return K.multiply_by_dx_norm(nd)
 
     def __repr__(self) -> str:
+        """
+        Returns a string representation of the polynomial.
+        """
         self.sort()
         if len(self.monos) == 0:
             return "+ (0) "

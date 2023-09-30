@@ -7,14 +7,6 @@
 - add logging with `logging` module
 
 
-## [yyyy mmm dd] v0.3.x: Documentation
-- write docstrings
-  - classes
-  - methods
-  - functions
-  - modules
-
-
 ## [yyyy mm dd] v0.3.x: Commit hooks
 - `isort`
 - `black`
@@ -34,15 +26,20 @@
 - move affiliations to contributors section
 
 
+## [yyyy mm dd] v0.3.x: Refactor and clean up
+- replace lists with sets where appropriate
+- logarithmic and rational functions
+- plots
+
+
 ## [yyyy mm dd] v0.3.x: D2N improvements
   - trigonometric interpolation
   - multiprocessing for batch computation
 
 
-## [yyyy mm dd] v0.3.x: Refactor and clean up
-- replace lists with sets where appropriate
-- logarithmic and rational functions
-- plots
+## [yyyy mm dd] v0.3.x: File management
+- add saving and loading of `mesh` objects
+- add saving and loading local stiffness/mass matrices
 
 
 ## [yyyy mm dd] v0.4.x: Mesh improvements

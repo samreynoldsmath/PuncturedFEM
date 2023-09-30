@@ -1,6 +1,15 @@
 # Punctured FEM: Change Log
 
 
+## [2023 Sep 30] v0.3.5: Docstrings
+- write docstrings
+  - modules
+  - classes
+  - methods
+  - functions
+- add `__init__.py` to `solver` subpackage
+
+
 ## [2023 Sep 20] v0.3.4: Type hints and clean up
 - use generators where appropriate
 - fix imports

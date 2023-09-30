@@ -10,6 +10,9 @@ import numpy as np
 
 
 def unpack(kwargs: Any) -> tuple[float, float, float, float]:
+    """
+    Extract the parameters H, R, t0, omega from the keyword arguments
+    """
     H = kwargs["H"]
     R = np.sqrt(0.25 + H**2)
     t0 = np.arcsin(H / R)
@@ -18,6 +21,7 @@ def unpack(kwargs: Any) -> tuple[float, float, float, float]:
 
 
 def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization"""
     H, R, t0, omega = unpack(kwargs)
     theta = t0 + np.pi + omega * t
     x = np.zeros((2, len(t)))
@@ -27,6 +31,7 @@ def X(t: np.ndarray, **kwargs: Any) -> np.ndarray:
 
 
 def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization derivative"""
     H, R, t0, omega = unpack(kwargs)
     theta = t0 + np.pi + omega * t
     dx = np.zeros((2, len(t)))
@@ -36,6 +41,7 @@ def DX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
 
 
 def DDX(t: np.ndarray, **kwargs: Any) -> np.ndarray:
+    """Edge parametrization second derivative"""
     H, R, t0, omega = unpack(kwargs)
     theta = t0 + np.pi + omega * t
     ddx = np.zeros((2, len(t)))

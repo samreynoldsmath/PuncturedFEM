@@ -1,3 +1,11 @@
+"""
+locfunsp.py
+===========
+
+Module containing the locfunspace class, which is used to represent a basis of
+a basis of the local Poisson space V_p(K) on a mesh cell K.
+"""
+
 from tqdm import tqdm
 
 from ..mesh.cell import cell
@@ -17,8 +25,6 @@ class locfunspace:
     In the case where the mesh cell K has a vertex-free edge (that is, the edge
     is a simple closed contour, e.g. a circle), no vertex functions are
     associated with that edge.
-
-    Edge spaces for all edges in the cell K must be computed first.
     """
 
     deg: int
@@ -39,11 +45,33 @@ class locfunspace:
         verbose: bool = True,
         processes: int = 1,
     ) -> None:
-        # set polynomial degree
-        self.set_deg(deg)
+        """
+        Initialize locfunspace object for a given cell K and the edge spaces,
+        which is a list of edge_space objects for each edge in K, in the order
+        that the edges appear in K.edges. The edge spaces must be computed
+        before the locfunspace object is initialized. This initialization
+        computes all function metadata (e.g. traces, interior values) and
+        and interior values.
+
+        Parameters
+        ----------
+        K : cell
+            Mesh cell
+        edge_spaces : list[edge_space]
+            List of edge_space objects for each edge in K
+        deg : int, optional
+            (DEPRECATED) Degree of polynomial space, by default 1
+        verbose : bool, optional
+            Print progress, by default True
+        processes : int, optional
+            Number of processes to use for parallel computation, by default 1
+        """
 
         # set up nyström solver
         self.solver = nystrom_solver(K, verbose=verbose)
+
+        # set degree of polynomial space
+        self.set_deg(deg)
 
         # bubble functions: zero trace, polynomial Laplacian
         self.build_bubble_funs()
@@ -64,6 +92,9 @@ class locfunspace:
         self.find_interior_values(verbose=verbose)
 
     def set_deg(self, deg: int) -> None:
+        """
+        Set degree of polynomial space
+        """
         if not isinstance(deg, int):
             raise TypeError("deg must be an integer")
         if deg < 1:
@@ -71,6 +102,9 @@ class locfunspace:
         self.deg = deg
 
     def find_interior_values(self, verbose: bool = True) -> None:
+        """
+        Equivalent to running v.compute_interior_values() for each locfun v
+        """
         if verbose:
             print("Finding interior values...")
             for v in tqdm(self.get_basis()):
@@ -94,7 +128,7 @@ class locfunspace:
 
     def compute_all(self, verbose: bool = True, processes: int = 1) -> None:
         """
-        Equivalent to running v.compute_all(K) for each locfun v
+        Equivalent to running v.compute_all(K) for each locfun v.
         """
         if processes == 1:
             self.compute_all_sequential(verbose=verbose)
@@ -104,6 +138,9 @@ class locfunspace:
             raise ValueError("processes must be a positive integer")
 
     def compute_all_sequential(self, verbose: bool = True) -> None:
+        """
+        Equivalent to running v.compute_all(K) for each locfun v.
+        """
         if verbose:
             print("Computing function metadata...")
             for v in tqdm(self.get_basis()):
@@ -115,9 +152,14 @@ class locfunspace:
     def compute_all_parallel(
         self, verbose: bool = True, processes: int = 1
     ) -> None:
+        """
+        Equivalent to running v.compute_all(K) for each locfun v, using
+        multiprocessing to parallelize computation.
+        """
         raise NotImplementedError("Parallel computation not yet implemented")
 
     def build_bubble_funs(self) -> None:
+        """Construct bubble functions"""
         # bubble functions
         num_bubb = (self.deg * (self.deg - 1)) // 2
         self.bubb_funs = []

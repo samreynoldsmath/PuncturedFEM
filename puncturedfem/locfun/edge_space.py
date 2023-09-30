@@ -1,3 +1,10 @@
+"""
+edge_space.py
+=============
+
+Module containing the edge_space class for managing spaces of trace functions.
+"""
+
 import numpy as np
 
 from ..mesh.edge import edge
@@ -8,6 +15,10 @@ from .poly.poly import polynomial
 
 
 class edge_space:
+    """
+    The space of polynomial traces of degree  <= deg on an edge.
+    """
+
     e: edge
     deg: int
     vert_fun_traces: list[polynomial]
@@ -19,6 +30,16 @@ class edge_space:
     num_funs: int
 
     def __init__(self, e: edge, deg: int) -> None:
+        """
+        Constructor for edge_space class.
+
+        Parameters
+        ----------
+        e : edge
+            Edge on which the space is defined.
+        deg : int
+            Maximum polynomial degree.
+        """
         self.edge_fun_traces = []
         self.vert_fun_traces = []
         self.set_edge(e)
@@ -32,11 +53,17 @@ class edge_space:
         self.find_num_funs()
 
     def set_edge(self, e: edge) -> None:
+        """
+        Set the edge on which the space is defined.
+        """
         if not isinstance(e, edge):
             raise TypeError("e must be an edge")
         self.e = e
 
     def set_deg(self, deg: int) -> None:
+        """
+        Set the maximum polynomial degree.
+        """
         if not isinstance(deg, int):
             raise TypeError("deg must be an integer")
         if deg < 1:
@@ -44,12 +71,21 @@ class edge_space:
         self.deg = deg
 
     def find_num_funs(self) -> None:
+        """
+        Find the total number of functions in the space.
+        """
         self.num_funs = self.num_vert_funs + self.num_edge_funs
 
     def compute_num_vert_funs(self) -> None:
+        """
+        Number of vertex functions is set to self.num_vert_funs.
+        """
         self.num_vert_funs = len(self.vert_fun_traces)
 
     def compute_num_edge_funs(self) -> None:
+        """
+        Number of edge functions is set to self.num_edge_funs.
+        """
         self.num_edge_funs = len(self.edge_fun_traces)
 
     def generate_vert_fun_global_keys(self) -> None:
@@ -147,6 +183,12 @@ class edge_space:
             self.edge_fun_traces.append(ell[2])
 
     def transform_coordinates_to_bounding_box(self) -> None:
+        """
+        Transform the domain of the Legendre tensor products from the square
+        [-1, 1] x [-1, 1] to the bounding box of the edge, by composing with
+        an affine change of coordinates (i.e. deg=1 polynomials).
+        """
+
         # get bounding box
         xmin, xmax, ymin, ymax = self.e.get_bounding_box()
 
@@ -178,6 +220,10 @@ class edge_space:
             self.edge_fun_traces[j] = f.compose(qx, qy)
 
     def reduce_to_basis(self) -> None:
+        """
+        Reduce spanning set to basis by determining the pivot columns of the
+        mass matrix.
+        """
         M = self.get_gram_matrix()
         idx = self.get_basis_index_set(M)
         basis = []
@@ -186,6 +232,12 @@ class edge_space:
         self.edge_fun_traces = basis
 
     def get_gram_matrix(self, precond: bool = True) -> np.ndarray:
+        """
+        Return the mass matrix M_ij = int_e phi_i phi_j ds.
+        If precond is True (default), then the normalization preconditioner is
+        applied.
+        """
+
         # compute inner products
         m = len(self.edge_fun_traces)
         M = np.zeros((m, m))
@@ -207,6 +259,9 @@ class edge_space:
         return M
 
     def diagonal_rescale(self, M: np.ndarray) -> np.ndarray:
+        """
+        Return the normalized mass matrix M_ij / sqrt(M_ii * M_jj).
+        """
         m = np.shape(M)[0]
         for i in range(m):
             for j in range(i + 1, m):
@@ -217,6 +272,9 @@ class edge_space:
         return M
 
     def eliminate_zeros(self, M: np.ndarray, tol: float = 1e-12) -> np.ndarray:
+        """
+        Return the matrix M with rows and columns with zero diagonals removed.
+        """
         m = np.shape(M)[0]
         idx = []
         for i in range(m):
@@ -233,6 +291,9 @@ class edge_space:
     def get_basis_index_set(
         self, M: np.ndarray, tol: float = 1e-12
     ) -> list[int]:
+        """
+        Return the index set of the pivot columns of the matrix M.
+        """
         idx: list[int] = []
         if np.shape(M)[0] == 0:
             return idx

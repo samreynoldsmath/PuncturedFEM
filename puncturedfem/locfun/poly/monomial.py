@@ -1,3 +1,15 @@
+"""
+monomial.py
+===========
+
+Module containing the monomial class, which is used to represent monomials
+of the form
+    m(x) = c * x^alpha
+         = c * (x_1, x_2) ^ (alpha_1, alpha_2)
+         = c * (x_1 ^ alpha_1) * (x_2 ^ alpha_2)
+where alpha = (alpha_1, alpha_2) is a multi-index and c is a scalar.
+"""
+
 from __future__ import annotations
 
 from typing import Optional
@@ -19,29 +31,57 @@ class monomial:
     def __init__(
         self, alpha: Optional[multi_index_2] = None, coef: float = 0.0
     ) -> None:
+        """
+        Constructor for monomial class.
+
+        Parameters
+        ----------
+        alpha : multi_index_2, optional
+            Multi-index of the monomial. Default is None.
+        coef : float, optional
+            Coefficient of the monomial. Default is 0.0.
+        """
         if alpha is None:
             alpha = multi_index_2()
         self.set_coef(coef)
         self.set_multidx(alpha)
 
     def copy(self) -> monomial:
+        """
+        Returns a copy of self.
+        """
         return monomial(self.alpha, self.coef)
 
     def is_zero(self, tol: float = 1e-12) -> bool:
+        """
+        Returns True iff self is the zero monomial. Default tolerance is 1e-12.
+        """
         return abs(self.coef) < tol
 
     def set_coef(self, coef: float) -> None:
+        """
+        Set the coefficient of the monomial to coef.
+        """
         self.coef = coef
 
     def set_multidx(self, alpha: multi_index_2) -> None:
+        """
+        Set the multi-index of the monomial to alpha.
+        """
         self.alpha = alpha
 
     def set_multidx_from_id(self, id: int) -> None:
+        """
+        Set the multi-index of the monomial to the multi-index with id = id.
+        """
         alpha = multi_index_2()
         alpha.set_from_id(id)
         self.set_multidx(alpha)
 
     def eval(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        """
+        Evaluate the monomial at the point (x, y).
+        """
         val = self.coef * np.ones(np.shape(x))
         if self.alpha.x > 0:
             val *= x**self.alpha.x
@@ -50,6 +90,9 @@ class monomial:
         return val
 
     def partial_deriv(self, var: str) -> monomial:
+        """
+        Compute the partial derivative of self with respect to var.
+        """
         if var == "x":
             if self.alpha.x == 0:
                 # constant wrt x
@@ -73,12 +116,17 @@ class monomial:
         return monomial(alpha=beta, coef=b)
 
     def grad(self) -> tuple[monomial, monomial]:
+        """
+        Compute the gradient of self.
+        """
         gx = self.partial_deriv("x")
         gy = self.partial_deriv("y")
         return gx, gy
 
     def __repr__(self) -> str:
-        # coefficient
+        """
+        Returns a string representation of self.
+        """
         msg = f"+ ({self.coef}) "
 
         # power of x
@@ -118,11 +166,15 @@ class monomial:
         return self.alpha.id > other.alpha.id
 
     def __add__(self, other: object) -> monomial:
+        """
+        Defines the operation self + other
+        where other is either a monomial object or a scalar
+        """
         if not isinstance(other, monomial):
             raise TypeError("Cannot add monomial to non-monomial object")
         if not self.alpha == other.alpha:
             raise ValueError(
-                "Cannot add monomomials with different mulit-"
+                "Cannot add monomials with different multi-"
                 + "indices. Use a polynomial object instead"
             )
         return monomial(self.alpha, self.coef + other.coef)

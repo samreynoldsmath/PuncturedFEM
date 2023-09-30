@@ -1,3 +1,11 @@
+"""
+closed_contour.py
+=================
+
+Module containing the closed_contour class, which represents a closed contour
+in the plane.
+"""
+
 from typing import Callable, Optional
 
 import numpy as np
@@ -29,6 +37,15 @@ class closed_contour:
         edges: Optional[list[edge]] = None,
         edge_orients: Optional[list[int]] = None,
     ) -> None:
+        """
+        Constructor for closed_contour class.
+
+        Parameters
+        ----------
+        cell_id : int
+            The cell id of the contour. (This is the cell id of the cell that
+            the contour is part of the boundary of.)
+        """
         self.set_cell_id(cell_id)
         self.num_edges = 0
         self.vert_idx = []
@@ -41,6 +58,7 @@ class closed_contour:
         self.add_edges(edges, edge_orients)
 
     def set_cell_id(self, cell_id: int) -> None:
+        """Set the cell id of the contour"""
         if not isinstance(cell_id, int):
             raise TypeError(
                 f"cell_id = {cell_id} invalid, must be a positive integer"
@@ -75,6 +93,7 @@ class closed_contour:
 
     # PARAMETERIZATION #######################################################
     def is_parameterized(self) -> bool:
+        """Returns true if all edges are parameterized"""
         return all(e.is_parameterized for e in self.edges)
 
     def parameterize(self, quad_dict: dict) -> None:
@@ -90,6 +109,7 @@ class closed_contour:
         self.find_interior_point()
 
     def deparameterize(self) -> None:
+        """Deparameterize each edge"""
         for e in self.edges:
             e.deparameterize()
         self.num_pts = 0
@@ -148,6 +168,10 @@ class closed_contour:
     def is_in_interior_contour(
         self, x: np.ndarray, y: np.ndarray
     ) -> np.ndarray:
+        """
+        Returns a boolean array indicating whether each point (x[i], y[i]) is
+        inside the contour.
+        """
         if x.shape != y.shape:
             raise Exception("x and y must have same size")
 
@@ -171,7 +195,8 @@ class closed_contour:
 
     def find_interior_point(self) -> None:
         """Finds an interior point."""
-        # TODO: Uses a brute force search. There is likely a more efficient way.
+
+        # NOTE: Uses a brute force search. There is likely a more efficient way.
 
         if not self.is_parameterized():
             raise NotParameterizedError("finding interior point")

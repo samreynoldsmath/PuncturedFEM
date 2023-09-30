@@ -1,3 +1,11 @@
+"""
+traceplot.py
+============
+
+Module containing functions for plotting traces of functions on the boundary of
+a cell.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -15,6 +23,10 @@ def plot_trace(
     K: cell,
     quad_list: list[quad],
 ) -> None:
+    """
+    Plots the trace of a function on the boundary of a cell.
+    """
+
     t = _get_trace_param_cell_boundary(K, quad_list)
 
     plt.figure()
@@ -38,6 +50,11 @@ def plot_trace_log(
     K: cell,
     quad_list: list[quad],
 ) -> None:
+    """
+    Plots the trace of a function on the boundary of a cell with a log scale on
+    the vertical axis.
+    """
+
     t = _get_trace_param_cell_boundary(K, quad_list)
 
     plt.figure()
@@ -66,6 +83,10 @@ def _make_quad_dict(quad_list: list[quad]) -> dict[str, quad]:
 def _get_trace_param_cell_boundary(
     K: cell, quad_list: list[quad]
 ) -> np.ndarray:
+    """
+    Returns the trace parameter values for the boundary of a cell.
+    """
+
     quad_dict = _make_quad_dict(quad_list)
 
     t = np.zeros((K.num_pts,))
@@ -83,6 +104,10 @@ def _get_trace_param_cell_boundary(
 
 
 def _get_ticks(K: cell) -> tuple[np.ndarray, list[str]]:
+    """
+    Returns the x-ticks and x-labels for a plot of a function on the boundary of
+    a cell.
+    """
     x_ticks = np.linspace(0, 2 * np.pi * K.num_edges, K.num_edges + 1)
     x_labels = [
         "0",
