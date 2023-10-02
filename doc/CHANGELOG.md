@@ -1,6 +1,12 @@
 # Punctured FEM: Change Log
 
 
+## [yyyy mm dd] v0.3.x: Exceptions and logging
+- [ ] document TODO comments in `doc/TODO.md`
+- [ ] change exceptions to specific error types
+- [ ] add logging with `logging` module
+
+
 ## [2023 Sep 30] v0.3.6: Rename id variables
 - rename `id` variables to either `idx` or `key` to avoid shadowing built-ins
 
