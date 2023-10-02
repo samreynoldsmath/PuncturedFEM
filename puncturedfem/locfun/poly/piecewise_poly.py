@@ -13,6 +13,7 @@ from numpy import ndarray, zeros
 from ...mesh.cell import cell
 from ...mesh.edge import edge
 from .poly import polynomial
+from .poly_exceptions import PolynomialError
 
 
 class piecewise_polynomial:
@@ -41,7 +42,7 @@ class piecewise_polynomial:
             Identifier for the piecewise_polynomial. Default is 0.
         """
         self.set_idx(idx)
-        self.set_num_polys(num_polys)  # TODO: this isn't safe
+        self.set_num_polys(num_polys)  # TODO: determine num_polys automatically
         self.set_polys(polys)
 
     def set_idx(self, idx: int) -> None:
@@ -79,7 +80,9 @@ class piecewise_polynomial:
         """
         m = len(edges)
         if m != self.num_polys:
-            raise Exception("Number of edges must match number of polynomials")
+            raise PolynomialError(
+                "Number of edges must match number of polynomials"
+            )
         vals_arr = []
         num_pts = 0
         for i in range(m):

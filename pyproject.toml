@@ -13,20 +13,19 @@ disable = [
     "wrong-import-order",               # isort and black handles this
     "wrong-import-position",            # isort and black handles this
     "duplicate-code",                   # mesh/edge libraries have similar code
-    "cell-var-from-loop",               # this is fine
 
     # reenable to find TODO comments
     "fixme",
 
     # TODO: reenable these warnings
-    "too-many-branches",
-    "too-many-nested-blocks",
+    "too-many-branches", # split up functions
+    "too-many-nested-blocks", # split up functions
     "too-many-arguments",
     "too-many-locals",
-    "too-many-instance-attributes",
-    "too-many-public-methods",
-    "nested-min-max",
-    "consider-using-enumerate",
-    "broad-exception-raised",
+    "too-many-instance-attributes", # use dataclasses?
+    "too-many-public-methods", # make more private?
+    "nested-min-max", # use min/max
+    "consider-using-enumerate", # use enumerate
+    "cell-var-from-loop", # use functools.partial instead
 
     ]

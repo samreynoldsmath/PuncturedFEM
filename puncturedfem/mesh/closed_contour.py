@@ -12,7 +12,12 @@ import numpy as np
 from matplotlib import path
 
 from .bounding_box import get_bounding_box
-from .edge import NotParameterizedError, edge
+from .edge import edge
+from .mesh_exceptions import (
+    InteriorPointError,
+    NotParameterizedError,
+    SizeMismatchError,
+)
 from .vert import vert
 
 
@@ -173,7 +178,7 @@ class closed_contour:
         inside the contour.
         """
         if x.shape != y.shape:
-            raise Exception("x and y must have same size")
+            raise SizeMismatchError("x and y must have same size")
 
         is_inside = np.zeros(x.shape, dtype=bool)
         x1, x2 = self.get_sampled_points()
@@ -245,7 +250,7 @@ class closed_contour:
             N = 4 * (N // 2) + 1
 
             if M * N > 1_000_000:
-                raise Exception("Unable to locate an interior point")
+                raise InteriorPointError("Unable to locate an interior point")
 
             self.interior_point = vert(x=x[ii, jj], y=y[ii, jj])
 
@@ -299,7 +304,7 @@ class closed_contour:
         if not self.is_parameterized():
             raise NotParameterizedError("multiplying by dx_norm")
         if len(vals) != self.num_pts:
-            raise Exception("vals must be same length as boundary")
+            raise SizeMismatchError("vals must be same length as boundary")
         vals_dx_norm = np.zeros((self.num_pts,))
         for i in range(self.num_edges):
             j = self.vert_idx[i]
@@ -324,9 +329,9 @@ class closed_contour:
         if not self.is_parameterized():
             raise NotParameterizedError("integrating over boundary")
         if len(np.shape(vals_dx_norm)) != 1:
-            raise Exception("vals_dx_norm must be a vector")
+            raise SizeMismatchError("vals_dx_norm must be a vector")
         if len(vals_dx_norm) != self.num_pts:
-            raise Exception("vals must be same length as boundary")
+            raise SizeMismatchError("vals must be same length as boundary")
 
         # # if contour is a single edge without a corner, use trapezoid rule
         # if self.num_edges == 1 and self.edges[0].quad_type == 'trap':

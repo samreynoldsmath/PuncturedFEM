@@ -10,14 +10,13 @@ from typing import Optional
 
 from numpy import empty, log, nan, ndarray, pi, zeros
 
+from ..mesh.mesh_exceptions import SizeMismatchError
 from ..solver.globkey import global_key
 from . import antilap, d2n
 from .nystrom import nystrom_solver
 from .poly.integrate_poly import integrate_poly_over_cell
 from .poly.piecewise_poly import piecewise_polynomial
 from .poly.poly import polynomial
-
-# from .interior_val import interior_value_object
 
 
 class locfun:
@@ -240,7 +239,7 @@ class locfun:
         if not isinstance(poly_trace, piecewise_polynomial):
             raise TypeError("poly_trace must be a piecewise_polynomial")
         if poly_trace.num_polys != self.solver.K.num_edges:
-            raise Exception(
+            raise ValueError(
                 "Number of polynomials must match number of edges in K"
             )
         self.poly_trace = poly_trace
@@ -270,12 +269,12 @@ class locfun:
         and stores them in self.trace.
         """
         if not self.has_poly_trace:
-            raise Exception(
+            raise SizeMismatchError(
                 "Cannot compute trace values for local function "
                 + "without piecewise polynomial trace"
             )
         if self.poly_trace.num_polys != self.solver.K.num_edges:
-            raise Exception(
+            raise SizeMismatchError(
                 "There must be exactly one trace polynomial "
                 + "for every edge of K"
             )
@@ -550,6 +549,8 @@ class locfun:
         return val
 
     # INTERIOR VALUES ########################################################
+
+    # TODO: move interior value calculation to separate module
 
     def compute_interior_values(self) -> None:
         """

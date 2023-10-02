@@ -10,7 +10,12 @@ from typing import Callable
 import numpy as np
 
 from .closed_contour import closed_contour
-from .edge import NotParameterizedError, edge
+from .edge import edge
+from .mesh_exceptions import (
+    EmbeddingError,
+    NotParameterizedError,
+    SizeMismatchError,
+)
 
 
 class cell:
@@ -151,7 +156,7 @@ class cell:
         cols_all_sum_to_one = np.linalg.norm(col_sum - 1) < TOL
 
         if not (rows_all_sum_to_one and cols_all_sum_to_one):
-            raise Exception(
+            raise EmbeddingError(
                 "Edge collection must be a union of "
                 + "disjoint simple closed contours"
             )
@@ -211,7 +216,7 @@ class cell:
 
     def find_hole_interior_points(self) -> None:
         """
-        TODO: Automatically find a point in the interior of each hole.
+        DEPRECATED: Automatically find a point in the interior of each hole.
 
         Finds a point by creating a rectangular grid of points and
         eliminating those that are not in the interior. Among those
@@ -387,7 +392,7 @@ class cell:
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with tangent")
         if len(v1) != self.num_pts or len(v2) != self.num_pts:
-            raise Exception("v1 and v2 must be same length as boundary")
+            raise SizeMismatchError("v1 and v2 must be same length as boundary")
         res = np.zeros((self.num_pts,))
         for i in range(self.num_holes + 1):
             j = self.component_start_idx[i]
@@ -402,7 +407,7 @@ class cell:
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with normal")
         if len(v1) != self.num_pts or len(v2) != self.num_pts:
-            raise Exception("v1 and v2 must be same length as boundary")
+            raise SizeMismatchError("v1 and v2 must be same length as boundary")
         res = np.zeros((self.num_pts,))
         for i in range(self.num_holes + 1):
             j = self.component_start_idx[i]
@@ -420,7 +425,7 @@ class cell:
         if not self.is_parameterized():
             raise NotParameterizedError("multiplying by dx_norm")
         if len(vals) != self.num_pts:
-            raise Exception("vals must be same length as boundary")
+            raise SizeMismatchError("vals must be same length as boundary")
         vals_dx_norm = np.zeros((self.num_pts,))
         for i in range(self.num_holes + 1):
             j = self.component_start_idx[i]
@@ -445,7 +450,7 @@ class cell:
         if not self.is_parameterized():
             raise NotParameterizedError("integrating over boundary")
         if len(vals_dx_norm) != self.num_pts:
-            raise Exception("vals must be same length as boundary")
+            raise SizeMismatchError("vals must be same length as boundary")
 
         # NOTE: this is more memory efficient, but less stable
         # res = 0

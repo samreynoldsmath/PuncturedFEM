@@ -131,7 +131,7 @@ class nystrom_solver:
             return self.solve_neumann_zero_average(-1 * phi_wtd), np.zeros((0,))
         if self.K.num_holes > 0:  # multiply connected
             return self.get_harmonic_conjugate_multiply_connected(phi, phi_wtd)
-        raise Exception("K.num_holes < 0")
+        raise ValueError("K.num_holes < 0")
 
     def get_harmonic_conjugate_multiply_connected(
         self, phi: np.ndarray, dphi_dt_wgt: np.ndarray

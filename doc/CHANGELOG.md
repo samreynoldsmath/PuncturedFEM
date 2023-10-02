@@ -1,10 +1,14 @@
 # Punctured FEM: Change Log
 
 
-## [yyyy mm dd] v0.3.x: Exceptions and logging
-- [ ] document TODO comments in `doc/TODO.md`
-- [ ] change exceptions to specific error types
-- [ ] add logging with `logging` module
+## [2023 Oct 02] v0.3.7-alpha
+- [x] change exceptions to specific error types
+- [x] document TODO comments in `doc/TODO.md`
+- [x] modify `CHANGELOG.md`, `TODO.md`, `WISHLIST.md` to reflect semantic versioning
+  - future versions will use `git` branches to isolate development
+  - git tags and GitHub releases will be used to track versions
+  - small commits get a descriptive message
+  - branch merges get a release number
 
 
 ## [2023 Sep 30] v0.3.6: Rename id variables

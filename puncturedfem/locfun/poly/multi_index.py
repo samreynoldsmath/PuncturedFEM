@@ -13,6 +13,8 @@ from __future__ import annotations
 from math import floor, sqrt
 from typing import Optional
 
+from .poly_exceptions import MultiIndexError
+
 
 class multi_index_2:
     """
@@ -44,7 +46,7 @@ class multi_index_2:
         if not isinstance(alpha, list):
             raise TypeError("Multi-index must be list of two integers")
         if len(alpha) != 2:
-            raise Exception("Multi-index is assumed to have 2 components")
+            raise MultiIndexError("Multi-index is assumed to have 2 components")
         if not (isinstance(alpha[0], int) and isinstance(alpha[1], int)):
             raise TypeError("Multi-index must be list of two integers")
         if alpha[0] < 0 or alpha[1] < 0:

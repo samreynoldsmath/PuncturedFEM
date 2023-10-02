@@ -17,6 +17,7 @@ from typing import Optional
 import numpy as np
 
 from .multi_index import multi_index_2
+from .poly_exceptions import InvalidVariableError
 
 
 class monomial:
@@ -112,7 +113,9 @@ class monomial:
                 b = self.coef * self.alpha.y
                 beta = multi_index_2([self.alpha.x, self.alpha.y - 1])
         else:
-            raise Exception('var must be one of the strings "x" or "y"')
+            raise InvalidVariableError(
+                'var must be one of the strings "x" or "y"'
+            )
         return monomial(alpha=beta, coef=b)
 
     def grad(self) -> tuple[monomial, monomial]:

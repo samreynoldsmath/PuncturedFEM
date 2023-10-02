@@ -5,7 +5,7 @@ meshlib
 Subpackage containing the mesh builder functions for the different types of
 meshes.
 
-TODO: Future versions may replace this subpackage with a file i/o system.
+PLANNED: Future versions may replace this subpackage with a file i/o system.
 
 Modules
 -------

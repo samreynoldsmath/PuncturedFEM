@@ -11,16 +11,13 @@ from typing import Any, Callable
 import numpy as np
 
 from .bounding_box import get_bounding_box
+from .mesh_exceptions import (
+    EdgeTransformationError,
+    NotParameterizedError,
+    SizeMismatchError,
+)
 from .quad import quad
 from .vert import vert
-
-
-class NotParameterizedError(Exception):
-    """Exception raised if edges are not parameterized"""
-
-    def __init__(self, cant_do: str = "calling this method") -> None:
-        super().__init__()
-        self.message = "Must parameterize edges before " + cant_do
 
 
 class edge:
@@ -139,7 +136,6 @@ class edge:
 
     def __str__(self) -> str:
         """Return a string representation of the edge"""
-        # TODO
         msg = ""
         msg += f"idx:         {self.idx}\n"
         msg += f"curve_type: {self.curve_type}\n"
@@ -303,14 +299,14 @@ class edge:
         # check that specified endpoints are distinct
         ab_norm = np.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
         if ab_norm < TOL:
-            raise Exception("a and b must be distinct points")
+            raise EdgeTransformationError("a and b must be distinct points")
 
         # check that endpoints of edge are distinct
         x = self.x[:, 0]
         y = self.x[:, self.num_pts - 1]
         xy_norm = np.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
         if xy_norm < TOL:
-            raise Exception("edge must have distinct endpoints")
+            raise EdgeTransformationError("edge must have distinct endpoints")
 
         # anchor starting point to origin
         self.translate(vert(x=-x[0], y=-x[1]))
@@ -352,7 +348,9 @@ class edge:
         TOL = 1e-12
 
         if np.abs(alpha) < TOL:
-            raise Exception("Dilation factor alpha must be nonzero")
+            raise EdgeTransformationError(
+                "Dilation factor alpha must be nonzero"
+            )
 
         self.x *= alpha
         self.dx_norm *= np.abs(alpha)
@@ -412,9 +410,9 @@ class edge:
         # safety checks
         msg = "A must be a 2 by 2 orthogonal matrix"
         if np.shape(A) != (2, 2):
-            raise Exception(msg)
+            raise EdgeTransformationError(msg)
         if np.linalg.norm(np.transpose(A) @ A - np.eye(2)) > TOL:
-            raise Exception(msg)
+            raise EdgeTransformationError(msg)
 
         # apply transformation to vector quantities
         self.x = A @ self.x
@@ -459,10 +457,10 @@ class edge:
         msg = "vals must be same length as boundary"
         if ignore_endpoint:
             if len(vals) != self.num_pts - 1:
-                raise Exception(msg)
+                raise SizeMismatchError(msg)
             return vals * self.dx_norm[:-1]
         if len(vals) != self.num_pts:
-            raise Exception(msg)
+            raise SizeMismatchError(msg)
         return vals * self.dx_norm
 
     def dot_with_tangent(
@@ -476,7 +474,7 @@ class edge:
         else:
             k = 0
         if len(v1) != self.num_pts - k or len(v2) != self.num_pts - k:
-            raise Exception("vals must be same length as boundary")
+            raise SizeMismatchError("vals must be same length as boundary")
         return v1 * self.unit_tangent[0, :-k] + v2 * self.unit_tangent[1, :-k]
 
     def dot_with_normal(
@@ -490,7 +488,7 @@ class edge:
         else:
             k = 0
         if len(v1) != self.num_pts - k or len(v2) != self.num_pts - k:
-            raise Exception("vals must be same length as boundary")
+            raise SizeMismatchError("vals must be same length as boundary")
         return v1 * self.unit_normal[0, :-k] + v2 * self.unit_normal[1, :-k]
 
     # INTEGRATION ############################################################
@@ -516,12 +514,12 @@ class edge:
         if ignore_endpoint:
             # left Riemann sum
             if len(vals_dx_norm) != self.num_pts - 1:
-                raise Exception("vals must be same length as edge")
+                raise SizeMismatchError("vals must be same length as edge")
             res = np.sum(h * vals_dx_norm[:-1])
         else:
             # trapezoidal rule
             if len(vals_dx_norm) != self.num_pts:
-                raise Exception("vals must be same length as edge")
+                raise SizeMismatchError("vals must be same length as edge")
             res = 0.5 * h * (vals_dx_norm[0] + vals_dx_norm[-1]) + np.sum(
                 h * vals_dx_norm[1:-1]
             )

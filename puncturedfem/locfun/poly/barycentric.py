@@ -16,6 +16,7 @@ from numpy.linalg import norm
 
 from ...mesh.edge import edge
 from .poly import polynomial
+from .poly_exceptions import DegenerateTriangleError
 
 ROOT3OVER2 = sqrt(3) / 2
 
@@ -52,9 +53,9 @@ def barycentric_coordinates(
         jminus1 = (j - 1) % 3
         dist[j] = norm(z[j] - z[jminus1])
         if dist[j] < 1e-12:
-            raise Exception("Degenerate triangle detected")
+            raise DegenerateTriangleError("Degenerate triangle detected")
 
-    # compute renormalized altitudes
+    # compute re-normalized altitudes
     s = sum(dist) / 2
     h = 2 * sqrt(s * (s - dist[0]) * (s - dist[1]) * (s - dist[2]))
 
@@ -76,10 +77,13 @@ def barycentric_coordinates(
 
 def barycentric_products(e: edge, deg: int) -> list[ndarray]:
     """
-    TODO: DEPRECATED
+    DEPRECATED
+
+    Returns a spanning set of the space of polynomials of degree deg <= 3 by
+    computing the products of the barycentric coordinates
     """
     if deg > 3:
-        raise Exception("NOT IMPLEMENTED")
+        raise NotImplementedError("Only implemented for deg <= 3")
 
     ell = barycentric_coordinates_edge(e)
     ell_trace = zeros((3, e.num_pts))

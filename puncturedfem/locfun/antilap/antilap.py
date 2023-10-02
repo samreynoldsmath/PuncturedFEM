@@ -19,8 +19,6 @@ from ..d2n.log_terms import get_log_grad
 from ..nystrom import nystrom_solver
 from . import log_antilap
 
-# TODO initialize solver in locfunspace and pass it to antilap
-
 
 def get_anti_laplacian_harmonic(
     K: cell, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
@@ -119,8 +117,10 @@ def _antilap_multiply_connected(
     rho_hat_nd_0 = K.dot_with_normal(psi_hat_0, psi_0)
     rho_hat_wnd_0 = K.multiply_by_dx_norm(rho_hat_nd_0)
 
-    # solve for rho_0 and rho_hat_0
+    # TODO initialize solver in locfunspace and pass it to antilap
     solver = nystrom_solver(K)
+
+    # solve for rho_0 and rho_hat_0
     rho_0 = solver.solve_neumann_zero_average(rho_wnd_0)
     rho_hat_0 = solver.solve_neumann_zero_average(rho_hat_wnd_0)
 

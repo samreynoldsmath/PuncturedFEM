@@ -8,9 +8,9 @@ mesh builder functions in the meshlib submodules.
 
 from typing import Any, Callable
 
+from ..edge import edge
 from ..planar_mesh import planar_mesh
 from ..vert import vert
-from ..edge import edge
 
 
 def mesh_builder(

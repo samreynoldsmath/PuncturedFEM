@@ -15,6 +15,7 @@ import numpy as np
 from ...mesh.cell import cell
 from .monomial import monomial
 from .multi_index import multi_index_2
+from .poly_exceptions import MultiIndexError, PolynomialError
 
 
 class polynomial:
@@ -48,7 +49,7 @@ class polynomial:
             return
         for triple in coef_multidx_pairs:
             if len(triple) != 3:
-                raise Exception(
+                raise MultiIndexError(
                     "Every multi-index / coefficient pair must consist of"
                     + "\n\t[0]:\tthe coefficient"
                     + "\n\t[1]:\tthe exponent on x_1"
@@ -139,7 +140,7 @@ class polynomial:
         defined with a 'upper triangular' ordering
         """
         if len(coef_list) != len(idx_list):
-            raise Exception(
+            raise PolynomialError(
                 "number of coefficients and multi-indices must be equal"
             )
         for i, c in enumerate(coef_list):

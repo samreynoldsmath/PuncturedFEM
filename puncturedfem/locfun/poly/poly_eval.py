@@ -13,6 +13,7 @@ get_poly_vals(x, y, polys)
 import numpy as np
 
 from ...mesh.edge import edge
+from ...mesh.mesh_exceptions import SizeMismatchError
 from .poly import polynomial
 
 
@@ -31,7 +32,7 @@ def get_poly_vals(
     """
     num_pts = len(x)
     if len(y) != num_pts:
-        raise Exception("x and y must be the same length")
+        raise SizeMismatchError("x and y must be the same length")
     num_polys = len(polys)
     poly_vals = []
     for j in range(num_polys):

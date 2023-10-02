@@ -86,7 +86,7 @@ class quad:
         """
 
         if p < 2:
-            raise Exception("Kress parameter p must be an integer at least 2")
+            raise ValueError("Kress parameter p must be an integer at least 2")
 
         # self.type += f'_{p}'
 

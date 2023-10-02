@@ -273,15 +273,15 @@ class solver:
         # rhs
         L = 1 + max(self.rhs_idx)
         if L > self.num_funs:
-            raise Exception(f"L > self.num_funs ({L} > {self.num_funs})")
+            raise ValueError(f"L > self.num_funs ({L} > {self.num_funs})")
         # rows
         M = 1 + max(self.row_idx)
         if M > self.num_funs:
-            raise Exception(f"M > self.num_funs ({M} > {self.num_funs})")
+            raise ValueError(f"M > self.num_funs ({M} > {self.num_funs})")
         # cols
         N = 1 + max(self.col_idx)
         if N > self.num_funs:
-            raise Exception(f"N > self.num_funs ({N} > {self.num_funs})")
+            raise ValueError(f"N > self.num_funs ({N} > {self.num_funs})")
 
     def build_matrix_and_rhs(self) -> None:
         """Build global system matrix and right-hand side vector"""

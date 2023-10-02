@@ -95,7 +95,7 @@ class planar_mesh:
         self.set_edge_ids()
         self.build_cell_idx_list()
         self.build_vert_idx_list()
-        self.find_repeats()
+        # self.find_repeats()
         if verbose:
             print(self)
 
@@ -183,7 +183,7 @@ class planar_mesh:
         Return the cell with index cell_idx.
         """
         if cell_idx not in self.cell_idx_list:
-            raise Exception("cell_idx is not in cell_idx_list")
+            raise IndexError("cell_idx is not in cell_idx_list")
         edges = []
         for e in self.edges:
             if cell_idx in (e.pos_cell_idx, e.neg_cell_idx):
@@ -221,5 +221,6 @@ class planar_mesh:
 
     def find_repeats(self) -> None:
         """
-        TODO: Find edges and cells that are repeated
+        PLANNED: Find edges and cells that are repeated
         """
+        raise NotImplementedError("find_repeats not implemented")
