@@ -241,21 +241,16 @@ class solver:
             for key in self.V.cell_dofs[abs_cell_idx]:
                 if key.is_on_boundary:
                     # zero rhs entry
-                    for k in range(len(self.rhs_idx)):
-                        if self.rhs_idx[k] == key.glob_idx:
+                    for k, idx in enumerate(self.rhs_idx):
+                        if idx == key.glob_idx:
                             self.rhs_vals[k] = 0.0
-
                     # zero mat row, except diagonal
-                    for k in range(len(self.row_idx)):
-                        if self.row_idx[k] == key.glob_idx:
+                    for k, idx in enumerate(self.row_idx):
+                        if idx == key.glob_idx:
                             if self.col_idx[k] == key.glob_idx:
                                 self.mat_vals[k] = 1.0
                             else:
                                 self.mat_vals[k] = 0.0
-
-                # else:
-
-                #     # normalize row
 
     def find_num_funs(self) -> None:
         """
@@ -426,8 +421,8 @@ class solver:
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
         int_vals = self.interior_values[abs_cell_idx]
         vals = zeros(shape(int_vals[0]))
-        for i in range(len(int_vals)):
-            vals += int_vals[i] * coef[i]
+        for i, val in enumerate(int_vals):
+            vals += val * coef[i]
         return vals
 
     def get_coef_on_cell(self, cell_idx: int, u: ndarray) -> ndarray:
@@ -435,8 +430,8 @@ class solver:
         Get the coefficients of the basis functions on a cell.
         """
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
-        ids = self.V.cell_dofs[abs_cell_idx]
-        coef = zeros(len(ids))
-        for i in range(len(ids)):
-            coef[i] = u[ids[i].glob_idx]
+        keys = self.V.cell_dofs[abs_cell_idx]
+        coef = zeros((len(keys),))
+        for i, key in enumerate(keys):
+            coef[i] = u[key.glob_idx]
         return coef

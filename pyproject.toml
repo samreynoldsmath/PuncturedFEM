@@ -25,7 +25,6 @@ disable = [
     "too-many-instance-attributes", # use dataclasses?
     "too-many-public-methods", # make more private?
     "nested-min-max", # use min/max
-    "consider-using-enumerate", # use enumerate
     "cell-var-from-loop", # use functools.partial instead
 
     ]
