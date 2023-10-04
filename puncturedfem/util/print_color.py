@@ -22,6 +22,9 @@ class Color(Enum):
     CYAN = "\033[36m"
 
     def __str__(self) -> str:
+        """
+        Return the name of the color.
+        """
         return self.name
 
 

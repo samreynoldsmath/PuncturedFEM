@@ -54,10 +54,11 @@
   - [ ] pass `alpha` as keyword argument
 - [ ] `plots`:
   - [ ] move quadrature dictionary to `mesh.quad` module
-  - [ ] move plotting functions in `solver.solver` class to separate module
   - [ ] update examples to reflect change
 - [x] `solver.solver`:
   - [x] move color printing to separate module
+  - [ ] move plotting functions to separate module
+- [x] add init file for `util` subpackage
 ### Bug fixes
 - [ ] fix colorbar position in contour plots
 - [ ] revert single/double layer operators to loop over edges rather than cell boundary components
