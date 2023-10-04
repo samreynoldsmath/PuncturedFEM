@@ -339,19 +339,8 @@ class solver:
             vmax = max(vmax, nanmax(vals))
 
         # determine axes
-        min_x = inf
-        max_x = -inf
-        min_y = inf
-        max_y = -inf
-        for e in self.V.T.edges:
-            min_x = min(min_x, min(e.x[0, :]))
-            max_x = max(max_x, max(e.x[0, :]))
-            min_y = min(min_y, min(e.x[1, :]))
-            max_y = max(max_y, max(e.x[1, :]))
-        dx = max_x - min_x
-        dy = max_y - min_y
-        h = 4.0
-        w = h * dx / dy
+        min_x, max_x, min_y, max_y = self.get_axis_limits()
+        w, h = self.get_figure_size(min_x, max_x, min_y, max_y)
 
         # get figure object
         fig = plt.figure(figsize=(w, h))
@@ -411,6 +400,49 @@ class solver:
             plt.show()
 
         plt.close(fig)
+
+    def get_axis_limits(self) -> tuple[float, float, float, float]:
+        """
+        Get the axis limits.
+        """
+        min_x = inf
+        max_x = -inf
+        min_y = inf
+        max_y = -inf
+        for e in self.V.T.edges:
+            min_x = self.update_min(min_x, e.x[0, :])
+            max_x = self.update_max(max_x, e.x[0, :])
+            min_y = self.update_min(min_y, e.x[1, :])
+            max_y = self.update_max(max_y, e.x[1, :])
+        return min_x, max_x, min_y, max_y
+
+    def update_min(self, current_min: float, candidates: ndarray) -> float:
+        """
+        Update the minimum value.
+        """
+        min_candidate = min(candidates)
+        new_min = min(current_min, min_candidate)
+        return new_min
+
+    def update_max(self, current_max: float, candidates: ndarray) -> float:
+        """
+        Update the maximum value.
+        """
+        max_candidate = max(candidates)
+        new_max = max(current_max, max_candidate)
+        return new_max
+
+    def get_figure_size(
+        self, min_x: float, max_x: float, min_y: float, max_y: float
+    ) -> tuple[float, float]:
+        """
+        Get the figure size.
+        """
+        dx = max_x - min_x
+        dy = max_y - min_y
+        h = 4.0
+        w = h * dx / dy
+        return w, h
 
     def compute_linear_combo_on_cell(
         self, cell_idx: int, coef: ndarray

@@ -33,7 +33,7 @@
 - [ ] add logging with `logging` module
 - [x] use enumerate to replace `range(len(...))` loops
 - [ ] use `functools.partial` to handle logarithmic functions
-- [ ] rectify nested min/max statements
+- [x] rectify nested min/max statements
 - [ ] move interior value calculation in `locfun` to separate module
 - [ ] initialize solver in `locfunspace` and pass it to `antilap`
 - [ ] `locfun.d2n` and `locfun.antilap`:
@@ -59,10 +59,12 @@
 - [ ] `solver.solver`:
   - [ ] move color printing to separate module
 ### Bug fixes
+- [ ] fix colorbar position in contour plots
 - [ ] revert single/double layer operators to loop over edges rather than cell boundary components
 ### Tests
 - [ ] deprecate `unittest` in favor of `pytest`
 - [ ] enforce conformity to `ex1a`/`ex1b`/`ex1c` examples
+- [ ] write solver tests
 
 
 ## [2023 Oct 02] v0.3.7-alpha
