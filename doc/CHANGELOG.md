@@ -56,8 +56,8 @@
   - [ ] move quadrature dictionary to `mesh.quad` module
   - [ ] move plotting functions in `solver.solver` class to separate module
   - [ ] update examples to reflect change
-- [ ] `solver.solver`:
-  - [ ] move color printing to separate module
+- [x] `solver.solver`:
+  - [x] move color printing to separate module
 ### Bug fixes
 - [ ] fix colorbar position in contour plots
 - [ ] revert single/double layer operators to loop over edges rather than cell boundary components

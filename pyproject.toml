@@ -24,7 +24,6 @@ disable = [
     "too-many-locals",
     "too-many-instance-attributes", # use dataclasses?
     "too-many-public-methods", # make more private?
-    # "nested-min-max", # use min/max
     "cell-var-from-loop", # use functools.partial instead
 
     ]

@@ -13,24 +13,9 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
 from tqdm import tqdm
 
+from ..util.print_color import Color, print_color
 from .bilinear_form import bilinear_form
 from .globfunsp import global_function_space
-
-# TODO: this belongs in a different module, use enum
-RESET = "\033[0m"  # Reset all attributes
-RED = "\033[31m"  # Red text
-GREEN = "\033[32m"  # Green text
-YELLOW = "\033[33m"  # Yellow text
-BLUE = "\033[34m"  # Blue text
-MAGENTA = "\033[35m"  # Magenta text
-CYAN = "\033[36m"  # Cyan text
-
-
-def print_color(s: str, color: str) -> None:
-    """
-    Print a string in color.
-    """
-    print(color + s + RESET)
 
 
 class solver:
@@ -181,7 +166,7 @@ class solver:
             if verbose:
                 print_color(
                     f"Cell {abs_cell_idx + 1:6} / {self.V.T.num_cells:6}",
-                    GREEN,
+                    Color.GREEN,
                 )
 
             # build local function space
