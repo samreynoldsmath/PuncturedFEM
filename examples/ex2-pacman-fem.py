@@ -3,7 +3,7 @@
 
 # # Finite Elements on a Pac-Man Mesh
 # This example demonstrates how to set up and solve a finite element problem on a
-# punctured mesh.
+# punctured mesh. 
 # The model problem under consideration is a simple diffusion-reaction problem
 # \begin{align*}
 # 	-\nabla\cdot(a \, \nabla u) + c \, u &= f \quad \text{in } \Omega, \\
@@ -23,7 +23,7 @@
 # We define the *global Poisson space* $V_p(\mathcal{T})$ as the space of
 # continuous functions in $H^1_0(\Omega)$ whose restriction to each cell $K$ is
 # an element of $V_p(K)$.
-# By constructing a basis $\{\phi_1, \dots, \phi_N\}$ of $V_p(\mathcal{T})$ by
+# By constructing a basis $\{\phi_1, \dots, \phi_N\}$ of $V_p(\mathcal{T})$ by 
 # continuously "stitching" the local basis functions together,
 # we seek a finite element solution $\tilde{u} \in V_p(\mathcal{T})$ such that
 # \begin{align*}
@@ -33,14 +33,14 @@
 # 	+ \int_\Omega c \, u_i \, \phi_i \, \phi_j \, dx
 # 	= \int_\Omega f \, \phi_j \, dx
 # \end{align*}
-#
+# 
 # We begin by importing the usual packages, as well as the `tqdm` package for
 # displaying progress bars.
-#
-# *Note:* This example can be run without the `tqdm` package by setting
+# 
+# *Note:* This example can be run without the `tqdm` package by setting 
 # `verbose=False` below.
 
-# In[1]:
+# In[ ]:
 
 
 import sys
@@ -56,15 +56,15 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 
-# Let's set a few parameters before we go any further.
+# Let's set a few parameters before we go any further. 
 # `deg` is the polynomial degree of global Poisson space,
 # `n` is edge sampling parameter (as used in previous examples),
 # and `verbose` controls how much output we see.
-#
-# **(!) WARNING:**
+# 
+# **(!) WARNING:** 
 # Higher order spaces (`deg > 1`) are still under development.
 
-# In[2]:
+# In[ ]:
 
 
 deg = 1
@@ -73,12 +73,12 @@ verbose = True
 
 
 # ## Mesh construction
-# The mesh we will use for this example was constructed in
+# The mesh we will use for this example was constructed in 
 # [Example 0](ex0-mesh-building.ipynb).
 # For convenience, the same mesh can be constructed by calling the `pacman_mesh`
 # function in the `mesh.meshlib` module.
 
-# In[3]:
+# In[ ]:
 
 
 # define mesh
@@ -86,16 +86,16 @@ verbose = True
 T = pf.meshlib.pacman_subdiv(verbose=verbose)
 
 
-# ## Build global function space
-# The global function space $V_p(\mathcal{T})\subset H^1(\Omega)$
-# is the space of continuous functions such that each function belongs to
+# ## Build global function space 
+# The global function space $V_p(\mathcal{T})\subset H^1(\Omega)$ 
+# is the space of continuous functions such that each function belongs to 
 # $V_p(K)$ when restricted to any cell $K\in\mathcal{T}$.
 # (Note that we use `deg` to denote the polynomial degree $p$.)
-#
-# To proceed with the computation, we define the quadrature scheme(s) used to
+# 
+# To proceed with the computation, we define the quadrature scheme(s) used to 
 # parameterize the edges of the mesh.
 
-# In[4]:
+# In[ ]:
 
 
 # TODO: this should really be done automatically
@@ -107,16 +107,16 @@ quad_dict = {"kress": q_kress, "trap": q_trap}
 # The global function space `V` is built from the mesh `T`, along with the `deg`
 # parameter and the information necessary to parameterize the edges of the mesh.
 
-# In[5]:
+# In[ ]:
 
 
 V = pf.global_function_space(T=T, deg=deg, quad_dict=quad_dict, verbose=verbose)
 
 
 # ## Define a bilinear form
-# The bilinear form
+# The bilinear form 
 # \begin{align*}
-# 	B(u,v) =
+# 	B(u,v) = 
 # 	a \, \int_\Omega \nabla u \cdot \nabla v ~dx
 # 	+ c \, \int_\Omega u \, v ~dx
 # \end{align*}
@@ -125,11 +125,11 @@ V = pf.global_function_space(T=T, deg=deg, quad_dict=quad_dict, verbose=verbose)
 # 	F(v) = \int_\Omega f \, v ~dx
 # \end{align*}
 # are declared as follows,
-# with `diffusion_coefficient` $a = 1$,
+# with `diffusion_coefficient` $a = 1$, 
 # `reaction_coefficient` $c = 1$,
 # and `rhs_poly` $f(x) = 1 \cdot x^{(0, 0)}$.
 
-# In[6]:
+# In[ ]:
 
 
 B = pf.bilinear_form(
@@ -141,21 +141,21 @@ print(B)
 
 
 # ## Set up the finite element solver
-# A finite element solver needs two things: the global function space and the bilinear form.
+# A finite element solver needs two things: the global function space and the bilinear form. 
 
-# In[7]:
+# In[ ]:
 
 
 S = pf.solver(V, B)
 
 
-# To assemble the matrix and right-hand side vector for the global system, we
+# To assemble the matrix and right-hand side vector for the global system, we 
 # call the `assemble()` method.
 # Zero Dirichlet boundary conditions are incorporated by default.
-#
+# 
 # This can take a while. You may want to grab a cup of coffee.
 
-# In[8]:
+# In[ ]:
 
 
 S.assemble(verbose=verbose)
@@ -164,7 +164,7 @@ S.assemble(verbose=verbose)
 # The `matplotlib.pyplot` module has a handy function for inspecting the sparsity
 # pattern of a matrix.  Let's take a look at the global matrix.
 
-# In[9]:
+# In[ ]:
 
 
 plt.figure()
@@ -177,25 +177,26 @@ plt.show()
 # To solve the system we worked hard to set up, we can call the `solve()` method
 # on the `solver` object.
 
-# In[10]:
+# In[ ]:
 
 
 S.solve()
 
 
 # ## Plot solution
-# We can visualize the solution by calling the `plot_solution()` method on the
-# solver object.
-# There are two types of plots available:
+# We can visualize the solution by calling the `plot_linear_combo()` function.
+# There are two types of plots available: 
 # a conventional contour plot (`fill=False`)
 # or a heat map (`fill=True`).
 # To view the figure in this notebook, set `show_fig = True`.
 # To save it to a file, set `save_fig = True` and select a filename.
 
-# In[11]:
+# In[ ]:
 
 
-S.plot_solution(
+pf.plot_linear_combo(
+    solver_obj=S,
+    u=S.soln,
     title="solution",
     show_fig=True,
     save_fig=False,
@@ -205,10 +206,10 @@ S.plot_solution(
 
 
 # ## Plot global basis functions
-# Let's take a look at the global basis functions by using the
+# Let's take a look at the global basis functions by using the 
 # `plot_linear_combo()` method.
 
-# In[12]:
+# In[ ]:
 
 
 # decide if to use a progress bar
@@ -222,8 +223,9 @@ else:
 for idx in basis_idx_list:
     u = np.zeros(V.num_funs)
     u[idx] = 1.0
-    S.plot_linear_combo(
-        u,
+    pf.plot_linear_combo(
+        solver_obj=S,
+        u=u,
         show_fig=True,
         save_fig=False,
         filename="out/png/basis_fun_%d.png" % idx,
@@ -231,4 +233,4 @@ for idx in basis_idx_list:
     )
 
 
-#
+# 

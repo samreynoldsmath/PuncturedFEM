@@ -54,10 +54,11 @@
   - [ ] pass `alpha` as keyword argument
 - [ ] `plots`:
   - [ ] move quadrature dictionary to `mesh.quad` module
+  - [ ] add plot maker class, each type of plot inherits from it
   - [ ] update examples to reflect change
 - [x] `solver.solver`:
   - [x] move color printing to separate module
-  - [ ] move plotting functions to separate module
+  - [x] move plotting functions to separate module
 - [x] add init file for `util` subpackage
 ### Bug fixes
 - [ ] fix colorbar position in contour plots
