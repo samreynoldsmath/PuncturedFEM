@@ -1,6 +1,6 @@
 """
 Teardrop shape
-x(t) = (2 sin(t/2), −β sin t), β = tan(π/(2α)), α = 3/2
+x(t) = (2 sin(t/2), −β sin t), β = tan(π/(2α)), α = 3/2 (default)
 """
 
 from typing import Any
@@ -10,8 +10,12 @@ import numpy as np
 
 def unpack(kwargs: Any) -> Any:
     """Unpack parameters"""
-    # TODO: Actually pass alpha as a parameter
-    alpha = 3 / 2
+    if "alpha" in kwargs:
+        alpha = kwargs["alpha"]
+    else:
+        alpha = 3 / 2
+    if alpha <=1:
+        raise ValueError("alpha must > 1")
     beta = np.tan(0.5 * np.pi / alpha)
     return beta
 

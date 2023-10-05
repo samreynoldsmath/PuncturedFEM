@@ -50,8 +50,8 @@
 - [ ] `mesh.planar_mesh`:
   - [ ] replace lists with sets where appropriate
   - [ ] set vert idxs in constructor
-- [ ] `mesh.edgelib.teardrop`:
-  - [ ] pass `alpha` as keyword argument
+- [x] `mesh.edgelib.teardrop`:
+  - [x] pass `alpha` as keyword argument
 - [ ] `plots`:
   - [ ] move quadrature dictionary to `mesh.quad` module
   - [ ] add plot maker class, each type of plot inherits from it
