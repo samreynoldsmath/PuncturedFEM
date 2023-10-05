@@ -78,7 +78,8 @@ def plot_linear_combo(
         sm = ScalarMappable(norm=plt.Normalize(vmin=v_min, vmax=v_max))
         plt.colorbar(
             mappable=sm,
-            ax=fig.axes,
+            # ax=fig.axes,
+            ax=plt.gca(),
             fraction=0.046,
             pad=0.04,
         )
