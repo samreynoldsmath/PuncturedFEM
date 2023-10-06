@@ -14,7 +14,7 @@ def unpack(kwargs: Any) -> Any:
         alpha = kwargs["alpha"]
     else:
         alpha = 3 / 2
-    if alpha <=1:
+    if alpha <= 1:
         raise ValueError("alpha must > 1")
     beta = np.tan(0.5 * np.pi / alpha)
     return beta

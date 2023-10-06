@@ -9,8 +9,8 @@ from typing import Callable
 
 import numpy as np
 
-from .closed_contour import closed_contour
-from .edge import edge
+from .closed_contour import ClosedContour
+from .edge import Edge
 from .mesh_exceptions import (
     EmbeddingError,
     NotParameterizedError,
@@ -18,7 +18,7 @@ from .mesh_exceptions import (
 )
 
 
-class cell:
+class MeshCell:
     """
     Class representing a mesh cell, which may be multiply connected.
 
@@ -32,7 +32,7 @@ class cell:
     ----------
     idx : int
         The cell id as it appears in the mesh.
-    components : list[closed_contour]
+    components : list[ClosedContour]
         The boundary components of the cell.
     num_holes : int
         The number of holes in the cell.
@@ -45,12 +45,12 @@ class cell:
     closest_vert_idx : np.ndarray
         The index of the closest vertex in the mesh to each sampled point.
     edge_orients : list[int]
-        The orientation of each edge in the cell (+/- 1).
+        The orientation of each Edge in the cell (+/- 1).
     int_mesh_size : tuple[int, int]
     """
 
     idx: int
-    components: list[closed_contour]
+    components: list[ClosedContour]
     num_holes: int
     num_edges: int
     num_pts: int
@@ -62,7 +62,7 @@ class cell:
     int_x2: np.ndarray
     is_inside: np.ndarray
 
-    def __init__(self, idx: int, edges: list[edge]) -> None:
+    def __init__(self, idx: int, edges: list[Edge]) -> None:
         """
         Constructor for the cell class.
 
@@ -70,7 +70,7 @@ class cell:
         ----------
         id : int
             The cell id.
-        edges : list[edge]
+        edges : list[Edge]
             The edges in the cell.
         """
         self.set_idx(idx)
@@ -89,8 +89,8 @@ class cell:
             raise ValueError(f"idx = {idx} invalid, must be a positive integer")
         self.idx = idx
 
-    def find_edge_orientations(self, edges: list[edge]) -> None:
-        """Find the orientation of each edge in the cell"""
+    def find_edge_orientations(self, edges: list[Edge]) -> None:
+        """Find the orientation of each Edge in the cell"""
         self.edge_orients = []
         for e in edges:
             if self.idx == e.pos_cell_idx:
@@ -98,7 +98,11 @@ class cell:
             elif self.idx == e.neg_cell_idx:
                 self.edge_orients.append(-1)
             else:
-                self.edge_orients.append(0)
+                print(f"cell idx = {self.idx}")
+                print(f"Edge pos_cell_idx = {e.pos_cell_idx}")
+                print(f"Edge neg_cell_idx = {e.neg_cell_idx}")
+                raise EmbeddingError("Undefined Edge orientation")
+                # self.edge_orients.append(0)
 
     # LOCAL EDGE MANAGEMENT ##################################################
 
@@ -106,7 +110,7 @@ class cell:
         """Find the number of edges in the cell"""
         self.num_edges = sum(c.num_edges for c in self.components)
 
-    def get_edges(self) -> list[edge]:
+    def get_edges(self) -> list[Edge]:
         """Returns a list of all edges in the cell"""
         edges = []
         for c in self.components:
@@ -114,16 +118,16 @@ class cell:
                 edges.append(e)
         return edges
 
-    def get_edge_endpoint_incidence(self, edges: list[edge]) -> np.ndarray:
+    def get_edge_endpoint_incidence(self, edges: list[Edge]) -> np.ndarray:
         """
-        Returns incidence array: for each edge i, point to an edge j
-        whose starting point is the terminal point of edge i
+        Returns incidence array: for each Edge i, point to an Edge j
+        whose starting point is the terminal point of Edge i
 
-                edge i          vertex     edge j
+                Edge i          vertex     Edge j
                 --->--->--->--- o --->--->--->---
         """
         # if not self.is_parameterized():
-        #     raise NotParameterizedError('finding edge endpoint incidence')
+        #     raise NotParameterizedError('finding Edge endpoint incidence')
 
         # form distance matrix between endpoints of edges
         num_edges = len(edges)
@@ -133,11 +137,15 @@ class cell:
                 a = edges[i].anchor
             elif self.edge_orients[i] == -1:
                 a = edges[i].endpnt
+            else:
+                raise EmbeddingError("Edge orientation must be +1 or -1")
             for j in range(num_edges):
                 if self.edge_orients[j] == +1:
                     b = edges[j].endpnt
                 elif self.edge_orients[j] == -1:
                     b = edges[j].anchor
+                else:
+                    raise EmbeddingError("Edge orientation must be +1 or -1")
                 distance[i, j] = np.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
 
         # mark edges as incident if distance between endpoints is zero
@@ -148,7 +156,7 @@ class cell:
                 if distance[i, j] < TOL:
                     incidence_mat[i, j] = 1
 
-        # check that each edge endpoint is incident to exactly one other edge
+        # check that each Edge endpoint is incident to exactly one other Edge
         row_sum = np.sum(incidence_mat, axis=0)
         rows_all_sum_to_one = np.linalg.norm(row_sum - 1) < TOL
 
@@ -161,7 +169,7 @@ class cell:
                 + "disjoint simple closed contours"
             )
 
-        # for each edge, return the index of the edge following it
+        # for each Edge, return the index of the Edge following it
         incidence = np.zeros((num_edges,), dtype=int)
         for i in range(num_edges):
             j = 0
@@ -171,7 +179,7 @@ class cell:
 
         return incidence
 
-    def find_boundary_components(self, edges: list[edge]) -> None:
+    def find_boundary_components(self, edges: list[Edge]) -> None:
         """Finds the boundary components of the cell"""
         if not self.is_parameterized():
             raise NotParameterizedError("finding closed contours")
@@ -209,7 +217,7 @@ class cell:
             edges_c = [edges[i] for i in c_idx]
             edge_orients_c = [self.edge_orients[i] for i in c_idx]
             self.components.append(
-                closed_contour(
+                ClosedContour(
                     cell_id=self.idx, edges=edges_c, edge_orients=edge_orients_c
                 )
             )
@@ -231,7 +239,7 @@ class cell:
         return all(c.is_parameterized() for c in self.components)
 
     def parameterize(self, quad_dict: dict) -> None:
-        """Parameterize each edge"""
+        """Parameterize each Edge"""
         for c in self.components:
             c.parameterize(quad_dict)
         self.find_num_pts()
@@ -241,7 +249,7 @@ class cell:
         self.generate_interior_points()
 
     def deparameterize(self) -> None:
-        """Remove parameterization of each edge"""
+        """Remove parameterization of each Edge"""
         for c in self.components:
             c.deparameterize()
         self.num_pts = 0
@@ -457,7 +465,7 @@ class cell:
         # for c, i in zip(self.components, range(self.num_holes + 1)):
         #     j = self.component_start_idx[i]
         #     jp1 = self.component_start_idx[i + 1]
-        #     res += c.integrate_over_closed_contour_preweighted(
+        #     res += c.integrate_over_ClosedContour_preweighted(
         #         vals_dx_norm[j:jp1])
         # return res
 

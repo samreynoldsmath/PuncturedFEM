@@ -47,7 +47,7 @@
   - [ ] clean up integration methods
 - [ ] `mesh.edge`:
   - [ ] safety checks for `set_cells` method
-- [ ] `mesh.planar_mesh`:
+- [ ] `mesh.PlanarMesh`:
   - [ ] replace lists with sets where appropriate
   - [ ] set vert idxs in constructor
 - [x] `mesh.edgelib.teardrop`:
@@ -56,11 +56,12 @@
   - [ ] move quadrature dictionary to `mesh.quad` module
   - [ ] add plot maker class, each type of plot inherits from it
   - [ ] contour plots over single cell
-  - [ ] update examples to reflect change
+  - [ ] update examples to reflect change in `plot` API
 - [x] `solver.solver`:
   - [x] move color printing to separate module
   - [x] move plotting functions to separate module
 - [x] add init file for `util` subpackage
+- [x] rename classes to use CapWords convention
 ### Bug fixes
 - [x] fix colorbar position in contour plots
 - [ ] revert single/double layer operators to loop over edges rather than cell boundary components
@@ -161,12 +162,12 @@
 * Overhaul of `cell` class
   * Added topological properties needed for mesh construction
   * Edge list replaced with `closed_contour` list
-* Added `planar_mesh` class
+* Added `PlanarMesh` class
   * Initialized as a collection of `edge` and `vert` objects
   * `cell` objects are constructed in situ using topological information from `edge` objects
 * Added `solver` class
   * Handles all aspects of solving a PDE on a mesh
-  * Initialized with a `planar_mesh` object and a `bilinear_form` object
+  * Initialized with a `PlanarMesh` object and a `bilinear_form` object
   * `solve` method solves the PDE on the mesh
   * `plot` method plots the solution
 * Added `bilinear_form` class

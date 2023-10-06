@@ -2,7 +2,7 @@
 locfun.py
 =========
 
-Module containing the locfun class for managing elements of the local
+Module containing the LocalFunction class for managing elements of the local
 Poisson space V_p(K).
 """
 
@@ -11,31 +11,31 @@ from typing import Optional
 from numpy import empty, log, nan, ndarray, pi, zeros
 
 from ..mesh.mesh_exceptions import SizeMismatchError
-from ..solver.globkey import global_key
+from ..solver.globkey import GlobalKey
 from . import antilap, d2n
-from .nystrom import nystrom_solver
-from .poly.integrate_poly import integrate_poly_over_cell
-from .poly.piecewise_poly import piecewise_polynomial
-from .poly.poly import polynomial
+from .nystrom import NystromSolver
+from .poly.integrate_poly import integrate_poly_over_mesh
+from .poly.piecewise_poly import PiecewisePolynomial
+from .poly.poly import Polynomial
 
 
-class locfun:
+class LocalFunction:
     """
     Element of the local Poisson space V_p(K), whose trace is continuous and a
-    polynomial of degree <= p on each edge of K, and whose Laplacian is a
-    polynomial of degree <= p-2 on each edge of K.
+    Polynomial of degree <= p on each Edge of K, and whose Laplacian is a
+    Polynomial of degree <= p-2 on each Edge of K.
 
     Can also be used to represent functions with an arbitrary continuous trace
     on the boundary of K.
 
     Any such function v can be decomposed as
         v = P + phi
-    where P is a polynomial of degree <= p in K and phi is a harmonic function.
+    where P is a Polynomial of degree <= p in K and phi is a harmonic function.
     (Note that this decomposition is not unique, since there are harmonic
-    polynomials). We refer to P as the "polynomial part" and phi as the
+    Polynomials). We refer to P as the "Polynomial part" and phi as the
     "harmonic part".
 
-    Furthermore, in multiply connected cells the harmonic part can be
+    Furthermore, in multiply connected MeshCells the harmonic part can be
     decomposed as
         phi = psi + sum_{j=1}^m a_j log |x - xi_j|
     where xi_j is a fixed arbitrary point in the jth hole of K, and psi is a
@@ -61,13 +61,13 @@ class locfun:
 
     Usage
     -----
-    Define an instance by passing a Nystrom solver object, a its Laplacian
-    polynomial, and (optionally) a piecewise polynomial trace:
-        >>> v = locfun(solver, lap_poly, poly_trace)
-    where poly_trace defaults to the zero polynomial if not specified. If one
+    Define an instance by passing a Nystrom nyst object, a its Laplacian
+    Polynomial, and (optionally) a piecewise Polynomial trace:
+        >>> v =LocalFunction(nyst, lap_poly, poly_trace)
+    where poly_trace defaults to the zero Polynomial if not specified. If one
     wishes to use a local function with an arbitrary continuous trace, then
     the has_poly_trace flag should be set to False:
-        >>> v = locfun(solver, lap_poly, has_poly_trace=False)
+        >>> v =LocalFunction(nyst, lap_poly, has_poly_trace=False)
     The trace values can be set using the set_trace_values method:
         >>> v.set_trace_values(trace_vals)
     Executing the compute_all method will compute and store all relevant data
@@ -85,31 +85,31 @@ class locfun:
     and retrieved using the get_interior_values method:
         >>> vals = v.get_interior_values()
     The interior values are stored in v.int_vals, with the same shape and
-    indexing as the interior points of the cell v.solver.K. The components of
+    indexing as the interior points of the MeshCell v.nyst.K. The components of
     the gradient are stored in v.int_grad1 and v.int_grad2, respectively.
     The "punctured square" example
         examples/ex1a-square-hole.ipynb
-    demonstrates more detailed usage of the locfun class.
+    demonstrates more detailed usage of theLocalFunction class.
 
     Attributes
     ----------
-    key : global_key
+    key : GlobalKey
         A unique tag that identifies the local function in the global space.
     trace : ndarray
         Dirichlet trace values on the boundary of K.
-    poly_trace : piecewise_polynomial
-        Piecewise polynomial trace on the boundary of K. Defaults to the zero
-        polynomial.
+    poly_trace : PiecewisePolynomial
+        Piecewise Polynomial trace on the boundary of K. Defaults to the zero
+        Polynomial.
     has_poly_trace : bool
-        Whether or not the local function has a piecewise polynomial trace.
-    lap : polynomial
-        Laplacian polynomial.
-    poly_part : polynomial
+        Whether or not the local function has a piecewise Polynomial trace.
+    lap : Polynomial
+        Laplacian Polynomial.
+    poly_part : Polynomial
         Polynomial part of the local function.
     poly_part_trace : ndarray
-        Dirichlet trace values of the polynomial part.
+        Dirichlet trace values of the Polynomial part.
     poly_part_wnd : ndarray
-        Weighted normal derivative of the polynomial part.
+        Weighted normal derivative of the Polynomial part.
     conj_trace : ndarray
         Dirichlet trace values of the harmonic conjugate of the harmonic part.
     log_coef : ndarray
@@ -120,8 +120,8 @@ class locfun:
         Dirichlet trace values of an anti-Laplacian of the harmonic part.
     antilap_wnd : ndarray
         Weighted normal derivative of an anti-Laplacian of the harmonic part.
-    solver : nystrom_solver
-        Nystrom solver object, which contains the cell K.
+    nyst : NystromSolver
+        Nystrom nyst object, which contains the MeshCell K.
     int_vals : ndarray
         Interior values of the local function.
     int_grad1 : ndarray
@@ -130,12 +130,12 @@ class locfun:
         Second component of the gradient of the local function.
     """
 
-    key: global_key
+    key: GlobalKey
     trace: ndarray
-    poly_trace: piecewise_polynomial
+    poly_trace: PiecewisePolynomial
     has_poly_trace: bool
-    lap: polynomial
-    poly_part: polynomial
+    lap: Polynomial
+    poly_part: Polynomial
     poly_part_trace: ndarray
     poly_part_wnd: ndarray
     conj_trace: ndarray
@@ -143,59 +143,59 @@ class locfun:
     harm_part_wnd: ndarray
     antilap_trace: ndarray
     antilap_wnd: ndarray
-    solver: nystrom_solver
+    nyst: NystromSolver
     int_vals: ndarray
     int_grad1: ndarray
     int_grad2: ndarray
 
     def __init__(
         self,
-        solver: nystrom_solver,
-        lap_poly: polynomial = polynomial(),  # TODO maybe should be None?
-        poly_trace: Optional[piecewise_polynomial] = None,
+        nyst: NystromSolver,
+        lap_poly: Polynomial = Polynomial(),  # TODO maybe should be None?
+        poly_trace: Optional[PiecewisePolynomial] = None,
         has_poly_trace: bool = True,
-        key: Optional[global_key] = None,
+        key: Optional[GlobalKey] = None,
     ) -> None:
         """
-        Constructor for locfun class.
+        Constructor forLocalFunction class.
 
         Parameters
         ----------
-        solver : nystrom_solver
-            Nystrom solver object, which contains the cell K.
-        lap_poly : polynomial, optional
-            Laplacian polynomial, by default polynomial()
-        poly_trace : Optional[piecewise_polynomial], optional
-            Piecewise polynomial trace, by default None
+        nyst : NystromSolver
+            Nystrom nyst object, which contains the MeshCell K.
+        lap_poly : Polynomial, optional
+            Laplacian Polynomial, by default Polynomial()
+        poly_trace : Optional[PiecewisePolynomial], optional
+            Piecewise Polynomial trace, by default None
         has_poly_trace : bool, optional
-            Whether or not the local function has a piecewise polynomial trace,
+            Whether or not the local function has a piecewise Polynomial trace,
             by default True
-        id : Optional[global_key], optional
+        id : Optional[GlobalKey], optional
             Global key, by default None
         """
         self.set_key(key)
-        self.set_solver(solver)
+        self.set_nystrom_solver(nyst)
         self.set_laplacian_polynomial(lap_poly)
         self.set_poly_trace(poly_trace)
         self.has_poly_trace = has_poly_trace
 
-    def set_key(self, key: Optional[global_key]) -> None:
+    def set_key(self, key: Optional[GlobalKey]) -> None:
         """
         Sets the global key for the local function.
         """
         if key is None:
             return
-        if not isinstance(key, global_key):
-            raise TypeError("key must be a global_key")
+        if not isinstance(key, GlobalKey):
+            raise TypeError("key must be a GlobalKey")
         self.key = key
 
-    def set_solver(self, solver: nystrom_solver) -> None:
+    def set_nystrom_solver(self, nyst: NystromSolver) -> None:
         """
-        Sets the Nystrom solver for the local function.
+        Sets the Nystrom nyst for the local function.
         """
-        if not isinstance(solver, nystrom_solver):
-            raise TypeError("solver must be a nystrom_solver")
-        self.solver = solver
+        if not isinstance(nyst, NystromSolver):
+            raise TypeError("nyst must be a NystromSolver")
+        self.nyst = nyst
 
     def compute_all(self) -> None:
         """
@@ -224,29 +224,27 @@ class locfun:
         self.antilap_trace = zeros((0,))
         self.antilap_wnd = zeros((0,))
 
-    # Piecewise polynomial Dirichlet trace ###################################
-    def set_poly_trace(
-        self, poly_trace: Optional[piecewise_polynomial]
-    ) -> None:
+    # Piecewise Polynomial Dirichlet trace ###################################
+    def set_poly_trace(self, poly_trace: Optional[PiecewisePolynomial]) -> None:
         """
-        Sets the piecewise polynomial trace to self.poly_trace.
+        Sets the piecewise Polynomial trace to self.poly_trace.
         """
         if poly_trace is None:
-            self.poly_trace = piecewise_polynomial(
-                num_polys=self.solver.K.num_edges
+            self.poly_trace = PiecewisePolynomial(
+                num_polys=self.nyst.K.num_edges
             )
             return
-        if not isinstance(poly_trace, piecewise_polynomial):
-            raise TypeError("poly_trace must be a piecewise_polynomial")
-        if poly_trace.num_polys != self.solver.K.num_edges:
+        if not isinstance(poly_trace, PiecewisePolynomial):
+            raise TypeError("poly_trace must be a PiecewisePolynomial")
+        if poly_trace.num_polys != self.nyst.K.num_edges:
             raise ValueError(
-                "Number of polynomials must match number of edges in K"
+                "Number of Polynomials must match number of edges in K"
             )
         self.poly_trace = poly_trace
 
-    def get_poly_trace(self) -> piecewise_polynomial:
+    def get_poly_trace(self) -> PiecewisePolynomial:
         """
-        Returns the piecewise polynomial trace.
+        Returns the piecewise Polynomial trace.
         """
         return self.poly_trace
 
@@ -265,115 +263,115 @@ class locfun:
 
     def compute_trace_values(self) -> None:
         """
-        Computes the Dirichlet trace values from the piecewise polynomial trace
+        Computes the Dirichlet trace values from the piecewise Polynomial trace
         and stores them in self.trace.
         """
         if not self.has_poly_trace:
             raise SizeMismatchError(
                 "Cannot compute trace values for local function "
-                + "without piecewise polynomial trace"
+                + "without piecewise Polynomial trace"
             )
-        if self.poly_trace.num_polys != self.solver.K.num_edges:
+        if self.poly_trace.num_polys != self.nyst.K.num_edges:
             raise SizeMismatchError(
-                "There must be exactly one trace polynomial "
-                + "for every edge of K"
+                "There must be exactly one trace Polynomial "
+                + "for every Edge of K"
             )
-        self.trace = zeros((self.solver.K.num_pts,))
+        self.trace = zeros((self.nyst.K.num_pts,))
         edge_idx = 0
-        for i in range(self.solver.K.num_holes + 1):
-            c = self.solver.K.components[i]
+        for i in range(self.nyst.K.num_holes + 1):
+            c = self.nyst.K.components[i]
             for j in range(c.num_edges):
-                k_start = self.solver.K.component_start_idx[i] + c.vert_idx[j]
-                k_end = self.solver.K.component_start_idx[i] + c.vert_idx[j + 1]
+                k_start = self.nyst.K.component_start_idx[i] + c.vert_idx[j]
+                k_end = self.nyst.K.component_start_idx[i] + c.vert_idx[j + 1]
                 self.trace[k_start:k_end] = self.poly_trace.polys[
                     edge_idx
                 ].eval(c.edges[j].x[0, :-1], c.edges[j].x[1, :-1])
                 edge_idx += 1
 
-    # Laplacian (polynomial) #################################################
-    def set_laplacian_polynomial(self, p: polynomial) -> None:
+    # Laplacian (Polynomial) #################################################
+    def set_laplacian_polynomial(self, p: Polynomial) -> None:
         """
-        Sets the Laplacian polynomial to self.lap.
+        Sets the Laplacian Polynomial to self.lap.
         """
-        if not isinstance(p, polynomial):
-            raise TypeError("p must be a polynomial")
+        if not isinstance(p, Polynomial):
+            raise TypeError("p must be a Polynomial")
         self.lap = p
 
-    def get_laplacian_polynomial(self) -> polynomial:
+    def get_laplacian_polynomial(self) -> Polynomial:
         """
-        Returns the Laplacian polynomial.
+        Returns the Laplacian Polynomial.
         """
         return self.lap
 
-    # polynomial part (polynomial anti-Laplacian of Laplacian) ###############
-    def set_polynomial_part(self, P_poly: polynomial) -> None:
+    # Polynomial part (Polynomial anti-Laplacian of Laplacian) ###############
+    def set_polynomial_part(self, P_poly: Polynomial) -> None:
         """
-        Sets the polynomial part to self.poly_part.
+        Sets the Polynomial part to self.poly_part.
         """
-        if not isinstance(P_poly, polynomial):
-            raise TypeError("P_poly must be a polynomial")
+        if not isinstance(P_poly, Polynomial):
+            raise TypeError("P_poly must be a Polynomial")
         self.poly_part = P_poly
 
-    def get_polynomial_part(self) -> polynomial:
+    def get_polynomial_part(self) -> Polynomial:
         """
-        Returns the polynomial part.
+        Returns the Polynomial part.
         """
         return self.poly_part
 
     def compute_polynomial_part(self) -> None:
         """
-        Computes the polynomial part from the Laplacian polynomial and stores
+        Computes the Polynomial part from the Laplacian Polynomial and stores
         it in self.poly_part.
         """
         self.poly_part = self.lap.anti_laplacian()
 
-    # polynomial part trace ##################################################
+    # Polynomial part trace ##################################################
     def set_polynomial_part_trace(self, P_trace: ndarray) -> None:
         """
-        Sets the Dirichlet trace values of the polynomial part to
+        Sets the Dirichlet trace values of the Polynomial part to
         self.poly_part_trace.
         """
         self.poly_part_trace = P_trace
 
     def get_polynomial_part_trace(self) -> ndarray:
         """
-        Returns the Dirichlet trace values of the polynomial part.
+        Returns the Dirichlet trace values of the Polynomial part.
         """
         return self.poly_part_trace
 
     def compute_polynomial_part_trace(self) -> None:
         """
-        Computes the Dirichlet trace values of the polynomial part and stores
+        Computes the Dirichlet trace values of the Polynomial part and stores
         them in self.poly_part_trace.
         """
-        x1, x2 = self.solver.K.get_boundary_points()
+        x1, x2 = self.nyst.K.get_boundary_points()
         self.poly_part_trace = self.poly_part.eval(x1, x2)
 
-    # polynomial part weighted normal derivative #############################
+    # Polynomial part weighted normal derivative #############################
     def set_polynomial_part_weighted_normal_derivative(
         self, P_wnd: ndarray
     ) -> None:
         """
-        Sets the weighted normal derivative of the polynomial part to
+        Sets the weighted normal derivative of the Polynomial part to
         self.poly_part_wnd.
         """
         self.poly_part_wnd = P_wnd
 
     def get_polynomial_part_weighted_normal_derivative(self) -> ndarray:
         """
-        Returns the weighted normal derivative of the polynomial part.
+        Returns the weighted normal derivative of the Polynomial part.
         """
         return self.poly_part_wnd
 
     def compute_polynomial_part_weighted_normal_derivative(self) -> None:
         """
-        Computes the weighted normal derivative of the polynomial part and
+        Computes the weighted normal derivative of the Polynomial part and
         stores it in self.poly_part_wnd.
         """
-        x1, x2 = self.solver.K.get_boundary_points()
+        x1, x2 = self.nyst.K.get_boundary_points()
         g1, g2 = self.poly_part.grad()
-        P_nd = self.solver.K.dot_with_normal(g1.eval(x1, x2), g2.eval(x1, x2))
-        self.poly_part_wnd = self.solver.K.multiply_by_dx_norm(P_nd)
+        P_nd = self.nyst.K.dot_with_normal(g1.eval(x1, x2), g2.eval(x1, x2))
+        self.poly_part_wnd = self.nyst.K.multiply_by_dx_norm(P_nd)
 
     # harmonic conjugate #####################################################
     def set_harmonic_conjugate(self, hc_vals: ndarray) -> None:
@@ -396,7 +394,7 @@ class locfun:
         harmonic part and stores them in self.conj_trace.
         """
         phi_trace = self.trace - self.poly_part_trace
-        self.conj_trace, self.log_coef = self.solver.get_harmonic_conjugate(
+        self.conj_trace, self.log_coef = self.nyst.get_harmonic_conjugate(
             phi_trace
         )
 
@@ -436,11 +434,11 @@ class locfun:
         """
         self.harm_part_wnd = (
             d2n.trace2tangential.get_weighted_tangential_derivative_from_trace(
-                self.solver.K, self.conj_trace
+                self.nyst.K, self.conj_trace
             )
         )
-        lam_x1, lam_x2 = d2n.log_terms.get_log_grad(self.solver.K)
-        lam_wnd = d2n.log_terms.get_dlam_dn_wgt(self.solver.K, lam_x1, lam_x2)
+        lam_x1, lam_x2 = d2n.log_terms.get_log_grad(self.nyst.K)
+        lam_wnd = d2n.log_terms.get_dlam_dn_wgt(self.nyst.K, lam_x1, lam_x2)
         self.harm_part_wnd += lam_wnd @ self.log_coef
 
     # harmonic conjugable part psi ###########################################
@@ -448,7 +446,7 @@ class locfun:
         """
         Returns the harmonic conjugable part psi.
         """
-        lam = d2n.log_terms.get_log_trace(self.solver.K)
+        lam = d2n.log_terms.get_log_trace(self.nyst.K)
         return self.trace - self.poly_part_trace - lam @ self.log_coef
 
     # anti-Laplacian #########################################################
@@ -478,7 +476,7 @@ class locfun:
             self.antilap_trace,
             self.antilap_wnd,
         ) = antilap.antilap.get_anti_laplacian_harmonic(
-            self.solver.K, psi=psi, psi_hat=self.conj_trace, a=self.log_coef
+            self.nyst.K, psi=psi, psi_hat=self.conj_trace, a=self.log_coef
         )
 
     # H^1 semi-inner product #################################################
@@ -488,21 +486,21 @@ class locfun:
             int_K grad(self) * grad(other) dx
         """
 
-        if not isinstance(other, locfun):
-            raise TypeError("other must be a locfun")
+        if not isinstance(other, LocalFunction):
+            raise TypeError("other must be aLocalFunction")
 
-        # polynomial part
+        # Polynomial part
         Px, Py = self.poly_part.grad()
         Qx, Qy = other.poly_part.grad()
         gradP_gradQ = Px * Qx + Py * Qy
-        val = integrate_poly_over_cell(gradP_gradQ, self.solver.K)
+        val = integrate_poly_over_mesh(gradP_gradQ, self.nyst.K)
 
         # remaining terms
         integrand = (
             other.trace * self.harm_part_wnd
             + self.poly_part_trace * other.harm_part_wnd
         )
-        val += self.solver.K.integrate_over_boundary_preweighted(integrand)
+        val += self.nyst.K.integrate_over_boundary_preweighted(integrand)
 
         return val
 
@@ -513,14 +511,14 @@ class locfun:
             int_K (self) * (other) dx
         """
 
-        if not isinstance(other, locfun):
-            raise TypeError("other must be a locfun")
+        if not isinstance(other, LocalFunction):
+            raise TypeError("other must be aLocalFunction")
 
-        x1, x2 = self.solver.K.get_boundary_points()
+        x1, x2 = self.nyst.K.get_boundary_points()
 
         # P * Q
         PQ = self.poly_part * other.poly_part
-        val = integrate_poly_over_cell(PQ, self.solver.K)
+        val = integrate_poly_over_mesh(PQ, self.nyst.K)
 
         # phi * psi
         integrand = (
@@ -530,7 +528,7 @@ class locfun:
         # phi * Q
         R = other.poly_part.anti_laplacian()
         R_trace = R.eval(x1, x2)
-        R_wnd = R.get_weighted_normal_derivative(self.solver.K)
+        R_wnd = R.get_weighted_normal_derivative(self.nyst.K)
         integrand += (
             self.trace - self.poly_part_trace
         ) * R_wnd - R_trace * self.harm_part_wnd
@@ -538,13 +536,13 @@ class locfun:
         # psi * P
         R = self.poly_part.anti_laplacian()
         R_trace = R.eval(x1, x2)
-        R_wnd = R.get_weighted_normal_derivative(self.solver.K)
+        R_wnd = R.get_weighted_normal_derivative(self.nyst.K)
         integrand += (
             other.trace - other.poly_part_trace
         ) * R_wnd - R_trace * other.harm_part_wnd
 
         # integrate over boundary
-        val += self.solver.K.integrate_over_boundary_preweighted(integrand)
+        val += self.nyst.K.integrate_over_boundary_preweighted(integrand)
 
         return val
 
@@ -560,7 +558,7 @@ class locfun:
         """
 
         # size of interior mesh
-        rows, cols = self.solver.K.int_mesh_size
+        rows, cols = self.nyst.K.int_mesh_size
 
         # initialize arrays
         self.int_vals = empty((rows, cols))
@@ -572,23 +570,23 @@ class locfun:
         self.int_grad2[:] = nan
 
         # points for evaluation
-        int_x1 = self.solver.K.int_x1
-        int_x2 = self.solver.K.int_x2
+        int_x1 = self.nyst.K.int_x1
+        int_x2 = self.nyst.K.int_x2
 
         # boundary points
-        bdy_x1, bdy_x2 = self.solver.K.get_boundary_points()
+        bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points()
 
         # conjugable part
         psi = self.get_conjugable_part()
         psi_hat = self.get_harmonic_conjugate()
 
-        # polynomial gradient
+        # Polynomial gradient
         Px, Py = self.poly_part.grad()
 
         # compute interior values
         for i in range(rows):
             for j in range(cols):
-                if self.solver.K.is_inside[i, j]:
+                if self.nyst.K.is_inside[i, j]:
                     self.cauchy_integral_formula(
                         i,
                         j,
@@ -612,8 +610,8 @@ class locfun:
         int_x2: ndarray,
         psi: ndarray,
         psi_hat: ndarray,
-        Px: polynomial,
-        Py: polynomial,
+        Px: Polynomial,
+        Py: Polynomial,
     ) -> None:
         """
         Applies Cauchy's integral formula to compute the interior values and
@@ -626,17 +624,17 @@ class locfun:
         xy_norm_sq = xy1 * xy1 + xy2 * xy2
         eta = (xy1 * psi + xy2 * psi_hat) / xy_norm_sq
         eta_hat = (xy1 * psi_hat - xy2 * psi) / xy_norm_sq
-        integrand = self.solver.K.dot_with_tangent(eta_hat, eta)
+        integrand = self.nyst.K.dot_with_tangent(eta_hat, eta)
         self.int_vals[i, j] = (
-            self.solver.K.integrate_over_boundary(integrand) * 0.5 / pi
+            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / pi
         )
 
-        # polynomial part
+        # Polynomial part
         self.int_vals[i, j] += self.poly_part.eval(int_x1[i, j], int_x2[i, j])
 
         # logarithmic part
-        for k in range(self.solver.K.num_holes):
-            xi = self.solver.K.components[k + 1].interior_point
+        for k in range(self.nyst.K.num_holes):
+            xi = self.nyst.K.components[k + 1].interior_point
             y_xi_norm_sq = (int_x1[i, j] - xi.x) ** 2 + (
                 int_x2[i, j] - xi.y
             ) ** 2
@@ -645,22 +643,22 @@ class locfun:
         # Cauchy's integral formula for gradient
         omega = (xy1 * eta + xy2 * eta_hat) / xy_norm_sq
         omega_hat = (xy1 * eta_hat - xy2 * eta) / xy_norm_sq
-        integrand = self.solver.K.dot_with_tangent(omega_hat, omega)
+        integrand = self.nyst.K.dot_with_tangent(omega_hat, omega)
         self.int_grad1[i, j] = (
-            self.solver.K.integrate_over_boundary(integrand) * 0.5 / pi
+            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / pi
         )
-        integrand = self.solver.K.dot_with_tangent(omega, -omega_hat)
+        integrand = self.nyst.K.dot_with_tangent(omega, -omega_hat)
         self.int_grad2[i, j] = (
-            self.solver.K.integrate_over_boundary(integrand) * 0.5 / pi
+            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / pi
         )
 
-        # gradient polynomial part
+        # gradient Polynomial part
         self.int_grad1[i, j] += Px.eval(int_x1[i, j], int_x2[i, j])
         self.int_grad2[i, j] += Py.eval(int_x1[i, j], int_x2[i, j])
 
         # gradient logarithmic part
-        for k in range(self.solver.K.num_holes):
-            xi = self.solver.K.components[k + 1].interior_point
+        for k in range(self.nyst.K.num_holes):
+            xi = self.nyst.K.components[k + 1].interior_point
             y_xi_1 = int_x1[i, j] - xi.x
             y_xi_2 = int_x2[i, j] - xi.y
             y_xi_norm_sq = y_xi_1**2 + y_xi_2**2

@@ -14,19 +14,19 @@ barycentric_products(e, deg) # DEPRECATED
 from numpy import array, ndarray, sqrt, zeros
 from numpy.linalg import norm
 
-from ...mesh.edge import edge
-from .poly import polynomial
+from ...mesh.edge import Edge
+from .poly import Polynomial
 from .poly_exceptions import DegenerateTriangleError
 
 ROOT3OVER2 = sqrt(3) / 2
 
 
-def barycentric_coordinates_edge(e: edge) -> list[polynomial]:
+def barycentric_coordinates_edge(e: Edge) -> list[Polynomial]:
     """
     Returns the barcentric coordinates ell = [ell0, ell1, ell2]
-    where ellj is a polynomial object and the point z2 is constructed
+    where ellj is a Polynomial object and the point z2 is constructed
     from z0,z1 to form an equilateral triangle, with z0,z1 being the
-    endpoints of the edge e.
+    endpoints of the Edge e.
     """
     z0 = e.x[:, 0]
     z1 = e.x[:, -1]
@@ -37,10 +37,10 @@ def barycentric_coordinates_edge(e: edge) -> list[polynomial]:
 
 def barycentric_coordinates(
     z0: ndarray, z1: ndarray, z2: ndarray
-) -> list[polynomial]:
+) -> list[Polynomial]:
     """
     Returns the barycentric coordinates ell = [ell0, ell1, ell2]
-    where ellj is a polynomial object
+    where ellj is a Polynomial object
     """
     z = zeros((3, 2))
     z[0, :] = z0
@@ -59,10 +59,10 @@ def barycentric_coordinates(
     s = sum(dist) / 2
     h = 2 * sqrt(s * (s - dist[0]) * (s - dist[1]) * (s - dist[2]))
 
-    # initialize polynomial objects
-    x = polynomial([(1.0, 1, 0)])
-    y = polynomial([(1.0, 0, 1)])
-    ell = [polynomial(), polynomial(), polynomial()]
+    # initialize Polynomial objects
+    x = Polynomial([(1.0, 1, 0)])
+    y = Polynomial([(1.0, 0, 1)])
+    ell = [Polynomial(), Polynomial(), Polynomial()]
 
     for j in range(3):
         jminus1 = (j - 1) % 3
@@ -75,11 +75,11 @@ def barycentric_coordinates(
     return ell
 
 
-def barycentric_products(e: edge, deg: int) -> list[ndarray]:
+def barycentric_products(e: Edge, deg: int) -> list[ndarray]:
     """
     DEPRECATED
 
-    Returns a spanning set of the space of polynomials of degree deg <= 3 by
+    Returns a spanning set of the space of Polynomials of degree deg <= 3 by
     computing the products of the barycentric coordinates
     """
     if deg > 3:
@@ -94,7 +94,7 @@ def barycentric_products(e: edge, deg: int) -> list[ndarray]:
     for j in range(3):
         spanning_trace.append(ell_trace[j, :])
 
-    # quadratics
+    # Quadratics
     if deg > 1:
         for i in range(3):
             for j in range(i + 1, 3):

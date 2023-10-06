@@ -2,43 +2,43 @@
 edge_space.py
 =============
 
-Module containing the edge_space class for managing spaces of trace functions.
+Module containing the EdgeSpace class for managing spaces of trace functions.
 """
 
 import numpy as np
 
-from ..mesh.edge import edge
-from ..solver.globkey import global_key
+from ..mesh.edge import Edge
+from ..solver.globkey import GlobalKey
 from .poly.barycentric import barycentric_coordinates_edge
 from .poly.legendre import integrated_legendre_tensor_products
-from .poly.poly import polynomial
+from .poly.poly import Polynomial
 
 
-class edge_space:
+class EdgeSpace:
     """
-    The space of polynomial traces of degree  <= deg on an edge.
+    The space of Polynomial traces of degree  <= deg on an Edge.
     """
 
-    e: edge
+    e: Edge
     deg: int
-    vert_fun_traces: list[polynomial]
-    edge_fun_traces: list[polynomial]
-    vert_fun_global_keys: list[global_key]
-    edge_fun_global_keys: list[global_key]
+    vert_fun_traces: list[Polynomial]
+    edge_fun_traces: list[Polynomial]
+    vert_fun_GlobalKeys: list[GlobalKey]
+    edge_fun_GlobalKeys: list[GlobalKey]
     num_vert_funs: int
     num_edge_funs: int
     num_funs: int
 
-    def __init__(self, e: edge, deg: int) -> None:
+    def __init__(self, e: Edge, deg: int) -> None:
         """
-        Constructor for edge_space class.
+        Constructor for EdgeSpace class.
 
         Parameters
         ----------
-        e : edge
+        e : Edge
             Edge on which the space is defined.
         deg : int
-            Maximum polynomial degree.
+            Maximum Polynomial degree.
         """
         self.edge_fun_traces = []
         self.vert_fun_traces = []
@@ -48,21 +48,21 @@ class edge_space:
         self.reduce_to_basis()
         self.compute_num_vert_funs()
         self.compute_num_edge_funs()
-        self.generate_vert_fun_global_keys()
-        self.generate_edge_fun_global_keys()
+        self.generate_vert_fun_GlobalKeys()
+        self.generate_edge_fun_GlobalKeys()
         self.find_num_funs()
 
-    def set_edge(self, e: edge) -> None:
+    def set_edge(self, e: Edge) -> None:
         """
-        Set the edge on which the space is defined.
+        Set the Edge on which the space is defined.
         """
-        if not isinstance(e, edge):
-            raise TypeError("e must be an edge")
+        if not isinstance(e, Edge):
+            raise TypeError("e must be an Edge")
         self.e = e
 
     def set_deg(self, deg: int) -> None:
         """
-        Set the maximum polynomial degree.
+        Set the maximum Polynomial degree.
         """
         if not isinstance(deg, int):
             raise TypeError("deg must be an integer")
@@ -84,24 +84,24 @@ class edge_space:
 
     def compute_num_edge_funs(self) -> None:
         """
-        Number of edge functions is set to self.num_edge_funs.
+        Number of Edge functions is set to self.num_edge_funs.
         """
         self.num_edge_funs = len(self.edge_fun_traces)
 
-    def generate_vert_fun_global_keys(self) -> None:
-        """Generate global keys for edge and vertex functions"""
-        self.vert_fun_global_keys = []
+    def generate_vert_fun_GlobalKeys(self) -> None:
+        """Generate global keys for Edge and vertex functions"""
+        self.vert_fun_GlobalKeys = []
         if self.e.is_loop:
             return
         for k in [self.e.anchor.idx, self.e.endpnt.idx]:
-            self.vert_fun_global_keys.append(global_key("vert", vert_idx=k))
+            self.vert_fun_GlobalKeys.append(GlobalKey("Vert", vert_idx=k))
 
-    def generate_edge_fun_global_keys(self) -> None:
-        """Generate global keys for edge and vertex functions"""
-        self.edge_fun_global_keys = []
+    def generate_edge_fun_GlobalKeys(self) -> None:
+        """Generate global keys for Edge and vertex functions"""
+        self.edge_fun_GlobalKeys = []
         for k in range(self.num_edge_funs):
-            self.edge_fun_global_keys.append(
-                global_key("edge", edge_idx=self.e.idx, edge_space_idx=k)
+            self.edge_fun_GlobalKeys.append(
+                GlobalKey("Edge", edge_idx=self.e.idx, EdgeSpace_idx=k)
             )
 
     def build_spanning_set(self) -> None:
@@ -109,11 +109,11 @@ class edge_space:
         Spanning set of P_p(e) using traces of
                 L_m(x_1) * L_n(x_2) - a * ell_0 - b * ell_1
         where
-                L_j is the jth integrated Legendre polynomial,
+                L_j is the jth integrated Legendre Polynomial,
                 a = L_m(y_1) * L_n(y_2),
                 b = L_m(z_1) * L_n(z_2),
-                y = (y_1, y_2) starting vertex of edge
-                z = (z_1, z_2) ending vertex of edge
+                y = (y_1, y_2) starting vertex of Edge
+                z = (z_1, z_2) ending vertex of Edge
         """
 
         # compute Legendre tensor products
@@ -122,7 +122,7 @@ class edge_space:
         linear_fun_idx = [0, 1, self.deg + 1]
 
         # redo linear functions to avoid constants
-        self.edge_fun_traces[linear_fun_idx[0]] = polynomial(
+        self.edge_fun_traces[linear_fun_idx[0]] = Polynomial(
             [
                 # 1 + x + y
                 (1.0, 0, 0),
@@ -130,7 +130,7 @@ class edge_space:
                 (1.0, 0, 1),
             ]
         )
-        self.edge_fun_traces[linear_fun_idx[1]] = polynomial(
+        self.edge_fun_traces[linear_fun_idx[1]] = Polynomial(
             [
                 # 1 - x - y
                 (+1.0, 0, 0),
@@ -138,7 +138,7 @@ class edge_space:
                 (-1.0, 0, 1),
             ]
         )
-        self.edge_fun_traces[linear_fun_idx[2]] = polynomial(
+        self.edge_fun_traces[linear_fun_idx[2]] = Polynomial(
             [
                 # x - y
                 (+1.0, 1, 0),
@@ -154,7 +154,7 @@ class edge_space:
             # compute barycentric coordinates
             ell = barycentric_coordinates_edge(self.e)
 
-            # correct edge functions to vanish at endpoints
+            # correct Edge functions to vanish at endpoints
             for j in range(2, len(self.edge_fun_traces)):
                 # get values of Legendre tensor products at the endpoints
                 a0 = self.edge_fun_traces[j].eval(
@@ -171,19 +171,19 @@ class edge_space:
             self.vert_fun_traces.append(ell[0])
             self.vert_fun_traces.append(ell[1])
 
-            # delete other linear functions from edge function list
+            # delete other linear functions from Edge function list
             del self.edge_fun_traces[linear_fun_idx[2]]
             del self.edge_fun_traces[linear_fun_idx[1]]
             del self.edge_fun_traces[linear_fun_idx[0]]
 
-            # add linear function vanishing at endpoints to edge function list
+            # add linear function vanishing at endpoints to Edge function list
             self.edge_fun_traces.append(ell[2])
 
     def transform_coordinates_to_bounding_box(self) -> None:
         """
         Transform the domain of the Legendre tensor products from the square
-        [-1, 1] x [-1, 1] to the bounding box of the edge, by composing with
-        an affine change of coordinates (i.e. deg=1 polynomials).
+        [-1, 1] x [-1, 1] to the bounding box of the Edge, by composing with
+        an affine change of coordinates (i.e. deg=1 Polynomials).
         """
 
         # get bounding box
@@ -198,14 +198,14 @@ class edge_space:
         ty = (ymax + ymin) / 2
 
         # define affine change of coordinates
-        qx = polynomial(
+        qx = Polynomial(
             [
                 (-tx / sx, 0, 0),
                 (1 / sx, 1, 0),
             ]
         )
 
-        qy = polynomial(
+        qy = Polynomial(
             [
                 (-ty / sy, 0, 0),
                 (1 / sy, 0, 1),

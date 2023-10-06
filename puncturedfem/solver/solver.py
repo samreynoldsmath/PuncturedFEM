@@ -2,7 +2,7 @@
 solver.py
 =========
 
-Module containing the solver class, which is a convenience class for solving
+Module containing the Solver class, which is a convenience class for solving
 the global linear system.
 """
 
@@ -12,19 +12,19 @@ from scipy.sparse.linalg import spsolve
 from tqdm import tqdm
 
 from ..util.print_color import Color, print_color
-from .bilinear_form import bilinear_form
-from .globfunsp import global_function_space
+from .bilinear_form import BilinearForm
+from .globfunsp import GlobalFunctionSpace
 
 
-class solver:
+class Solver:
     """
     Convenience class for solving the global linear system.
 
     Attributes
     ----------
-    V : global_function_space
+    V : GlobalFunctionSpace
         Global function space
-    a : bilinear_form
+    a : BilinearForm
         Bilinear form
     glob_mat : csr_matrix
         Global system matrix
@@ -43,13 +43,13 @@ class solver:
     num_funs : int
         Number of global functions
     interior_values : list[list[ndarray]]
-        List of interior values on each cell
+        List of interior values on each MeshCell
     soln : ndarray
         Solution vector
     """
 
-    V: global_function_space
-    a: bilinear_form
+    V: GlobalFunctionSpace
+    a: BilinearForm
     glob_mat: csr_matrix
     glob_rhs: csr_matrix
     row_idx: list[int]
@@ -61,25 +61,25 @@ class solver:
     interior_values: list[list[ndarray]]
     soln: ndarray
 
-    def __init__(self, V: global_function_space, a: bilinear_form) -> None:
+    def __init__(self, V: GlobalFunctionSpace, a: BilinearForm) -> None:
         """
-        Constructor for solver class.
+        Constructor for Solver class.
 
         Parameters
         ----------
-        V : global_function_space
+        V : GlobalFunctionSpace
             Global function space
-        a : bilinear_form
+        a : BilinearForm
             Bilinear form
         """
-        self.set_global_function_space(V)
-        self.set_bilinear_form(a)
+        self.set_GlobalFunctionSpace(V)
+        self.set_BilinearForm(a)
 
     def __str__(self) -> str:
         """
         Return string representation.
         """
-        s = "solver:\n"
+        s = "Solver:\n"
         s += f"\tV: {self.V}\n"
         s += f"\ta: {self.a}\n"
         s += f"\tnum_funs: {self.num_funs}\n"
@@ -87,20 +87,20 @@ class solver:
 
     # SETTERS ################################################################
 
-    def set_global_function_space(self, V: global_function_space) -> None:
+    def set_GlobalFunctionSpace(self, V: GlobalFunctionSpace) -> None:
         """
         Set the global function space.
         """
-        if not isinstance(V, global_function_space):
-            raise TypeError("V must be a global_function_space")
+        if not isinstance(V, GlobalFunctionSpace):
+            raise TypeError("V must be a GlobalFunctionSpace")
         self.V = V
 
-    def set_bilinear_form(self, a: bilinear_form) -> None:
+    def set_BilinearForm(self, a: BilinearForm) -> None:
         """
         Set the bilinear form.
         """
-        if not isinstance(a, bilinear_form):
-            raise TypeError("a must be a bilinear_form")
+        if not isinstance(a, BilinearForm):
+            raise TypeError("a must be a BilinearForm")
         self.a = a
 
     # SOLVE LINEAR SYSTEM ####################################################
@@ -157,7 +157,7 @@ class solver:
 
         self.interior_values = [[] for _ in range(self.V.T.num_cells)]
 
-        # loop over cells
+        # loop over MeshCells
         for abs_cell_idx in range(self.V.T.num_cells):
             cell_idx = self.V.T.cell_idx_list[abs_cell_idx]
 
@@ -274,11 +274,11 @@ class solver:
 
     # COMPUTE LINEAR COMBINATION #############################################
 
-    def compute_linear_combo_on_cell(
+    def compute_linear_combo_on_mesh(
         self, cell_idx: int, coef: ndarray
     ) -> ndarray:
         """
-        Compute a linear combination of the basis functions on a cell.
+        Compute a linear combination of the basis functions on a MeshCell.
         """
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
         int_vals = self.interior_values[abs_cell_idx]
@@ -287,9 +287,9 @@ class solver:
             vals += val * coef[i]
         return vals
 
-    def get_coef_on_cell(self, cell_idx: int, u: ndarray) -> ndarray:
+    def get_coef_on_mesh(self, cell_idx: int, u: ndarray) -> ndarray:
         """
-        Get the coefficients of the basis functions on a cell.
+        Get the coefficients of the basis functions on a MeshCell.
         """
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
         keys = self.V.cell_dofs[abs_cell_idx]

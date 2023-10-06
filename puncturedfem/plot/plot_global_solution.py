@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
 from numpy import inf, nanmax, nanmin, ndarray
 
-from ..solver.solver import solver
+from ..solver.solver import Solver
 
 
 def plot_linear_combo(
-    solver_obj: solver,
+    solver: Solver,
     u: ndarray,
     title: str = "",
     show_fig: bool = True,
@@ -26,35 +26,35 @@ def plot_linear_combo(
     """
     if not (show_fig or save_fig):
         return
-    # compute linear combo on each cell, determine range of global values
+    # compute linear combo on each MeshCell, determine range of global values
     vals_arr = []
     v_min = inf
     v_max = -inf
-    for cell_idx in solver_obj.V.T.cell_idx_list:
-        coef = solver_obj.get_coef_on_cell(cell_idx, u)
-        vals = solver_obj.compute_linear_combo_on_cell(cell_idx, coef)
+    for cell_idx in solver.V.T.cell_idx_list:
+        coef = solver.get_coef_on_mesh(cell_idx, u)
+        vals = solver.compute_linear_combo_on_mesh(cell_idx, coef)
         vals_arr.append(vals)
         v_min = min(v_min, nanmin(vals))
         v_max = max(v_max, nanmax(vals))
 
     # determine axes and figure size
-    min_x, max_x, min_y, max_y = _get_axis_limits(solver_obj)
+    min_x, max_x, min_y, max_y = _get_axis_limits(solver)
     w, h = _get_figure_size(min_x, max_x, min_y, max_y)
 
     # get figure object
     fig = plt.figure(figsize=(w, h))
 
     # plot mesh edges
-    for e in solver_obj.V.T.edges:
+    for e in solver.V.T.edges:
         plt.plot(e.x[0, :], e.x[1, :], "k")
 
-    # plot interior values on each cell
-    for cell_idx in solver_obj.V.T.cell_idx_list:
+    # plot interior values on each MeshCell
+    for cell_idx in solver.V.T.cell_idx_list:
         vals = vals_arr[cell_idx]
         if v_max - v_min > 1e-6:
-            K = solver_obj.V.T.get_cell(cell_idx)
-            abs_cell_idx = solver_obj.V.T.get_abs_cell_idx(cell_idx)
-            K.parameterize(solver_obj.V.quad_dict)
+            K = solver.V.T.get_cells(cell_idx)
+            abs_cell_idx = solver.V.T.get_abs_cell_idx(cell_idx)
+            K.parameterize(solver.V.quad_dict)
             if fill:
                 plt.contourf(
                     K.int_x1,
@@ -102,7 +102,7 @@ def plot_linear_combo(
     plt.close(fig)
 
 
-def _get_axis_limits(solver_obj: solver) -> tuple[float, float, float, float]:
+def _get_axis_limits(solver: Solver) -> tuple[float, float, float, float]:
     """
     Get the axis limits.
     """
@@ -110,7 +110,7 @@ def _get_axis_limits(solver_obj: solver) -> tuple[float, float, float, float]:
     max_x = -inf
     min_y = inf
     max_y = -inf
-    for e in solver_obj.V.T.edges:
+    for e in solver.V.T.edges:
         min_x = _update_min(min_x, e.x[0, :])
         max_x = _update_max(max_x, e.x[0, :])
         min_y = _update_min(min_y, e.x[1, :])

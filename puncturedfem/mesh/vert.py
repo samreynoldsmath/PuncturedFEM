@@ -1,12 +1,12 @@
 """
-vert.py
+Vert.py
 =======
 
-Module for the vert class, which represents a vertex in a planar mesh.
+Module for the Vert class, which represents a vertex in a planar mesh.
 """
 
 
-class vert:
+class Vert:
     """
     Represents a vertex in a planar mesh. Stores the vertex's global index and
     coordinates.
@@ -27,7 +27,7 @@ class vert:
 
     def __init__(self, x: float, y: float, idx: int = -1) -> None:
         """
-        Constructor for the vert class.
+        Constructor for the Vert class.
 
         Parameters
         ----------
@@ -62,8 +62,8 @@ class vert:
 
     def __eq__(self, other: object) -> bool:
         """
-        Returns True if two vertices have the same coordinates.
+        Returns True if two Vertices have the same coordinates.
         """
-        if not isinstance(other, vert):
-            raise TypeError("Cannot compare vert to non-vert")
+        if not isinstance(other, Vert):
+            raise TypeError("Cannot compare Vert to non-Vert")
         return self.x == other.x and self.y == other.y

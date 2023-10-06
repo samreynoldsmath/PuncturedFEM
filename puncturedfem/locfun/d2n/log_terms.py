@@ -21,7 +21,7 @@ Notes
 
 import numpy as np
 
-from ...mesh.cell import cell
+from ...mesh.cell import MeshCell
 
 
 def shifted_coordinates(
@@ -35,7 +35,7 @@ def shifted_coordinates(
     return x_xi, x_xi_norm_sq
 
 
-def get_log_trace(K: cell) -> np.ndarray:
+def get_log_trace(K: MeshCell) -> np.ndarray:
     """
     Returns traces of logarithmic terms on the boundary
     """
@@ -53,7 +53,7 @@ def get_log_trace(K: cell) -> np.ndarray:
     return lam_trace
 
 
-def get_log_grad(K: cell) -> tuple[np.ndarray, np.ndarray]:
+def get_log_grad(K: MeshCell) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns gradients of logarithmic terms on the boundary
     """
@@ -79,7 +79,7 @@ def get_log_grad(K: cell) -> tuple[np.ndarray, np.ndarray]:
 
 
 def get_dlam_dt_wgt(
-    K: cell, lam_x1_trace: np.ndarray, lam_x2_trace: np.ndarray
+    K: MeshCell, lam_x1_trace: np.ndarray, lam_x2_trace: np.ndarray
 ) -> np.ndarray:
     """
     Returns weighted tangential derivative of logarithmic terms
@@ -94,7 +94,7 @@ def get_dlam_dt_wgt(
 
 
 def get_dlam_dn_wgt(
-    K: cell, lam_x1_trace: np.ndarray, lam_x2_trace: np.ndarray
+    K: MeshCell, lam_x1_trace: np.ndarray, lam_x2_trace: np.ndarray
 ) -> np.ndarray:
     """
     Returns weighted normal derivative of logarithmic terms

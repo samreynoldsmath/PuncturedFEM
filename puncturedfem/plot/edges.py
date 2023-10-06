@@ -8,12 +8,12 @@ Module containing functions for plotting edges in the plane.
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..mesh.cell import cell
-from ..mesh.edge import edge
+from ..mesh.cell import MeshCell
+from ..mesh.edge import Edge
 
 
 def plot_edges(
-    edge_list: list[edge],
+    edge_list: list[Edge],
     orientation: bool = False,
     axis_arg: str = "equal",
     grid_arg: bool = True,
@@ -36,14 +36,14 @@ def plot_edges(
 
 
 def plot_boundary(
-    K: cell,
+    K: MeshCell,
     orientation: bool = False,
     hole_int_pts: bool = False,
     axis_arg: str = "equal",
     grid_arg: bool = True,
 ) -> None:
     """
-    Plots the boundary of a cell.
+    Plots the boundary of a MeshCell.
     """
 
     plt.figure()
@@ -62,16 +62,16 @@ def plot_boundary(
     plt.show()
 
 
-def _plot_edge(e: edge) -> None:
+def _plot_edge(e: Edge) -> None:
     """
-    Plots an edge.
+    Plots an Edge.
     """
     plt.plot(e.x[0, :], e.x[1, :], "k-")
 
 
-def _plot_oriented_edge(e: edge) -> None:
+def _plot_oriented_edge(e: Edge) -> None:
     """
-    Plot an oriented edge, with arrows indicating the direction.
+    Plot an oriented Edge, with arrows indicating the direction.
     """
     X = e.x[0, :]
     Y = e.x[1, :]
@@ -84,8 +84,8 @@ def _plot_oriented_edge(e: edge) -> None:
     plt.quiver(X, Y, U, V, scale=1, angles="xy", scale_units="xy")
 
 
-def _plot_hole_interior_points(K: cell) -> None:
+def _plot_hole_interior_points(K: MeshCell) -> None:
     """
-    Plot the interior point of each hole in a cell.
+    Plot the interior point of each hole in a MeshCell.
     """
     plt.scatter(K.int_x1, K.int_x2)

@@ -1,41 +1,41 @@
 """
-planar_mesh.py
+PlanarMesh.py
 ==============
 
-Module containing the planar_mesh class, which handles planar mesh geometry and
-topology.
+Module containing the PlanarMesh class, which handles planar mesh
+geometry and topology.
 """
 
-from .cell import cell
-from .edge import edge
+from .cell import MeshCell
+from .edge import Edge
 
 
-class planar_mesh:
+class PlanarMesh:
     """
     Planar mesh geometry and topology. The edges of the mesh are permitted to be
-    curved, and cells are permitted to be multiply connected.
+    curved, and MeshCells are permitted to be multiply connected.
 
-    Edges meet at an interior angle strictly between 0 and 2 pi (no slits or
+    edges meet at an interior angle strictly between 0 and 2 pi (no slits or
     cusps). Hanging nodes (i.e. an interior angle of pi) are permitted. Looped
     edges (edges with identical endpoints) are permitted under the same
     restrictions.
 
     The mesh geometry is determined by the parameterization of the edges. The
-    mesh topology is automatically determined by observing that each edge is
-    shared by the boundary of exactly two cells.
+    mesh topology is automatically determined by observing that each Edge is
+    shared by the boundary of exactly two MeshCells.
 
-    Computations on the mesh dictate that the boundary of each cell have an
+    Computations on the mesh dictate that the boundary of each MeshCell have an
     oriented boundary (counterclockwise on the outer boundary, clockwise on the
-    inner boundary). Rather than storing the parameterization of each edge
-    twice (once for each cell), we record the orientation of each edge relative
-    to the boundary of each cell.
+    inner boundary). Rather than storing the parameterization of each Edge
+    twice (once for each MeshCell), we record the orientation of each Edge
+    relative to the boundary of each MeshCell.
 
-    For instance, if the edge is oriented counterclockwise to a cell boundary,
-    with that edge lying on the outer boundary of this cell, then the edge is
-    said to have positive orientation with respect to that cell. Each edge
-    object stores the cell index of the cell on either side of the edge, one
-    positive and one negative. If the edge is on the boundary of the domain,
-    the "missing" cell is assigned a negative cell index.
+    For instance, if the Edge is oriented counterclockwise to a MeshCell
+    boundary, with that Edge lying on the outer boundary of this MeshCell, then
+    the Edge is said to have positive orientation with respect to that MeshCell.
+    Each Edge object stores the MeshCell index of the MeshCell on either side of
+    the Edge, one positive and one negative. If the Edge is on the boundary of
+    the domain, the "missing" MeshCell is assigned a negative MeshCell index.
 
     Usage
     -----
@@ -46,43 +46,43 @@ class planar_mesh:
     num_edges : int
         Number of edges in the mesh.
     num_cells : int
-        Number of cells in the mesh.
+        Number of MeshCells in the mesh.
     num_verts : int
-        Number of vertices in the mesh.
-    edges : list[edge]
+        Number of Vertices in the mesh.
+    edges : list[Edge]
         List of edges in the mesh.
     vert_idx_list : list[int]
-        List of vertex indices in the mesh, excluding vertices of loops.
+        List of vertex indices in the mesh, excluding Vertices of loops.
     cell_idx_list : list[int]
-        List of cell indices in the mesh.
+        List of MeshCell indices in the mesh.
 
     Notes
     -----
     - The vertex indices are taken to be nonnegative integers. These indices
       are not necessarily 0, 1, ...., num_verts - 1, but instead are determined
       by the indices assigned to the endpoints of the edges.
-    - The cell indices are taken to be nonnegative integers, except for the case
-      of edges on the boundary of the domain. In this case, the cell index is
-      assigned to be negative. Similar to the vertex indices, the cell indices
-      are not necessarily 0, 1, ...., num_cells - 1, but instead are determined
-      by the indices assigned to the edges in the pos_cell_idx and neg_cell_idx
-      attributes.
+    - The MeshCell indices are taken to be nonnegative integers, except for the
+      case of edges on the boundary of the domain. In this case, the MeshCell
+      index is assigned to be negative. Similar to the vertex indices, the
+      MeshCell indices are not necessarily 0, 1, ...., num_cells - 1, but
+      instead are determined by the indices assigned to the edges in the
+      pos_cell_idx and neg_cell_idx attributes.
     """
 
     num_edges: int
     num_cells: int
     num_verts: int
-    edges: list[edge]
+    edges: list[Edge]
     vert_idx_list: list[int]  # TODO: use set instead of list
     cell_idx_list: list[int]  # TODO: use set instead of list
 
-    def __init__(self, edges: list[edge], verbose: bool = True) -> None:
+    def __init__(self, edges: list[Edge], verbose: bool = True) -> None:
         """
-        Constructor for planar_mesh class.
+        Constructor for PlanarMesh class.
 
         Parameters
         ----------
-        edges : list[edge]
+        edges : list[Edge]
             List of edges in the mesh.
         verbose : bool, optional
             If True, print information about the mesh. Default is True.
@@ -101,9 +101,9 @@ class planar_mesh:
 
     def __str__(self) -> str:
         """
-        String representation of planar_mesh object.
+        String representation of PlanarMesh object.
         """
-        s = "planar_mesh:"
+        s = "PlanarMesh:"
         s += f"\n\tnum_verts: {self.num_verts}"
         s += f"\n\tnum_edges: {self.num_edges}"
         s += f"\n\tnum_cells: {self.num_cells}"
@@ -116,22 +116,22 @@ class planar_mesh:
         """
         self.num_edges = len(self.edges)
 
-    def add_edge(self, e: edge) -> None:
-        """Add an edge to the mesh."""
-        if not isinstance(e, edge):
-            raise TypeError("e must be an edge")
+    def add_edge(self, e: Edge) -> None:
+        """Add an Edge to the mesh."""
+        if not isinstance(e, Edge):
+            raise TypeError("e must be an Edge")
         if e in self.edges:
             return
         self.edges.append(e)
         self.num_edges += 1
 
-    def add_edges(self, edges: list[edge]) -> None:
+    def add_edges(self, edges: list[Edge]) -> None:
         """Add a list of edges to the mesh."""
         for e in edges:
             self.add_edge(e)
 
     def set_edge_ids(self) -> None:
-        """Set the id of each edge in the mesh."""
+        """Set the id of each Edge in the mesh."""
         for k, e in enumerate(self.edges):
             e.set_idx(k)
 
@@ -139,7 +139,7 @@ class planar_mesh:
 
     def compute_num_verts(self) -> None:
         """
-        Compute and store the number of vertices in the mesh to self.num_verts.
+        Compute and store the number of Vertices in the mesh to self.num_verts.
         """
         self.num_verts = len(self.vert_idx_list)
 
@@ -161,13 +161,13 @@ class planar_mesh:
 
     def compute_num_cells(self) -> None:
         """
-        Compute and store the number of cells in the mesh to self.num_cells.
+        Compute and store the number of MeshCells in the mesh to self.num_cells.
         """
         self.num_cells = len(self.cell_idx_list)
 
     def build_cell_idx_list(self) -> None:
         """
-        Build and store the list of cell indices in the mesh to
+        Build and store the list of MeshCell indices in the mesh to
         self.cell_idx_list.
         """
         self.cell_idx_list = []
@@ -178,9 +178,9 @@ class planar_mesh:
         self.cell_idx_list.sort()
         self.compute_num_cells()
 
-    def get_cell(self, cell_idx: int) -> cell:
+    def get_cells(self, cell_idx: int) -> MeshCell:
         """
-        Return the cell with index cell_idx.
+        Return the MeshCell with index cell_idx.
         """
         if cell_idx not in self.cell_idx_list:
             raise IndexError("cell_idx is not in cell_idx_list")
@@ -188,11 +188,11 @@ class planar_mesh:
         for e in self.edges:
             if cell_idx in (e.pos_cell_idx, e.neg_cell_idx):
                 edges.append(e)
-        return cell(idx=cell_idx, edges=edges)
+        return MeshCell(idx=cell_idx, edges=edges)
 
     def get_abs_cell_idx(self, cell_idx: int) -> int:
         """
-        Return the absolute cell index of cell_idx.
+        Return the absolute MeshCell index of cell_idx.
         """
         return self.cell_idx_list.index(cell_idx)
 
@@ -211,7 +211,7 @@ class planar_mesh:
 
     def edge_is_on_boundary(self, edge_idx: int) -> bool:
         """
-        Return True if the edge with index edge_idx is on the boundary of the
+        Return True if the Edge with index edge_idx is on the boundary of the
         domain.
         """
         e = self.edges[edge_idx]
@@ -221,6 +221,6 @@ class planar_mesh:
 
     def find_repeats(self) -> None:
         """
-        PLANNED: Find edges and cells that are repeated
+        PLANNED: Find edges and MeshCells that are repeated
         """
         raise NotImplementedError("find_repeats not implemented")

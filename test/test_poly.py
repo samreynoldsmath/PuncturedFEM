@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath("../puncturedfem"))
 
 import numpy as np
 
-from puncturedfem import polynomial
+from puncturedfem import Polynomial
 
 
 class TestTemplate(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestTemplate(unittest.TestCase):
         """
         z[x,y] = 0
         """
-        self.z = polynomial()
+        self.z = Polynomial()
 
         """
 		p[x_, y_] :=
@@ -28,12 +28,12 @@ class TestTemplate(unittest.TestCase):
 			+ x^2
 			- y^2
 		"""
-        self.p = polynomial(
+        self.p = Polynomial(
             [[1.0, 0, 0], [-5.0, 1, 0], [2.0, 0, 1], [1.0, 2, 0], [-1.0, 0, 2]],
         )
 
         self.scalar = 4
-        self.p_plus_scalar = polynomial(
+        self.p_plus_scalar = Polynomial(
             [
                 [1.0 + self.scalar, 0, 0],
                 [-5.0, 1, 0],
@@ -42,7 +42,7 @@ class TestTemplate(unittest.TestCase):
                 [-1.0, 0, 2],
             ]
         )
-        self.p_times_scalar = polynomial(
+        self.p_times_scalar = Polynomial(
             [
                 [1.0 * self.scalar, 0, 0],
                 [-5.0 * self.scalar, 1, 0],
@@ -59,7 +59,7 @@ class TestTemplate(unittest.TestCase):
 			+ y
 			+ 5 x*y^2
 		"""
-        self.q = polynomial(
+        self.q = Polynomial(
             [[3.0, 0, 0], [-2.0, 1, 0], [1.0, 0, 1], [5.0, 1, 2]],
         )
 
@@ -80,7 +80,7 @@ class TestTemplate(unittest.TestCase):
 			+ 10 x y^3
 			- 5 x y^4
 		"""
-        self.pq = polynomial(
+        self.pq = Polynomial(
             [
                 [3.0, 0, 0],
                 [-17.0, 1, 0],
@@ -130,12 +130,12 @@ class TestTemplate(unittest.TestCase):
         self.assertTrue(self.scalar + self.p == self.p_plus_scalar)
 
     def test_addition_increment(self):
-        r = polynomial()
+        r = Polynomial()
         r += self.p
         self.assertTrue(r == self.p)
 
     def test_addition_increment_with_scalar(self):
-        r = polynomial() + self.p
+        r = Polynomial() + self.p
         r += self.scalar
         self.assertTrue(r == self.p_plus_scalar)
         r -= 4
@@ -154,14 +154,14 @@ class TestTemplate(unittest.TestCase):
         self.assertTrue(self.p * self.scalar == self.p_times_scalar)
 
     def test_multiplication_increment(self):
-        r = polynomial() + self.q
+        r = Polynomial() + self.q
         r *= self.p
         self.assertTrue(r == self.pq)
         r *= self.z
         self.assertTrue(r == self.z)
 
     def test_multiplication_increment_scalar(self):
-        r = polynomial() + self.p
+        r = Polynomial() + self.p
         r *= self.scalar
         self.assertTrue(r == self.p_times_scalar)
 
@@ -174,13 +174,13 @@ class TestTemplate(unittest.TestCase):
         grad_q = {-2 + 5 y^2, 1 + 10 x y}
         """
 
-        px = polynomial([[-5.0, 0, 0], [2.0, 1, 0]])
+        px = Polynomial([[-5.0, 0, 0], [2.0, 1, 0]])
 
-        py = polynomial([[2.0, 0, 0], [-2.0, 0, 1]])
+        py = Polynomial([[2.0, 0, 0], [-2.0, 0, 1]])
 
-        qx = polynomial([[-2.0, 0, 0], [5.0, 0, 2]])
+        qx = Polynomial([[-2.0, 0, 0], [5.0, 0, 2]])
 
-        qy = polynomial([[1.0, 0, 0], [10.0, 1, 1]])
+        qy = Polynomial([[1.0, 0, 0], [10.0, 1, 1]])
 
         PX, PY = self.p.grad()
         QX, QY = self.q.grad()
@@ -205,13 +205,13 @@ class TestTemplate(unittest.TestCase):
                 - 30 x y^2
         """
 
-        dq = polynomial(
+        dq = Polynomial(
             [
                 [10.0, 1, 0],
             ]
         )
 
-        dpq = polynomial(
+        dpq = Polynomial(
             [
                 [24.0, 0, 0],
                 [2.0, 1, 0],
@@ -229,7 +229,7 @@ class TestTemplate(unittest.TestCase):
         self.assertTrue(self.pq.laplacian() == dpq)
 
     def test_anti_laplacian(self):
-        P = polynomial()
+        P = Polynomial()
         P.add_monomials_with_idxs(
             coef_list=[
                 1 / 4,

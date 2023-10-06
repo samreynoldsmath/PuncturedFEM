@@ -18,11 +18,11 @@ poly
 Modules
 -------
 edge_space
-    Contains the edge_space class for managing spaces of trace functions.
-local_fun
-    Contains the local_fun class modeling elements of V_p(K).
-local_fun_space
-    Contains the local_fun_space class for managing V_p(K).
+    Contains the EdgeSpace class for managing spaces of trace functions.
+locfun
+    Contains the LocalFunction class modeling elements of V_p(K).
+locfunsp
+    Contains the LocalFunctionSpace class for managing V_p(K).
 nystrom
-    Contains the nystrom_solver class for solving integral equations.
+    Contains the NystromSolver class for solving integral equations.
 """

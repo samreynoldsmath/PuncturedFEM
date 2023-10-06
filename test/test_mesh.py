@@ -16,8 +16,8 @@ import puncturedfem as pf
 class TestLocalFunction(unittest.TestCase):
     def setUp(self) -> None:
         n = 64
-        q_trap = pf.quad(qtype="trap", n=n)
-        q_kress = pf.quad(qtype="kress", n=n)
+        q_trap = pf.Quad(qtype="trap", n=n)
+        q_kress = pf.Quad(qtype="kress", n=n)
         self.quad_dict = {"kress": q_kress, "trap": q_trap}
         self.tol = 1e-14
 
@@ -80,13 +80,13 @@ class TestLocalFunction(unittest.TestCase):
 
     def build_circle(self):
         # define vertices
-        verts: list[pf.vert] = []
-        verts.append(pf.vert(x=0.5, y=0.5))  # center of circle
+        verts: list[pf.Vert] = []
+        verts.append(pf.Vert(x=0.5, y=0.5))  # center of circle
 
         # define edges
-        edges: list[pf.edge] = []
+        edges: list[pf.Edge] = []
         edges.append(
-            pf.edge(
+            pf.Edge(
                 verts[0],
                 verts[0],
                 pos_cell_idx=0,
@@ -97,7 +97,7 @@ class TestLocalFunction(unittest.TestCase):
         )
 
         # define mesh cell
-        K = pf.cell(idx=0, edges=edges)
+        K = pf.MeshCell(idx=0, edges=edges)
 
         # parameterize edges
         K.parameterize(self.quad_dict)
@@ -106,21 +106,21 @@ class TestLocalFunction(unittest.TestCase):
 
     def build_square(self):
         # define vertices
-        verts: list[pf.vert] = []
-        verts.append(pf.vert(x=0.0, y=0.0))
-        verts.append(pf.vert(x=1.0, y=0.0))
-        verts.append(pf.vert(x=1.0, y=1.0))
-        verts.append(pf.vert(x=0.0, y=1.0))
+        verts: list[pf.Vert] = []
+        verts.append(pf.Vert(x=0.0, y=0.0))
+        verts.append(pf.Vert(x=1.0, y=0.0))
+        verts.append(pf.Vert(x=1.0, y=1.0))
+        verts.append(pf.Vert(x=0.0, y=1.0))
 
         # define edges
-        edges: list[pf.edge] = []
-        edges.append(pf.edge(verts[0], verts[1], pos_cell_idx=0))
-        edges.append(pf.edge(verts[1], verts[2], pos_cell_idx=0))
-        edges.append(pf.edge(verts[2], verts[3], pos_cell_idx=0))
-        edges.append(pf.edge(verts[3], verts[0], pos_cell_idx=0))
+        edges: list[pf.Edge] = []
+        edges.append(pf.Edge(verts[0], verts[1], pos_cell_idx=0))
+        edges.append(pf.Edge(verts[1], verts[2], pos_cell_idx=0))
+        edges.append(pf.Edge(verts[2], verts[3], pos_cell_idx=0))
+        edges.append(pf.Edge(verts[3], verts[0], pos_cell_idx=0))
 
         # define mesh cell
-        K = pf.cell(idx=0, edges=edges)
+        K = pf.MeshCell(idx=0, edges=edges)
 
         # parameterize edges
         K.parameterize(self.quad_dict)
@@ -129,21 +129,21 @@ class TestLocalFunction(unittest.TestCase):
 
     def build_punctured_square(self):
         # define vertices
-        verts: list[pf.vert] = []
-        verts.append(pf.vert(x=0.0, y=0.0))
-        verts.append(pf.vert(x=1.0, y=0.0))
-        verts.append(pf.vert(x=1.0, y=1.0))
-        verts.append(pf.vert(x=0.0, y=1.0))
-        verts.append(pf.vert(x=0.5, y=0.5))  # center of circle
+        verts: list[pf.Vert] = []
+        verts.append(pf.Vert(x=0.0, y=0.0))
+        verts.append(pf.Vert(x=1.0, y=0.0))
+        verts.append(pf.Vert(x=1.0, y=1.0))
+        verts.append(pf.Vert(x=0.0, y=1.0))
+        verts.append(pf.Vert(x=0.5, y=0.5))  # center of circle
 
         # define edges
-        edges: list[pf.edge] = []
-        edges.append(pf.edge(verts[0], verts[1], pos_cell_idx=0))
-        edges.append(pf.edge(verts[1], verts[2], pos_cell_idx=0))
-        edges.append(pf.edge(verts[2], verts[3], pos_cell_idx=0))
-        edges.append(pf.edge(verts[3], verts[0], pos_cell_idx=0))
+        edges: list[pf.Edge] = []
+        edges.append(pf.Edge(verts[0], verts[1], pos_cell_idx=0))
+        edges.append(pf.Edge(verts[1], verts[2], pos_cell_idx=0))
+        edges.append(pf.Edge(verts[2], verts[3], pos_cell_idx=0))
+        edges.append(pf.Edge(verts[3], verts[0], pos_cell_idx=0))
         edges.append(
-            pf.edge(
+            pf.Edge(
                 verts[4],
                 verts[4],
                 neg_cell_idx=0,
@@ -154,7 +154,7 @@ class TestLocalFunction(unittest.TestCase):
         )
 
         # define mesh cell
-        K = pf.cell(idx=0, edges=edges)
+        K = pf.MeshCell(idx=0, edges=edges)
 
         # parameterize edges
         K.parameterize(self.quad_dict)

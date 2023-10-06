@@ -16,11 +16,11 @@ Assumes that the interior point of each hole has been set to K.hole_int_pts.
 
 import numpy as np
 
-from ...mesh.cell import cell
+from ...mesh.cell import MeshCell
 from .. import d2n
 
 
-def get_log_antilap(K: cell) -> np.ndarray:
+def get_log_antilap(K: MeshCell) -> np.ndarray:
     """
     Returns traces of an anti-Laplacian of logarithmic terms on the boundary
             Lambda(x) = 1/4 |x|^2 (ln|x|-1)
@@ -41,7 +41,7 @@ def get_log_antilap(K: cell) -> np.ndarray:
     return LAM_trace
 
 
-def get_log_antilap_weighted_normal_derivative(K: cell) -> np.ndarray:
+def get_log_antilap_weighted_normal_derivative(K: MeshCell) -> np.ndarray:
     """
     Returns traces of an anti-Laplacian of logarithmic terms on the boundary:
             Lambda(x) = 1/4 |x|^2 (ln|x|-1)

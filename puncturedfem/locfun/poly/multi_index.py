@@ -2,7 +2,7 @@
 multi_index.py
 ==============
 
-Module containing the multi_index_2 class, which is used to represent
+Module containing the MultiIndex class, which is used to represent
 multi-indices of the form
     alpha = (alpha_1, alpha_2)
 where alpha_1 and alpha_2 are nonnegative integers.
@@ -16,7 +16,7 @@ from typing import Optional
 from .poly_exceptions import MultiIndexError
 
 
-class multi_index_2:
+class MultiIndex:
     """
     Integer multi-index with two components
     """
@@ -28,7 +28,7 @@ class multi_index_2:
 
     def __init__(self, alpha: Optional[list[int]] = None) -> None:
         """
-        Constructor for multi_index_2 class.
+        Constructor for MultiIndex class.
 
         Parameters
         ----------
@@ -73,28 +73,28 @@ class multi_index_2:
         alpha.append(idx - N)
         self.set(alpha)
 
-    def copy(self) -> multi_index_2:
+    def copy(self) -> MultiIndex:
         """
         Returns a copy of self.
         """
-        return multi_index_2([self.x, self.y])
+        return MultiIndex([self.x, self.y])
 
     def __eq__(self, other: object) -> bool:
         """
         Returns True iff self and other have the same multi-index.
         """
-        if not isinstance(other, multi_index_2):
+        if not isinstance(other, MultiIndex):
             raise TypeError(
                 "Comparison of multi-index to object" + " of different type"
             )
         return self.idx == other.idx
 
-    def __add__(self, other: object) -> multi_index_2:
+    def __add__(self, other: object) -> MultiIndex:
         """
         Defines the operation self + other
         where other is a multi-index
         """
-        if isinstance(other, multi_index_2):
+        if isinstance(other, MultiIndex):
             beta = [self.x + other.x, self.y + other.y]
-            return multi_index_2(beta)
+            return MultiIndex(beta)
         raise TypeError("Cannot add multi-index to different type")

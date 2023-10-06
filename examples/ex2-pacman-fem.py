@@ -68,7 +68,7 @@ from tqdm import tqdm
 
 
 deg = 1
-n = 64
+n = 4
 verbose = True
 
 
@@ -99,8 +99,8 @@ T = pf.meshlib.pacman_subdiv(verbose=verbose)
 
 
 # TODO: this should really be done automatically
-q_trap = pf.quad(qtype="trap", n=n)
-q_kress = pf.quad(qtype="kress", n=n)
+q_trap = pf.Quad(qtype="trap", n=n)
+q_kress = pf.Quad(qtype="kress", n=n)
 quad_dict = {"kress": q_kress, "trap": q_trap}
 
 
@@ -110,7 +110,7 @@ quad_dict = {"kress": q_kress, "trap": q_trap}
 # In[ ]:
 
 
-V = pf.global_function_space(T=T, deg=deg, quad_dict=quad_dict, verbose=verbose)
+V = pf.GlobalFunctionSpace(T=T, deg=deg, quad_dict=quad_dict, verbose=verbose)
 
 
 # ## Define a bilinear form
@@ -132,10 +132,10 @@ V = pf.global_function_space(T=T, deg=deg, quad_dict=quad_dict, verbose=verbose)
 # In[ ]:
 
 
-B = pf.bilinear_form(
+B = pf.BilinearForm(
     diffusion_constant=1.0,
     reaction_constant=1.0,
-    rhs_poly=pf.polynomial([[1.0, 0, 0]]),
+    rhs_poly=pf.Polynomial([[1.0, 0, 0]]),
 )
 print(B)
 
@@ -146,7 +146,7 @@ print(B)
 # In[ ]:
 
 
-S = pf.solver(V, B)
+S = pf.Solver(V, B)
 
 
 # To assemble the matrix and right-hand side vector for the global system, we 
@@ -175,7 +175,7 @@ plt.show()
 
 # ## Solving the global linear system
 # To solve the system we worked hard to set up, we can call the `solve()` method
-# on the `solver` object.
+# on the `Solver` object.
 
 # In[ ]:
 
@@ -195,7 +195,7 @@ S.solve()
 
 
 pf.plot_linear_combo(
-    solver_obj=S,
+    solver=S,
     u=S.soln,
     title="solution",
     show_fig=True,
@@ -224,7 +224,7 @@ for idx in basis_idx_list:
     u = np.zeros(V.num_funs)
     u[idx] = 1.0
     pf.plot_linear_combo(
-        solver_obj=S,
+        solver=S,
         u=u,
         show_fig=True,
         save_fig=False,
@@ -232,5 +232,3 @@ for idx in basis_idx_list:
         fill=True,
     )
 
-
-# 

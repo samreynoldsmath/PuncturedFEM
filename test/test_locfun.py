@@ -25,7 +25,7 @@ class TestLocalFunction(unittest.TestCase):
         """
 
         K = self.build_punctured_square()
-        solver = pf.nystrom_solver(K)
+        solver = pf.NystromSolver(K)
 
         # get the coordinates of sampled boundary points
         x1, x2 = K.get_boundary_points()
@@ -44,11 +44,13 @@ class TestLocalFunction(unittest.TestCase):
             + x1 * x2**3
         )
 
-        # create polynomial object
-        v_laplacian = pf.polynomial([[12.0, 1, 1]])
+        # create Polynomial object
+        v_laplacian = pf.Polynomial([[12.0, 1, 1]])
 
         # create local function object
-        v = pf.locfun(solver=solver, lap_poly=v_laplacian, has_poly_trace=False)
+        v = pf.LocalFunction(
+            nyst=solver, lap_poly=v_laplacian, has_poly_trace=False
+        )
         v.set_trace_values(v_trace)
         v.compute_all()
 
@@ -60,10 +62,12 @@ class TestLocalFunction(unittest.TestCase):
         )
 
         # define a monomial term by specifying its multi-index and coefficient
-        w_laplacian = pf.polynomial([[8.0, 1, 0]])
+        w_laplacian = pf.Polynomial([[8.0, 1, 0]])
 
         # declare w as local function object
-        w = pf.locfun(solver=solver, lap_poly=w_laplacian, has_poly_trace=False)
+        w = pf.LocalFunction(
+            nyst=solver, lap_poly=w_laplacian, has_poly_trace=False
+        )
         w.set_trace_values(w_trace)
         w.compute_all()
 
@@ -81,26 +85,26 @@ class TestLocalFunction(unittest.TestCase):
         self.assertTrue(h1_error < self.tol)
 
     def build_punctured_square(self):
-        q_trap = pf.quad(qtype="trap", n=self.n)
-        q_kress = pf.quad(qtype="kress", n=self.n)
+        q_trap = pf.Quad(qtype="trap", n=self.n)
+        q_kress = pf.Quad(qtype="kress", n=self.n)
         quad_dict = {"kress": q_kress, "trap": q_trap}
 
         # define vertices
         verts: list[pf.vert] = []
-        verts.append(pf.vert(x=0.0, y=0.0))
-        verts.append(pf.vert(x=1.0, y=0.0))
-        verts.append(pf.vert(x=1.0, y=1.0))
-        verts.append(pf.vert(x=0.0, y=1.0))
-        verts.append(pf.vert(x=0.5, y=0.5))  # center of circle
+        verts.append(pf.Vert(x=0.0, y=0.0))
+        verts.append(pf.Vert(x=1.0, y=0.0))
+        verts.append(pf.Vert(x=1.0, y=1.0))
+        verts.append(pf.Vert(x=0.0, y=1.0))
+        verts.append(pf.Vert(x=0.5, y=0.5))  # center of circle
 
         # define edges
-        edges: list[pf.edge] = []
-        edges.append(pf.edge(verts[0], verts[1], pos_cell_idx=0))
-        edges.append(pf.edge(verts[1], verts[2], pos_cell_idx=0))
-        edges.append(pf.edge(verts[2], verts[3], pos_cell_idx=0))
-        edges.append(pf.edge(verts[3], verts[0], pos_cell_idx=0))
+        edges: list[pf.Edge] = []
+        edges.append(pf.Edge(verts[0], verts[1], pos_cell_idx=0))
+        edges.append(pf.Edge(verts[1], verts[2], pos_cell_idx=0))
+        edges.append(pf.Edge(verts[2], verts[3], pos_cell_idx=0))
+        edges.append(pf.Edge(verts[3], verts[0], pos_cell_idx=0))
         edges.append(
-            pf.edge(
+            pf.Edge(
                 verts[4],
                 verts[4],
                 neg_cell_idx=0,
@@ -111,7 +115,7 @@ class TestLocalFunction(unittest.TestCase):
         )
 
         # define mesh cell
-        K = pf.cell(idx=0, edges=edges)
+        K = pf.MeshCell(idx=0, edges=edges)
 
         # parameterize edges
         K.parameterize(quad_dict)

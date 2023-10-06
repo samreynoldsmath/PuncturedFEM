@@ -15,7 +15,7 @@ class DegenerateTriangleError(Exception):
 
 
 class DegreeError(Exception):
-    """Exception raised if polynomial degree is not valid"""
+    """Exception raised if Polynomial degree is not valid"""
 
     def __init__(self, msg: str = "") -> None:
         super().__init__()
@@ -39,7 +39,7 @@ class MultiIndexError(Exception):
 
 
 class PolynomialError(Exception):
-    """Exception raised if polynomial is not valid"""
+    """Exception raised if Polynomial is not valid"""
 
     def __init__(self, msg: str = "") -> None:
         super().__init__()

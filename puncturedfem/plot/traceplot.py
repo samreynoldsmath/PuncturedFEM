@@ -3,14 +3,14 @@ traceplot.py
 ============
 
 Module containing functions for plotting traces of functions on the boundary of
-a cell.
+a MeshCell.
 """
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..mesh.cell import cell
-from ..mesh.quad import quad
+from ..mesh.cell import MeshCell
+from ..mesh.quad import Quad
 
 PI_CHAR = r"$\pi$"
 
@@ -20,14 +20,14 @@ def plot_trace(
     fmt: str,
     legend: str,
     title: str,
-    K: cell,
-    quad_list: list[quad],
+    K: MeshCell,
+    quad_list: list[Quad],
 ) -> None:
     """
-    Plots the trace of a function on the boundary of a cell.
+    Plots the trace of a function on the boundary of a MeshCell.
     """
 
-    t = _get_trace_param_cell_boundary(K, quad_list)
+    t = _get_trace_param_mesh_boundary(K, quad_list)
 
     plt.figure()
     for k, f_trace in enumerate(f_trace_list):
@@ -47,15 +47,15 @@ def plot_trace_log(
     fmt: str,
     legend: str,
     title: str,
-    K: cell,
-    quad_list: list[quad],
+    K: MeshCell,
+    quad_list: list[Quad],
 ) -> None:
     """
-    Plots the trace of a function on the boundary of a cell with a log scale on
-    the vertical axis.
+    Plots the trace of a function on the boundary of a MeshCell with a log scale
+    on the vertical axis.
     """
 
-    t = _get_trace_param_cell_boundary(K, quad_list)
+    t = _get_trace_param_mesh_boundary(K, quad_list)
 
     plt.figure()
     for k, f_trace in enumerate(f_trace_list):
@@ -70,9 +70,9 @@ def plot_trace_log(
     plt.show()
 
 
-def _make_quad_dict(quad_list: list[quad]) -> dict[str, quad]:
+def _make_quad_dict(quad_list: list[Quad]) -> dict[str, Quad]:
     """
-    Organize a list of distinct quad objects into a convenient dictionary
+    Organize a list of distinct Quad objects into a convenient dictionary
     """
     quad_dict = {}
     for q in quad_list:
@@ -80,11 +80,11 @@ def _make_quad_dict(quad_list: list[quad]) -> dict[str, quad]:
     return quad_dict
 
 
-def _get_trace_param_cell_boundary(
-    K: cell, quad_list: list[quad]
+def _get_trace_param_mesh_boundary(
+    K: MeshCell, quad_list: list[Quad]
 ) -> np.ndarray:
     """
-    Returns the trace parameter values for the boundary of a cell.
+    Returns the trace parameter values for the boundary of a MeshCell.
     """
 
     quad_dict = _make_quad_dict(quad_list)
@@ -103,10 +103,10 @@ def _get_trace_param_cell_boundary(
     return t
 
 
-def _get_ticks(K: cell) -> tuple[np.ndarray, list[str]]:
+def _get_ticks(K: MeshCell) -> tuple[np.ndarray, list[str]]:
     """
     Returns the x-ticks and x-labels for a plot of a function on the boundary of
-    a cell.
+    a MeshCell.
     """
     x_ticks = np.linspace(0, 2 * np.pi * K.num_edges, K.num_edges + 1)
     x_labels = [

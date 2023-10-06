@@ -8,37 +8,37 @@ Modules
 -------
 bounding_box
     Contains the bounding_box function for computing bounding boxes.
-cell
-    Contains the cell class for creating mesh cells.
-closed_contour
-    Contains the closed_contour class for creating closed contours.
-edge
-    Contains the edge class for creating mesh edges.
-planar_mesh
-    Contains the planar_mesh class for creating planar meshes.
-quad
-    Contains the quad class for creating quadrature rules.
-vert
-    Contains the vert class for creating mesh vertices.
+MeshCell
+    Contains the MeshCell class for creating mesh cells.
+ClosedContour
+    Contains the ClosedContour class for creating closed contours.
+Edge
+    Contains the Edge class for creating mesh edges.
+PlanarMesh
+    Contains the PlanarMesh class for creating planar meshes.
+Quad
+    Contains the Quad class for creating Quadrature rules.
+Vert
+    Contains the Vert class for creating mesh Vertices.
 
 Libraries
 ---------
-edgelib
+Edgelib
     A library of modules for creating mesh edges.
 meshlib
     A library of modules for creating meshes.
 """
 
-from .cell import cell
-from .edge import edge
-from .planar_mesh import planar_mesh
-from .quad import quad
-from .vert import vert
+from .cell import MeshCell
+from .edge import Edge
+from .planar_mesh import PlanarMesh
+from .quad import Quad
+from .vert import Vert
 
 __all__ = [
-    "cell",
-    "edge",
-    "planar_mesh",
-    "quad",
-    "vert",
+    "MeshCell",
+    "Edge",
+    "PlanarMesh",
+    "Quad",
+    "Vert",
 ]

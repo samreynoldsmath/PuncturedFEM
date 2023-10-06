@@ -1,19 +1,19 @@
 """
-quad.py
+Quad.py
 =======
 
-Module for the quad class, which represents a 1-dimensional quadrature object.
+Module for the Quad class, which represents a 1-dimensional Quadrature object.
 """
 
 import numpy as np
 
 
-class quad:
+class Quad:
     """
-    quad: 1-dimensional quadrature object
+    Quad: 1-dimensional Quadrature object
 
     Attributes:
-        type: str = label for quadrature variant
+        type: str = label for Quadrature variant
         n: int = interval sampled at 2*n points, excluding the last endpoint
         h: float = pi / n sample spacing in tau
         t: array (len=2*n) of sampled parameter between 0 and 2*pi
@@ -32,12 +32,12 @@ class quad:
 
     def __init__(self, qtype: str = "trap", n: int = 16, p: int = 7) -> None:
         """
-        Constructor for quad object.
+        Constructor for Quad object.
 
         Parameters
         ----------
         qtype : str, optional
-            Label for quadrature variant. Default is "trap".
+            Label for Quadrature variant. Default is "trap".
         n : int, optional
             Interval sampled at 2*n points, excluding the last endpoint.
             Default is 16.
@@ -60,7 +60,7 @@ class quad:
         """ "
         Print method
         """
-        msg = f"quad object \n\ttype\t{self.type} \n\tn\t{self.n}"
+        msg = f"Quad object \n\ttype\t{self.type} \n\tn\t{self.n}"
         return msg
 
     def trap(self) -> None:
@@ -75,9 +75,9 @@ class quad:
 
     def kress(self, p: int) -> None:
         """
-        Kress quadrature
+        Kress Quadrature
 
-        Used to parameterize an edge that terminates at corners.
+        Used to parameterize an Edge that terminates at corners.
 
         For a complete description, see:
 
@@ -103,7 +103,7 @@ class quad:
 
     def martensen(self) -> None:
         """
-        Martensen quadrature
+        Martensen Quadrature
 
         E. Martensen, Über eine Methode zum räumlichen Neumannschen Problem
         mit einer An-wendung für torusartige Berandungen, Acta Math., 109

@@ -2,24 +2,24 @@
 integrate_poly.py
 =================
 
-Module containing functions for integrating polynomials.
+Module containing functions for integrating Polynomials.
 
 Routines in this module
 -----------------------
-integrate_poly_over_cell(p, K)
+integrate_poly_over_mesh(p, K)
 
 Notes
 -----
-The integral of a polynomial over a cell is computed by reducing this
+The integral of a Polynomial over a MeshCell is computed by reducing this
 volumetric integral to one on the boundary via the Divergence Theorem:
     int_K (x^alpha) dx = (1/|alpha|+2) int_{dK} (x^alpha)(x*n) dx
 """
 
-from ...mesh.cell import cell
-from .poly import polynomial
+from ...mesh.cell import MeshCell
+from .poly import Polynomial
 
 
-def integrate_poly_over_cell(p: polynomial, K: cell) -> float:
+def integrate_poly_over_mesh(p: Polynomial, K: MeshCell) -> float:
     """ "
     Returns the value of int_K (self) dx by reducing this volumetric integral
     to one on the boundary via the Divergence Theorem
