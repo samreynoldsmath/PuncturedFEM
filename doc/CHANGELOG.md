@@ -32,26 +32,18 @@
 ### Maintenance
 - [ ] add logging with `logging` module
 - [x] use enumerate to replace `range(len(...))` loops
-- [ ] use `functools.partial` to handle logarithmic functions
 - [x] rectify nested min/max statements
-- [ ] move interior value calculation in `locfun` to separate module
-- [ ] initialize solver in `locfunspace` and pass it to `antilap`
-- [ ] `locfun.d2n` and `locfun.antilap`:
-  - [ ] logarithmic functions moved to own module
-  - [ ] rational functions moved to own module
-- [ ] `locfun.poly.poly`:
-  - [ ] use enum for `x` and `y` variable references (gradient etc.)
-- [ ] `locfun.poly.piecewise_poly`
-  - [ ] determine `num_polys` automatically in `piecewise_poly` constructor
-- [ ] `mesh.cell`:
-  - [ ] clean up integration methods
-- [ ] `mesh.edge`:
-  - [ ] safety checks for `set_cells` method
+- [ ] `locfun.locfun`: move interior value calculation to separate module
+- [ ] `locfun.d2n`: logarithmic functions moved to own module
+- [ ] `locfun.antilap`: rational functions moved to own module
+- [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
+- [ ] `locfun.poly.piecewise_poly`: determine `num_polys` automatically in `piecewise_poly` constructor
+- [ ] `mesh.cell`: clean up integration methods
+- [ ] `mesh.edge`: safety checks for `set_cells` method
 - [ ] `mesh.PlanarMesh`:
   - [ ] replace lists with sets where appropriate
   - [ ] set vert idxs in constructor
-- [x] `mesh.edgelib.teardrop`:
-  - [x] pass `alpha` as keyword argument
+- [x] `mesh.edgelib.teardrop`: pass `alpha` as keyword argument
 - [ ] `plots`:
   - [ ] move quadrature dictionary to `mesh.quad` module
   - [ ] add plot maker class, each type of plot inherits from it
@@ -62,13 +54,15 @@
   - [x] move plotting functions to separate module
 - [x] add init file for `util` subpackage
 - [x] rename classes to use CapWords convention
+- [x] fix invalid names introduced by class renaming
 ### Bug fixes
 - [x] fix colorbar position in contour plots
 - [ ] revert single/double layer operators to loop over edges rather than cell boundary components
 ### Tests
 - [ ] deprecate `unittest` in favor of `pytest`
-- [ ] enforce conformity to `ex1a`/`ex1b`/`ex1c` examples
-- [ ] write solver tests
+- [ ] `test_locfun`: enforce conformity to `ex1a`/`ex1b`/`ex1c` examples
+- [ ] add `test_edge_space`
+- [ ] add `test_solver`
 
 
 ## [2023 Oct 02] v0.3.7-alpha

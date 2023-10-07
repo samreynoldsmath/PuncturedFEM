@@ -23,8 +23,8 @@ class EdgeSpace:
     deg: int
     vert_fun_traces: list[Polynomial]
     edge_fun_traces: list[Polynomial]
-    vert_fun_GlobalKeys: list[GlobalKey]
-    edge_fun_GlobalKeys: list[GlobalKey]
+    vert_fun_global_keys: list[GlobalKey]
+    edge_fun_global_keys: list[GlobalKey]
     num_vert_funs: int
     num_edge_funs: int
     num_funs: int
@@ -48,8 +48,8 @@ class EdgeSpace:
         self.reduce_to_basis()
         self.compute_num_vert_funs()
         self.compute_num_edge_funs()
-        self.generate_vert_fun_GlobalKeys()
-        self.generate_edge_fun_GlobalKeys()
+        self.generate_vert_fun_global_keys()
+        self.generate_edge_fun_global_keys()
         self.find_num_funs()
 
     def set_edge(self, e: Edge) -> None:
@@ -88,20 +88,20 @@ class EdgeSpace:
         """
         self.num_edge_funs = len(self.edge_fun_traces)
 
-    def generate_vert_fun_GlobalKeys(self) -> None:
+    def generate_vert_fun_global_keys(self) -> None:
         """Generate global keys for Edge and vertex functions"""
-        self.vert_fun_GlobalKeys = []
+        self.vert_fun_global_keys = []
         if self.e.is_loop:
             return
         for k in [self.e.anchor.idx, self.e.endpnt.idx]:
-            self.vert_fun_GlobalKeys.append(GlobalKey("Vert", vert_idx=k))
+            self.vert_fun_global_keys.append(GlobalKey("Vert", vert_idx=k))
 
-    def generate_edge_fun_GlobalKeys(self) -> None:
+    def generate_edge_fun_global_keys(self) -> None:
         """Generate global keys for Edge and vertex functions"""
-        self.edge_fun_GlobalKeys = []
+        self.edge_fun_global_keys = []
         for k in range(self.num_edge_funs):
-            self.edge_fun_GlobalKeys.append(
-                GlobalKey("Edge", edge_idx=self.e.idx, EdgeSpace_idx=k)
+            self.edge_fun_global_keys.append(
+                GlobalKey("Edge", edge_idx=self.e.idx, edge_space_idx=k)
             )
 
     def build_spanning_set(self) -> None:

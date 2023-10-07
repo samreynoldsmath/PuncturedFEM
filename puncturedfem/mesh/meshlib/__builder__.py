@@ -41,14 +41,14 @@ def mesh_builder(
     """
 
     # define Vertices
-    Verts = get_verts(**kwargs)
+    verts = get_verts(**kwargs)
 
     # TODO: set vertex ids here or in PlanarMesh constructor?
-    for k, v in enumerate(Verts):
+    for k, v in enumerate(verts):
         v.set_idx(k)
 
     # define edges
-    edges = get_edges(Verts, **kwargs)
+    edges = get_edges(verts, **kwargs)
 
     # return planar mesh
     return PlanarMesh(edges, verbose=verbose)

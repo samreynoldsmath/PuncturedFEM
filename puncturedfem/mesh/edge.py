@@ -465,32 +465,37 @@ class Edge:
         return vals * self.dx_norm
 
     def dot_with_tangent(
-        self, v1: np.ndarray, v2: np.ndarray, ignore_endpoint: bool = True
+        self, comp1: np.ndarray, comp2: np.ndarray, ignore_endpoint: bool = True
     ) -> np.ndarray:
-        """Returns the dot product (v1, v2) * unit_tangent"""
+        """Returns the dot product (comp1, comp2) * unit_tangent"""
         if not self.is_parameterized:
             raise NotParameterizedError("dotting with tangent")
         if ignore_endpoint:
             k = 1
         else:
             k = 0
-        if len(v1) != self.num_pts - k or len(v2) != self.num_pts - k:
+        if len(comp1) != self.num_pts - k or len(comp2) != self.num_pts - k:
             raise SizeMismatchError("vals must be same length as boundary")
-        return v1 * self.unit_tangent[0, :-k] + v2 * self.unit_tangent[1, :-k]
+        return (
+            comp1 * self.unit_tangent[0, :-k]
+            + comp2 * self.unit_tangent[1, :-k]
+        )
 
     def dot_with_normal(
-        self, v1: np.ndarray, v2: np.ndarray, ignore_endpoint: bool = True
+        self, comp1: np.ndarray, comp2: np.ndarray, ignore_endpoint: bool = True
     ) -> np.ndarray:
-        """Returns the dot product (v1, v2) * unit_normal"""
+        """Returns the dot product (comp1, comp2) * unit_normal"""
         if not self.is_parameterized:
             raise NotParameterizedError("dotting with normal")
         if ignore_endpoint:
             k = 1
         else:
             k = 0
-        if len(v1) != self.num_pts - k or len(v2) != self.num_pts - k:
+        if len(comp1) != self.num_pts - k or len(comp2) != self.num_pts - k:
             raise SizeMismatchError("vals must be same length as boundary")
-        return v1 * self.unit_normal[0, :-k] + v2 * self.unit_normal[1, :-k]
+        return (
+            comp1 * self.unit_normal[0, :-k] + comp2 * self.unit_normal[1, :-k]
+        )
 
     # INTEGRATION ############################################################
 

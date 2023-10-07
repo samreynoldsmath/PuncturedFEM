@@ -98,8 +98,8 @@ def _antilap_multiply_connected(
         kp1 = K.component_start_idx[j + 2]
         F_hat_t_j = F_hat_t[k:kp1]
         F_t_j = F_t[k:kp1]
-        b[j] = K.components[j + 1].integrate_over_ClosedContour(F_hat_t_j)
-        c[j] = K.components[j + 1].integrate_over_ClosedContour(F_t_j)
+        b[j] = K.components[j + 1].integrate_over_closed_contour(F_hat_t_j)
+        c[j] = K.components[j + 1].integrate_over_closed_contour(F_t_j)
     b /= -2 * np.pi
     c /= 2 * np.pi
 

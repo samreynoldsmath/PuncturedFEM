@@ -72,8 +72,8 @@ class Solver:
         a : BilinearForm
             Bilinear form
         """
-        self.set_GlobalFunctionSpace(V)
-        self.set_BilinearForm(a)
+        self.set_global_function_space(V)
+        self.set_bilinear_form(a)
 
     def __str__(self) -> str:
         """
@@ -87,7 +87,7 @@ class Solver:
 
     # SETTERS ################################################################
 
-    def set_GlobalFunctionSpace(self, V: GlobalFunctionSpace) -> None:
+    def set_global_function_space(self, V: GlobalFunctionSpace) -> None:
         """
         Set the global function space.
         """
@@ -95,7 +95,7 @@ class Solver:
             raise TypeError("V must be a GlobalFunctionSpace")
         self.V = V
 
-    def set_BilinearForm(self, a: BilinearForm) -> None:
+    def set_bilinear_form(self, a: BilinearForm) -> None:
         """
         Set the bilinear form.
         """

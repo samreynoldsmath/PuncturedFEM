@@ -395,33 +395,41 @@ class MeshCell:
             x1[j:jp1], x2[j:jp1] = self.components[i].get_sampled_points()
         return x1, x2
 
-    def dot_with_tangent(self, v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
-        """Returns the dot product (v1, v2) * unit_tangent"""
+    def dot_with_tangent(
+        self, comp1: np.ndarray, comp2: np.ndarray
+    ) -> np.ndarray:
+        """Returns the dot product (comp1, comp2) * unit_tangent"""
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with tangent")
-        if len(v1) != self.num_pts or len(v2) != self.num_pts:
-            raise SizeMismatchError("v1 and v2 must be same length as boundary")
+        if len(comp1) != self.num_pts or len(comp2) != self.num_pts:
+            raise SizeMismatchError(
+                "comp1 and comp2 must be same length as boundary"
+            )
         res = np.zeros((self.num_pts,))
         for i in range(self.num_holes + 1):
             j = self.component_start_idx[i]
             jp1 = self.component_start_idx[i + 1]
             res[j:jp1] = self.components[i].dot_with_tangent(
-                v1[j:jp1], v2[j:jp1]
+                comp1[j:jp1], comp2[j:jp1]
             )
         return res
 
-    def dot_with_normal(self, v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
-        """Returns the dot product (v1, v2) * unit_normal"""
+    def dot_with_normal(
+        self, comp1: np.ndarray, comp2: np.ndarray
+    ) -> np.ndarray:
+        """Returns the dot product (comp1, comp2) * unit_normal"""
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with normal")
-        if len(v1) != self.num_pts or len(v2) != self.num_pts:
-            raise SizeMismatchError("v1 and v2 must be same length as boundary")
+        if len(comp1) != self.num_pts or len(comp2) != self.num_pts:
+            raise SizeMismatchError(
+                "comp1 and comp2 must be same length as boundary"
+            )
         res = np.zeros((self.num_pts,))
         for i in range(self.num_holes + 1):
             j = self.component_start_idx[i]
             jp1 = self.component_start_idx[i + 1]
             res[j:jp1] = self.components[i].dot_with_normal(
-                v1[j:jp1], v2[j:jp1]
+                comp1[j:jp1], comp2[j:jp1]
             )
         return res
 
@@ -465,7 +473,7 @@ class MeshCell:
         # for c, i in zip(self.components, range(self.num_holes + 1)):
         #     j = self.component_start_idx[i]
         #     jp1 = self.component_start_idx[i + 1]
-        #     res += c.integrate_over_ClosedContour_preweighted(
+        #     res += c.integrate_over_closed_contour_preweighted(
         #         vals_dx_norm[j:jp1])
         # return res
 

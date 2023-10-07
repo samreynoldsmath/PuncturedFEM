@@ -274,26 +274,34 @@ class ClosedContour:
         x2 = self.evaluate_function_on_contour(lambda x: x[1])
         return x1, x2
 
-    def dot_with_tangent(self, v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
-        """Returns the dot product (v1, v2) * unit_tangent"""
+    def dot_with_tangent(
+        self, comp1: np.ndarray, comp2: np.ndarray
+    ) -> np.ndarray:
+        """Returns the dot product (comp1, comp2) * unit_tangent"""
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with tangent")
         res = np.zeros((self.num_pts,))
         for i in range(self.num_edges):
             j = self.vert_idx[i]
             jp1 = self.vert_idx[i + 1]
-            res[j:jp1] = self.edges[i].dot_with_tangent(v1[j:jp1], v2[j:jp1])
+            res[j:jp1] = self.edges[i].dot_with_tangent(
+                comp1[j:jp1], comp2[j:jp1]
+            )
         return res
 
-    def dot_with_normal(self, v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
-        """Returns the dot product (v1, v2) * unit_normal"""
+    def dot_with_normal(
+        self, comp1: np.ndarray, comp2: np.ndarray
+    ) -> np.ndarray:
+        """Returns the dot product (comp1, comp2) * unit_normal"""
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with normal")
         res = np.zeros((self.num_pts,))
         for i in range(self.num_edges):
             j = self.vert_idx[i]
             jp1 = self.vert_idx[i + 1]
-            res[j:jp1] = self.edges[i].dot_with_normal(v1[j:jp1], v2[j:jp1])
+            res[j:jp1] = self.edges[i].dot_with_normal(
+                comp1[j:jp1], comp2[j:jp1]
+            )
         return res
 
     def multiply_by_dx_norm(self, vals: np.ndarray) -> np.ndarray:
@@ -313,14 +321,14 @@ class ClosedContour:
         return vals_dx_norm
 
     # INTEGRATION ############################################################
-    def integrate_over_ClosedContour(self, vals: np.ndarray) -> float:
+    def integrate_over_closed_contour(self, vals: np.ndarray) -> float:
         """Contour integral of vals"""
         if not self.is_parameterized():
             raise NotParameterizedError("integrating over boundary")
         vals_dx_norm = self.multiply_by_dx_norm(vals)
-        return self.integrate_over_ClosedContour_preweighted(vals_dx_norm)
+        return self.integrate_over_closed_contour_preweighted(vals_dx_norm)
 
-    def integrate_over_ClosedContour_preweighted(
+    def integrate_over_closed_contour_preweighted(
         self, vals_dx_norm: np.ndarray
     ) -> float:
         """Contour integral of vals_dx_norm"""

@@ -193,7 +193,7 @@ class LocalFunctionSpace:
             v = LocalFunction(nyst=self.solver, key=vert_key)
             for j, b in enumerate(edge_spaces):
                 for k in range(b.num_vert_funs):
-                    if b.vert_fun_GlobalKeys[k].vert_idx == vert_key.vert_idx:
+                    if b.vert_fun_global_keys[k].vert_idx == vert_key.vert_idx:
                         v.poly_trace.polys[j] = b.vert_fun_traces[k]
             self.vert_funs.append(v)
 
@@ -216,7 +216,7 @@ class LocalFunctionSpace:
 
                 # create harmonicLocalFunction
                 v = LocalFunction(
-                    nyst=self.solver, key=b.edge_fun_GlobalKeys[k]
+                    nyst=self.solver, key=b.edge_fun_global_keys[k]
                 )
 
                 # set Dirichlet data

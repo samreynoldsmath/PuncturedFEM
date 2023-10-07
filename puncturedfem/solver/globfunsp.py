@@ -207,7 +207,7 @@ class GlobalFunctionSpace:
         if key.fun_type == "Edge":
             idx = self.num_bubb_funs + self.num_vert_funs
             idx += self.edge_fun_cumsum[key.edge_idx]
-            idx += key.edgeSpace_idx
+            idx += key.edge_space_idx
             if not self.is_in_range(idx, EDGE_START_IDX, self.num_funs):
                 raise IndexError("Edge function index out of range")
         return idx
