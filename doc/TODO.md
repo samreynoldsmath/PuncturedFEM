@@ -1,8 +1,51 @@
 # Punctured FEM: To-do List
 
-## [yyyy mm dd] v0.5
+
+## [yyyy mm dd] v0.x
 ### Features
-- [ ] Advection terms
-- [ ] Diffusion terms
-- [ ] Different material properties across regions
-- [ ] Different polynomial degree on different cells/edges
+- [ ] add trigonometric interpolation for cell boundary traces
+- [ ] add multiprocessing for batch computation of `LocalFunction` metadata
+
+
+## [yyyy mm dd] v0.x
+### Documentation
+- [ ] `README`: extend description, add references
+- [ ] add installation guide
+- [ ] add contributing guide
+
+
+## [yyyy mm dd] v0.x
+### Features
+- [ ] add mixed zero Dirichlet/Neumann boundary conditions
+- [ ] add saving and loading local stiffness/mass matrices to/from file
+
+
+## [yyyy mm dd] v0.x
+### Features
+- [ ] edge space interpolation
+- [ ] nonhomogeneous boundary conditions
+
+
+## [yyyy mm dd] v0.x
+### Features
+- [ ] different material properties across regions
+- [ ] add saving and loading of `PlanarMesh` objects to/from file
+### Optimizations
+- [ ] automatically identify repeated cells in a mesh (up to scaling and rigid motion)
+
+
+## [yyyy mm dd] v0.x
+### Features
+- [ ] p-refinement: different polynomial degree on different cells/edges
+
+
+## [yyyy mm dd] v0.x
+### Features
+- [ ] advection terms
+- [ ] diffusion terms
+
+
+## [yyyy mm dd] v0.x
+### PyPI Release
+- [ ] add `setup.py` file
+- [ ] upload to PyPI

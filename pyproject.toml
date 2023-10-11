@@ -7,16 +7,8 @@ filterwarnings = ["error"]
 [tool.pylint."messages control"]
 max-line-length = 80
 disable = [
-
-    # keep these disabled
-    "wrong-import-order",               # isort and black handles this
-    "wrong-import-position",            # isort and black handles this
-    "duplicate-code",                   # mesh/edge libraries have similar code
-
-    # reenable to find TODO comments
-    "fixme",
-
-    # TODO: reenable these warnings
+    "fixme", # reenable to find TODO comments
+    "duplicate-code", # mesh/edge libraries have similar code
     "invalid-name", # use good-names
     "too-many-branches", # split up functions
     "too-many-nested-blocks", # split up functions
@@ -25,13 +17,12 @@ disable = [
     "too-many-instance-attributes", # use dataclasses?
     "too-many-public-methods", # make more private?
     "cell-var-from-loop", # use functools.partial instead
-
     ]
 good-names = [
-    "a","b","c","d","e","f","g","h","i","j","k","m",
-    "n","p","q","r","s","t","u","v","w","x","y","z",
+    "a","b","c","d","e","f","g","h","i","j","k","l","m",
+    "n","o","p","q","r","s","t","u","v","w","x","y","z",
     "A","B","C","D","E","F","G","H","I","J","K","L","M",
-    "N","P","Q","R","S","T","U","V","W","X","Y","Z",
+    "N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
     "xi",
     "x0", "x1", "x2",
     "y0", "y1", "y2",
@@ -39,5 +30,8 @@ good-names = [
     "Px", "Py", "Qx", "Qy",
     "TOL",
     "PHI", "PHI_nd", "PHI_wnd",
+    "ii", "jj", "ij",
+    "dx", "dy", "dz", "xy",
+    "pt",
     "_"
-]
+    ]

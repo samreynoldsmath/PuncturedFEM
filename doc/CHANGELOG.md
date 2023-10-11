@@ -1,34 +1,15 @@
 # Punctured FEM: Change Log
 
 
-## [yyyy mm dd] v0.4
-### Features
-- [ ] global boundary conditions
-  - [ ] zero Dirichlet
-  - [ ] zero Neumann
-  - [ ] mixed Dirichlet/Neumann
-- [ ] file management
-  - [ ] add saving and loading of `mesh` objects
-  - [ ] add saving and loading local stiffness/mass matrices
-### Optimizations
-- [ ] D2N improvements
-  - [ ] trigonometric interpolation
-  - [ ] multiprocessing for batch computation
-- [ ] `locfun.poly.poly`:
-  - [ ] use binary exponentiation in `poly.pow()` method
-- [ ] Mesh improvements
-  - [ ] identify repeat edges
-  - [ ] identify repeat cells
-### Documentation
-- [ ] README improvements
-  - [ ] extend description
-  - [ ] include references
-- [ ] add installation guide
-- [ ] replace `WISHLIST.md` with more comprehensive roadmap
-- [ ] add contributing guide
-### PyPI
-- [ ] add `setup.py` file
-- [ ] upload to PyPI
+## [yyyy mm dd] v0.3.8
+### Examples
+- [ ] `examples/ex1d-hat-tile.ipynb`: add example of a hat tile local basis functions
+- [ ] update examples to reflect changes
+### Tests
+- [ ] deprecate `unittest` in favor of `pytest`
+- [ ] `test_locfun`: enforce conformity to `ex1a`/`ex1b`/`ex1c` examples
+- [ ] add `test_edge_space`
+- [ ] add `test_solver`
 ### Maintenance
 - [ ] add logging with `logging` module
 - [x] use enumerate to replace `range(len(...))` loops
@@ -37,18 +18,16 @@
 - [ ] `locfun.d2n`: logarithmic functions moved to own module
 - [ ] `locfun.antilap`: rational functions moved to own module
 - [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
-- [ ] `locfun.poly.piecewise_poly`: determine `num_polys` automatically in `piecewise_poly` constructor
+- [ ] `locfun.poly.piecewise_poly`: determine `num_polys` automatically in `PiecewisePolynomial` constructor
 - [ ] `mesh.cell`: clean up integration methods
 - [ ] `mesh.edge`: safety checks for `set_cells` method
-- [ ] `mesh.PlanarMesh`:
+- [ ] `mesh.planar_mesh`:
   - [ ] replace lists with sets where appropriate
   - [ ] set vert idxs in constructor
+- [ ] `mesh.quad`: move quadrature dictionary to `mesh.quad` module
 - [x] `mesh.edgelib.teardrop`: pass `alpha` as keyword argument
-- [ ] `plots`:
-  - [ ] move quadrature dictionary to `mesh.quad` module
-  - [ ] add plot maker class, each type of plot inherits from it
-  - [ ] contour plots over single cell
-  - [ ] update examples to reflect change in `plot` API
+- [ ] add `PlotManager` class
+- [ ] add contour plots over single cell
 - [x] `solver.solver`:
   - [x] move color printing to separate module
   - [x] move plotting functions to separate module
@@ -58,11 +37,6 @@
 ### Bug fixes
 - [x] fix colorbar position in contour plots
 - [ ] revert single/double layer operators to loop over edges rather than cell boundary components
-### Tests
-- [ ] deprecate `unittest` in favor of `pytest`
-- [ ] `test_locfun`: enforce conformity to `ex1a`/`ex1b`/`ex1c` examples
-- [ ] add `test_edge_space`
-- [ ] add `test_solver`
 
 
 ## [2023 Oct 02] v0.3.7-alpha
