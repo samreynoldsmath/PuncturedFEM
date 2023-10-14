@@ -3,21 +3,23 @@
 
 ## [yyyy mm dd] v0.3.8
 ### Examples
-- [ ] `examples/ex1d-hat-tile.ipynb`: add example of a hat tile local basis functions
+- [ ] `examples/ex1d-hat-tile.ipynb`: add example of hat tile local basis functions
 - [ ] update examples to reflect changes
 ### Tests
-- [ ] deprecate `unittest` in favor of `pytest`
-- [ ] `test_locfun`: enforce conformity to `ex1a`/`ex1b`/`ex1c` examples
+- [x] deprecate `unittest` in favor of `pytest`
 - [ ] add `test_edge_space`
-- [ ] add `test_solver`
+- [ ] add `test_mesh`
+- [x] add `test_solver`
 ### Maintenance
 - [ ] add logging with `logging` module
 - [x] use enumerate to replace `range(len(...))` loops
 - [x] rectify nested min/max statements
 - [ ] `locfun.locfun`: move interior value calculation to separate module
+- [ ] `locfun.locfun`: make interior value calculation optional
 - [ ] `locfun.d2n`: logarithmic functions moved to own module
 - [ ] `locfun.antilap`: rational functions moved to own module
 - [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
+- [ ] `locfun.poly.poly`: use list of tuples for polynomial initialization
 - [ ] `locfun.poly.piecewise_poly`: determine `num_polys` automatically in `PiecewisePolynomial` constructor
 - [ ] `mesh.cell`: clean up integration methods
 - [ ] `mesh.edge`: safety checks for `set_cells` method

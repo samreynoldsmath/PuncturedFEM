@@ -80,6 +80,7 @@ class PolynomialCollection:
             ]
         )
 
+
 def test_equality():
     """
     Test the == operator.
@@ -90,6 +91,7 @@ def test_equality():
     assert pc.q == pc.q
     assert not pc.p == pc.z
     assert not pc.p == pc.q
+
 
 def test_inequality():
     """
@@ -102,6 +104,7 @@ def test_inequality():
     assert pc.p != pc.z
     assert pc.p != pc.q
 
+
 def test_addition_with_zero():
     """
     Test addition with the zero polynomial.
@@ -111,12 +114,14 @@ def test_addition_with_zero():
     assert pc.p + pc.z == pc.p
     assert pc.z + pc.p == pc.p
 
+
 def test_addition_commutativity():
     """
     Test addition commutativity.
     """
     pc = PolynomialCollection()
     assert pc.p + pc.q == pc.q + pc.p
+
 
 def test_addition_with_scalar():
     """
@@ -127,6 +132,7 @@ def test_addition_with_scalar():
     assert pc.p + pc.scalar == pc.p_plus_scalar
     assert pc.scalar + pc.p == pc.p_plus_scalar
 
+
 def test_addition_increment():
     """
     Test addition increment operator +=
@@ -135,6 +141,7 @@ def test_addition_increment():
     r = Polynomial()
     r += pc.p
     assert r == pc.p
+
 
 def test_addition_increment_with_scalar():
     """
@@ -149,6 +156,7 @@ def test_addition_increment_with_scalar():
     r += pc.q
     assert r == pc.q
 
+
 def test_multiplication():
     """
     Test multiplication of polynomials.
@@ -156,6 +164,7 @@ def test_multiplication():
     pc = PolynomialCollection()
     assert pc.z * pc.p == pc.z
     assert pc.p * pc.q == pc.pq
+
 
 def test_multiplication_with_scalar():
     """
@@ -166,6 +175,7 @@ def test_multiplication_with_scalar():
     assert pc.p * 0 == pc.z
     assert pc.scalar * pc.p == pc.p_times_scalar
     assert pc.p * pc.scalar == pc.p_times_scalar
+
 
 def test_multiplication_increment():
     """
@@ -178,6 +188,7 @@ def test_multiplication_increment():
     r *= pc.z
     assert r == pc.z
 
+
 def test_multiplication_increment_scalar():
     """
     Test multiplication increment operator *= with scalar
@@ -189,6 +200,7 @@ def test_multiplication_increment_scalar():
 
     r *= 0
     assert r == pc.z
+
 
 def test_gradient():
     """
@@ -214,6 +226,7 @@ def test_gradient():
     assert PY == py
     assert QX == qx
     assert QY == qy
+
 
 def test_laplacian():
     """
@@ -256,6 +269,7 @@ def test_laplacian():
     assert pc.q.laplacian() == dq
     assert pc.pq.laplacian() == dpq
 
+
 def test_anti_laplacian():
     """
     Test anti-Laplacian of polynomials.
@@ -283,6 +297,7 @@ def test_anti_laplacian():
 
     assert pc.p.anti_laplacian() == P
     assert P.laplacian() == pc.p
+
 
 def test_evaluation():
     """

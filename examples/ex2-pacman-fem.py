@@ -68,7 +68,7 @@ from tqdm import tqdm
 
 
 deg = 1
-n = 4
+n = 64
 verbose = True
 
 
@@ -82,7 +82,6 @@ verbose = True
 
 
 # define mesh
-# T = pf.meshlib.pacman(verbose=verbose)
 T = pf.meshlib.pacman_subdiv(verbose=verbose)
 
 
