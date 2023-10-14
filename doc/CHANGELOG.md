@@ -15,7 +15,7 @@
 - [x] use enumerate to replace `range(len(...))` loops
 - [x] rectify nested min/max statements
 - [ ] `locfun.locfun`: move interior value calculation to separate module
-- [ ] `locfun.locfun`: make interior value calculation optional
+- [x] `locfun.locfunsp`: make interior value calculation optional
 - [ ] `locfun.d2n`: logarithmic functions moved to own module
 - [ ] `locfun.antilap`: rational functions moved to own module
 - [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references

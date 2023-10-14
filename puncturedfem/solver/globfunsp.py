@@ -120,6 +120,7 @@ class GlobalFunctionSpace:
         self,
         cell_idx: int,
         verbose: bool = True,
+        compute_interior_values: bool = True,
     ) -> LocalFunctionSpace:
         """
         Builds the local function space V_p(K) for a MeshCell K.
@@ -131,7 +132,13 @@ class GlobalFunctionSpace:
         for e in K.get_edges():
             b = self.edge_spaces[e.idx]
             edge_spaces.append(b)
-        V_K = LocalFunctionSpace(K, edge_spaces, self.deg, verbose=verbose)
+        V_K = LocalFunctionSpace(
+            K,
+            edge_spaces,
+            self.deg,
+            verbose=verbose,
+            compute_interior_values=compute_interior_values,
+        )
         for v in V_K.get_basis():
             glob_idx = self.get_global_idx(v.key, abs_cell_idx)
             v.key.set_glob_idx(glob_idx)

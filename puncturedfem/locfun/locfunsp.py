@@ -43,6 +43,7 @@ class LocalFunctionSpace:
         K: MeshCell,
         edge_spaces: list[EdgeSpace],
         deg: int = 1,
+        compute_interior_values: bool = True,
         verbose: bool = True,
         processes: int = 1,
     ) -> None:
@@ -90,7 +91,8 @@ class LocalFunctionSpace:
         self.compute_all(verbose=verbose, processes=processes)
 
         # find interior values
-        self.find_interior_values(verbose=verbose)
+        if compute_interior_values:
+            self.find_interior_values(verbose=verbose)
 
     def set_deg(self, deg: int) -> None:
         """

@@ -47,7 +47,7 @@ def test_solver_deg1():
     # TODO: test assemble and solve methods separately
 
     S = build_solver()
-    S.assemble(verbose=False)
+    S.assemble(verbose=False, compute_interior_values=False)
     S.solve()
 
     x = np.loadtxt("tests/data/glob_soln_n16.txt")

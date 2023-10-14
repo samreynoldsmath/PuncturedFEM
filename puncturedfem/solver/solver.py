@@ -117,34 +117,55 @@ class Solver:
 
     # ASSEMBLE GLOBAL SYSTEM #################################################
 
-    def assemble(self, verbose: bool = True, processes: int = 1) -> None:
+    def assemble(
+        self,
+        verbose: bool = True,
+        processes: int = 1,
+        compute_interior_values: bool = True,
+    ) -> None:
         """Assemble global system matrix"""
-        self.build_values_and_indexes(verbose=verbose, processes=processes)
+        self.build_values_and_indexes(
+            verbose=verbose,
+            processes=processes,
+            compute_interior_values=compute_interior_values,
+        )
         self.find_num_funs()
         self.build_matrix_and_rhs()
 
     def build_values_and_indexes(
-        self, verbose: bool = True, processes: int = 1
+        self,
+        verbose: bool = True,
+        processes: int = 1,
+        compute_interior_values: bool = True,
     ) -> None:
         """Build values and indexes"""
         if processes == 1:
-            self.build_values_and_indexes_sequential(verbose=verbose)
+            self.build_values_and_indexes_sequential(
+                verbose=verbose, compute_interior_values=compute_interior_values
+            )
         elif processes > 1:
             self.build_values_and_indexes_parallel(
-                verbose=verbose, processes=processes
+                verbose=verbose,
+                processes=processes,
+                compute_interior_values=compute_interior_values,
             )
         else:
             raise ValueError("processes must be a positive integer")
 
     def build_values_and_indexes_parallel(
-        self, verbose: bool = True, processes: int = 1
+        self,
+        verbose: bool = True,
+        processes: int = 1,
+        compute_interior_values: bool = True,
     ) -> None:
         """
         Build values and indexes in parallel.
         """
         raise NotImplementedError("Parallel assembly not yet implemented")
 
-    def build_values_and_indexes_sequential(self, verbose: bool = True) -> None:
+    def build_values_and_indexes_sequential(
+        self, verbose: bool = True, compute_interior_values: bool = True
+    ) -> None:
         """
         Build values and indexes sequentially.
         """
@@ -168,12 +189,17 @@ class Solver:
                 )
 
             # build local function space
-            V_K = self.V.build_local_function_space(cell_idx, verbose=verbose)
+            V_K = self.V.build_local_function_space(
+                cell_idx,
+                verbose=verbose,
+                compute_interior_values=compute_interior_values,
+            )
 
             # initialize interior values
-            self.interior_values[abs_cell_idx] = [
-                zeros((0,)) for _ in range(V_K.num_funs)
-            ]
+            if compute_interior_values:
+                self.interior_values[abs_cell_idx] = [
+                    zeros((0,)) for _ in range(V_K.num_funs)
+                ]
 
             if verbose:
                 print("Evaluating bilinear form and right-hand side...")
@@ -191,7 +217,8 @@ class Solver:
                 v = loc_basis[i]
 
                 # store interior values
-                self.interior_values[abs_cell_idx][i] = v.int_vals
+                if compute_interior_values:
+                    self.interior_values[abs_cell_idx][i] = v.int_vals
 
                 # evaluate local right-hand side
                 f_i = self.a.eval_rhs(v)
