@@ -51,10 +51,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # define quadrature schemes
-n = 64
-q_trap = pf.Quad(qtype="trap", n=n)
-q_kress = pf.Quad(qtype="kress", n=n)
-quad_dict = {"kress": q_kress, "trap": q_trap}
+quad_dict = pf.get_quad_dict(n=64)
 
 # define vertices
 verts: list[pf.Vert] = []
@@ -281,8 +278,8 @@ psi_hat_exact = np.exp(x1) * np.sin(x2)
 
 # plot harmonic conjugate
 quad_list = [
-    q_trap,
-    q_kress,
+    quad_dict["trap"],
+    quad_dict["kress"],
 ]
 f_trace_list = [
     psi_hat_exact,
@@ -316,10 +313,6 @@ integrated_difference = K.integrate_over_boundary(
 c = -integrated_difference / boundary_length
 
 # plot harmonic conjugate
-quad_list = [
-    q_trap,
-    q_kress,
-]
 f_trace_list = [
     psi_hat_exact,
     psi_hat_computed - c,
@@ -449,10 +442,6 @@ phi_wnd_computed = v.get_harmonic_weighted_normal_derivative()
 wnd_error = np.abs(phi_wnd_computed - phi_wnd_exact)
 
 # plot exact and computed weighted normal derivatives
-quad_list = [
-    q_trap,
-    q_kress,
-]
 f_trace_list = [
     phi_wnd_exact,
     phi_wnd_computed,
@@ -533,10 +522,6 @@ PHI_exact = 0.25 * np.exp(x1) * (
 # computed anti-Laplacian
 PHI_computed = v.get_anti_laplacian_harmonic_part()
 
-quad_list = [
-    q_trap,
-    q_kress,
-]
 f_trace_list = [PHI_exact, PHI_computed]
 fmt = ("g--", "k.")
 legend = ("exact", "computed")
@@ -575,21 +560,12 @@ aa = np.linalg.solve(XX, Xy)
 PHI_diff_fit = X @ aa
 
 PHI_diff_error = np.abs(PHI_diff_fit - PHI_diff)
-
-quad_list = [
-    q_trap,
-    q_kress,
-]
 f_trace_list = [PHI_diff_fit, PHI_diff]
 fmt = ("b--", "k.")
 legend = ("least squares best linear fit", "exact - computed")
 title = "Anti-Laplacian difference"
 pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 
-quad_list = [
-    q_trap,
-    q_kress,
-]
 f_trace_list = [
     PHI_diff_error,
 ]
@@ -752,7 +728,7 @@ print("L^2 error (wv) = ", abs(l2_wv_computed - l2_vw_exact))
 # In[ ]:
 
 
-print(q_kress.n)
+print(quad_dict["kress"].n)
 
 print("")
 

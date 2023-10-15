@@ -26,7 +26,7 @@
 - [ ] `mesh.planar_mesh`:
   - [ ] replace lists with sets where appropriate
   - [ ] set vert idxs in constructor
-- [ ] `mesh.quad`: move quadrature dictionary to `mesh.quad` module
+- [x] `mesh.quad`: add `get_quad_dict()` function
 - [x] `mesh.edgelib.teardrop`: pass `alpha` as keyword argument
 - [ ] add `PlotManager` class
 - [ ] add contour plots over single cell

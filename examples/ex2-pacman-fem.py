@@ -97,10 +97,7 @@ T = pf.meshlib.pacman_subdiv(verbose=verbose)
 # In[ ]:
 
 
-# TODO: this should really be done automatically
-q_trap = pf.Quad(qtype="trap", n=n)
-q_kress = pf.Quad(qtype="kress", n=n)
-quad_dict = {"kress": q_kress, "trap": q_trap}
+quad_dict = pf.get_quad_dict(n)
 
 
 # The global function space `V` is built from the mesh `T`, along with the `deg`

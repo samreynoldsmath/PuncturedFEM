@@ -58,6 +58,7 @@ from .mesh.edge import Edge
 from .mesh.meshlib.__builder__ import mesh_builder
 from .mesh.planar_mesh import PlanarMesh
 from .mesh.quad import Quad
+from .mesh.quad import get_quad_dict
 from .mesh.vert import Vert
 from .plot.edges import plot_edges
 from .plot.plot_global_solution import plot_linear_combo
@@ -76,6 +77,7 @@ __all__ = [
     "meshlib",
     "PlanarMesh",
     "Quad",
+    "get_quad_dict",
     "Vert",
     "mesh_builder",
     "plot_edges",

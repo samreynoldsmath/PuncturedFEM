@@ -14,28 +14,33 @@ TOL = 1e-12
 
 def build_solver() -> pf.Solver:
     """
-    Build a mesh and bilinear form.
+    Helper function: build a mesh and bilinear form, return a solver object.
     """
 
+    # set test parameters
     n = 16
+    deg = 1
     a = 1.0
     c = 1.0
     f = pf.Polynomial([[1.0, 0, 0]])
 
-    T = pf.meshlib.pacman_subdiv(verbose=False)
-
-    q_trap = pf.Quad(qtype="trap", n=n)
-    q_kress = pf.Quad(qtype="kress", n=n)
-    quad_dict = {"kress": q_kress, "trap": q_trap}
-
-    V = pf.GlobalFunctionSpace(T, deg=1, quad_dict=quad_dict, verbose=False)
-
+    # define bilinear form
     B = pf.BilinearForm(
         diffusion_constant=a,
         reaction_constant=c,
         rhs_poly=f,
     )
 
+    # build mesh
+    T = pf.meshlib.pacman_subdiv(verbose=False)
+
+    # build quadrature dictionary for parameterization
+    quad_dict = pf.get_quad_dict(n)
+
+    # build global function space
+    V = pf.GlobalFunctionSpace(T, deg, quad_dict, verbose=False)
+
+    # return solver object
     return pf.Solver(V, B)
 
 

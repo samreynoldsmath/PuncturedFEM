@@ -13,7 +13,6 @@ import numpy as np
 import puncturedfem as pf
 
 from .build_cell import build_circle, build_square, build_punctured_square
-from .build_quad import get_quad_dict
 
 TOL = 1e-10
 
@@ -42,7 +41,7 @@ def test_integration_circle():
     """
 
     # set up test parameters
-    quad_dict = get_quad_dict()
+    quad_dict = pf.get_quad_dict(n=64)
 
     # build mesh cell
     K, cell_data = build_circle()
@@ -66,7 +65,7 @@ def test_integration_square():
     """
 
     # set up test parameters
-    quad_dict = get_quad_dict()
+    quad_dict = pf.get_quad_dict(n=64)
 
     # build mesh cell
     K, cell_data = build_square()
@@ -90,7 +89,7 @@ def test_integration_punctured_square():
     """
 
     # set up test parameters
-    quad_dict = get_quad_dict()
+    quad_dict = pf.get_quad_dict(n=64)
 
     # build mesh cell
     K, cell_data = build_punctured_square()

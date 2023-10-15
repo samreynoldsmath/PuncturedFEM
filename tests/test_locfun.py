@@ -10,8 +10,6 @@ import numpy as np
 import puncturedfem as pf
 
 from .build_cell import build_punctured_square
-from .build_quad import get_quad_dict
-
 
 TOL = 1e-10
 
@@ -26,7 +24,7 @@ def test_punctured_square():
     K, cell_data = build_punctured_square()
 
     # parameterize edges
-    quad_dict = get_quad_dict()
+    quad_dict = pf.get_quad_dict(n=64)
     K.parameterize(quad_dict)
 
     # set up solver

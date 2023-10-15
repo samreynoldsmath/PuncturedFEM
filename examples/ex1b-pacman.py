@@ -115,8 +115,8 @@ v.compute_all()
 
 
 quad_list = [
-    q_trap,
-    q_kress,
+    quad_dict["trap"],
+    quad_dict["kress"],
 ]
 f_trace_list = [
     v.harm_part_wnd,

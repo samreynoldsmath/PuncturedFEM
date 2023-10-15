@@ -8,6 +8,29 @@ Module for the Quad class, which represents a 1-dimensional Quadrature object.
 import numpy as np
 
 
+def get_quad_dict(n: int = 16, p: int = 7) -> dict:
+    """
+    Return a dictionary of Quad objects.
+
+    Parameters
+    ----------
+    n : int, optional
+        Interval sampled at 2*n points, excluding the last endpoint.
+        Default is 16.
+    p : int, optional
+        Kress parameter. Default is 7.
+
+    Returns
+    -------
+    quad_dict : dict
+        Dictionary of Quad objects.
+    """
+    q_trap = Quad(qtype="trap", n=n)
+    q_kress = Quad(qtype="kress", n=n, p=p)
+    quad_dict = {"kress": q_kress, "trap": q_trap}
+    return quad_dict
+
+
 class Quad:
     """
     Quad: 1-dimensional Quadrature object
