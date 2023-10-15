@@ -1,14 +1,19 @@
 """
-Quad.py
+quad.py
 =======
 
 Module for the Quad class, which represents a 1-dimensional Quadrature object.
+
+Also includes a convenience function for generating a dictionary of Quad
+objects.
 """
+
+from __future__ import annotations
 
 import numpy as np
 
 
-def get_quad_dict(n: int = 16, p: int = 7) -> dict:
+def get_quad_dict(n: int = 16, p: int = 7) -> dict[str, Quad]:
     """
     Return a dictionary of Quad objects.
 
