@@ -277,18 +277,14 @@ psi_hat_computed = v.get_harmonic_conjugate()
 psi_hat_exact = np.exp(x1) * np.sin(x2)
 
 # plot harmonic conjugate
-quad_list = [
-    quad_dict["trap"],
-    quad_dict["kress"],
-]
-f_trace_list = [
-    psi_hat_exact,
-    psi_hat_computed,
-]
-fmt = ("g--", "k.")
-legend = ("exact", "computed")
-title = "Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+pf.TracePlot(
+    traces=[psi_hat_exact, psi_hat_computed],
+    fmt=["g--", "k."],
+    legend=("exact", "computed"),
+    title="Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$",
+    K=K,
+    quad_dict=quad_dict,
+)
 
 
 # **Note**: A harmonic conjugate is unique only up to an additive constant.
@@ -313,14 +309,14 @@ integrated_difference = K.integrate_over_boundary(
 c = -integrated_difference / boundary_length
 
 # plot harmonic conjugate
-f_trace_list = [
-    psi_hat_exact,
-    psi_hat_computed - c,
-]
-fmt = ("g--", "k.")
-legend = ("exact", "computed")
-title = "Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+pf.TracePlot(
+    traces=[psi_hat_exact, psi_hat_computed - c],
+    fmt=["g--", "k."],
+    legend=("exact", "computed"),
+    title="Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$",
+    K=K,
+    quad_dict=quad_dict,
+)
 
 
 # Compute and plot the error in the computed harmonic conjugate.
@@ -332,13 +328,14 @@ pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 psi_hat_error = np.abs(psi_hat_exact - psi_hat_computed + c)
 
 # plot harmonic conjugate error
-f_trace_list = [
-    psi_hat_error,
-]
-fmt = ("k.",)
-legend = ("error",)
-title = "Harmonic conjugate error"
-pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
+pf.TracePlot(
+    traces=psi_hat_error,
+    fmt="k.",
+    title="Harmonic conjugate error",
+    K=K,
+    quad_dict=quad_dict,
+    log_scale=True,
+)
 
 
 # The pointwise errors look alright. 
@@ -442,23 +439,24 @@ phi_wnd_computed = v.get_harmonic_weighted_normal_derivative()
 wnd_error = np.abs(phi_wnd_computed - phi_wnd_exact)
 
 # plot exact and computed weighted normal derivatives
-f_trace_list = [
-    phi_wnd_exact,
-    phi_wnd_computed,
-]
-fmt = ("g--", "k.")
-legend = ("exact", "computed")
-title = "Weighted normal derivative"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+pf.TracePlot(
+    traces=[phi_wnd_exact, phi_wnd_computed],
+    fmt=["g--", "k."],
+    legend=("exact", "computed"),
+    title="Weighted normal derivative",
+    K=K,
+    quad_dict=quad_dict,
+)
 
 # plot errors
-f_trace_list = [
-    wnd_error,
-]
-fmt = ("k.",)
-legend = ("error",)
-title = "Weighted normal derivative error"
-pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
+pf.TracePlot(
+    traces=wnd_error,
+    fmt="k.",
+    title="Weighted normal derivative error",
+    K=K,
+    quad_dict=quad_dict,
+    log_scale=True,
+)
 
 
 # Let's look at the maximum pointwise error as well as the error in the
@@ -522,11 +520,15 @@ PHI_exact = 0.25 * np.exp(x1) * (
 # computed anti-Laplacian
 PHI_computed = v.get_anti_laplacian_harmonic_part()
 
-f_trace_list = [PHI_exact, PHI_computed]
-fmt = ("g--", "k.")
-legend = ("exact", "computed")
-title = "Anti-Laplacian"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+# plot exact and computed anti-Laplacian
+pf.TracePlot(
+    traces=[PHI_exact, PHI_computed],
+    fmt=["g--", "k."],
+    legend=("exact", "computed"),
+    title="Anti-Laplacian",
+    K=K,
+    quad_dict=quad_dict,
+)
 
 
 # In general, $\Phi$ is unique only up to the addition of a harmonic function.
@@ -559,20 +561,28 @@ Xy = np.transpose(X) @ PHI_diff
 aa = np.linalg.solve(XX, Xy)
 PHI_diff_fit = X @ aa
 
+# compute errors
 PHI_diff_error = np.abs(PHI_diff_fit - PHI_diff)
-f_trace_list = [PHI_diff_fit, PHI_diff]
-fmt = ("b--", "k.")
-legend = ("least squares best linear fit", "exact - computed")
-title = "Anti-Laplacian difference"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 
-f_trace_list = [
-    PHI_diff_error,
-]
-fmt = ("k.",)
-legend = ("exact - computed - linear fit",)
-title = "Anti-Laplacian error"
-pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
+# plot exact and computed anti-Laplacian
+pf.TracePlot(
+    traces=[PHI_diff_fit, PHI_diff],
+    fmt=["b--", "k."],
+    legend=("least squares best linear fit", "exact - computed"),
+    title="Anti-Laplacian difference",
+    K=K,
+    quad_dict=quad_dict,
+)
+
+# plot errors
+pf.TracePlot(
+    traces=PHI_diff_error,
+    fmt="k.",
+    title="Anti-Laplacian difference error",
+    K=K,
+    quad_dict=quad_dict,
+    log_scale=True,
+)
 
 
 # As before, let's compute the maximum pointwise error and the 

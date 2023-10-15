@@ -60,9 +60,9 @@ from .mesh.planar_mesh import PlanarMesh
 from .mesh.quad import Quad
 from .mesh.quad import get_quad_dict
 from .mesh.vert import Vert
+from .plot.trace_plot import TracePlot
 from .plot.edges import plot_edges
 from .plot.plot_global_solution import plot_linear_combo
-from .plot.traceplot import plot_trace, plot_trace_log
 from .solver.bilinear_form import BilinearForm
 from .solver.globfunsp import GlobalFunctionSpace
 from .solver.solver import Solver
@@ -80,10 +80,9 @@ __all__ = [
     "get_quad_dict",
     "Vert",
     "mesh_builder",
+    "TracePlot",
     "plot_edges",
     "plot_linear_combo",
-    "plot_trace",
-    "plot_trace_log",
     "GlobalFunctionSpace",
     "BilinearForm",
     "Solver",

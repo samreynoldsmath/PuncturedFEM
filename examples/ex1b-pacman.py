@@ -114,17 +114,13 @@ v.compute_all()
 # In[ ]:
 
 
-quad_list = [
-    quad_dict["trap"],
-    quad_dict["kress"],
-]
-f_trace_list = [
-    v.harm_part_wnd,
-]
-fmt = ("k.",)
-legend = ("wnd",)
-title = "Weighted normal derivative"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+pf.TracePlot(
+    traces=v.harm_part_wnd,
+    title="Weighted normal derivative",
+    fmt="k.",
+    K=K,
+    quad_dict=quad_dict,
+)
 
 
 # ### $H^1$ seminorm

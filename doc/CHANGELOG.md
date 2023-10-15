@@ -28,8 +28,9 @@
   - [ ] set vert idxs in constructor
 - [x] `mesh.quad`: add `get_quad_dict()` function
 - [x] `mesh.edgelib.teardrop`: pass `alpha` as keyword argument
-- [ ] add `PlotManager` class
-- [ ] add contour plots over single cell
+- [x] add `TracePlot` class
+- [ ] add `MeshPlot` class
+- [ ] add `ContourPlot` class
 - [x] `solver.solver`:
   - [x] move color printing to separate module
   - [x] move plotting functions to separate module
