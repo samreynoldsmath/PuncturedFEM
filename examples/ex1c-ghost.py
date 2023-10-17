@@ -74,7 +74,7 @@ K = pf.MeshCell(idx=0, edges=edges)
 K.parameterize(quad_dict)
 
 # plot boundary
-pf.plot_edges(edges, orientation=True)
+pf.plot.MeshPlot(K.get_edges()).draw()
 
 # set up Nyström solver
 nyst = pf.NystromSolver(K, verbose=True)

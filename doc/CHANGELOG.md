@@ -29,7 +29,7 @@
 - [x] `mesh.quad`: add `get_quad_dict()` function
 - [x] `mesh.edgelib.teardrop`: pass `alpha` as keyword argument
 - [x] add `TracePlot` class
-- [ ] add `MeshPlot` class
+- [x] add `MeshPlot` class
 - [ ] add `ContourPlot` class
 - [x] `solver.solver`:
   - [x] move color printing to separate module

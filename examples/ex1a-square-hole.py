@@ -85,7 +85,7 @@ K = pf.MeshCell(idx=0, edges=edges)
 K.parameterize(quad_dict)
 
 # plot boundary
-pf.plot_edges(edges, orientation=True)
+pf.plot.MeshPlot(K.get_edges()).draw()
 
 
 # ## Define a Local Function
@@ -277,14 +277,14 @@ psi_hat_computed = v.get_harmonic_conjugate()
 psi_hat_exact = np.exp(x1) * np.sin(x2)
 
 # plot harmonic conjugate
-pf.TracePlot(
+pf.plot.TracePlot(
     traces=[psi_hat_exact, psi_hat_computed],
+    K=K,
     fmt=["g--", "k."],
     legend=("exact", "computed"),
     title="Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$",
-    K=K,
     quad_dict=quad_dict,
-)
+).draw()
 
 
 # **Note**: A harmonic conjugate is unique only up to an additive constant.
@@ -309,14 +309,14 @@ integrated_difference = K.integrate_over_boundary(
 c = -integrated_difference / boundary_length
 
 # plot harmonic conjugate
-pf.TracePlot(
+pf.plot.TracePlot(
     traces=[psi_hat_exact, psi_hat_computed - c],
     fmt=["g--", "k."],
     legend=("exact", "computed"),
     title="Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$",
     K=K,
     quad_dict=quad_dict,
-)
+).draw()
 
 
 # Compute and plot the error in the computed harmonic conjugate.
@@ -328,14 +328,14 @@ pf.TracePlot(
 psi_hat_error = np.abs(psi_hat_exact - psi_hat_computed + c)
 
 # plot harmonic conjugate error
-pf.TracePlot(
+pf.plot.TracePlot(
     traces=psi_hat_error,
     fmt="k.",
     title="Harmonic conjugate error",
     K=K,
     quad_dict=quad_dict,
     log_scale=True,
-)
+).draw()
 
 
 # The pointwise errors look alright. 
@@ -439,24 +439,24 @@ phi_wnd_computed = v.get_harmonic_weighted_normal_derivative()
 wnd_error = np.abs(phi_wnd_computed - phi_wnd_exact)
 
 # plot exact and computed weighted normal derivatives
-pf.TracePlot(
+pf.plot.TracePlot(
     traces=[phi_wnd_exact, phi_wnd_computed],
     fmt=["g--", "k."],
     legend=("exact", "computed"),
     title="Weighted normal derivative",
     K=K,
     quad_dict=quad_dict,
-)
+).draw()
 
 # plot errors
-pf.TracePlot(
+pf.plot.TracePlot(
     traces=wnd_error,
     fmt="k.",
     title="Weighted normal derivative error",
     K=K,
     quad_dict=quad_dict,
     log_scale=True,
-)
+).draw()
 
 
 # Let's look at the maximum pointwise error as well as the error in the
@@ -521,14 +521,14 @@ PHI_exact = 0.25 * np.exp(x1) * (
 PHI_computed = v.get_anti_laplacian_harmonic_part()
 
 # plot exact and computed anti-Laplacian
-pf.TracePlot(
+pf.plot.TracePlot(
     traces=[PHI_exact, PHI_computed],
     fmt=["g--", "k."],
     legend=("exact", "computed"),
     title="Anti-Laplacian",
     K=K,
     quad_dict=quad_dict,
-)
+).draw()
 
 
 # In general, $\Phi$ is unique only up to the addition of a harmonic function.
@@ -565,24 +565,24 @@ PHI_diff_fit = X @ aa
 PHI_diff_error = np.abs(PHI_diff_fit - PHI_diff)
 
 # plot exact and computed anti-Laplacian
-pf.TracePlot(
+pf.plot.TracePlot(
     traces=[PHI_diff_fit, PHI_diff],
     fmt=["b--", "k."],
     legend=("least squares best linear fit", "exact - computed"),
     title="Anti-Laplacian difference",
     K=K,
     quad_dict=quad_dict,
-)
+).draw()
 
 # plot errors
-pf.TracePlot(
+pf.plot.TracePlot(
     traces=PHI_diff_error,
     fmt="k.",
     title="Anti-Laplacian difference error",
     K=K,
     quad_dict=quad_dict,
     log_scale=True,
-)
+).draw()
 
 
 # As before, let's compute the maximum pointwise error and the 

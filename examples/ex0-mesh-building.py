@@ -6,7 +6,7 @@
 # This tutorial introduces the construction and manipulation of curvilinear 
 # meshes.
 # 
-# A `planar_mesh` object is fundamentally a list of curvilinear `edge` objects.
+# A `PlanarMesh` object is fundamentally a list of curvilinear `Edge` objects.
 # Each edge consists of a pair of vertices and enough information to 
 # parameterize the edge as a curve in the plane. Each edge also is assigned to 
 # two mesh cells to which the edge is part of the boundary. 
@@ -19,7 +19,7 @@
 # We begin by importing the `puncturedfem` package, 
 # as well as `numpy` and `matplotlib` for the sake of this example.
 
-# In[ ]:
+# In[31]:
 
 
 import sys
@@ -38,7 +38,7 @@ import matplotlib.pyplot as plt
 # The simplest type of edge is a straight line segment, which is the default
 # when initializing an `edge` object.
 
-# In[ ]:
+# In[32]:
 
 
 # define vertices
@@ -58,7 +58,7 @@ e1 = pf.Edge(v1, v2)
 # For instance, we can create a circular arc corresponding to a $120^\circ$ angle
 # as follows:
 
-# In[ ]:
+# In[33]:
 
 
 # create a circular arc
@@ -83,7 +83,7 @@ e2 = pf.Edge(v1, v2, curve_type="circular_arc_deg", theta0=120)
 # For now, we will use the trapezoid rule, which uses the equispacing 
 # $t_k = hk$, where $h=\pi / n$ for a chosen natural number $n$.
 
-# In[ ]:
+# In[34]:
 
 
 n = 32
@@ -99,7 +99,7 @@ quad_dict = {"kress": q_kress, "trap": q_trap}
 # an edge.
 # We can see that the Kress scheme samples points more heavily near the endpoints: 
 
-# In[ ]:
+# In[35]:
 
 
 plt.figure()
@@ -111,29 +111,37 @@ plt.show()
 
 # We are now prepared to parameterize our edges.
 
-# In[ ]:
+# In[36]:
 
 
 e1.parameterize(quad_dict)
 e2.parameterize(quad_dict)
 
-pf.plot_edges([e1, e2])
+
+# We can plot the edges using the `MeshPlot` class:
+
+# In[37]:
 
 
-# we can visualize the orientation of each edge by setting the 
-# `orientation` parameter to `True`:
-
-# In[ ]:
+pf.plot.MeshPlot([e1, e2]).draw()
 
 
-pf.plot_edges([e1, e2], orientation=True)
+# We can visualize the orientation of each edge by setting the 
+# `show_orientation` keyword argument to `True`. 
+# We can also introduce grid lines by setting the `show_grid` keyword argument
+# to `True`.
+
+# In[38]:
+
+
+pf.plot.MeshPlot([e1, e2], show_orientation=True, show_grid=True).draw()
 
 
 # ## Creating a mesh
 # 
 # First we begin by defining the vertices of the mesh.
 
-# In[ ]:
+# In[39]:
 
 
 verts: list[pf.Vert] = []
@@ -210,7 +218,7 @@ verts.append(
 
 # We need to label our vertices:
 
-# In[ ]:
+# In[40]:
 
 
 # TODO: future versions should do this automatically.
@@ -220,7 +228,7 @@ for k in range(len(verts)):
 
 # Let's visualized these points:
 
-# In[ ]:
+# In[41]:
 
 
 plt.figure()
@@ -238,7 +246,7 @@ plt.show()
 # no such cell, `pos_cell_idx = -1` is taken as the default argument.
 # The `neg_cell_idx` is the index of the cell where the opposite is true. 
 
-# In[ ]:
+# In[42]:
 
 
 edges: list[pf.Edge] = []
@@ -362,25 +370,16 @@ edges.append(
 # With all of the edges of the mesh defined, we are prepared to define a
 # `planar_mesh` object.
 
-# In[ ]:
+# In[43]:
 
 
 T = pf.PlanarMesh(edges)
 
 
-# We can view some information about the mesh with the standard `print()` 
-# function.
-
-# In[ ]:
-
-
-print(T)
-
-
 # Let's visualize the mesh skeleton, but first we should remember to parameterize
 # the edges.
 
-# In[ ]:
+# In[44]:
 
 
 # parameterize all edges of the mesh
@@ -388,17 +387,17 @@ for e in T.edges:
     e.parameterize(quad_dict)
 
 # plot the skeleton
-pf.plot_edges(edges)
+pf.plot.MeshPlot(T.edges).draw()
 
 
 # Moreover, we can visualize an individual cell of the mesh:
 
-# In[ ]:
+# In[47]:
 
 
 cell_idx = 8
 K = T.get_cells(cell_idx)
-pf.plot_edges(K.get_edges())
+pf.plot.MeshPlot(K.get_edges()).draw()
 
 
 # ## Appendix: Defining a custom `curvetype`
@@ -413,7 +412,8 @@ pf.plot_edges(K.get_edges())
 # * $x(\cdot)$ is regularizable: there is some fixed $\sigma>0$ such that
 #   $|x'(t)|\geq\sigma$ for all $0 < t < 2\pi$.
 # 
-# In the event that we need an edge that is not provided in the `edgelib` folder,
+# In the event that we need an edge that is not provided in the 
+# `puncturedfem/mesh/edgelib` folder,
 # we can add to the edge library as follows. 
 # 1. Create a file `puncturedfem/mesh/edgelib/mycurve.py`, where `mycurve` will
 #    be the name of the curve that will be called during the initialization 
@@ -423,7 +423,7 @@ pf.plot_edges(K.get_edges())
 #    These will define $x(t)$, $x'(t)$, and $x''(t)$ respectively.
 # 4. Each of these three functions will return a $2\times (2n+1)$ array,
 #    where $2n+1$ is the number of sampled points specified by the chosen
-#    `quad` object.
+#    `Quad` object.
 # 5. Row 0 of each array contains the $x_1$ component, and row 1 contains the 
 #    $x_2$ component.
 # 6. Unpack any additional arguments from `**kwargs`.

@@ -165,7 +165,7 @@ S.assemble(verbose=verbose)
 
 plt.figure()
 plt.spy(S.glob_mat)
-plt.grid("minor")
+plt.grid(True)
 plt.show()
 
 

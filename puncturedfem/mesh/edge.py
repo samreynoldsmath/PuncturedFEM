@@ -259,10 +259,14 @@ class Edge:
 
     def get_sampled_points(self) -> tuple[np.ndarray, np.ndarray]:
         """Return the sampled points on the Edge"""
+        if not self.is_parameterized:
+            raise NotParameterizedError("getting sampled points")
         return self.x[0, :], self.x[1, :]
 
     def get_bounding_box(self) -> tuple[float, float, float, float]:
         """Return the bounding box of the Edge"""
+        if not self.is_parameterized:
+            raise NotParameterizedError("getting bounding box")
         return get_bounding_box(x=self.x[0, :], y=self.x[1, :])
 
     # TRANSFORMATIONS ########################################################

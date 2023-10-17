@@ -22,9 +22,15 @@ class TracePlot:
 
     fig_handle: plt.Figure
     t: np.ndarray
+    traces: np.ndarray | list[np.ndarray]
     x_ticks: np.ndarray
     x_labels: list[str]
     num_pts: int
+    fmt: str | list[str]
+    legend: tuple
+    title: str
+    log_scale: bool
+    show_grid: bool
 
     def __init__(
         self,
@@ -35,9 +41,7 @@ class TracePlot:
         legend: tuple = (),
         title: str = "",
         log_scale: bool = False,
-        grid: bool = True,
-        filename: str = "",
-        show: bool = True,
+        show_grid: bool = True,
     ) -> None:
         """
         Constructor for TracePlot class.
@@ -70,49 +74,109 @@ class TracePlot:
         grid : bool, optional
             Whether or not to display a grid on the plot. The default is True,
             which displays a grid.
-        filename : str, optional
-            The filename to save the plot to. The default is "", which does not
-            save the plot.
-        show : bool, optional
-            Whether or not to display the plot. The default is True, which
-            displays the plot.
         """
         self._set_num_pts(K)
-        self._validate_traces(traces)
-        self.fig_handle = plt.figure()
         self._find_t_parameter(K, quad_dict)
         self._find_ticks_and_labels(K.num_edges)
-        if isinstance(traces, np.ndarray):
-            self._plot_single_trace(traces, fmt, log_scale)
-        elif isinstance(traces, list):
-            self._plot_traces(traces, fmt, log_scale)
-        self._make_legend(legend)
-        self._make_title(title)
-        self._make_axis_labels(grid)
-        if filename:
-            plt.savefig(filename)
-        if show:
-            plt.show()
+        self.set_traces(traces)
+        self.set_format(fmt)
+        self.set_legend(legend)
+        self.set_title(title)
+        self.set_log_scale(log_scale)
+        self.set_grid(show_grid)
 
-    def save(self, filename: str) -> None:
+    def draw(self, show_plot: bool = True, filename: str = "") -> None:
         """
-        Saves the plot to a file.
+        Creates the plot.
 
         Parameters
         ----------
-        filename : str
-            The filename to save the plot to.
+        show_plot : bool, optional
+            Whether to show the plot. The default is True.
+        filename : str, optional
+            The filename to save the plot to. The default is "", which results
+            in no file being saved.
         """
-        plt.savefig(filename)
+        self.fig_handle = plt.figure()
+        self._plot_traces()
+        self._make_legend(self.legend)
+        self._make_title(self.title)
+        self._make_axis_labels()
+        plt.grid(self.show_grid)
+        if show_plot:
+            plt.show()
+        if filename:
+            plt.savefig(filename)
 
-    def show(self) -> None:
+    def set_traces(self, traces: np.ndarray | list[np.ndarray]) -> None:
         """
-        Displays the plot.
+        Sets the traces to be plotted.
         """
-        plt.show()
+        self._validate_traces(traces)
+        self.traces = traces
+
+    def set_format(self, fmt: str | list[str]) -> None:
+        """
+        Sets the format string(s) used to plot the traces.
+        """
+        self._validate_format(fmt)
+        self.fmt = fmt
+
+    def set_legend(self, legend: tuple) -> None:
+        """
+        Sets the legend for the plot.
+        """
+        self._validate_legend(legend)
+        self.legend = legend
+
+    def set_title(self, title: str) -> None:
+        """
+        Sets the title for the plot.
+        """
+        if not isinstance(title, str):
+            raise TypeError("title must be a string")
+        self.title = title
+
+    def set_grid(self, show_grid: bool) -> None:
+        """
+        Sets whether or not to display a grid on the plot.
+        """
+        if not isinstance(show_grid, bool):
+            raise TypeError("show_grid must be a boolean")
+        self.show_grid = show_grid
+
+    def set_log_scale(self, log_scale: bool) -> None:
+        """
+        Sets whether or not to use a log scale on the vertical axis.
+        """
+        if not isinstance(log_scale, bool):
+            raise TypeError("log_scale must be a boolean")
+        self.log_scale = log_scale
 
     def _set_num_pts(self, K: MeshCell) -> None:
         self.num_pts = K.num_pts
+
+    def _validate_legend(self, legend: tuple) -> None:
+        if not isinstance(legend, tuple):
+            raise TypeError("legend must be a tuple of strings")
+        if legend:
+            if len(legend) != len(self.traces):
+                raise ValueError(
+                    "legend must be a tuple of strings of the same length as "
+                    "traces"
+                )
+
+    def _validate_format(self, fmt: str | list[str]) -> None:
+        if isinstance(fmt, str):
+            pass
+        elif isinstance(fmt, list):
+            if len(fmt) != len(self.traces):
+                raise ValueError(
+                    "fmt must either be a string or a list of the same length "
+                    "as traces"
+                )
+        else:
+            raise TypeError("fmt must be a string or a list of strings")
 
     def _validate_traces(self, traces: np.ndarray | list[np.ndarray]) -> None:
         if isinstance(traces, np.ndarray):
@@ -157,34 +221,26 @@ class TracePlot:
         for k in range(1, num_edges + 1):
             self.x_labels.append(f"{2 * k}{PI_CHAR}")
 
-    def _plot_traces(
-        self, traces: list[np.ndarray], fmt: str | list[str], log_scale: bool
-    ) -> None:
-        if isinstance(fmt, str):
-            for f_trace in traces:
-                self._plot_single_trace(f_trace, fmt, log_scale)
-        elif isinstance(fmt, list):
-            if len(fmt) != len(traces):
-                raise ValueError(
-                    "fmt must either be a string or a list of the same length "
-                    "as traces"
-                )
-            for k, f_trace in enumerate(traces):
-                self._plot_single_trace(f_trace, fmt[k], log_scale)
+    def _plot_traces(self) -> None:
+        if isinstance(self.traces, np.ndarray):
+            if isinstance(self.fmt, str):
+                fmt_str = self.fmt
+            elif isinstance(self.fmt, list):
+                fmt_str = self.fmt[0]
+            self._plot_single_trace(self.traces, fmt_str)
+        elif isinstance(self.traces, list):
+            if isinstance(self.fmt, str):
+                for f_trace in self.traces:
+                    self._plot_single_trace(f_trace, self.fmt)
+            elif isinstance(self.fmt, list):
+                for f_trace, fmt in zip(self.traces, self.fmt):
+                    self._plot_single_trace(f_trace, fmt)
 
-    def _plot_single_trace(
-        self, f_trace: np.ndarray, fmt: str | list[str], log_scale: bool
-    ) -> None:
-        if isinstance(fmt, list):
-            fmt_str = fmt[0]
-        elif isinstance(fmt, str):
-            fmt_str = fmt
+    def _plot_single_trace(self, vals: np.ndarray, fmt: str) -> None:
+        if self.log_scale:
+            plt.semilogy(self.t, vals, fmt)
         else:
-            raise TypeError("fmt must be a string or a list of strings")
-        if log_scale:
-            plt.semilogy(self.t, f_trace, fmt_str)
-        else:
-            plt.plot(self.t, f_trace, fmt_str)
+            plt.plot(self.t, vals, fmt)
 
     def _make_legend(self, legend: tuple) -> None:
         if not isinstance(legend, tuple):
@@ -198,6 +254,5 @@ class TracePlot:
         if title:
             plt.title(title)
 
-    def _make_axis_labels(self, grid: bool) -> None:
-        plt.grid(grid)
+    def _make_axis_labels(self) -> None:
         plt.xticks(ticks=self.x_ticks, labels=self.x_labels)

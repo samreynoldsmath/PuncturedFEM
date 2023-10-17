@@ -65,7 +65,7 @@ K = pf.MeshCell(idx=0, edges=edges)
 K.parameterize(quad_dict)
 
 # plot boundary
-pf.plot_edges(edges, orientation=True)
+pf.plot.MeshPlot(K.get_edges()).draw()
 
 # set up Nyström solver
 nyst = pf.NystromSolver(K, verbose=True)
@@ -114,13 +114,13 @@ v.compute_all()
 # In[ ]:
 
 
-pf.TracePlot(
+pf.plot.TracePlot(
     traces=v.harm_part_wnd,
     title="Weighted normal derivative",
     fmt="k.",
     K=K,
     quad_dict=quad_dict,
-)
+).draw()
 
 
 # ### $H^1$ seminorm
