@@ -134,6 +134,7 @@ class Edge:
         self.set_verts(anchor, endpnt)
         self.set_cells(pos_cell_idx, neg_cell_idx)
         self.is_parameterized = False
+        self.num_pts = -1
 
     def __str__(self) -> str:
         """Return a string representation of the Edge"""

@@ -48,6 +48,7 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see https://www.gnu.org/licenses/.
 """
 
+from .locfun.edge_space import EdgeSpace
 from .locfun.locfun import LocalFunction
 from .locfun.locfunsp import LocalFunctionSpace
 from .locfun.nystrom import NystromSolver
@@ -67,6 +68,7 @@ from .solver.globfunsp import GlobalFunctionSpace
 from .solver.solver import Solver
 
 __all__ = [
+    "EdgeSpace",
     "LocalFunction",
     "LocalFunctionSpace",
     "Polynomial",

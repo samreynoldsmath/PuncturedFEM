@@ -7,7 +7,7 @@
 - [ ] update examples to reflect changes
 ### Tests
 - [x] deprecate `unittest` in favor of `pytest`
-- [ ] add `test_edge_space`
+- [x] add `test_edge_space`
 - [ ] add `test_mesh`
 - [x] add `test_solver`
 ### Maintenance
@@ -37,6 +37,7 @@
 - [x] add init file for `util` subpackage
 - [x] rename classes to use CapWords convention
 - [x] fix invalid names introduced by class renaming
+- [ ] fix type hints in tests
 ### Bug fixes
 - [x] fix colorbar position in contour plots
 - [ ] revert single/double layer operators to loop over edges rather than cell boundary components

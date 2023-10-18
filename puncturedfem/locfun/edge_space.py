@@ -17,6 +17,29 @@ from .poly.poly import Polynomial
 class EdgeSpace:
     """
     The space of Polynomial traces of degree  <= deg on an Edge.
+
+    TODO: deg > 3 is still experimental, use with caution.
+
+    Attributes
+    ----------
+    e : Edge
+        Edge on which the space is defined.
+    deg : int
+        Maximum Polynomial degree.
+    vert_fun_traces : list[Polynomial]
+        List of vertex function traces.
+    edge_fun_traces : list[Polynomial]
+        List of Edge function traces.
+    vert_fun_global_keys : list[GlobalKey]
+        List of global keys for vertex functions.
+    edge_fun_global_keys : list[GlobalKey]
+        List of global keys for Edge functions.
+    num_vert_funs : int
+        Number of vertex functions.
+    num_edge_funs : int
+        Number of Edge functions.
+    num_funs : int
+        Total number of functions in the space.
     """
 
     e: Edge
@@ -222,7 +245,25 @@ class EdgeSpace:
         mass matrix.
         """
         M = self.get_gram_matrix()
+
+        # replace M with a low-rank approximation
+        tol = 1e-8
+        if np.shape(M)[0] > 0:
+            U, S, Vh = np.linalg.svd(M)
+            S_max = np.max(S)
+            S_low_rank = np.zeros_like(S)
+            S_idx = np.where(S > (tol * S_max))[0]
+            S_low_rank[S_idx] = S[S_idx]
+            M = U @ np.diag(S_low_rank) @ Vh
+
+        # DEBUG
+        # sigma = np.linalg.svd(M, compute_uv=False)
+        # print("singular values =", sigma)
+
+        # find the index set of the pivot columns
         idx = self.get_basis_index_set(M)
+
+        # set the linearly independent edge functions as the basis
         basis = []
         for k in idx:
             basis.append(self.edge_fun_traces[k])
