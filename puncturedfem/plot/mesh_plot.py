@@ -6,8 +6,8 @@ Module containing the MeshPlot class, which is used to plot edges, cells, and
 meshes.
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from ..mesh.edge import Edge
 

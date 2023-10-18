@@ -6,8 +6,8 @@ Module containing the TracePlot class for plotting traces of functions on the
 boundary of a MeshCell.
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from ..mesh.cell import MeshCell
 from ..mesh.quad import Quad

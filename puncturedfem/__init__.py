@@ -48,6 +48,7 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see https://www.gnu.org/licenses/.
 """
 
+from . import plot
 from .locfun.edge_space import EdgeSpace
 from .locfun.locfun import LocalFunction
 from .locfun.locfunsp import LocalFunctionSpace
@@ -58,10 +59,8 @@ from .mesh.cell import MeshCell
 from .mesh.edge import Edge
 from .mesh.meshlib.__builder__ import mesh_builder
 from .mesh.planar_mesh import PlanarMesh
-from .mesh.quad import Quad
-from .mesh.quad import get_quad_dict
+from .mesh.quad import Quad, get_quad_dict
 from .mesh.vert import Vert
-from . import plot
 from .plot.plot_global_solution import plot_linear_combo  # TODO: remove
 from .solver.bilinear_form import BilinearForm
 from .solver.globfunsp import GlobalFunctionSpace
