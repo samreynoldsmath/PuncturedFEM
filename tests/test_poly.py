@@ -5,17 +5,20 @@ test_poly.py
 Tests the Polynomial class.
 """
 
+from dataclasses import dataclass
+
 import numpy as np
 
 from puncturedfem import Polynomial
 
 
+@dataclass
 class PolynomialCollection:
     """
     Set up some polynomials for testing.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Set up some polynomials for testing.
         """
@@ -24,64 +27,64 @@ class PolynomialCollection:
 
         self.p = Polynomial(
             [
-                [1.0, 0, 0],  # 1
-                [-5.0, 1, 0],  # -5 x
-                [2.0, 0, 1],  # 2 y
-                [1.0, 2, 0],  # x^2
-                [-1.0, 0, 2],  # -y^2
+                (1.0, 0, 0),  # 1
+                (-5.0, 1, 0),  # -5 x
+                (2.0, 0, 1),  # 2 y
+                (1.0, 2, 0),  # x^2
+                (-1.0, 0, 2),  # -y^2
             ]
         )
 
         self.scalar = 4
         self.p_plus_scalar = Polynomial(
             [
-                [1.0 + self.scalar, 0, 0],  # 1 + scalar
-                [-5.0, 1, 0],  # -5 x
-                [2.0, 0, 1],  # 2 y
-                [1.0, 2, 0],  # x^2
-                [-1.0, 0, 2],  # -y^2
+                (1.0 + self.scalar, 0, 0),  # 1 + scalar
+                (-5.0, 1, 0),  # -5 x
+                (2.0, 0, 1),  # 2 y
+                (1.0, 2, 0),  # x^2
+                (-1.0, 0, 2),  # -y^2
             ]
         )
         self.p_times_scalar = Polynomial(
             [
-                [1.0 * self.scalar, 0, 0],  # scalar
-                [-5.0 * self.scalar, 1, 0],  # -5 scalar x
-                [2.0 * self.scalar, 0, 1],  # 2 scalar y
-                [1.0 * self.scalar, 2, 0],  # scalar x^2
-                [-1.0 * self.scalar, 0, 2],  # -scalar y^2
+                (1.0 * self.scalar, 0, 0),  # scalar
+                (-5.0 * self.scalar, 1, 0),  # -5 scalar x
+                (2.0 * self.scalar, 0, 1),  # 2 scalar y
+                (1.0 * self.scalar, 2, 0),  # scalar x^2
+                (-1.0 * self.scalar, 0, 2),  # -scalar y^2
             ]
         )
 
         self.q = Polynomial(
             [
-                [3.0, 0, 0],  # 3
-                [-2.0, 1, 0],  # -2 x
-                [1.0, 0, 1],  # y
-                [5.0, 1, 2],  # 5 x y^2
+                (3.0, 0, 0),  # 3
+                (-2.0, 1, 0),  # -2 x
+                (1.0, 0, 1),  # y
+                (5.0, 1, 2),  # 5 x y^2
             ]
         )
 
         self.pq = Polynomial(
             [
-                [3.0, 0, 0],  # 3
-                [-17.0, 1, 0],  # -17 x
-                [13.0, 2, 0],  # 13 x^2
-                [-2.0, 3, 0],  # -2 x^3
-                [7.0, 0, 1],  # 7 y
-                [-9.0, 1, 1],  # -9 x y
-                [1.0, 2, 1],  # x^2 y
-                [-1.0, 0, 2],  # -y^2
-                [7.0, 1, 2],  # 7 x y^2
-                [-25.0, 2, 2],  # -25 x^2 y^2
-                [5.0, 3, 2],  # 5 x^3 y^2
-                [-1.0, 0, 3],  # -y^3
-                [10.0, 1, 3],  # 10 x y^3
-                [-5.0, 1, 4],  # -5 x y^4
+                (3.0, 0, 0),  # 3
+                (-17.0, 1, 0),  # -17 x
+                (13.0, 2, 0),  # 13 x^2
+                (-2.0, 3, 0),  # -2 x^3
+                (7.0, 0, 1),  # 7 y
+                (-9.0, 1, 1),  # -9 x y
+                (1.0, 2, 1),  # x^2 y
+                (-1.0, 0, 2),  # -y^2
+                (7.0, 1, 2),  # 7 x y^2
+                (-25.0, 2, 2),  # -25 x^2 y^2
+                (5.0, 3, 2),  # 5 x^3 y^2
+                (-1.0, 0, 3),  # -y^3
+                (10.0, 1, 3),  # 10 x y^3
+                (-5.0, 1, 4),  # -5 x y^4
             ]
         )
 
 
-def test_equality():
+def test_equality() -> None:
     """
     Test the == operator.
     """
@@ -89,23 +92,23 @@ def test_equality():
     assert pc.z == pc.z
     assert pc.p == pc.p
     assert pc.q == pc.q
-    assert not pc.p == pc.z
-    assert not pc.p == pc.q
+    assert not pc.p == pc.z  # pylint: disable=unneeded-not
+    assert not pc.p == pc.q  # pylint: disable=unneeded-not
 
 
-def test_inequality():
+def test_inequality() -> None:
     """
     Test the != operator.
     """
     pc = PolynomialCollection()
-    assert not pc.z != pc.z
-    assert not pc.p != pc.p
-    assert not pc.q != pc.q
+    assert not pc.z != pc.z  # pylint: disable=unneeded-not
+    assert not pc.p != pc.p  # pylint: disable=unneeded-not
+    assert not pc.q != pc.q  # pylint: disable=unneeded-not
     assert pc.p != pc.z
     assert pc.p != pc.q
 
 
-def test_addition_with_zero():
+def test_addition_with_zero() -> None:
     """
     Test addition with the zero polynomial.
     """
@@ -115,7 +118,7 @@ def test_addition_with_zero():
     assert pc.z + pc.p == pc.p
 
 
-def test_addition_commutativity():
+def test_addition_commutativity() -> None:
     """
     Test addition commutativity.
     """
@@ -123,7 +126,7 @@ def test_addition_commutativity():
     assert pc.p + pc.q == pc.q + pc.p
 
 
-def test_addition_with_scalar():
+def test_addition_with_scalar() -> None:
     """
     Test addition with scalars.
     """
@@ -133,7 +136,7 @@ def test_addition_with_scalar():
     assert pc.scalar + pc.p == pc.p_plus_scalar
 
 
-def test_addition_increment():
+def test_addition_increment() -> None:
     """
     Test addition increment operator +=
     """
@@ -143,7 +146,7 @@ def test_addition_increment():
     assert r == pc.p
 
 
-def test_addition_increment_with_scalar():
+def test_addition_increment_with_scalar() -> None:
     """
     Test addition increment operator += with scalar
     """
@@ -157,7 +160,7 @@ def test_addition_increment_with_scalar():
     assert r == pc.q
 
 
-def test_multiplication():
+def test_multiplication() -> None:
     """
     Test multiplication of polynomials.
     """
@@ -166,7 +169,7 @@ def test_multiplication():
     assert pc.p * pc.q == pc.pq
 
 
-def test_multiplication_with_scalar():
+def test_multiplication_with_scalar() -> None:
     """
     Test multiplication of polynomials with scalars.
     """
@@ -177,7 +180,7 @@ def test_multiplication_with_scalar():
     assert pc.p * pc.scalar == pc.p_times_scalar
 
 
-def test_multiplication_increment():
+def test_multiplication_increment() -> None:
     """
     Test multiplication increment operator *=
     """
@@ -189,7 +192,7 @@ def test_multiplication_increment():
     assert r == pc.z
 
 
-def test_multiplication_increment_scalar():
+def test_multiplication_increment_scalar() -> None:
     """
     Test multiplication increment operator *= with scalar
     """
@@ -202,7 +205,7 @@ def test_multiplication_increment_scalar():
     assert r == pc.z
 
 
-def test_gradient():
+def test_gradient() -> None:
     """
     Test gradient of polynomials.
 
@@ -211,13 +214,13 @@ def test_gradient():
     """
     pc = PolynomialCollection()
 
-    px = Polynomial([[-5.0, 0, 0], [2.0, 1, 0]])
+    px = Polynomial([(-5.0, 0, 0), (2.0, 1, 0)])
 
-    py = Polynomial([[2.0, 0, 0], [-2.0, 0, 1]])
+    py = Polynomial([(2.0, 0, 0), (-2.0, 0, 1)])
 
-    qx = Polynomial([[-2.0, 0, 0], [5.0, 0, 2]])
+    qx = Polynomial([(-2.0, 0, 0), (5.0, 0, 2)])
 
-    qy = Polynomial([[1.0, 0, 0], [10.0, 1, 1]])
+    qy = Polynomial([(1.0, 0, 0), (10.0, 1, 1)])
 
     PX, PY = pc.p.grad()
     QX, QY = pc.q.grad()
@@ -228,7 +231,7 @@ def test_gradient():
     assert QY == qy
 
 
-def test_laplacian():
+def test_laplacian() -> None:
     """
     Test Laplacian of polynomials.
 
@@ -248,20 +251,20 @@ def test_laplacian():
 
     dq = Polynomial(
         [
-            [10.0, 1, 0],
+            (10.0, 1, 0),
         ]
     )
 
     dpq = Polynomial(
         [
-            [24.0, 0, 0],
-            [2.0, 1, 0],
-            [-50.0, 2, 0],
-            [10.0, 3, 0],
-            [-4.0, 0, 1],
-            [60.0, 1, 1],
-            [-50.0, 0, 2],
-            [-30.0, 1, 2],
+            (24.0, 0, 0),
+            (2.0, 1, 0),
+            (-50.0, 2, 0),
+            (10.0, 3, 0),
+            (-4.0, 0, 1),
+            (60.0, 1, 1),
+            (-50.0, 0, 2),
+            (-30.0, 1, 2),
         ]
     )
 
@@ -270,7 +273,7 @@ def test_laplacian():
     assert pc.pq.laplacian() == dpq
 
 
-def test_anti_laplacian():
+def test_anti_laplacian() -> None:
     """
     Test anti-Laplacian of polynomials.
     """
@@ -299,7 +302,7 @@ def test_anti_laplacian():
     assert P.laplacian() == pc.p
 
 
-def test_evaluation():
+def test_evaluation() -> None:
     """
     Test evaluation of polynomials.
     """

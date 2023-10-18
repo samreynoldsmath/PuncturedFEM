@@ -37,7 +37,7 @@
 - [x] add init file for `util` subpackage
 - [x] rename classes to use CapWords convention
 - [x] fix invalid names introduced by class renaming
-- [ ] fix type hints in tests
+- [x] fix type hints in tests
 ### Bug fixes
 - [x] fix colorbar position in contour plots
 - [ ] revert single/double layer operators to loop over edges rather than cell boundary components

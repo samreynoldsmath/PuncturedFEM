@@ -5,6 +5,8 @@ test_fft_deriv.py
 Test the FFT derivative and antiderivative functions.
 """
 
+from dataclasses import dataclass
+
 import numpy as np
 
 from puncturedfem.locfun.d2n.fft_deriv import fft_antiderivative, fft_derivative
@@ -12,6 +14,7 @@ from puncturedfem.locfun.d2n.fft_deriv import fft_antiderivative, fft_derivative
 TOL = 1e-6
 
 
+@dataclass
 class Interval:
     """
     Interval class for testing FFT derivative.
@@ -26,18 +29,18 @@ class Interval:
         self.t = np.linspace(self.a, self.b - self.h, 2 * self.n)
 
 
-def set_up_interval():
+def set_up_interval() -> Interval:
     """
     Set up the test.
     """
     n = 32
     a = np.pi + 1.23
     b = 7 * np.pi + 1.23
-    I = Interval(a, b, n)
-    return I
+    ab = Interval(a, b, n)
+    return ab
 
 
-def get_derivative_error(x, dx, L):
+def get_derivative_error(x: np.ndarray, dx: np.ndarray, L: float) -> float:
     """
     Get the error between the computed derivative and the exact derivative.
     """
@@ -47,7 +50,7 @@ def get_derivative_error(x, dx, L):
     return max_dx_error
 
 
-def get_antiderivative_error(dx, x, L):
+def get_antiderivative_error(dx: np.ndarray, x: np.ndarray, L: float) -> float:
     """
     Get the error between the computed antiderivative and an exact
     antiderivative.
@@ -59,7 +62,7 @@ def get_antiderivative_error(dx, x, L):
     return max_x_error
 
 
-def constant_function(t):
+def constant_function(t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Return a constant function and its derivative.
     """
@@ -68,7 +71,7 @@ def constant_function(t):
     return x, dx
 
 
-def cos_function(t):
+def cos_function(t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Return a cosine function and its derivative.
     """
@@ -77,7 +80,7 @@ def cos_function(t):
     return x, dx
 
 
-def linear_combo_function(t):
+def linear_combo_function(t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Return a 5*cos(3t) - (1/7)*sin(2t) function and its derivative.
     """
@@ -86,7 +89,9 @@ def linear_combo_function(t):
     return x, dx
 
 
-def polynomial_function(t, a, b):
+def polynomial_function(
+    t: np.ndarray, a: float, b: float
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Return a 16*(t-a)^2*(t-b)^2/(b-a)^4 function and its derivative.
     """
@@ -98,81 +103,81 @@ def polynomial_function(t, a, b):
     return x, dx
 
 
-def test_fft_deriv_constant():
+def test_fft_deriv_constant() -> None:
     """
     Test FFT derivative on a constant function.
     """
-    I = set_up_interval()
-    x, dx = constant_function(I.t)
-    max_dx_error = get_derivative_error(x, dx, I.L)
+    ab = set_up_interval()
+    x, dx = constant_function(ab.t)
+    max_dx_error = get_derivative_error(x, dx, ab.L)
     assert max_dx_error < TOL
 
 
-def test_fft_deriv_cos():
+def test_fft_deriv_cos() -> None:
     """
     Test FFT derivative on a cosine function.
     """
-    I = set_up_interval()
-    x, dx = cos_function(I.t)
-    max_dx_error = get_derivative_error(x, dx, I.L)
+    ab = set_up_interval()
+    x, dx = cos_function(ab.t)
+    max_dx_error = get_derivative_error(x, dx, ab.L)
     assert max_dx_error < TOL
 
 
-def test_fft_deriv_linear_combo():
+def test_fft_deriv_linear_combo() -> None:
     """
     Test FFT derivative on a 5*cos(3t) - (1/7)*sin(2t) function.
     """
-    I = set_up_interval()
-    x, dx = linear_combo_function(I.t)
-    max_dx_error = get_derivative_error(x, dx, I.L)
+    ab = set_up_interval()
+    x, dx = linear_combo_function(ab.t)
+    max_dx_error = get_derivative_error(x, dx, ab.L)
     assert max_dx_error < TOL
 
 
-def test_fft_deriv_polynomial():
+def test_fft_deriv_polynomial() -> None:
     """
     Test FFT derivative on a 16*(t-a)^2*(t-b)^2/(b-a)^4 function.
     """
-    I = set_up_interval()
-    x, dx = polynomial_function(I.t, I.a, I.b)
-    max_dx_error = get_derivative_error(x, dx, I.L)
+    ab = set_up_interval()
+    x, dx = polynomial_function(ab.t, ab.a, ab.b)
+    max_dx_error = get_derivative_error(x, dx, ab.L)
     assert max_dx_error < TOL
 
 
-def test_fft_antideriv_constant():
+def test_fft_antideriv_constant() -> None:
     """
     Test FFT antiderivative on a constant function.
     """
-    I = set_up_interval()
-    x, dx = constant_function(I.t)
-    max_x_error = get_antiderivative_error(dx, x, I.L)
+    ab = set_up_interval()
+    x, dx = constant_function(ab.t)
+    max_x_error = get_antiderivative_error(dx, x, ab.L)
     assert max_x_error < TOL
 
 
-def test_fft_antideriv_cos():
+def test_fft_antideriv_cos() -> None:
     """
     Test FFT antiderivative on a cosine function.
     """
-    I = set_up_interval()
-    x, dx = cos_function(I.t)
-    max_x_error = get_antiderivative_error(dx, x, I.L)
+    ab = set_up_interval()
+    x, dx = cos_function(ab.t)
+    max_x_error = get_antiderivative_error(dx, x, ab.L)
     assert max_x_error < TOL
 
 
-def test_fft_antideriv_linear_combo():
+def test_fft_antideriv_linear_combo() -> None:
     """
     Test FFT antiderivative on a 5*cos(3t) - (1/7)*sin(2t) function.
     """
-    I = set_up_interval()
-    x, dx = linear_combo_function(I.t)
-    max_x_error = get_antiderivative_error(dx, x, I.L)
+    ab = set_up_interval()
+    x, dx = linear_combo_function(ab.t)
+    max_x_error = get_antiderivative_error(dx, x, ab.L)
     assert max_x_error < TOL
 
 
-def test_fft_antideriv_polynomial():
+def test_fft_antideriv_polynomial() -> None:
     """
     Test FFT antiderivative on a 16*(t-a)^2*(t-b)^2/(b-a)^4 function.
     """
-    I = set_up_interval()
-    x, dx = polynomial_function(I.t, I.a, I.b)
-    max_x_error = get_antiderivative_error(dx, x, I.L)
+    ab = set_up_interval()
+    x, dx = polynomial_function(ab.t, ab.a, ab.b)
+    max_x_error = get_antiderivative_error(dx, x, ab.L)
     assert max_x_error < TOL

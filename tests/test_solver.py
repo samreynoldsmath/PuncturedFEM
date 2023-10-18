@@ -22,7 +22,7 @@ def build_solver() -> pf.Solver:
     deg = 1
     a = 1.0
     c = 1.0
-    f = pf.Polynomial([[1.0, 0, 0]])
+    f = pf.Polynomial([(1.0, 0, 0)])
 
     # define bilinear form
     B = pf.BilinearForm(
@@ -44,7 +44,7 @@ def build_solver() -> pf.Solver:
     return pf.Solver(V, B)
 
 
-def test_solver_deg1():
+def test_solver_deg1() -> None:
     """
     Test the solver class.
     """

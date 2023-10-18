@@ -5,13 +5,15 @@ cell_builder.py
 Build mesh cells for testing purposes.
 """
 
+from typing import Any
+
 import numpy as np
 import puncturedfem as pf
 
 
 def build_circle(
     radius: float = 0.25, center_x: float = 0.5, center_y: float = 0.5
-) -> tuple[pf.MeshCell, dict[str, float]]:
+) -> tuple[pf.MeshCell, dict[str, Any]]:
     """
     Construct a mesh cell that is a disk with radius 0.25 centered at (0.5, 0.5)
     """
@@ -21,16 +23,11 @@ def build_circle(
         "center": np.array([center_x, center_y]),
         "radius": radius,
     }
-    cell_data["boundary_length"] = 2 * np.pi * cell_data["radius"]
+    cell_data["boundary_length"] = 2 * np.pi * radius
 
     # define central "vertex"
     verts: list[pf.Vert] = []
-    verts.append(
-        pf.Vert(
-            x=cell_data["center"][0],
-            y=cell_data["center"][1],
-        )
-    )
+    verts.append(pf.Vert(x=center_x, y=center_y))
 
     # define edge
     edges: list[pf.Edge] = []
@@ -88,7 +85,7 @@ def build_punctured_square(
     radius: float = 0.25,
     center_x: float = 0.5,
     center_y: float = 0.5,
-) -> tuple[pf.MeshCell, dict[str, float]]:
+) -> tuple[pf.MeshCell, dict[str, Any]]:
     """
     Construct a mesh cell that is a square with side length 1 with a disk of
     radius 0.25 centered at (0.5, 0.5) removed.
@@ -99,24 +96,15 @@ def build_punctured_square(
         "radius": radius,
         "center": np.array([center_x, center_y]),
     }
-    cell_data["boundary_length"] = (
-        4 * side_length + 2 * np.pi * cell_data["radius"]
-    )
+    cell_data["boundary_length"] = 4 * side_length + 2 * np.pi * radius
 
     # define vertices
     verts: list[pf.Vert] = []
     verts.append(pf.Vert(x=0.0, y=0.0))
-    verts.append(pf.Vert(x=cell_data["side_length"], y=0.0))
-    verts.append(
-        pf.Vert(x=cell_data["side_length"], y=cell_data["side_length"])
-    )
-    verts.append(pf.Vert(x=0.0, y=cell_data["side_length"]))
-    verts.append(
-        pf.Vert(
-            x=cell_data["center"][0],
-            y=cell_data["center"][1],
-        )
-    )
+    verts.append(pf.Vert(x=side_length, y=0.0))
+    verts.append(pf.Vert(x=side_length, y=side_length))
+    verts.append(pf.Vert(x=0.0, y=side_length))
+    verts.append(pf.Vert(x=center_x, y=center_y))
 
     # define edges
     edges: list[pf.Edge] = []

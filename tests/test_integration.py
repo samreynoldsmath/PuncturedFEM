@@ -34,7 +34,7 @@ def compute_boundary_length(
     return boundary_length
 
 
-def test_integration_circle():
+def test_integration_circle() -> None:
     """
     Test integration over cell boundary of a disk by integrating 1 over boundary
     and comparing to exact length of boundary.
@@ -58,7 +58,7 @@ def test_integration_circle():
     assert boundary_length_error < TOL
 
 
-def test_integration_square():
+def test_integration_square() -> None:
     """
     Test integration over cell boundary of a square by integrating 1 over
     boundary and comparing to exact length of boundary.
@@ -82,7 +82,7 @@ def test_integration_square():
     assert boundary_length_error < TOL
 
 
-def test_integration_punctured_square():
+def test_integration_punctured_square() -> None:
     """
     Test integration over cell boundary of a square with a disk removed by
     integrating 1 over boundary and comparing to exact length of boundary.

@@ -14,7 +14,7 @@ from .build_cell import build_punctured_square
 TOL = 1e-10
 
 
-def test_punctured_square():
+def test_punctured_square() -> None:
     """
     Sets up the mesh cell K and functions functions v,w as in
     examples/ex1a-square-hole.ipynb
@@ -48,7 +48,7 @@ def test_punctured_square():
     )
 
     # create Polynomial object
-    v_laplacian = pf.Polynomial([[12.0, 1, 1]])
+    v_laplacian = pf.Polynomial([(12.0, 1, 1)])
 
     # create local function object
     v = pf.LocalFunction(
@@ -65,7 +65,7 @@ def test_punctured_square():
     )
 
     # define a monomial term by specifying its multi-index and coefficient
-    w_laplacian = pf.Polynomial([[8.0, 1, 0]])
+    w_laplacian = pf.Polynomial([(8.0, 1, 0)])
 
     # declare w as local function object
     w = pf.LocalFunction(
