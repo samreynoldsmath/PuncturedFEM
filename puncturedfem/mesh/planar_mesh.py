@@ -120,6 +120,11 @@ class PlanarMesh:
         """Add an Edge to the mesh."""
         if not isinstance(e, Edge):
             raise TypeError("e must be an Edge")
+        if e.neg_cell_idx < 0 and e.pos_cell_idx < 0:
+            raise ValueError(
+                "Edge must be part of the boundary of "
+                + "at least one mesh cell"
+            )
         if e in self.edges:
             return
         self.edges.append(e)

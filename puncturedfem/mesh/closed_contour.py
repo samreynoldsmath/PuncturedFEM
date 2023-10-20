@@ -47,7 +47,7 @@ class ClosedContour:
 
         Parameters
         ----------
-        cell_id : int
+        cell_id: int
             The MeshCell id of the contour. (This is the MeshCell id of the
             MeshCell that the contour is part of the boundary of.)
         """

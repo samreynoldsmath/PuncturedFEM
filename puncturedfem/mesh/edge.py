@@ -167,14 +167,6 @@ class Edge:
         """
         Set the positively and negatively oriented MeshCells of the Edge.
         """
-
-        # check that MeshCells are distinct
-        # TODO this warning should only happen in PlanarMesh
-        # if pos_cell_idx < 0 and neg_cell_idx < 0:
-        #     raise ValueError(
-        #         'Edge must be boundary of at least one MeshCell'
-        #     )
-
         self.pos_cell_idx = pos_cell_idx
         self.neg_cell_idx = neg_cell_idx
         self.is_on_mesh_boundary = (
