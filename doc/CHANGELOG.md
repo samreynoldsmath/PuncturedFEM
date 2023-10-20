@@ -21,7 +21,7 @@
 - [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
 - [ ] `locfun.poly.poly`: use list of tuples for polynomial initialization
 - [ ] `locfun.poly.piecewise_poly`: determine `num_polys` automatically in `PiecewisePolynomial` constructor
-- [ ] `mesh.cell`: clean up integration methods
+- [x] clean up integration methods
 - [ ] `mesh.edge`: safety checks for `set_cells` method
 - [ ] `mesh.planar_mesh`:
   - [ ] replace lists with sets where appropriate

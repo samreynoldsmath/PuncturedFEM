@@ -341,32 +341,11 @@ class ClosedContour:
         if len(vals_dx_norm) != self.num_pts:
             raise SizeMismatchError("vals must be same length as boundary")
 
-        # # if contour is a single Edge without a corner, use trapezoid rule
-        # if self.num_edges == 1 and self.edges[0].quad_type == 'trap':
-        #     vals_vals = zeros((self.edges[0].num_pts,))
-        #     vals_vals[:-1] = vals_dx_norm
-        #     vals_vals[-1] = vals_dx_norm[0]
-        #     res = self.edges[0].integrate_over_edge_preweighted(
-        #         vals_vals, ignore_endpoint=False
-        #     )
-
-        # # otherwise, use Kress Quadrature on each Edge
-        # else:
-        #     res = 0
-        #     for i in range(self.num_edges):
-        #         j = self.vert_idx[i]
-        #         jp1 = self.vert_idx[i + 1]
-        #         res += self.edges[i].integrate_over_edge_preweighted(
-        #             vals_dx_norm[j:jp1], ignore_endpoint=True)
-        # return res
-
-        # TODO: fix this hack
-        # numpy.sum() is more stable, but this uses more memory
-
+        # NOTE: numpy.sum() is more stable, but this uses more memory
         y = np.zeros((self.num_pts,))
         for i in range(self.num_edges):
             h = 2 * np.pi / (self.edges[i].num_pts - 1)
             y[self.vert_idx[i] : self.vert_idx[i + 1]] = (
                 h * vals_dx_norm[self.vert_idx[i] : self.vert_idx[i + 1]]
             )
-        return sum(y)
+        return np.sum(y)

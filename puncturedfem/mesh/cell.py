@@ -468,15 +468,6 @@ class MeshCell:
         if len(vals_dx_norm) != self.num_pts:
             raise SizeMismatchError("vals must be same length as boundary")
 
-        # NOTE: this is more memory efficient, but less stable
-        # res = 0
-        # for c, i in zip(self.components, range(self.num_holes + 1)):
-        #     j = self.component_start_idx[i]
-        #     jp1 = self.component_start_idx[i + 1]
-        #     res += c.integrate_over_closed_contour_preweighted(
-        #         vals_dx_norm[j:jp1])
-        # return res
-
         # NOTE: numpy.sum() is more stable, but this uses more memory
         y = np.zeros((self.num_pts,))
         for i in range(self.num_holes + 1):
