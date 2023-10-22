@@ -61,7 +61,6 @@ class GlobalFunctionPlot:
         self.fill = fill
         self.title = title
 
-
     def set_solver(self, solver: Solver) -> None:
         """
         Set the solver.
