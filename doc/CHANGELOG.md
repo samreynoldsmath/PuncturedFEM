@@ -4,11 +4,9 @@
 ## [yyyy mm dd] v0.3.8
 ### Examples
 - [ ] `examples/ex1d-hat-tile.ipynb`: add example of hat tile local basis functions
-- [ ] update examples to reflect changes
 ### Tests
 - [x] deprecate `unittest` in favor of `pytest`
 - [x] add `test_edge_space`
-- [ ] add `test_mesh`
 - [x] add `test_solver`
 ### Maintenance
 - [ ] add logging with `logging` module
@@ -19,18 +17,14 @@
 - [ ] `locfun.d2n`: logarithmic functions moved to own module
 - [ ] `locfun.antilap`: rational functions moved to own module
 - [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
-- [ ] `locfun.poly.poly`: use list of tuples for polynomial initialization
-- [ ] `locfun.poly.piecewise_poly`: determine `num_polys` automatically in `PiecewisePolynomial` constructor
+- [x] `locfun.poly.poly`: use list of tuples for polynomial initialization
 - [x] clean up integration methods
-- [ ] `mesh.edge`: safety checks for `set_cells` method
-- [ ] `mesh.planar_mesh`:
-  - [ ] replace lists with sets where appropriate
-  - [ ] set vert idxs in constructor
+- [x] add safety check to `add_edge()` method in `PlanarMesh`
 - [x] `mesh.quad`: add `get_quad_dict()` function
 - [x] `mesh.edgelib.teardrop`: pass `alpha` as keyword argument
 - [x] add `TracePlot` class
 - [x] add `MeshPlot` class
-- [ ] add `ContourPlot` class
+- [x] add `GlobalFunctionPlot` class
 - [x] `solver.solver`:
   - [x] move color printing to separate module
   - [x] move plotting functions to separate module

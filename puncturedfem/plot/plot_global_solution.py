@@ -12,7 +12,97 @@ from numpy import inf, nanmax, nanmin, ndarray
 from ..solver.solver import Solver
 
 
-def plot_linear_combo(
+class GlobalFunctionPlot:
+    """
+    Class for plotting a global function.
+
+    Parameters
+    ----------
+    solver : Solver
+        A Solver object, which contains the Mesh and the basis functions.
+    u : ndarray
+        The coefficients of the linear combination of basis functions.
+    fill : bool, optional
+        If True, a heatmap is plotted. If False, a contour plot is plotted.
+        Default is True.
+    title : str, optional
+        The title of the plot. Default is "", i.e. no title.
+    """
+
+    solver: Solver
+    u: ndarray
+    fill: bool
+    title: str
+
+    def __init__(
+        self,
+        solver: Solver,
+        u: ndarray,
+        fill: bool = True,
+        title: str = "",
+    ) -> None:
+        """
+        Constructor for the GlobalFunctionPlot class.
+
+        Parameters
+        ----------
+        solver : Solver
+            A Solver object, which contains the Mesh and the basis functions.
+        u : ndarray
+            The coefficients of the linear combination of basis functions.
+        fill : bool, optional
+            If True, a heatmap is plotted. If False, a contour plot is plotted.
+            Default is True.
+        title : str, optional
+            The title of the plot. Default is "", i.e. no title.
+        """
+        self.set_solver(solver)
+        self.set_coefficients(u)
+        self.fill = fill
+        self.title = title
+
+
+    def set_solver(self, solver: Solver) -> None:
+        """
+        Set the solver.
+        """
+        if not isinstance(solver, Solver):
+            raise TypeError("solver must be of type Solver")
+        self.solver = solver
+
+    def set_coefficients(self, u: ndarray) -> None:
+        """
+        Set the coefficients.
+        """
+        if not isinstance(u, ndarray):
+            raise TypeError("u must be of type ndarray")
+        if u.shape != (self.solver.V.num_funs,):
+            raise ValueError("u must have shape (solver.V.N,)")
+        self.u = u
+
+    def draw(self, show_plot: bool = True, filename: str = "") -> None:
+        """
+        Draw the plot.
+
+        Parameters
+        ----------
+        show_plot : bool, optional
+            If True, the plot is shown. Default is True.
+        filename : str, optional
+            If not empty, the plot is saved to this file. Default is "".
+        """
+        _plot_linear_combo(
+            self.solver,
+            self.u,
+            title=self.title,
+            show_fig=show_plot,
+            save_fig=(len(filename) > 0),
+            filename=filename,
+            fill=self.fill,
+        )
+
+
+def _plot_linear_combo(
     solver: Solver,
     u: ndarray,
     title: str = "",

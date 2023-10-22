@@ -61,7 +61,6 @@ from .mesh.meshlib.__builder__ import mesh_builder
 from .mesh.planar_mesh import PlanarMesh
 from .mesh.quad import Quad, get_quad_dict
 from .mesh.vert import Vert
-from .plot.plot_global_solution import plot_linear_combo  # TODO: remove
 from .solver.bilinear_form import BilinearForm
 from .solver.globfunsp import GlobalFunctionSpace
 from .solver.solver import Solver
@@ -81,7 +80,6 @@ __all__ = [
     "Vert",
     "mesh_builder",
     "plot",
-    "plot_linear_combo",  # TODO: remove
     "GlobalFunctionSpace",
     "BilinearForm",
     "Solver",

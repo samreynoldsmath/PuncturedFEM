@@ -33,12 +33,6 @@
 # 	+ \int_\Omega c \, u_i \, \phi_i \, \phi_j \, dx
 # 	= \int_\Omega f \, \phi_j \, dx
 # \end{align*}
-# 
-# We begin by importing the usual packages, as well as the `tqdm` package for
-# displaying progress bars.
-# 
-# *Note:* This example can be run without the `tqdm` package by setting 
-# `verbose=False` below.
 
 # In[ ]:
 
@@ -51,9 +45,6 @@ parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
 sys.path.append(parent_dir)
 
 import puncturedfem as pf
-import numpy as np
-import matplotlib.pyplot as plt
-from tqdm import tqdm
 
 
 # Let's set a few parameters before we go any further. 
@@ -81,7 +72,6 @@ verbose = True
 # In[ ]:
 
 
-# define mesh
 T = pf.meshlib.pacman_subdiv(verbose=verbose)
 
 
@@ -163,6 +153,8 @@ S.assemble(verbose=verbose)
 # In[ ]:
 
 
+import matplotlib.pyplot as plt
+
 plt.figure()
 plt.spy(S.glob_mat)
 plt.grid(True)
@@ -180,51 +172,30 @@ S.solve()
 
 
 # ## Plot solution
-# We can visualize the solution by calling the `plot_linear_combo()` function.
+# We can visualize the solution by 
+# creating an instance of the `GlobalFunctionPlot` class.
 # There are two types of plots available: 
 # a conventional contour plot (`fill=False`)
 # or a heat map (`fill=True`).
 # To view the figure in this notebook, set `show_fig = True`.
-# To save it to a file, set `save_fig = True` and select a filename.
+# To save it to a file, set the `filename` keyword argument in the 
+# `draw()` method.
 
 # In[ ]:
 
 
-pf.plot_linear_combo(
-    solver=S,
-    u=S.soln,
-    title="solution",
-    show_fig=True,
-    save_fig=False,
-    filename="out/png/solution_heat.png",
-    fill=True,
-)
+pf.plot.GlobalFunctionPlot(solver=S, u=S.soln, fill=True).draw(show_plot=True)
 
 
 # ## Plot global basis functions
-# Let's take a look at the global basis functions by using the 
-# `plot_linear_combo()` method.
+# Let's take a look at the global basis functions.
 
 # In[ ]:
 
 
-# decide if to use a progress bar
-if verbose:
-    print("Plotting basis functions...")
-    basis_idx_list = tqdm(range(S.num_funs))
-else:
-    basis_idx_list = range(S.num_funs)
-
-# plot each basis function
-for idx in basis_idx_list:
+import numpy as np
+for idx in range(S.num_funs):
     u = np.zeros(V.num_funs)
     u[idx] = 1.0
-    pf.plot_linear_combo(
-        solver=S,
-        u=u,
-        show_fig=True,
-        save_fig=False,
-        filename="out/png/basis_fun_%d.png" % idx,
-        fill=True,
-    )
+    pf.plot.GlobalFunctionPlot(solver=S, u=u, fill=True).draw(show_plot=True)
 
