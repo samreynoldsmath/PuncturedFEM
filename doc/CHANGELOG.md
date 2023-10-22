@@ -14,8 +14,7 @@
 - [x] rectify nested min/max statements
 - [ ] `locfun.locfun`: move interior value calculation to separate module
 - [x] `locfun.locfunsp`: make interior value calculation optional
-- [ ] `locfun.d2n`: logarithmic functions moved to own module
-- [ ] `locfun.antilap`: rational functions moved to own module
+- [x] use `functools.partial` to pass logarithmic terms to integrators
 - [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
 - [x] `locfun.poly.poly`: use list of tuples for polynomial initialization
 - [x] clean up integration methods
@@ -34,7 +33,6 @@
 - [x] fix type hints in tests
 ### Bug fixes
 - [x] fix colorbar position in contour plots
-- [ ] revert single/double layer operators to loop over edges rather than cell boundary components
 
 
 ## [2023 Oct 02] v0.3.7-alpha

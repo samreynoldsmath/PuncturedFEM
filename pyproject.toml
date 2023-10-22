@@ -16,7 +16,6 @@ disable = [
     "too-many-locals",
     "too-many-instance-attributes", # use dataclasses?
     "too-many-public-methods", # make more private?
-    "cell-var-from-loop", # use functools.partial instead
     ]
 good-names = [
     "a","b","c","d","e","f","g","h","i","j","k","l","m",
