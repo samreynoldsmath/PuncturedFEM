@@ -67,3 +67,9 @@ class Vert:
         if not isinstance(other, Vert):
             raise TypeError("Cannot compare Vert to non-Vert")
         return self.x == other.x and self.y == other.y
+
+    def __hash__(self) -> int:
+        """
+        Returns a hash of the vertex.
+        """
+        return hash((self.x, self.y))
