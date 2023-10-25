@@ -348,4 +348,4 @@ class ClosedContour:
             y[self.vert_idx[i] : self.vert_idx[i + 1]] = (
                 h * vals_dx_norm[self.vert_idx[i] : self.vert_idx[i + 1]]
             )
-        return np.sum(y)
+        return float(np.sum(y))
