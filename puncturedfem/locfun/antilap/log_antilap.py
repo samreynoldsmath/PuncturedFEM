@@ -55,9 +55,7 @@ def get_log_antilap(K: MeshCell) -> np.ndarray:
     LAM_trace = np.zeros((K.num_pts, K.num_holes))
     for j in range(K.num_holes):
         LAM_trace[:, j] = K.evaluate_function_on_boundary(
-            fun=partial(
-                _log_antilap, xi=K.components[j + 1].interior_point
-            )
+            fun=partial(_log_antilap, xi=K.components[j + 1].interior_point)
         )
     return LAM_trace
 
@@ -69,16 +67,11 @@ def get_log_antilap_weighted_normal_derivative(K: MeshCell) -> np.ndarray:
     """
     dLAM_dn_wgt = np.zeros((K.num_pts, K.num_holes))
     for j in range(K.num_holes):
-
         LAM_x1_trace = K.evaluate_function_on_boundary(
-            fun=partial(
-                _log_antilap_x1, xi=K.components[j + 1].interior_point
-            )
+            fun=partial(_log_antilap_x1, xi=K.components[j + 1].interior_point)
         )
         LAM_x2_trace = K.evaluate_function_on_boundary(
-            fun=partial(
-                _log_antilap_x2, xi=K.components[j + 1].interior_point
-            )
+            fun=partial(_log_antilap_x2, xi=K.components[j + 1].interior_point)
         )
 
         dLAM_dn = K.dot_with_normal(LAM_x1_trace, LAM_x2_trace)

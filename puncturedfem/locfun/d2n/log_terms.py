@@ -43,12 +43,14 @@ def _log_trace(x: np.ndarray, xi: Vert) -> float:
     _, x_xi_norm_sq = shifted_coordinates(x, xi)
     return 0.5 * np.log(x_xi_norm_sq)
 
+
 def _log_grad_x1(x: np.ndarray, xi: Vert) -> float:
     """
     Returns the x1 derivative of the logarithmic term
     """
     x_xi, x_xi_norm_sq = shifted_coordinates(x, xi)
     return x_xi[0] / x_xi_norm_sq
+
 
 def _log_grad_x2(x: np.ndarray, xi: Vert) -> float:
     """
@@ -57,6 +59,7 @@ def _log_grad_x2(x: np.ndarray, xi: Vert) -> float:
     x_xi, x_xi_norm_sq = shifted_coordinates(x, xi)
     return x_xi[1] / x_xi_norm_sq
 
+
 def get_log_trace(K: MeshCell) -> np.ndarray:
     """
     Returns traces of logarithmic terms on the boundary
@@ -64,7 +67,7 @@ def get_log_trace(K: MeshCell) -> np.ndarray:
     lam_trace = np.zeros((K.num_pts, K.num_holes))
     for j in range(K.num_holes):
         lam_trace[:, j] = K.evaluate_function_on_boundary(
-            fun=partial( _log_trace, xi=K.components[j + 1].interior_point)
+            fun=partial(_log_trace, xi=K.components[j + 1].interior_point)
         )
     return lam_trace
 
@@ -77,10 +80,10 @@ def get_log_grad(K: MeshCell) -> tuple[np.ndarray, np.ndarray]:
     lam_x2_trace = np.zeros((K.num_pts, K.num_holes))
     for j in range(K.num_holes):
         lam_x1_trace[:, j] = K.evaluate_function_on_boundary(
-            fun=partial( _log_grad_x1, xi=K.components[j + 1].interior_point)
+            fun=partial(_log_grad_x1, xi=K.components[j + 1].interior_point)
         )
         lam_x2_trace[:, j] = K.evaluate_function_on_boundary(
-            fun=partial( _log_grad_x2, xi=K.components[j + 1].interior_point)
+            fun=partial(_log_grad_x2, xi=K.components[j + 1].interior_point)
         )
     return lam_x1_trace, lam_x2_trace
 
