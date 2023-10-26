@@ -194,6 +194,7 @@ pf.plot.GlobalFunctionPlot(solver=S, u=S.soln, fill=True).draw(show_plot=True)
 
 
 import numpy as np
+
 for idx in range(S.num_funs):
     u = np.zeros(V.num_funs)
     u[idx] = 1.0
