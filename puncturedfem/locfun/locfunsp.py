@@ -6,6 +6,8 @@ Module containing the LocalFunctionSpace class, which is used to represent a
 basis of the local Poisson space V_p(K) on a mesh cell K.
 """
 
+from typing import Optional
+
 from tqdm import tqdm
 
 from ..mesh.cell import MeshCell
@@ -36,12 +38,12 @@ class LocalFunctionSpace:
     vert_funs: list[LocalFunction]
     edge_funs: list[LocalFunction]
     bubb_funs: list[LocalFunction]
-    Solver: NystromSolver
+    solver: NystromSolver
 
     def __init__(
         self,
         K: MeshCell,
-        edge_spaces: list[EdgeSpace],
+        edge_spaces: Optional[list[EdgeSpace]] = None,
         deg: int = 1,
         compute_interior_values: bool = True,
         verbose: bool = True,
@@ -59,7 +61,7 @@ class LocalFunctionSpace:
         ----------
         K : MeshCell
             Mesh MeshCell
-        edge_spaces : list[EdgeSpace]
+        edge_spaces : list[EdgeSpace], optional
             List of EdgeSpace objects for each Edge in K
         deg : int, optional
             (DEPRECATED) Degree of Polynomial space, by default 1
@@ -77,6 +79,12 @@ class LocalFunctionSpace:
 
         # bubble functions: zero trace, Polynomial Laplacian
         self.build_bubble_funs()
+
+        # construct edge spaces, if not provided
+        if edge_spaces is None:
+            edge_spaces = []
+            for e in K.get_edges():
+                edge_spaces.append(EdgeSpace(e, self.deg))
 
         # build vertex functions...')
         self.build_vert_funs(edge_spaces)
