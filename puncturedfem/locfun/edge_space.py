@@ -190,6 +190,9 @@ class EdgeSpace:
                 # force values at endpoints to be zero
                 self.edge_fun_traces[j] -= a0 * ell[0] + a1 * ell[1]
 
+                # flip sign if necessary
+                self.edge_fun_traces[j] *= -1
+
             # set vertex functions to barycentric coordinates
             self.vert_fun_traces.append(ell[0])
             self.vert_fun_traces.append(ell[1])

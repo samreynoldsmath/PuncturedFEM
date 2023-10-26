@@ -179,7 +179,7 @@ class LocalFunctionSpace:
             v_key = GlobalKey(fun_type="bubb", bubb_space_idx=k)
             v = LocalFunction(nyst=self.solver, key=v_key)
             p = Polynomial()
-            p.add_monomial_with_idx(coef=1.0, idx=k)
+            p.add_monomial_with_idx(coef=-1.0, idx=k)
             v.set_laplacian_polynomial(p)
             self.bubb_funs.append(v)
 
