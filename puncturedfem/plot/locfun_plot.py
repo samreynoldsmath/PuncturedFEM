@@ -6,6 +6,7 @@ Module for plotting the global solution.
 """
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from ..locfun.locfun import LocalFunction
 
@@ -28,10 +29,19 @@ class LocalFunctionPlot:
         v : LocalFunction
             The local function to be plotted.
         """
+        self.set_local_function(v)
+
+    def set_local_function(self, v: LocalFunction) -> None:
+        """
+        Set the local function to be plotted.
+        """
+        if not isinstance(v, LocalFunction):
+            raise TypeError("v must be a LocalFunction")
         self.v = v
 
-    def draw(
+    def _draw_generic(
         self,
+        vals: np.ndarray,
         show_plot: bool = True,
         filename: str = "",
         fill: bool = True,
@@ -62,3 +72,91 @@ class LocalFunctionPlot:
             plt.show()
         if filename:
             plt.savefig(filename)
+
+    def draw_vals(
+        self,
+        show_plot: bool = True,
+        filename: str = "",
+        fill: bool = True,
+        title: str = "",
+        levels: int = 32,
+        show_colorbar: bool = True,
+    ) -> None:
+        """
+        Draw the plot of the internal values.
+        """
+        self._draw_generic(
+            vals=self.v.int_vals,
+            show_plot=show_plot,
+            filename=filename,
+            fill=fill,
+            title=title,
+            levels=levels,
+            show_colorbar=show_colorbar,
+        )
+
+    def draw_grad_x1(
+        self,
+        show_plot: bool = True,
+        filename: str = "",
+        fill: bool = True,
+        title: str = "",
+        levels: int = 32,
+        show_colorbar: bool = True,
+    ) -> None:
+        """
+        Draw the plot of the x1 component of the gradient.
+        """
+        self._draw_generic(
+            vals=self.v.int_grad1,
+            show_plot=show_plot,
+            filename=filename,
+            fill=fill,
+            title=title,
+            levels=levels,
+            show_colorbar=show_colorbar,
+        )
+
+    def draw_grad_x2(
+        self,
+        show_plot: bool = True,
+        filename: str = "",
+        fill: bool = True,
+        title: str = "",
+        levels: int = 32,
+        show_colorbar: bool = True,
+    ) -> None:
+        """
+        Draw the plot of the x2 component of the gradient.
+        """
+        self._draw_generic(
+            vals=self.v.int_grad2,
+            show_plot=show_plot,
+            filename=filename,
+            fill=fill,
+            title=title,
+            levels=levels,
+            show_colorbar=show_colorbar,
+        )
+
+    def draw_grad_norm(
+        self,
+        show_plot: bool = True,
+        filename: str = "",
+        fill: bool = True,
+        title: str = "",
+        levels: int = 32,
+        show_colorbar: bool = True,
+    ) -> None:
+        """
+        Draw the plot of the norm of the gradient.
+        """
+        self._draw_generic(
+            vals=np.sqrt(self.v.int_grad1**2 + self.v.int_grad2**2),
+            show_plot=show_plot,
+            filename=filename,
+            fill=fill,
+            title=title,
+            levels=levels,
+            show_colorbar=show_colorbar,
+        )
