@@ -60,16 +60,22 @@ class Vert:
         self.x = x
         self.y = y
 
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the vertex.
+        """
+        return f"[vert{self.idx}]({self.x}, {self.y})"
+
     def __eq__(self, other: object) -> bool:
         """
         Returns True if two Vertices have the same coordinates.
         """
-        if isinstance(other, Vert):
+        if not isinstance(other, Vert):
             return NotImplemented
         diff = self - other
         if isinstance(diff, Vert):
             return diff.norm() < 1e-12
-        return False
+        raise TypeError("Subtraction against Vert must return a Vert")
 
     def __add__(self, other: object) -> object:
         """
