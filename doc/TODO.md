@@ -8,6 +8,13 @@
 
 
 ## [yyyy mm dd] v0.x
+### Maintenance
+- [ ] add logging with `logging` module
+- [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
+- [ ] `locfun.locfun`: move interior value calculation to separate module
+
+
+## [yyyy mm dd] v0.x
 ### Documentation
 - [ ] `README`: extend description, add references
 - [ ] add installation guide

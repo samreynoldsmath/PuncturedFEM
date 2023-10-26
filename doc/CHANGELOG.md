@@ -2,6 +2,13 @@
 
 
 ## [yyyy mm dd] v0.3.8
+### Features
+- [x] add `TracePlot` class
+- [x] add `MeshPlot` class
+- [x] add `GlobalFunctionPlot` class
+- [x] add `LocalFunctionPlot` class
+- [x] add `get_quad_dict()` function
+- [x] make `edgespaces` an optional parameter in `LocalFunctionSpace` init method
 ### Examples
 - [ ] `examples/ex1d-hat-tile.ipynb`: add example of hat tile local basis functions
 ### Tests
@@ -9,21 +16,14 @@
 - [x] add `test_edge_space`
 - [x] add `test_solver`
 ### Maintenance
-- [ ] add logging with `logging` module
 - [x] use enumerate to replace `range(len(...))` loops
 - [x] rectify nested min/max statements
-- [ ] `locfun.locfun`: move interior value calculation to separate module
 - [x] `locfun.locfunsp`: make interior value calculation optional
 - [x] use `functools.partial` to pass logarithmic terms to integrators
-- [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
 - [x] `locfun.poly.poly`: use list of tuples for polynomial initialization
 - [x] clean up integration methods
 - [x] add safety check to `add_edge()` method in `PlanarMesh`
-- [x] `mesh.quad`: add `get_quad_dict()` function
 - [x] `mesh.edgelib.teardrop`: pass `alpha` as keyword argument
-- [x] add `TracePlot` class
-- [x] add `MeshPlot` class
-- [x] add `GlobalFunctionPlot` class
 - [x] `solver.solver`:
   - [x] move color printing to separate module
   - [x] move plotting functions to separate module
