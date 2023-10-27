@@ -1,7 +1,7 @@
 # Punctured FEM: Change Log
 
 
-## [yyyy mm dd] v0.3.8
+## [2023 Oct 27] v0.3.8
 ### Features
 - [x] add `TracePlot` class
 - [x] add `MeshPlot` class
@@ -10,7 +10,7 @@
 - [x] add `get_quad_dict()` function
 - [x] make `edgespaces` an optional parameter in `LocalFunctionSpace` init method
 ### Examples
-- [ ] `examples/ex1d-hat-tile.ipynb`: add example of hat tile local basis functions
+- [x] `examples/ex1d-hat-tile.ipynb`: add example of hat tile local basis functions
 ### Tests
 - [x] deprecate `unittest` in favor of `pytest`
 - [x] add `test_edge_space`
