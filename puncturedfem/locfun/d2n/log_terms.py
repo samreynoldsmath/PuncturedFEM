@@ -19,67 +19,77 @@ Notes
 - lam denotes lambda, dlam denotes a derivative of lambda.
 """
 
+from functools import partial
+
 import numpy as np
 
-from ...mesh.cell import cell
+from ...mesh.cell import MeshCell
+from ...mesh.vert import Vert
 
 
-def shifted_coordinates(
-    x: np.ndarray, xi: list[float]
-) -> tuple[np.ndarray, float]:
+def shifted_coordinates(x: np.ndarray, xi: Vert) -> tuple[np.ndarray, float]:
     """
     Returns x - xi and its norm squared
     """
-    x_xi = np.array([x[0] - xi[0], x[1] - xi[1]])
+    x_xi = np.array([x[0] - xi.x, x[1] - xi.y])
     x_xi_norm_sq = x_xi[0] ** 2 + x_xi[1] ** 2
     return x_xi, x_xi_norm_sq
 
 
-def get_log_trace(K: cell) -> np.ndarray:
+def _log_trace(x: np.ndarray, xi: Vert) -> float:
+    """
+    Returns the trace of the logarithmic term
+    """
+    _, x_xi_norm_sq = shifted_coordinates(x, xi)
+    return 0.5 * np.log(x_xi_norm_sq)
+
+
+def _log_grad_x1(x: np.ndarray, xi: Vert) -> float:
+    """
+    Returns the x1 derivative of the logarithmic term
+    """
+    x_xi, x_xi_norm_sq = shifted_coordinates(x, xi)
+    return x_xi[0] / x_xi_norm_sq
+
+
+def _log_grad_x2(x: np.ndarray, xi: Vert) -> float:
+    """
+    Returns the x2 derivative of the logarithmic term
+    """
+    x_xi, x_xi_norm_sq = shifted_coordinates(x, xi)
+    return x_xi[1] / x_xi_norm_sq
+
+
+def get_log_trace(K: MeshCell) -> np.ndarray:
     """
     Returns traces of logarithmic terms on the boundary
     """
     lam_trace = np.zeros((K.num_pts, K.num_holes))
     for j in range(K.num_holes):
-        # xi = K.hole_int_pts[:,j]
-        xi = K.components[j + 1].interior_point
-
-        def lam(x: np.ndarray) -> float:
-            _, x_xi_norm_sq = shifted_coordinates(x, xi=[xi.x, xi.y])
-            return 0.5 * np.log(x_xi_norm_sq)
-
-        lam_trace[:, j] = K.evaluate_function_on_boundary(lam)
-
+        lam_trace[:, j] = K.evaluate_function_on_boundary(
+            fun=partial(_log_trace, xi=K.components[j + 1].interior_point)
+        )
     return lam_trace
 
 
-def get_log_grad(K: cell) -> tuple[np.ndarray, np.ndarray]:
+def get_log_grad(K: MeshCell) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns gradients of logarithmic terms on the boundary
     """
     lam_x1_trace = np.zeros((K.num_pts, K.num_holes))
     lam_x2_trace = np.zeros((K.num_pts, K.num_holes))
-
     for j in range(K.num_holes):
-        xi = K.components[j + 1].interior_point
-        xi_arr = [xi.x, xi.y]
-
-        def lam_x1(x: np.ndarray) -> float:
-            x_xi, x_xi_norm_sq = shifted_coordinates(x, xi_arr)
-            return x_xi[0] / x_xi_norm_sq
-
-        def lam_x2(x: np.ndarray) -> float:
-            x_xi, x_xi_norm_sq = shifted_coordinates(x, xi_arr)
-            return x_xi[1] / x_xi_norm_sq
-
-        lam_x1_trace[:, j] = K.evaluate_function_on_boundary(lam_x1)
-        lam_x2_trace[:, j] = K.evaluate_function_on_boundary(lam_x2)
-
+        lam_x1_trace[:, j] = K.evaluate_function_on_boundary(
+            fun=partial(_log_grad_x1, xi=K.components[j + 1].interior_point)
+        )
+        lam_x2_trace[:, j] = K.evaluate_function_on_boundary(
+            fun=partial(_log_grad_x2, xi=K.components[j + 1].interior_point)
+        )
     return lam_x1_trace, lam_x2_trace
 
 
 def get_dlam_dt_wgt(
-    K: cell, lam_x1_trace: np.ndarray, lam_x2_trace: np.ndarray
+    K: MeshCell, lam_x1_trace: np.ndarray, lam_x2_trace: np.ndarray
 ) -> np.ndarray:
     """
     Returns weighted tangential derivative of logarithmic terms
@@ -94,7 +104,7 @@ def get_dlam_dt_wgt(
 
 
 def get_dlam_dn_wgt(
-    K: cell, lam_x1_trace: np.ndarray, lam_x2_trace: np.ndarray
+    K: MeshCell, lam_x1_trace: np.ndarray, lam_x2_trace: np.ndarray
 ) -> np.ndarray:
     """
     Returns weighted normal derivative of logarithmic terms

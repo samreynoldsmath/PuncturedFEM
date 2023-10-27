@@ -2,46 +2,29 @@
 solver.py
 =========
 
-Module containing the solver class, which is a convenience class for solving
+Module containing the Solver class, which is a convenience class for solving
 the global linear system.
 """
 
-import matplotlib.pyplot as plt
-from matplotlib.cm import ScalarMappable
-from numpy import inf, nanmax, nanmin, ndarray, shape, zeros
+from numpy import ndarray, shape, zeros
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
 from tqdm import tqdm
 
-from .bilinear_form import bilinear_form
-from .globfunsp import global_function_space
-
-# TODO: this belongs in a different module, use enum
-RESET = "\033[0m"  # Reset all attributes
-RED = "\033[31m"  # Red text
-GREEN = "\033[32m"  # Green text
-YELLOW = "\033[33m"  # Yellow text
-BLUE = "\033[34m"  # Blue text
-MAGENTA = "\033[35m"  # Magenta text
-CYAN = "\033[36m"  # Cyan text
+from ..util.print_color import Color, print_color
+from .bilinear_form import BilinearForm
+from .globfunsp import GlobalFunctionSpace
 
 
-def print_color(s: str, color: str) -> None:
-    """
-    Print a string in color.
-    """
-    print(color + s + RESET)
-
-
-class solver:
+class Solver:
     """
     Convenience class for solving the global linear system.
 
     Attributes
     ----------
-    V : global_function_space
+    V : GlobalFunctionSpace
         Global function space
-    a : bilinear_form
+    a : BilinearForm
         Bilinear form
     glob_mat : csr_matrix
         Global system matrix
@@ -60,13 +43,13 @@ class solver:
     num_funs : int
         Number of global functions
     interior_values : list[list[ndarray]]
-        List of interior values on each cell
+        List of interior values on each MeshCell
     soln : ndarray
         Solution vector
     """
 
-    V: global_function_space
-    a: bilinear_form
+    V: GlobalFunctionSpace
+    a: BilinearForm
     glob_mat: csr_matrix
     glob_rhs: csr_matrix
     row_idx: list[int]
@@ -78,15 +61,15 @@ class solver:
     interior_values: list[list[ndarray]]
     soln: ndarray
 
-    def __init__(self, V: global_function_space, a: bilinear_form) -> None:
+    def __init__(self, V: GlobalFunctionSpace, a: BilinearForm) -> None:
         """
-        Constructor for solver class.
+        Constructor for Solver class.
 
         Parameters
         ----------
-        V : global_function_space
+        V : GlobalFunctionSpace
             Global function space
-        a : bilinear_form
+        a : BilinearForm
             Bilinear form
         """
         self.set_global_function_space(V)
@@ -96,7 +79,7 @@ class solver:
         """
         Return string representation.
         """
-        s = "solver:\n"
+        s = "Solver:\n"
         s += f"\tV: {self.V}\n"
         s += f"\ta: {self.a}\n"
         s += f"\tnum_funs: {self.num_funs}\n"
@@ -104,20 +87,20 @@ class solver:
 
     # SETTERS ################################################################
 
-    def set_global_function_space(self, V: global_function_space) -> None:
+    def set_global_function_space(self, V: GlobalFunctionSpace) -> None:
         """
         Set the global function space.
         """
-        if not isinstance(V, global_function_space):
-            raise TypeError("V must be a global_function_space")
+        if not isinstance(V, GlobalFunctionSpace):
+            raise TypeError("V must be a GlobalFunctionSpace")
         self.V = V
 
-    def set_bilinear_form(self, a: bilinear_form) -> None:
+    def set_bilinear_form(self, a: BilinearForm) -> None:
         """
         Set the bilinear form.
         """
-        if not isinstance(a, bilinear_form):
-            raise TypeError("a must be a bilinear_form")
+        if not isinstance(a, BilinearForm):
+            raise TypeError("a must be a BilinearForm")
         self.a = a
 
     # SOLVE LINEAR SYSTEM ####################################################
@@ -134,34 +117,55 @@ class solver:
 
     # ASSEMBLE GLOBAL SYSTEM #################################################
 
-    def assemble(self, verbose: bool = True, processes: int = 1) -> None:
+    def assemble(
+        self,
+        verbose: bool = True,
+        processes: int = 1,
+        compute_interior_values: bool = True,
+    ) -> None:
         """Assemble global system matrix"""
-        self.build_values_and_indexes(verbose=verbose, processes=processes)
+        self.build_values_and_indexes(
+            verbose=verbose,
+            processes=processes,
+            compute_interior_values=compute_interior_values,
+        )
         self.find_num_funs()
         self.build_matrix_and_rhs()
 
     def build_values_and_indexes(
-        self, verbose: bool = True, processes: int = 1
+        self,
+        verbose: bool = True,
+        processes: int = 1,
+        compute_interior_values: bool = True,
     ) -> None:
         """Build values and indexes"""
         if processes == 1:
-            self.build_values_and_indexes_sequential(verbose=verbose)
+            self.build_values_and_indexes_sequential(
+                verbose=verbose, compute_interior_values=compute_interior_values
+            )
         elif processes > 1:
             self.build_values_and_indexes_parallel(
-                verbose=verbose, processes=processes
+                verbose=verbose,
+                processes=processes,
+                compute_interior_values=compute_interior_values,
             )
         else:
             raise ValueError("processes must be a positive integer")
 
     def build_values_and_indexes_parallel(
-        self, verbose: bool = True, processes: int = 1
+        self,
+        verbose: bool = True,
+        processes: int = 1,
+        compute_interior_values: bool = True,
     ) -> None:
         """
         Build values and indexes in parallel.
         """
         raise NotImplementedError("Parallel assembly not yet implemented")
 
-    def build_values_and_indexes_sequential(self, verbose: bool = True) -> None:
+    def build_values_and_indexes_sequential(
+        self, verbose: bool = True, compute_interior_values: bool = True
+    ) -> None:
         """
         Build values and indexes sequentially.
         """
@@ -174,23 +178,28 @@ class solver:
 
         self.interior_values = [[] for _ in range(self.V.T.num_cells)]
 
-        # loop over cells
+        # loop over MeshCells
         for abs_cell_idx in range(self.V.T.num_cells):
             cell_idx = self.V.T.cell_idx_list[abs_cell_idx]
 
             if verbose:
                 print_color(
                     f"Cell {abs_cell_idx + 1:6} / {self.V.T.num_cells:6}",
-                    GREEN,
+                    Color.GREEN,
                 )
 
             # build local function space
-            V_K = self.V.build_local_function_space(cell_idx, verbose=verbose)
+            V_K = self.V.build_local_function_space(
+                cell_idx,
+                verbose=verbose,
+                compute_interior_values=compute_interior_values,
+            )
 
             # initialize interior values
-            self.interior_values[abs_cell_idx] = [
-                zeros((0,)) for _ in range(V_K.num_funs)
-            ]
+            if compute_interior_values:
+                self.interior_values[abs_cell_idx] = [
+                    zeros((0,)) for _ in range(V_K.num_funs)
+                ]
 
             if verbose:
                 print("Evaluating bilinear form and right-hand side...")
@@ -208,7 +217,8 @@ class solver:
                 v = loc_basis[i]
 
                 # store interior values
-                self.interior_values[abs_cell_idx][i] = v.int_vals
+                if compute_interior_values:
+                    self.interior_values[abs_cell_idx][i] = v.int_vals
 
                 # evaluate local right-hand side
                 f_i = self.a.eval_rhs(v)
@@ -241,21 +251,16 @@ class solver:
             for key in self.V.cell_dofs[abs_cell_idx]:
                 if key.is_on_boundary:
                     # zero rhs entry
-                    for k in range(len(self.rhs_idx)):
-                        if self.rhs_idx[k] == key.glob_idx:
+                    for k, idx in enumerate(self.rhs_idx):
+                        if idx == key.glob_idx:
                             self.rhs_vals[k] = 0.0
-
                     # zero mat row, except diagonal
-                    for k in range(len(self.row_idx)):
-                        if self.row_idx[k] == key.glob_idx:
+                    for k, idx in enumerate(self.row_idx):
+                        if idx == key.glob_idx:
                             if self.col_idx[k] == key.glob_idx:
                                 self.mat_vals[k] = 1.0
                             else:
                                 self.mat_vals[k] = 0.0
-
-                # else:
-
-                #     # normalize row
 
     def find_num_funs(self) -> None:
         """
@@ -294,149 +299,28 @@ class solver:
             shape=(self.num_funs, 1),
         )
 
-    # PLOT SOLUTION ##########################################################
+    # COMPUTE LINEAR COMBINATION #############################################
 
-    # TODO: this belongs in a different module
-
-    def plot_solution(
-        self,
-        title: str = "",
-        show_fig: bool = True,
-        save_fig: bool = False,
-        filename: str = "solution.pdf",
-        fill: bool = True,
-    ) -> None:
-        """
-        Plot the solution.
-        """
-        self.plot_linear_combo(
-            self.soln,
-            title=title,
-            show_fig=show_fig,
-            save_fig=save_fig,
-            filename=filename,
-            fill=fill,
-        )
-
-    def plot_linear_combo(
-        self,
-        u: ndarray,
-        title: str = "",
-        show_fig: bool = True,
-        save_fig: bool = False,
-        filename: str = "solution.pdf",
-        fill: bool = True,
-    ) -> None:
-        """
-        Plot a linear combination of the basis functions.
-        """
-        if not (show_fig or save_fig):
-            return
-        # compute linear combo on each cell, determine range of global values
-        vals_arr = []
-        vmin = inf
-        vmax = -inf
-        for cell_idx in self.V.T.cell_idx_list:
-            coef = self.get_coef_on_cell(cell_idx, u)
-            vals = self.compute_linear_combo_on_cell(cell_idx, coef)
-            vals_arr.append(vals)
-            vmin = min(vmin, nanmin(vals))
-            vmax = max(vmax, nanmax(vals))
-
-        # determine axes
-        min_x = inf
-        max_x = -inf
-        min_y = inf
-        max_y = -inf
-        for e in self.V.T.edges:
-            min_x = min(min_x, min(e.x[0, :]))
-            max_x = max(max_x, max(e.x[0, :]))
-            min_y = min(min_y, min(e.x[1, :]))
-            max_y = max(max_y, max(e.x[1, :]))
-        dx = max_x - min_x
-        dy = max_y - min_y
-        h = 4.0
-        w = h * dx / dy
-
-        # get figure object
-        fig = plt.figure(figsize=(w, h))
-
-        # plot mesh edges
-        for e in self.V.T.edges:
-            plt.plot(e.x[0, :], e.x[1, :], "k")
-
-        # plot interior values on each cell
-        for cell_idx in self.V.T.cell_idx_list:
-            vals = vals_arr[cell_idx]
-            if vmax - vmin > 1e-6:
-                K = self.V.T.get_cell(cell_idx)
-                abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
-                K.parameterize(self.V.quad_dict)
-                if fill:
-                    plt.contourf(
-                        K.int_x1,
-                        K.int_x2,
-                        vals_arr[abs_cell_idx],
-                        vmin=vmin,
-                        vmax=vmax,
-                        levels=32,
-                    )
-                else:
-                    plt.contour(
-                        K.int_x1,
-                        K.int_x2,
-                        vals_arr[abs_cell_idx],
-                        vmin=vmin,
-                        vmax=vmax,
-                        levels=32,
-                        colors="b",
-                    )
-        if fill:
-            sm = ScalarMappable(norm=plt.Normalize(vmin=vmin, vmax=vmax))
-            plt.colorbar(
-                mappable=sm,
-                ax=fig.axes,
-                fraction=0.046,
-                pad=0.04,
-            )
-        plt.axis("equal")
-        plt.axis("off")
-        plt.gca().set_aspect("equal")
-        plt.subplots_adjust(
-            left=0.0, right=1.0, bottom=0.0, top=1.0, wspace=0.0, hspace=0.0
-        )
-
-        if len(title) > 0:
-            plt.title(title)
-
-        if save_fig:
-            plt.savefig(filename)
-
-        if show_fig:
-            plt.show()
-
-        plt.close(fig)
-
-    def compute_linear_combo_on_cell(
+    def compute_linear_combo_on_mesh(
         self, cell_idx: int, coef: ndarray
     ) -> ndarray:
         """
-        Compute a linear combination of the basis functions on a cell.
+        Compute a linear combination of the basis functions on a MeshCell.
         """
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
         int_vals = self.interior_values[abs_cell_idx]
         vals = zeros(shape(int_vals[0]))
-        for i in range(len(int_vals)):
-            vals += int_vals[i] * coef[i]
+        for i, val in enumerate(int_vals):
+            vals += val * coef[i]
         return vals
 
-    def get_coef_on_cell(self, cell_idx: int, u: ndarray) -> ndarray:
+    def get_coef_on_mesh(self, cell_idx: int, u: ndarray) -> ndarray:
         """
-        Get the coefficients of the basis functions on a cell.
+        Get the coefficients of the basis functions on a MeshCell.
         """
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
-        ids = self.V.cell_dofs[abs_cell_idx]
-        coef = zeros(len(ids))
-        for i in range(len(ids)):
-            coef[i] = u[ids[i].glob_idx]
+        keys = self.V.cell_dofs[abs_cell_idx]
+        coef = zeros((len(keys),))
+        for i, key in enumerate(keys):
+            coef[i] = u[key.glob_idx]
         return coef

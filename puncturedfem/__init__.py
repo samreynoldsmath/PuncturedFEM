@@ -27,7 +27,7 @@ mesh
     Mesh data structures and mesh generation.
 plot
     Plotting functions.
-solver
+Solver
     Solver for PDEs on punctured meshes.
 
 
@@ -48,39 +48,39 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see https://www.gnu.org/licenses/.
 """
 
-from .locfun.locfun import locfun
-from .locfun.locfunsp import locfunspace
-from .locfun.nystrom import nystrom_solver
-from .locfun.poly.poly import polynomial
+from . import plot
+from .locfun.edge_space import EdgeSpace
+from .locfun.locfun import LocalFunction
+from .locfun.locfunsp import LocalFunctionSpace
+from .locfun.nystrom import NystromSolver
+from .locfun.poly.poly import Polynomial
 from .mesh import meshlib
-from .mesh.cell import cell
-from .mesh.edge import edge
+from .mesh.cell import MeshCell
+from .mesh.edge import Edge
 from .mesh.meshlib.__builder__ import mesh_builder
-from .mesh.planar_mesh import planar_mesh
-from .mesh.quad import quad
-from .mesh.vert import vert
-from .plot.edges import plot_edges
-from .plot.traceplot import plot_trace, plot_trace_log
-from .solver.bilinear_form import bilinear_form
-from .solver.globfunsp import global_function_space
-from .solver.solver import solver
+from .mesh.planar_mesh import PlanarMesh
+from .mesh.quad import Quad, get_quad_dict
+from .mesh.vert import Vert
+from .solver.bilinear_form import BilinearForm
+from .solver.globfunsp import GlobalFunctionSpace
+from .solver.solver import Solver
 
 __all__ = [
-    "locfun",
-    "locfunspace",
-    "polynomial",
-    "nystrom_solver",
-    "cell",
-    "edge",
+    "EdgeSpace",
+    "LocalFunction",
+    "LocalFunctionSpace",
+    "Polynomial",
+    "NystromSolver",
+    "MeshCell",
+    "Edge",
     "meshlib",
-    "planar_mesh",
-    "quad",
-    "vert",
+    "PlanarMesh",
+    "Quad",
+    "get_quad_dict",
+    "Vert",
     "mesh_builder",
-    "plot_edges",
-    "plot_trace",
-    "plot_trace_log",
-    "global_function_space",
-    "bilinear_form",
-    "solver",
+    "plot",
+    "GlobalFunctionSpace",
+    "BilinearForm",
+    "Solver",
 ]

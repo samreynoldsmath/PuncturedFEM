@@ -6,7 +6,7 @@
 # This tutorial introduces the construction and manipulation of curvilinear 
 # meshes.
 # 
-# A `planar_mesh` object is fundamentally a list of curvilinear `edge` objects.
+# A `PlanarMesh` object is fundamentally a list of curvilinear `Edge` objects.
 # Each edge consists of a pair of vertices and enough information to 
 # parameterize the edge as a curve in the plane. Each edge also is assigned to 
 # two mesh cells to which the edge is part of the boundary. 
@@ -19,7 +19,7 @@
 # We begin by importing the `puncturedfem` package, 
 # as well as `numpy` and `matplotlib` for the sake of this example.
 
-# In[16]:
+# In[31]:
 
 
 import sys
@@ -38,15 +38,15 @@ import matplotlib.pyplot as plt
 # The simplest type of edge is a straight line segment, which is the default
 # when initializing an `edge` object.
 
-# In[17]:
+# In[32]:
 
 
 # define vertices
-v1 = pf.vert(x=0.0, y=0.0)
-v2 = pf.vert(x=1.0, y=2.0)
+v1 = pf.Vert(x=0.0, y=0.0)
+v2 = pf.Vert(x=1.0, y=2.0)
 
 # define a straight edge
-e1 = pf.edge(v1, v2)
+e1 = pf.Edge(v1, v2)
 
 
 # For curvilinear edges, we can supply additional arguments to define the edge.
@@ -58,11 +58,11 @@ e1 = pf.edge(v1, v2)
 # For instance, we can create a circular arc corresponding to a $120^\circ$ angle
 # as follows:
 
-# In[18]:
+# In[33]:
 
 
 # create a circular arc
-e2 = pf.edge(v1, v2, curve_type="circular_arc_deg", theta0=120)
+e2 = pf.Edge(v1, v2, curve_type="circular_arc_deg", theta0=120)
 
 
 # Some of the common `curvetype`s used in these examples are
@@ -83,12 +83,12 @@ e2 = pf.edge(v1, v2, curve_type="circular_arc_deg", theta0=120)
 # For now, we will use the trapezoid rule, which uses the equispacing 
 # $t_k = hk$, where $h=\pi / n$ for a chosen natural number $n$.
 
-# In[19]:
+# In[34]:
 
 
 n = 32
-q_trap = pf.quad(qtype="trap", n=n)
-q_kress = pf.quad(qtype="kress", n=n)
+q_trap = pf.Quad(qtype="trap", n=n)
+q_kress = pf.Quad(qtype="kress", n=n)
 quad_dict = {"kress": q_kress, "trap": q_trap}
 
 
@@ -99,7 +99,7 @@ quad_dict = {"kress": q_kress, "trap": q_trap}
 # an edge.
 # We can see that the Kress scheme samples points more heavily near the endpoints: 
 
-# In[20]:
+# In[35]:
 
 
 plt.figure()
@@ -111,97 +111,105 @@ plt.show()
 
 # We are now prepared to parameterize our edges.
 
-# In[21]:
+# In[36]:
 
 
 e1.parameterize(quad_dict)
 e2.parameterize(quad_dict)
 
-pf.plot_edges([e1, e2])
+
+# We can plot the edges using the `MeshPlot` class:
+
+# In[37]:
 
 
-# we can visualize the orientation of each edge by setting the 
-# `orientation` parameter to `True`:
-
-# In[22]:
+pf.plot.MeshPlot([e1, e2]).draw()
 
 
-pf.plot_edges([e1, e2], orientation=True)
+# We can visualize the orientation of each edge by setting the 
+# `show_orientation` keyword argument to `True`. 
+# We can also introduce grid lines by setting the `show_grid` keyword argument
+# to `True`.
+
+# In[38]:
+
+
+pf.plot.MeshPlot([e1, e2], show_orientation=True, show_grid=True).draw()
 
 
 # ## Creating a mesh
 # 
 # First we begin by defining the vertices of the mesh.
 
-# In[23]:
+# In[39]:
 
 
-verts = []
+verts: list[pf.Vert] = []
 
 # rectangle corners
-verts.append(pf.vert(x=0.0, y=0.0))  # 0
-verts.append(pf.vert(x=1.0, y=0.0))  # 1
-verts.append(pf.vert(x=3.0, y=0.0))  # 2
-verts.append(pf.vert(x=4.0, y=0.0))  # 3
-verts.append(pf.vert(x=4.0, y=1.0))  # 4
-verts.append(pf.vert(x=3.0, y=1.0))  # 5
-verts.append(pf.vert(x=1.0, y=1.0))  # 6
-verts.append(pf.vert(x=0.0, y=1.0))  # 7
+verts.append(pf.Vert(x=0.0, y=0.0))  # 0
+verts.append(pf.Vert(x=1.0, y=0.0))  # 1
+verts.append(pf.Vert(x=3.0, y=0.0))  # 2
+verts.append(pf.Vert(x=4.0, y=0.0))  # 3
+verts.append(pf.Vert(x=4.0, y=1.0))  # 4
+verts.append(pf.Vert(x=3.0, y=1.0))  # 5
+verts.append(pf.Vert(x=1.0, y=1.0))  # 6
+verts.append(pf.Vert(x=0.0, y=1.0))  # 7
 
 # pacman
 pacman_scale = 0.4
-verts.append(pf.vert(x=0.5, y=0.5))  # 8
+verts.append(pf.Vert(x=0.5, y=0.5))  # 8
 verts.append(
-    pf.vert(x=0.5 + pacman_scale * (np.sqrt(3) / 2), y=0.5 + pacman_scale * 0.5)
+    pf.Vert(x=0.5 + pacman_scale * (np.sqrt(3) / 2), y=0.5 + pacman_scale * 0.5)
 )  # 9
 verts.append(
-    pf.vert(x=0.5 + pacman_scale * (np.sqrt(3) / 2), y=0.5 - pacman_scale * 0.5)
+    pf.Vert(x=0.5 + pacman_scale * (np.sqrt(3) / 2), y=0.5 - pacman_scale * 0.5)
 )  # 10
 verts.append(
-    pf.vert(x=0.5 + pacman_scale * -0.1, y=0.5 + pacman_scale * 0.5)
+    pf.Vert(x=0.5 + pacman_scale * -0.1, y=0.5 + pacman_scale * 0.5)
 )  # 11
 
 # dots
-verts.append(pf.vert(x=1.5, y=0.5))  # 12
-verts.append(pf.vert(x=2.0, y=0.5))  # 13
-verts.append(pf.vert(x=2.5, y=0.5))  # 14
+verts.append(pf.Vert(x=1.5, y=0.5))  # 12
+verts.append(pf.Vert(x=2.0, y=0.5))  # 13
+verts.append(pf.Vert(x=2.5, y=0.5))  # 14
 
 # ghost
 ghost_scale = 0.6
 ghost_x_shift = 3.5
 ghost_y_shift = 0.5
 verts.append(
-    pf.vert(
+    pf.Vert(
         x=ghost_x_shift + ghost_scale * (-0.5),
         y=ghost_y_shift + ghost_scale * (-0.6),
     )
 )  # 15
 verts.append(
-    pf.vert(
+    pf.Vert(
         x=ghost_x_shift + ghost_scale * (0.5),
         y=ghost_y_shift + ghost_scale * (-0.6),
     )
 )  # 16
 verts.append(
-    pf.vert(
+    pf.Vert(
         x=ghost_x_shift + ghost_scale * (0.5),
         y=ghost_y_shift + ghost_scale * (0.2),
     )
 )  # 17
 verts.append(
-    pf.vert(
+    pf.Vert(
         x=ghost_x_shift + ghost_scale * (-0.5),
         y=ghost_y_shift + ghost_scale * (0.2),
     )
 )  # 18
 verts.append(
-    pf.vert(
+    pf.Vert(
         x=ghost_x_shift + ghost_scale * (-0.25),
         y=ghost_y_shift + ghost_scale * (0.1),
     )
 )  # 19
 verts.append(
-    pf.vert(
+    pf.Vert(
         x=ghost_x_shift + ghost_scale * (0.25),
         y=ghost_y_shift + ghost_scale * (0.1),
     )
@@ -210,17 +218,17 @@ verts.append(
 
 # We need to label our vertices:
 
-# In[24]:
+# In[40]:
 
 
 # TODO: future versions should do this automatically.
 for k in range(len(verts)):
-    verts[k].set_id(k)
+    verts[k].set_idx(k)
 
 
 # Let's visualized these points:
 
-# In[25]:
+# In[41]:
 
 
 plt.figure()
@@ -238,27 +246,27 @@ plt.show()
 # no such cell, `pos_cell_idx = -1` is taken as the default argument.
 # The `neg_cell_idx` is the index of the cell where the opposite is true. 
 
-# In[26]:
+# In[42]:
 
 
-edges = []
+edges: list[pf.Edge] = []
 
 # rectangles
-edges.append(pf.edge(verts[0], verts[1], pos_cell_idx=0))
-edges.append(pf.edge(verts[1], verts[2], pos_cell_idx=3))
-edges.append(pf.edge(verts[2], verts[3], pos_cell_idx=7))
-edges.append(pf.edge(verts[3], verts[4], pos_cell_idx=7))
-edges.append(pf.edge(verts[4], verts[5], pos_cell_idx=7))
-edges.append(pf.edge(verts[5], verts[6], pos_cell_idx=3))
-edges.append(pf.edge(verts[6], verts[7], pos_cell_idx=0))
-edges.append(pf.edge(verts[7], verts[0], pos_cell_idx=0))
-edges.append(pf.edge(verts[1], verts[6], pos_cell_idx=0, neg_cell_idx=3))
-edges.append(pf.edge(verts[2], verts[5], pos_cell_idx=3, neg_cell_idx=7))
+edges.append(pf.Edge(verts[0], verts[1], pos_cell_idx=0))
+edges.append(pf.Edge(verts[1], verts[2], pos_cell_idx=3))
+edges.append(pf.Edge(verts[2], verts[3], pos_cell_idx=7))
+edges.append(pf.Edge(verts[3], verts[4], pos_cell_idx=7))
+edges.append(pf.Edge(verts[4], verts[5], pos_cell_idx=7))
+edges.append(pf.Edge(verts[5], verts[6], pos_cell_idx=3))
+edges.append(pf.Edge(verts[6], verts[7], pos_cell_idx=0))
+edges.append(pf.Edge(verts[7], verts[0], pos_cell_idx=0))
+edges.append(pf.Edge(verts[1], verts[6], pos_cell_idx=0, neg_cell_idx=3))
+edges.append(pf.Edge(verts[2], verts[5], pos_cell_idx=3, neg_cell_idx=7))
 
 # pacman
-edges.append(pf.edge(verts[8], verts[9], pos_cell_idx=1, neg_cell_idx=0))
+edges.append(pf.Edge(verts[8], verts[9], pos_cell_idx=1, neg_cell_idx=0))
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[9],
         verts[10],
         pos_cell_idx=1,
@@ -267,9 +275,9 @@ edges.append(
         theta0=300,
     )
 )
-edges.append(pf.edge(verts[10], verts[8], pos_cell_idx=1, neg_cell_idx=0))
+edges.append(pf.Edge(verts[10], verts[8], pos_cell_idx=1, neg_cell_idx=0))
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[11],
         verts[11],
         pos_cell_idx=2,
@@ -281,7 +289,7 @@ edges.append(
 
 # dots
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[12],
         verts[12],
         pos_cell_idx=4,
@@ -291,7 +299,7 @@ edges.append(
     )
 )
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[13],
         verts[13],
         pos_cell_idx=5,
@@ -301,7 +309,7 @@ edges.append(
     )
 )
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[14],
         verts[14],
         pos_cell_idx=6,
@@ -313,7 +321,7 @@ edges.append(
 
 # ghost
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[15],
         verts[16],
         pos_cell_idx=8,
@@ -323,9 +331,9 @@ edges.append(
         freq=6,
     )
 )
-edges.append(pf.edge(verts[16], verts[17], pos_cell_idx=8, neg_cell_idx=7))
+edges.append(pf.Edge(verts[16], verts[17], pos_cell_idx=8, neg_cell_idx=7))
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[17],
         verts[18],
         pos_cell_idx=8,
@@ -334,9 +342,9 @@ edges.append(
         theta0=180,
     )
 )
-edges.append(pf.edge(verts[18], verts[15], pos_cell_idx=8, neg_cell_idx=7))
+edges.append(pf.Edge(verts[18], verts[15], pos_cell_idx=8, neg_cell_idx=7))
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[19],
         verts[19],
         pos_cell_idx=9,
@@ -347,7 +355,7 @@ edges.append(
     )
 )
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[20],
         verts[20],
         pos_cell_idx=10,
@@ -362,25 +370,16 @@ edges.append(
 # With all of the edges of the mesh defined, we are prepared to define a
 # `planar_mesh` object.
 
-# In[27]:
+# In[43]:
 
 
-T = pf.planar_mesh(edges)
-
-
-# We can view some information about the mesh with the standard `print()` 
-# function.
-
-# In[28]:
-
-
-print(T)
+T = pf.PlanarMesh(edges)
 
 
 # Let's visualize the mesh skeleton, but first we should remember to parameterize
 # the edges.
 
-# In[29]:
+# In[44]:
 
 
 # parameterize all edges of the mesh
@@ -388,17 +387,17 @@ for e in T.edges:
     e.parameterize(quad_dict)
 
 # plot the skeleton
-pf.plot_edges(edges)
+pf.plot.MeshPlot(T.edges).draw()
 
 
 # Moreover, we can visualize an individual cell of the mesh:
 
-# In[30]:
+# In[47]:
 
 
 cell_idx = 8
-K = T.get_cell(cell_idx)
-pf.plot_edges(K.get_edges())
+K = T.get_cells(cell_idx)
+pf.plot.MeshPlot(K.get_edges()).draw()
 
 
 # ## Appendix: Defining a custom `curvetype`
@@ -413,7 +412,8 @@ pf.plot_edges(K.get_edges())
 # * $x(\cdot)$ is regularizable: there is some fixed $\sigma>0$ such that
 #   $|x'(t)|\geq\sigma$ for all $0 < t < 2\pi$.
 # 
-# In the event that we need an edge that is not provided in the `edgelib` folder,
+# In the event that we need an edge that is not provided in the 
+# `puncturedfem/mesh/edgelib` folder,
 # we can add to the edge library as follows. 
 # 1. Create a file `puncturedfem/mesh/edgelib/mycurve.py`, where `mycurve` will
 #    be the name of the curve that will be called during the initialization 
@@ -423,7 +423,7 @@ pf.plot_edges(K.get_edges())
 #    These will define $x(t)$, $x'(t)$, and $x''(t)$ respectively.
 # 4. Each of these three functions will return a $2\times (2n+1)$ array,
 #    where $2n+1$ is the number of sampled points specified by the chosen
-#    `quad` object.
+#    `Quad` object.
 # 5. Row 0 of each array contains the $x_1$ component, and row 1 contains the 
 #    $x_2$ component.
 # 6. Unpack any additional arguments from `**kwargs`.

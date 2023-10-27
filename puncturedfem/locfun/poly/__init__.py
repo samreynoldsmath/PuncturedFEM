@@ -2,28 +2,28 @@
 poly
 ====
 
-This subpackage contains tools for working with polynomials in two variables.
+This subpackage contains tools for working with Polynomials in two variables.
 
 Modules
 -------
 barycentric
     Functions for working with barycentric coordinates.
 integrate_poly
-    Functions for integrating polynomials.
+    Functions for integrating Polynomials.
 legendre
-    Functions for working with Legendre polynomials.
+    Functions for working with Legendre Polynomials.
 monomial
-    Defines the monomial class.
+    Defines the Monomial class.
 multi_index
     Defines the multi_index class.
-piecewise_polynomial
-    Defines the piecewise_polynomial class.
+PiecewisePolynomial
+    Defines the PiecewisePolynomial class.
 poly_eval
-    Functions for evaluating polynomials.
+    Functions for evaluating Polynomials.
 poly
-    Defines the polynomial class.
+    Defines the Polynomial class.
 """
 
-from .poly import polynomial
+from .poly import Polynomial
 
-__all__ = ["polynomial"]
+__all__ = ["Polynomial"]

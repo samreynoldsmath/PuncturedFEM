@@ -2,33 +2,33 @@
 nystrom.py
 ==========
 
-Module containing the nystrom_solver class, which is used to represent a
-Nyström solver for a given mesh cell K.
+Module containing the NystromSolver class, which is used to represent a
+Nyström Solver for a given mesh cell K.
 """
 
 
 import numpy as np
 from scipy.sparse.linalg import LinearOperator, gmres
 
-from ..mesh.cell import cell
-from ..mesh.closed_contour import closed_contour
-from ..mesh.edge import edge
-from ..mesh.quad import quad
+from ..mesh.cell import MeshCell
+from ..mesh.closed_contour import ClosedContour
+from ..mesh.edge import Edge
+from ..mesh.quad import Quad
 from .d2n import log_terms
 from .d2n.trace2tangential import get_weighted_tangential_derivative_from_trace
 
 
-class nystrom_solver:
+class NystromSolver:
     """
-    Nyström solver for a given mesh cell K. The Nyström solver is used to solve
+    Nyström Solver for a given mesh cell K. The Nyström Solver is used to solve
     the Neumann problem on K, which can be used to compute harmonic conjugates
     of functions on K, for example.
     """
 
-    # TODO add batch processing for multiple locfuns
+    # TODO add batch processing for multipleLocalFunctions
     # TODO use multiprocessing to speed up computation
 
-    K: cell
+    K: MeshCell
     single_layer_mat: np.ndarray
     double_layer_mat: np.ndarray
     single_layer_op: LinearOperator
@@ -42,30 +42,30 @@ class nystrom_solver:
     T1_dlam_dt: np.ndarray
     Sn_lam: np.ndarray
 
-    def __init__(self, K: cell, verbose: bool = False) -> None:
+    def __init__(self, K: MeshCell, verbose: bool = False) -> None:
         """
-        Constructor for Nyström solver. This constructor computes the single
+        Constructor for Nyström Solver. This constructor computes the single
         and double layer operators, as well as the logarithmic terms (if K has
         holes).
 
         Parameters
         ----------
-        K : cell
-            Mesh cell
+        K : MeshCell
+            Mesh MeshCell
         verbose : bool, optional
-            Whether to print information about the Nyström solver, by default
+            Whether to print information about the Nyström Solver, by default
             False
         """
         if verbose:
             msg = (
-                "Setting up Nyström solver... "
-                + f"{K.num_pts} sampled points on {K.num_edges} edge"
+                "Setting up Nyström Solver... "
+                + f"{K.num_pts} sampled points on {K.num_edges} Edge"
             )
             if K.num_edges > 1:
                 msg += "s"
             print(msg)
-        if not isinstance(K, cell):
-            raise TypeError("K must be a cell")
+        if not isinstance(K, MeshCell):
+            raise TypeError("K must be a MeshCell")
         self.K = K
         self.build_single_layer_mat()
         self.build_double_layer_mat()
@@ -268,9 +268,9 @@ class nystrom_solver:
             kk1 = self.K.components[i].vert_idx[k]
             kk2 = self.K.components[i].vert_idx[k + 1]
             e = self.K.components[i].edges[k]
-            # Martensen quadrature
+            # Martensen Quadrature
             nm = (self.K.components[i].edges[k].num_pts - 1) // 2
-            qm = quad(qtype="mart", n=nm)
+            qm = Quad(qtype="mart", n=nm)
             for ell in range(self.K.components[j].num_edges):
                 ll1 = self.K.components[j].vert_idx[ell]
                 ll2 = self.K.components[j].vert_idx[ell + 1]
@@ -280,10 +280,10 @@ class nystrom_solver:
                 )
         return B_comp
 
-    def single_layer_edge_block(self, e: edge, f: edge, qm: quad) -> np.ndarray:
+    def single_layer_edge_block(self, e: Edge, f: Edge, qm: Quad) -> np.ndarray:
         """
         Block of the single layer operator matrix corresponding to the edges e
-        and f. The quadrature object qm is the Martensen quadrature.
+        and f. The Quadrature object qm is the Martensen Quadrature.
         """
 
         # allocate block
@@ -292,7 +292,7 @@ class nystrom_solver:
         # trapezoid weight: pi in integrand cancels
         h = -0.5 / (f.num_pts - 1)
 
-        # adapt quadrature to accommodate both trapezoid and Kress
+        # adapt Quadrature to accommodate both trapezoid and Kress
         if f.quad_type[0:5] == "kress":
             j_start = 1
         else:
@@ -350,7 +350,7 @@ class nystrom_solver:
                 )
 
     def double_layer_component_block(
-        self, ci: closed_contour, cj: closed_contour
+        self, ci: ClosedContour, cj: ClosedContour
     ) -> np.ndarray:
         """
         Block of the double layer operator matrix corresponding to the i-th
@@ -368,7 +368,7 @@ class nystrom_solver:
                 )
         return B_comp
 
-    def double_layer_edge_block(self, e: edge, f: edge) -> np.ndarray:
+    def double_layer_edge_block(self, e: Edge, f: Edge) -> np.ndarray:
         """
         Block of the double layer operator matrix corresponding to the edges e
         and f.
@@ -380,10 +380,10 @@ class nystrom_solver:
         # trapezoid step size
         h = 1 / (f.num_pts - 1)
 
-        # check if edges are the same edge
+        # check if edges are the same Edge
         same_edge = e == f
 
-        # adapt quadrature to accommodate both trapezoid and Kress
+        # adapt Quadrature to accommodate both trapezoid and Kress
         if f.quad_type[0:5] == "kress":
             j_start = 1
         else:

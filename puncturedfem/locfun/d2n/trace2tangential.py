@@ -19,12 +19,12 @@ Notes
 
 import numpy as np
 
-from ...mesh.cell import cell
+from ...mesh.cell import MeshCell
 from . import fft_deriv
 
 
 def get_weighted_tangential_derivative_from_trace(
-    K: cell, f_vals: np.ndarray
+    K: MeshCell, f_vals: np.ndarray
 ) -> np.ndarray:
     """
     Returns df / ds = nabla f(x(t)) * x'(t) by computing the derivative

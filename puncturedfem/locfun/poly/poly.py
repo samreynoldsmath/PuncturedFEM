@@ -2,8 +2,8 @@
 poly.py
 =======
 
-Module containing the polynomial class, which is used to represent
-polynomials in two variables, and is basically a list of monomials.
+Module containing the Polynomial class, which is used to represent
+Polynomials in two variables, and is basically a list of Monomials.
 """
 
 from __future__ import annotations
@@ -12,24 +12,24 @@ from typing import Optional
 
 import numpy as np
 
-from ...mesh.cell import cell
-from .monomial import monomial
-from .multi_index import multi_index_2
+from ...mesh.cell import MeshCell
+from .monomial import Monomial
+from .multi_index import MultiIndex
 from .poly_exceptions import MultiIndexError, PolynomialError
 
 
-class polynomial:
+class Polynomial:
     """
-    Treated as a list of monomial objects
+    Treated as a list of Monomial objects
     """
 
-    monos: list[monomial]
+    monos: list[Monomial]
 
     def __init__(
         self, coef_multidx_pairs: Optional[list[tuple[float, int, int]]] = None
     ) -> None:
         """
-        Constructor for the polynomial class.
+        Constructor for the Polynomial class.
 
         Parameters
         ----------
@@ -42,7 +42,7 @@ class polynomial:
         self, coef_multidx_pairs: Optional[list[tuple[float, int, int]]] = None
     ) -> None:
         """
-        Sets the polynomial to the list of coefficient / multi-index pairs.
+        Sets the Polynomial to the list of coefficient / multi-index pairs.
         """
         self.monos = []
         if coef_multidx_pairs is None:
@@ -56,29 +56,29 @@ class polynomial:
                     + "\n\t[2]:\tthe exponent on x_2"
                 )
             c = float(triple[0])
-            alpha = multi_index_2([triple[1], triple[2]])
-            m = monomial(alpha, c)
+            alpha = MultiIndex([triple[1], triple[2]])
+            m = Monomial(alpha, c)
             self.add_monomial(m)
         self.consolidate()
 
-    def copy(self) -> polynomial:
+    def copy(self) -> Polynomial:
         """
-        Returns a copy of the polynomial.
+        Returns a copy of the Polynomial.
         """
-        new = polynomial()
+        new = Polynomial()
         new.add_monomials(self.monos)
         return new
 
-    def add_monomial(self, m: monomial) -> None:
+    def add_monomial(self, m: Monomial) -> None:
         """
-        Adds a monomial to the polynomial
+        Adds a Monomial to the Polynomial
         """
         if not m.is_zero():
             self.monos.append(m)
 
-    def add_monomials(self, monos: Optional[list[monomial]] = None) -> None:
+    def add_monomials(self, monos: Optional[list[Monomial]] = None) -> None:
         """
-        Adds a list of monomials to the polynomial
+        Adds a list of Monomials to the Polynomial
         """
         if monos is None:
             return
@@ -109,9 +109,9 @@ class polynomial:
 
     def sort(self) -> None:
         """
-        Sorts the monomials according to multi-index id
+        Sorts the Monomials according to multi-index id
 
-        (Using Insertion Sort since monomial list is assumed be be short)
+        (Using Insertion Sort since Monomial list is assumed be be short)
         """
         for i in range(len(self.monos)):
             j = i
@@ -123,10 +123,10 @@ class polynomial:
 
     def add_monomial_with_idx(self, coef: float, idx: int) -> None:
         """
-        Adds a monomial with a given multi-index idx, defined with a
+        Adds a Monomial with a given multi-index idx, defined with a
         'upper triangular' ordering
         """
-        m = monomial()
+        m = Monomial()
         m.set_multidx_from_idx(idx)
         m.set_coef(coef)
         self.add_monomial(m)
@@ -136,7 +136,7 @@ class polynomial:
         self, coef_list: list[float], idx_list: list[int]
     ) -> None:
         """
-        Adds a list of monomials with a given list of multi-index ids,
+        Adds a list of Monomials with a given list of multi-index ids,
         defined with a 'upper triangular' ordering
         """
         if len(coef_list) != len(idx_list):
@@ -149,98 +149,98 @@ class polynomial:
 
     def is_zero(self) -> bool:
         """
-        Returns True if the polynomial is zero
+        Returns True if the Polynomial is zero
         """
         self.consolidate()
         return len(self.monos) == 0
 
     def set_to_zero(self) -> None:
         """
-        Sets the polynomial to zero
+        Sets the Polynomial to zero
         """
         self.monos = []
 
     def eval(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
-        Evaluates the polynomial at the point (x, y)
+        Evaluates the Polynomial at the point (x, y)
         """
         val = np.zeros(np.shape(x))
         for m in self.monos:
             val += m.eval(x, y)
         return val
 
-    def pow(self, exponent: int) -> polynomial:
+    def pow(self, exponent: int) -> Polynomial:
         """
-        Raises the polynomial to a nonnegative integer power
+        Raises the Polynomial to a nonnegative integer power
         """
         if not isinstance(exponent, int) or exponent < 0:
             raise ValueError("Exponent must be nonnegative integer")
-        new = polynomial([(1.0, 0, 0)])
+        new = Polynomial([(1.0, 0, 0)])
         # TODO: use a binary exponentiation algorithm
         for _ in range(exponent):
             new *= self
         return new
 
-    def compose(self, q1: polynomial, q2: polynomial) -> polynomial:
+    def compose(self, q1: Polynomial, q2: Polynomial) -> Polynomial:
         """
-        Returns a polynomial new(x, y) = self(q1(x, y), q2(x, y))
+        Returns a Polynomial new(x, y) = self(q1(x, y), q2(x, y))
         """
-        new = polynomial()
+        new = Polynomial()
         for m in self.monos:
             temp = q1.pow(m.alpha.x)
             temp *= q2.pow(m.alpha.y)
             new += m.coef * temp
         return new
 
-    def partial_deriv(self, var: str) -> polynomial:
+    def partial_deriv(self, var: str) -> Polynomial:
         """
-        Returns the partial derivative of the polynomial with respect to
+        Returns the partial derivative of the Polynomial with respect to
         the variable var
         """
         # TODO: use an enum for x and y
-        new = polynomial()
+        new = Polynomial()
         for m in self.monos:
             dm = m.partial_deriv(var)
             new.add_monomial(dm)
         return new
 
-    def grad(self) -> tuple[polynomial, polynomial]:
+    def grad(self) -> tuple[Polynomial, Polynomial]:
         """
-        Returns the gradient of the polynomial
+        Returns the gradient of the Polynomial
         """
         gx = self.partial_deriv("x")
         gy = self.partial_deriv("y")
         return gx, gy
 
-    def laplacian(self) -> polynomial:
+    def laplacian(self) -> Polynomial:
         """
-        Returns the Laplacian of the polynomial
+        Returns the Laplacian of the Polynomial
         """
         gx, gy = self.grad()
         gxx = gx.partial_deriv("x")
         gyy = gy.partial_deriv("y")
         return gxx + gyy
 
-    def anti_laplacian(self) -> polynomial:
+    def anti_laplacian(self) -> Polynomial:
         """
-        Returns a polynomial anti-Laplacian of the polynomial
+        Returns a Polynomial anti-Laplacian of the Polynomial
         """
-        new = polynomial()
+        new = Polynomial()
 
         # define |(x, y)|^2 = x^2 + y^2
-        p1 = polynomial()
+        p1 = Polynomial()
         p1.add_monomials_with_idxs([1, 1], [3, 5])
 
-        # loop over monomial terms
+        # loop over Monomial terms
         for m in self.monos:
-            # anti-Laplacian of the monomial m
+            # anti-Laplacian of the Monomial m
             N = m.alpha.order // 2
 
             # (x ^ 2 + y ^ 2) ^ {k + 1}
             pk = p1.copy()
 
             # Delta ^ k (x ^ 2 + y ^ 2) ^ alpha
-            Lk = polynomial()
+            Lk = Polynomial()
             Lk.add_monomial(m)
 
             # first term: k = 0
@@ -259,7 +259,7 @@ class polynomial:
 
         return new
 
-    def get_weighted_normal_derivative(self, K: cell) -> np.ndarray:
+    def get_weighted_normal_derivative(self, K: MeshCell) -> np.ndarray:
         """
         TODO: this belongs elsewhere
         """
@@ -272,7 +272,7 @@ class polynomial:
 
     def __repr__(self) -> str:
         """
-        Returns a string representation of the polynomial.
+        Returns a string representation of the Polynomial.
         """
         self.sort()
         if len(self.monos) == 0:
@@ -286,8 +286,8 @@ class polynomial:
         """
         Tests equality between self and other
         """
-        if not isinstance(other, polynomial):
-            raise TypeError("Cannot compare polynomial to non-polynomial")
+        if not isinstance(other, Polynomial):
+            raise TypeError("Cannot compare Polynomial to non-Polynomial")
         if len(self.monos) != len(other.monos):
             return False
         self.sort()
@@ -297,114 +297,114 @@ class polynomial:
                 return False
         return True
 
-    def __add__(self, other: object) -> polynomial:
+    def __add__(self, other: object) -> Polynomial:
         """
         Defines the addition operation self + other,
-        where other is either another polynomial or a scalar
+        where other is either another Polynomial or a scalar
         """
-        if isinstance(other, polynomial):
-            new = polynomial()
+        if isinstance(other, Polynomial):
+            new = Polynomial()
             for m in self.monos:
                 new.add_monomial(m)
             for m in other.monos:
                 new.add_monomial(m)
         elif isinstance(other, (int, float)):
-            new = polynomial()
+            new = Polynomial()
             for m in self.monos:
                 new.add_monomial(m)
-            constant = monomial()
+            constant = Monomial()
             constant.set_multidx_from_idx(0)
             constant.set_coef(other)
             new.add_monomial(constant)
         else:
             raise TypeError(
-                "Addition with a polynomial must be with a scalar or"
-                + " with another polynomial"
+                "Addition with a Polynomial must be with a scalar or"
+                + " with another Polynomial"
             )
         new.consolidate()
         return new
 
-    def __radd__(self, other: object) -> polynomial:
+    def __radd__(self, other: object) -> Polynomial:
         """
         Defines the addition operator other + self,
-        where other is either another polynomial or a scalar
+        where other is either another Polynomial or a scalar
         """
         if isinstance(other, (int, float)):
             return self + other
         raise TypeError(
-            "Addition with a polynomial must be with a scalar or"
-            + " with another polynomial"
+            "Addition with a Polynomial must be with a scalar or"
+            + " with another Polynomial"
         )
 
-    def __iadd__(self, other: object) -> polynomial:
+    def __iadd__(self, other: object) -> Polynomial:
         """
         Defines the increment operation self += other
-        where other is either another polynomial or a scalar
+        where other is either another Polynomial or a scalar
         """
-        if isinstance(other, polynomial):
+        if isinstance(other, Polynomial):
             for m in other.monos:
                 self.add_monomial(m)
             self.consolidate()
         elif isinstance(other, (int, float)):
-            constant = monomial()
+            constant = Monomial()
             constant.set_multidx_from_idx(0)
             constant.set_coef(other)
             self.add_monomial(constant)
             self.consolidate()
         else:
             raise TypeError(
-                "Can only add polynomials to other polynomials" + " or scalars"
+                "Can only add Polynomials to other Polynomials" + " or scalars"
             )
         return self
 
-    def __mul__(self, other: object) -> polynomial:
+    def __mul__(self, other: object) -> Polynomial:
         """
         Defines the multiplication operator self * other,
-        where other is either another polynomial or a scalar
+        where other is either another Polynomial or a scalar
         """
-        if isinstance(other, polynomial):
-            new = polynomial()
+        if isinstance(other, Polynomial):
+            new = Polynomial()
             for m in self.monos:
                 for n in other.monos:
                     new.add_monomial(m * n)
             new.consolidate()
             return new
         if isinstance(other, (int, float)):
-            new = polynomial()
+            new = Polynomial()
             for m in self.monos:
                 new.add_monomial(other * m.copy())
             return new
         raise TypeError(
-            "Multiplication by polynomial must be by a scalar or"
-            + " by another polynomial"
+            "Multiplication by Polynomial must be by a scalar or"
+            + " by another Polynomial"
         )
 
-    def __rmul__(self, other: object) -> polynomial:
+    def __rmul__(self, other: object) -> Polynomial:
         """
         Defines the multiplication operator other * self,
-        where other is either another polynomial or a scalar
+        where other is either another Polynomial or a scalar
         """
-        if isinstance(other, polynomial):
+        if isinstance(other, Polynomial):
             return self * other
         if isinstance(other, (int, float)):
             return self * other
         raise TypeError(
-            "Multiplication by polynomial must be by a scalar or"
-            + " by another polynomial"
+            "Multiplication by Polynomial must be by a scalar or"
+            + " by another Polynomial"
         )
 
-    def __truediv__(self, other: object) -> polynomial:
+    def __truediv__(self, other: object) -> Polynomial:
         """
         Defines division by a scalar
         """
         if isinstance(other, (int, float)):
             return self * (1 / other)
-        raise TypeError("Division of a polynomial must be by a scalar")
+        raise TypeError("Division of a Polynomial must be by a scalar")
 
-    def __neg__(self) -> polynomial:
+    def __neg__(self) -> Polynomial:
         return -1 * self
 
-    def __sub__(self, other: object) -> polynomial:
-        if isinstance(other, (int, float, polynomial)):
+    def __sub__(self, other: object) -> Polynomial:
+        if isinstance(other, (int, float, Polynomial)):
             return self + (-1 * other)
-        raise TypeError("Subtraction of a polynomial must be from a polynomial")
+        raise TypeError("Subtraction of a Polynomial must be from a Polynomial")

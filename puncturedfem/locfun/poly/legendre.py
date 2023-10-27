@@ -2,7 +2,7 @@
 legendre.py
 ===========
 
-Module containing functions for working with Legendre polynomials.
+Module containing functions for working with Legendre Polynomials.
 
 Routines in this module
 -----------------------
@@ -15,18 +15,18 @@ swap_coordinates_of_poly_argument(p)
 
 from numpy import sqrt
 
-from .poly import polynomial
+from .poly import Polynomial
 
 
-def legendre_polynomials(deg: int) -> list[polynomial]:
+def legendre_polynomials(deg: int) -> list[Polynomial]:
     """
-    Returns an array of polynomial objects
+    Returns an array of Polynomial objects
             [p_0, p_1, ..., p_deg]
-    where p_j is the jth Legendre polynomial
+    where p_j is the jth Legendre Polynomial
     """
     polys = []
-    polys.append(polynomial([(1.0, 0, 0)]))
-    polys.append(polynomial([(1.0, 1, 0)]))
+    polys.append(Polynomial([(1.0, 0, 0)]))
+    polys.append(Polynomial([(1.0, 1, 0)]))
     for n in range(2, deg + 1):
         pn = (
             (2 * n - 1) * polys[1] * polys[n - 1] - (n - 1) * polys[n - 2]
@@ -35,10 +35,10 @@ def legendre_polynomials(deg: int) -> list[polynomial]:
     return polys
 
 
-def legendre_tensor_products(deg: int) -> list[polynomial]:
+def legendre_tensor_products(deg: int) -> list[Polynomial]:
     """
-    Returns the tensor products of the Legendre polynomials up to degree deg as
-    an array of polynomial objects. The array is ordered in "triangular"
+    Returns the tensor products of the Legendre Polynomials up to degree deg as
+    an array of Polynomial objects. The array is ordered in "triangular"
     fashion:
         0x0, 0x1, 0x2, ..., 0x(d-1), 0xd
         1x0, 1x1, 1x2, ..., 1x(d-1)
@@ -59,10 +59,10 @@ def legendre_tensor_products(deg: int) -> list[polynomial]:
     return pq
 
 
-def integrated_legendre_polynomials(deg: int) -> list[polynomial]:
+def integrated_legendre_polynomials(deg: int) -> list[Polynomial]:
     """
-    Returns an array of polynomial objects [q_0, q_1, ..., q_deg] where q_j is
-    the jth integrated Legendre polynomial
+    Returns an array of Polynomial objects [q_0, q_1, ..., q_deg] where q_j is
+    the jth integrated Legendre Polynomial
     """
     polys = []
     p = legendre_polynomials(deg)
@@ -74,10 +74,10 @@ def integrated_legendre_polynomials(deg: int) -> list[polynomial]:
     return polys
 
 
-def integrated_legendre_tensor_products(deg: int) -> list[polynomial]:
+def integrated_legendre_tensor_products(deg: int) -> list[Polynomial]:
     """
-    Returns the tensor products of the integrated Legendre polynomials up to
-    degree deg as an array of polynomial objects. The array is ordered the same
+    Returns the tensor products of the integrated Legendre Polynomials up to
+    degree deg as an array of Polynomial objects. The array is ordered the same
     as in legendre_tensor_products().
     """
     p = integrated_legendre_polynomials(deg)
@@ -92,14 +92,14 @@ def integrated_legendre_tensor_products(deg: int) -> list[polynomial]:
     return pq
 
 
-def swap_coordinates_of_poly_argument(p: polynomial) -> polynomial:
+def swap_coordinates_of_poly_argument(p: Polynomial) -> Polynomial:
     """
-    Returns the polynomial q(x,y) = p(y,x)
+    Returns the Polynomial q(x,y) = p(y,x)
     """
-    q = polynomial()
+    q = Polynomial()
     for mono in p.monos:
         coef = mono.coef
         alpha_0 = mono.alpha.x
         alpha_1 = mono.alpha.y
-        q += polynomial([(coef, alpha_1, alpha_0)])
+        q += Polynomial([(coef, alpha_1, alpha_0)])
     return q

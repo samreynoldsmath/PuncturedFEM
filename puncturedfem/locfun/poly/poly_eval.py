@@ -2,7 +2,7 @@
 poly_eval.py
 ============
 
-Module containing functions for evaluating polynomials.
+Module containing functions for evaluating Polynomials.
 
 Routines in this module
 -----------------------
@@ -12,23 +12,23 @@ get_poly_vals(x, y, polys)
 
 import numpy as np
 
-from ...mesh.edge import edge
+from ...mesh.edge import Edge
 from ...mesh.mesh_exceptions import SizeMismatchError
-from .poly import polynomial
+from .poly import Polynomial
 
 
-def get_poly_traces_edge(e: edge, polys: list[polynomial]) -> np.ndarray:
+def get_poly_traces_edge(e: Edge, polys: list[Polynomial]) -> np.ndarray:
     """
-    Evaluates the polynomials in polys on the edge e.
+    Evaluates the Polynomials in polys on the Edge e.
     """
     return get_poly_vals(x=e.x[0, :], y=e.x[1, :], polys=polys)
 
 
 def get_poly_vals(
-    x: np.ndarray, y: np.ndarray, polys: list[polynomial]
+    x: np.ndarray, y: np.ndarray, polys: list[Polynomial]
 ) -> np.ndarray:
     """
-    Evaluates the polynomials in polys at the points (x[j], y[j]).
+    Evaluates the Polynomials in polys at the points (x[j], y[j]).
     """
     num_pts = len(x)
     if len(y) != num_pts:

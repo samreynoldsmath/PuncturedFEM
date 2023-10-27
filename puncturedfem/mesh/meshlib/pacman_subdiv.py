@@ -9,9 +9,9 @@ split into two edges each.
 
 from numpy import sqrt
 
-from ..edge import edge
-from ..planar_mesh import planar_mesh
-from ..vert import vert
+from ..edge import Edge
+from ..planar_mesh import PlanarMesh
+from ..vert import Vert
 from .__builder__ import mesh_builder
 
 ROOT3OVER2 = sqrt(3) / 2
@@ -23,7 +23,7 @@ GHOST_X_SHIFT = 3.5
 GHOST_Y_SHIFT = 0.5
 
 
-def pacman_subdiv(verbose: bool = True) -> planar_mesh:
+def pacman_subdiv(verbose: bool = True) -> PlanarMesh:
     """
     Returns a planar mesh representing a subdivision of the pacman mesh. The
     vertical edges have been split into two edges each.
@@ -34,89 +34,89 @@ def pacman_subdiv(verbose: bool = True) -> planar_mesh:
 # VERTICES ###################################################################
 
 
-def get_verts() -> list[vert]:
-    """Returns a list of vertices for the mesh."""
+def get_verts() -> list[Vert]:
+    """Returns a list of Vertices for the mesh."""
 
-    # define vertices
-    verts: list[vert] = []
+    # define Vertices
+    verts: list[Vert] = []
 
     # rectangle corners
-    verts.append(vert(x=0.0, y=0.0))  # 0
-    verts.append(vert(x=1.0, y=0.0))  # 1
-    verts.append(vert(x=3.0, y=0.0))  # 2
-    verts.append(vert(x=4.0, y=0.0))  # 3
-    verts.append(vert(x=4.0, y=1.0))  # 4
-    verts.append(vert(x=3.0, y=1.0))  # 5
-    verts.append(vert(x=1.0, y=1.0))  # 6
-    verts.append(vert(x=0.0, y=1.0))  # 7
+    verts.append(Vert(x=0.0, y=0.0))  # 0
+    verts.append(Vert(x=1.0, y=0.0))  # 1
+    verts.append(Vert(x=3.0, y=0.0))  # 2
+    verts.append(Vert(x=4.0, y=0.0))  # 3
+    verts.append(Vert(x=4.0, y=1.0))  # 4
+    verts.append(Vert(x=3.0, y=1.0))  # 5
+    verts.append(Vert(x=1.0, y=1.0))  # 6
+    verts.append(Vert(x=0.0, y=1.0))  # 7
 
     # "Pac-Man"
-    verts.append(vert(x=0.5, y=0.5))  # 8
+    verts.append(Vert(x=0.5, y=0.5))  # 8
     verts.append(
-        vert(
+        Vert(
             x=PACMAN_XSHIFT + PACMAN_SCALE * ROOT3OVER2,
             y=PACMAN_YSHIFT + PACMAN_SCALE * 0.5,
         )
     )  # 9
     verts.append(
-        vert(
+        Vert(
             x=PACMAN_XSHIFT + PACMAN_SCALE * ROOT3OVER2,
             y=PACMAN_YSHIFT - PACMAN_SCALE * 0.5,
         )
     )  # 10
     verts.append(
-        vert(
+        Vert(
             x=PACMAN_XSHIFT + PACMAN_SCALE * -0.1,
             y=PACMAN_YSHIFT + PACMAN_SCALE * 0.5,
         )
     )  # 11
 
     # central "dots"
-    verts.append(vert(x=1.5, y=0.5))  # 12
-    verts.append(vert(x=2.0, y=0.5))  # 13
-    verts.append(vert(x=2.5, y=0.5))  # 14
+    verts.append(Vert(x=1.5, y=0.5))  # 12
+    verts.append(Vert(x=2.0, y=0.5))  # 13
+    verts.append(Vert(x=2.5, y=0.5))  # 14
 
     # "ghost"
     verts.append(
-        vert(
+        Vert(
             x=GHOST_X_SHIFT + GHOST_SCALE * (-0.5),
             y=GHOST_Y_SHIFT + GHOST_SCALE * (-0.6),
         )
     )  # 15
     verts.append(
-        vert(
+        Vert(
             x=GHOST_X_SHIFT + GHOST_SCALE * (0.5),
             y=GHOST_Y_SHIFT + GHOST_SCALE * (-0.6),
         )
     )  # 16
     verts.append(
-        vert(
+        Vert(
             x=GHOST_X_SHIFT + GHOST_SCALE * (0.5),
             y=GHOST_Y_SHIFT + GHOST_SCALE * (0.2),
         )
     )  # 17
     verts.append(
-        vert(
+        Vert(
             x=GHOST_X_SHIFT + GHOST_SCALE * (-0.5),
             y=GHOST_Y_SHIFT + GHOST_SCALE * (0.2),
         )
     )  # 18
     verts.append(
-        vert(
+        Vert(
             x=GHOST_X_SHIFT + GHOST_SCALE * (-0.25),
             y=GHOST_Y_SHIFT + GHOST_SCALE * (0.1),
         )
     )  # 19
     verts.append(
-        vert(
+        Vert(
             x=GHOST_X_SHIFT + GHOST_SCALE * (0.25),
             y=GHOST_Y_SHIFT + GHOST_SCALE * (0.1),
         )
     )  # 20
 
     # split vertical edges
-    verts.append(vert(x=1.0, y=0.5))  # 21
-    verts.append(vert(x=3.0, y=0.5))  # 22
+    verts.append(Vert(x=1.0, y=0.5))  # 21
+    verts.append(Vert(x=3.0, y=0.5))  # 22
 
     return verts
 
@@ -124,30 +124,30 @@ def get_verts() -> list[vert]:
 # EDGES ######################################################################
 
 
-def get_edges(verts: list[vert]) -> list[edge]:
+def get_edges(verts: list[Vert]) -> list[Edge]:
     """Returns a list of edges for the mesh."""
 
     # define edges
     edges = []
 
     # rectangles
-    edges.append(edge(verts[0], verts[1], pos_cell_idx=0))
-    edges.append(edge(verts[1], verts[2], pos_cell_idx=3))
-    edges.append(edge(verts[2], verts[3], pos_cell_idx=7))
-    edges.append(edge(verts[3], verts[4], pos_cell_idx=7))
-    edges.append(edge(verts[4], verts[5], pos_cell_idx=7))
-    edges.append(edge(verts[5], verts[6], pos_cell_idx=3))
-    edges.append(edge(verts[6], verts[7], pos_cell_idx=0))
-    edges.append(edge(verts[7], verts[0], pos_cell_idx=0))
-    edges.append(edge(verts[1], verts[21], pos_cell_idx=0, neg_cell_idx=3))
-    edges.append(edge(verts[21], verts[6], pos_cell_idx=0, neg_cell_idx=3))
-    edges.append(edge(verts[2], verts[22], pos_cell_idx=3, neg_cell_idx=7))
-    edges.append(edge(verts[22], verts[5], pos_cell_idx=3, neg_cell_idx=7))
+    edges.append(Edge(verts[0], verts[1], pos_cell_idx=0))
+    edges.append(Edge(verts[1], verts[2], pos_cell_idx=3))
+    edges.append(Edge(verts[2], verts[3], pos_cell_idx=7))
+    edges.append(Edge(verts[3], verts[4], pos_cell_idx=7))
+    edges.append(Edge(verts[4], verts[5], pos_cell_idx=7))
+    edges.append(Edge(verts[5], verts[6], pos_cell_idx=3))
+    edges.append(Edge(verts[6], verts[7], pos_cell_idx=0))
+    edges.append(Edge(verts[7], verts[0], pos_cell_idx=0))
+    edges.append(Edge(verts[1], verts[21], pos_cell_idx=0, neg_cell_idx=3))
+    edges.append(Edge(verts[21], verts[6], pos_cell_idx=0, neg_cell_idx=3))
+    edges.append(Edge(verts[2], verts[22], pos_cell_idx=3, neg_cell_idx=7))
+    edges.append(Edge(verts[22], verts[5], pos_cell_idx=3, neg_cell_idx=7))
 
     # pacman
-    edges.append(edge(verts[8], verts[9], pos_cell_idx=1, neg_cell_idx=0))
+    edges.append(Edge(verts[8], verts[9], pos_cell_idx=1, neg_cell_idx=0))
     edges.append(
-        edge(
+        Edge(
             verts[9],
             verts[10],
             pos_cell_idx=1,
@@ -156,9 +156,9 @@ def get_edges(verts: list[vert]) -> list[edge]:
             theta0=300,
         )
     )
-    edges.append(edge(verts[10], verts[8], pos_cell_idx=1, neg_cell_idx=0))
+    edges.append(Edge(verts[10], verts[8], pos_cell_idx=1, neg_cell_idx=0))
     edges.append(
-        edge(
+        Edge(
             verts[11],
             verts[11],
             pos_cell_idx=2,
@@ -170,7 +170,7 @@ def get_edges(verts: list[vert]) -> list[edge]:
 
     # dots
     edges.append(
-        edge(
+        Edge(
             verts[12],
             verts[12],
             pos_cell_idx=4,
@@ -180,7 +180,7 @@ def get_edges(verts: list[vert]) -> list[edge]:
         )
     )
     edges.append(
-        edge(
+        Edge(
             verts[13],
             verts[13],
             pos_cell_idx=5,
@@ -190,7 +190,7 @@ def get_edges(verts: list[vert]) -> list[edge]:
         )
     )
     edges.append(
-        edge(
+        Edge(
             verts[14],
             verts[14],
             pos_cell_idx=6,
@@ -202,7 +202,7 @@ def get_edges(verts: list[vert]) -> list[edge]:
 
     # ghost
     edges.append(
-        edge(
+        Edge(
             verts[15],
             verts[16],
             pos_cell_idx=8,
@@ -212,9 +212,9 @@ def get_edges(verts: list[vert]) -> list[edge]:
             freq=6,
         )
     )
-    edges.append(edge(verts[16], verts[17], pos_cell_idx=8, neg_cell_idx=7))
+    edges.append(Edge(verts[16], verts[17], pos_cell_idx=8, neg_cell_idx=7))
     edges.append(
-        edge(
+        Edge(
             verts[17],
             verts[18],
             pos_cell_idx=8,
@@ -223,9 +223,9 @@ def get_edges(verts: list[vert]) -> list[edge]:
             theta0=180,
         )
     )
-    edges.append(edge(verts[18], verts[15], pos_cell_idx=8, neg_cell_idx=7))
+    edges.append(Edge(verts[18], verts[15], pos_cell_idx=8, neg_cell_idx=7))
     edges.append(
-        edge(
+        Edge(
             verts[19],
             verts[19],
             pos_cell_idx=9,
@@ -236,7 +236,7 @@ def get_edges(verts: list[vert]) -> list[edge]:
         )
     )
     edges.append(
-        edge(
+        Edge(
             verts[20],
             verts[20],
             pos_cell_idx=10,

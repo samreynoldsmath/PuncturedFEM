@@ -1,8 +1,8 @@
 """
-closed_contour.py
+ClosedContour.py
 =================
 
-Module containing the closed_contour class, which represents a closed contour
+Module containing the ClosedContour class, which represents a closed contour
 in the plane.
 """
 
@@ -12,25 +12,25 @@ import numpy as np
 from matplotlib import path
 
 from .bounding_box import get_bounding_box
-from .edge import edge
+from .edge import Edge
 from .mesh_exceptions import (
     InteriorPointError,
     NotParameterizedError,
     SizeMismatchError,
 )
-from .vert import vert
+from .vert import Vert
 
 
-class closed_contour:
+class ClosedContour:
     """
     List of edges forming a closed contour, assumed to be simple
     with edges listed successively.
     """
 
-    edges: list[edge]
+    edges: list[Edge]
     num_edges: int
     edge_orient: list[int]
-    interior_point: vert
+    interior_point: Vert
     num_pts: int
     vert_idx: list[int]
     local_vert_idx: list[int]
@@ -39,22 +39,22 @@ class closed_contour:
     def __init__(
         self,
         cell_id: int,
-        edges: Optional[list[edge]] = None,
+        edges: Optional[list[Edge]] = None,
         edge_orients: Optional[list[int]] = None,
     ) -> None:
         """
-        Constructor for closed_contour class.
+        Constructor for ClosedContour class.
 
         Parameters
         ----------
-        cell_id : int
-            The cell id of the contour. (This is the cell id of the cell that
-            the contour is part of the boundary of.)
+        cell_id: int
+            The MeshCell id of the contour. (This is the MeshCell id of the
+            MeshCell that the contour is part of the boundary of.)
         """
-        self.set_cell_id(cell_id)
+        self.set_mesh_id(cell_id)
         self.num_edges = 0
         self.vert_idx = []
-        self.edges: list[edge] = []
+        self.edges: list[Edge] = []
         self.edge_orients: list[int] = []
         if edges is None:
             edges = []
@@ -62,8 +62,8 @@ class closed_contour:
             edge_orients = []
         self.add_edges(edges, edge_orients)
 
-    def set_cell_id(self, cell_id: int) -> None:
-        """Set the cell id of the contour"""
+    def set_mesh_id(self, cell_id: int) -> None:
+        """Set the MeshCell id of the contour"""
         if not isinstance(cell_id, int):
             raise TypeError(
                 f"cell_id = {cell_id} invalid, must be a positive integer"
@@ -72,11 +72,11 @@ class closed_contour:
             raise ValueError(
                 f"cell_id = {cell_id} invalid, must be a positive integer"
             )
-        self.cell_id = cell_id
+        self.mesh_id = cell_id
 
     # EDGE MANAGEMENT ########################################################
-    def add_edge(self, e: edge, edge_orient: int) -> None:
-        """Add edge to contour"""
+    def add_edge(self, e: Edge, edge_orient: int) -> None:
+        """Add Edge to contour"""
         if edge_orient not in (+1, -1):
             raise ValueError("Orientation must be +1 or -1")
         if e in self.edges:
@@ -85,10 +85,10 @@ class closed_contour:
         self.edge_orients.append(edge_orient)
         self.num_edges += 1
 
-    def add_edges(self, edges: list[edge], edge_orients: list[int]) -> None:
+    def add_edges(self, edges: list[Edge], edge_orients: list[int]) -> None:
         """Add edges to contour"""
         if len(edges) != len(edge_orients):
-            raise ValueError("Must provide orientation for each edge")
+            raise ValueError("Must provide orientation for each Edge")
         for e, o in zip(edges, edge_orients):
             self.add_edge(e, o)
 
@@ -102,7 +102,7 @@ class closed_contour:
         return all(e.is_parameterized for e in self.edges)
 
     def parameterize(self, quad_dict: dict) -> None:
-        """Parameterize each edge"""
+        """Parameterize each Edge"""
         # TODO: eliminate redundant calls to parameterize
         for i in range(self.num_edges):
             self.edges[i].parameterize(quad_dict)
@@ -114,7 +114,7 @@ class closed_contour:
         self.find_interior_point()
 
     def deparameterize(self) -> None:
-        """Deparameterize each edge"""
+        """Deparameterize each Edge"""
         for e in self.edges:
             e.deparameterize()
         self.num_pts = 0
@@ -129,7 +129,7 @@ class closed_contour:
             self.num_pts += e.num_pts - 1
 
     def find_local_vert_idx(self) -> None:
-        """Get the index of the starting point of each edge"""
+        """Get the index of the starting point of each Edge"""
         if not self.is_parameterized():
             raise NotParameterizedError("finding vert_idx")
         self.vert_idx = [0]
@@ -144,12 +144,12 @@ class closed_contour:
         # get midpoint indices
         mid_idx = np.zeros((self.num_edges,), dtype=int)
         for i in range(self.num_edges):
-            n = self.edges[i].num_pts // 2  # 2n points per edge
+            n = self.edges[i].num_pts // 2  # 2n points per Edge
             mid_idx[i] = self.vert_idx[i] + n
 
-        # on first half of an edge, the closest vertex is the starting
-        # point on that edge; on the second half of an edge, the closest vertex
-        # is the starting point of the next edge
+        # on first half of an Edge, the closest vertex is the starting
+        # point on that Edge; on the second half of an Edge, the closest vertex
+        # is the starting point of the next Edge
         self.closest_vert_idx = np.zeros((self.num_pts,), dtype=int)
         for i in range(self.num_edges):
             self.closest_vert_idx[
@@ -252,7 +252,7 @@ class closed_contour:
             if M * N > 1_000_000:
                 raise InteriorPointError("Unable to locate an interior point")
 
-            self.interior_point = vert(x=x[ii, jj], y=y[ii, jj])
+            self.interior_point = Vert(x=x[ii, jj], y=y[ii, jj])
 
     # FUNCTION EVALUATION ####################################################
     def evaluate_function_on_contour(self, fun: Callable) -> np.ndarray:
@@ -274,26 +274,34 @@ class closed_contour:
         x2 = self.evaluate_function_on_contour(lambda x: x[1])
         return x1, x2
 
-    def dot_with_tangent(self, v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
-        """Returns the dot product (v1, v2) * unit_tangent"""
+    def dot_with_tangent(
+        self, comp1: np.ndarray, comp2: np.ndarray
+    ) -> np.ndarray:
+        """Returns the dot product (comp1, comp2) * unit_tangent"""
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with tangent")
         res = np.zeros((self.num_pts,))
         for i in range(self.num_edges):
             j = self.vert_idx[i]
             jp1 = self.vert_idx[i + 1]
-            res[j:jp1] = self.edges[i].dot_with_tangent(v1[j:jp1], v2[j:jp1])
+            res[j:jp1] = self.edges[i].dot_with_tangent(
+                comp1[j:jp1], comp2[j:jp1]
+            )
         return res
 
-    def dot_with_normal(self, v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
-        """Returns the dot product (v1, v2) * unit_normal"""
+    def dot_with_normal(
+        self, comp1: np.ndarray, comp2: np.ndarray
+    ) -> np.ndarray:
+        """Returns the dot product (comp1, comp2) * unit_normal"""
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with normal")
         res = np.zeros((self.num_pts,))
         for i in range(self.num_edges):
             j = self.vert_idx[i]
             jp1 = self.vert_idx[i + 1]
-            res[j:jp1] = self.edges[i].dot_with_normal(v1[j:jp1], v2[j:jp1])
+            res[j:jp1] = self.edges[i].dot_with_normal(
+                comp1[j:jp1], comp2[j:jp1]
+            )
         return res
 
     def multiply_by_dx_norm(self, vals: np.ndarray) -> np.ndarray:
@@ -333,32 +341,11 @@ class closed_contour:
         if len(vals_dx_norm) != self.num_pts:
             raise SizeMismatchError("vals must be same length as boundary")
 
-        # # if contour is a single edge without a corner, use trapezoid rule
-        # if self.num_edges == 1 and self.edges[0].quad_type == 'trap':
-        #     vals_vals = zeros((self.edges[0].num_pts,))
-        #     vals_vals[:-1] = vals_dx_norm
-        #     vals_vals[-1] = vals_dx_norm[0]
-        #     res = self.edges[0].integrate_over_edge_preweighted(
-        #         vals_vals, ignore_endpoint=False
-        #     )
-
-        # # otherwise, use Kress quadrature on each edge
-        # else:
-        #     res = 0
-        #     for i in range(self.num_edges):
-        #         j = self.vert_idx[i]
-        #         jp1 = self.vert_idx[i + 1]
-        #         res += self.edges[i].integrate_over_edge_preweighted(
-        #             vals_dx_norm[j:jp1], ignore_endpoint=True)
-        # return res
-
-        # TODO: fix this hack
-        # numpy.sum() is more stable, but this uses more memory
-
+        # NOTE: numpy.sum() is more stable, but this uses more memory
         y = np.zeros((self.num_pts,))
         for i in range(self.num_edges):
             h = 2 * np.pi / (self.edges[i].num_pts - 1)
             y[self.vert_idx[i] : self.vert_idx[i + 1]] = (
                 h * vals_dx_norm[self.vert_idx[i] : self.vert_idx[i + 1]]
             )
-        return sum(y)
+        return float(np.sum(y))

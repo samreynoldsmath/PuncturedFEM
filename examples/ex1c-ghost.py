@@ -7,7 +7,7 @@
 # functions, $v,w$ with the property that they are the sum of a harmonic 
 # function and a polynomial.
 
-# In[1]:
+# In[ ]:
 
 
 import sys
@@ -22,24 +22,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # define quadrature schemes
-n = 64
-q_trap = pf.quad(qtype="trap", n=n)
-q_kress = pf.quad(qtype="kress", n=n)
-quad_dict = {"kress": q_kress, "trap": q_trap}
+quad_dict = pf.get_quad_dict(n=64)
 
 # define vertices
 verts = []
-verts.append(pf.vert(x=0.0, y=0.0))  # 0
-verts.append(pf.vert(x=1.0, y=0.0))  # 1
-verts.append(pf.vert(x=1.0, y=0.8))  # 2
-verts.append(pf.vert(x=0.0, y=0.8))  # 3
-verts.append(pf.vert(x=0.25, y=0.7))  # 4
-verts.append(pf.vert(x=0.75, y=0.7))  # 5
+verts.append(pf.Vert(x=0.0, y=0.0))  # 0
+verts.append(pf.Vert(x=1.0, y=0.0))  # 1
+verts.append(pf.Vert(x=1.0, y=0.8))  # 2
+verts.append(pf.Vert(x=0.0, y=0.8))  # 3
+verts.append(pf.Vert(x=0.25, y=0.7))  # 4
+verts.append(pf.Vert(x=0.75, y=0.7))  # 5
 
 # define edges
 edges = []
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[0],
         verts[1],
         pos_cell_idx=0,
@@ -48,9 +45,9 @@ edges.append(
         freq=6,
     )
 )
-edges.append(pf.edge(verts[1], verts[2], pos_cell_idx=0))
+edges.append(pf.Edge(verts[1], verts[2], pos_cell_idx=0))
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[2],
         verts[3],
         pos_cell_idx=0,
@@ -58,29 +55,29 @@ edges.append(
         theta0=180,
     )
 )
-edges.append(pf.edge(verts[3], verts[0], pos_cell_idx=0))
+edges.append(pf.Edge(verts[3], verts[0], pos_cell_idx=0))
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[4], verts[4], neg_cell_idx=0, curve_type="ellipse", a=0.15, b=0.2
     )
 )
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[5], verts[5], neg_cell_idx=0, curve_type="ellipse", a=0.15, b=0.2
     )
 )
 
 # define mesh cell
-K = pf.cell(id=0, edges=edges)
+K = pf.MeshCell(idx=0, edges=edges)
 
 # parameterize edges
 K.parameterize(quad_dict)
 
 # plot boundary
-pf.plot_edges(edges, orientation=True)
+pf.plot.MeshPlot(K.get_edges()).draw()
 
 # set up Nyström solver
-solver = pf.nystrom_solver(K, verbose=True)
+nyst = pf.NystromSolver(K, verbose=True)
 
 
 # ## Define local functions
@@ -103,7 +100,7 @@ solver = pf.nystrom_solver(K, verbose=True)
 # 	~.
 # \end{align*}
 
-# In[2]:
+# In[ ]:
 
 
 # get coordinates of boundary points
@@ -119,10 +116,10 @@ v_trace = (
 )
 
 # Laplacian of v
-v_laplacian = pf.polynomial([[6.0, 1, 1], [2.0, 0, 0]])
+v_laplacian = pf.Polynomial([[6.0, 1, 1], [2.0, 0, 0]])
 
 # store v as a local function object
-v = pf.locfun(solver=solver, lap_poly=v_laplacian, has_poly_trace=False)
+v = pf.LocalFunction(nyst=nyst, lap_poly=v_laplacian, has_poly_trace=False)
 v.set_trace_values(v_trace)
 
 ################################################################################
@@ -135,13 +132,13 @@ w_trace = (
 )
 
 # Laplacian of w
-w_laplacian = pf.polynomial([[2.0, 2, 0], [-6.0, 1, 1], [2.0, 0, 2]])
+w_laplacian = pf.Polynomial([[2.0, 2, 0], [-6.0, 1, 1], [2.0, 0, 2]])
 
 # store w as a local function object
-w = pf.locfun(solver=solver, lap_poly=w_laplacian, has_poly_trace=False)
+w = pf.LocalFunction(nyst=nyst, lap_poly=w_laplacian, has_poly_trace=False)
 w.set_trace_values(w_trace)
 
-# compute quanties needed for integration
+# compute quantities needed for integration
 v.compute_all()
 w.compute_all()
 
@@ -157,7 +154,7 @@ w.compute_all()
 # \end{align*}
 # whose approximate value was obtained with *Mathematica*. 
 
-# In[3]:
+# In[ ]:
 
 
 h1_vw_computed = v.get_h1_semi_inner_prod(w)
@@ -175,7 +172,7 @@ print("Error in H^1 semi-inner product = %.4e" % (h1_vw_error))
 # 	\pm 1.0856\times 10^{-13}
 # \end{align*}
 
-# In[4]:
+# In[ ]:
 
 
 l2_vw_computed = v.get_l2_inner_prod(w)
@@ -196,7 +193,7 @@ print("Error in L^2 inner product = %.4e" % l2_vw_error)
 # |	32	|	5.3219e-07	|	8.1747e-07	|
 # |	64	|	1.5430e-11	|	4.6189e-11	|
 
-# In[5]:
+# In[ ]:
 
 
 print("H^1 error (vw) = %.4e" % h1_vw_error)
@@ -205,7 +202,7 @@ print("L^2 error (vw) = %.4e" % l2_vw_error)
 
 # ## Interior values
 
-# In[6]:
+# In[ ]:
 
 
 y1 = K.int_x1
@@ -250,7 +247,7 @@ plt.ylim([-0.15, 1.35])
 plt.show()
 
 
-# In[7]:
+# In[ ]:
 
 
 # exact values
@@ -324,7 +321,7 @@ plt.ylim([-0.15, 1.35])
 plt.show()
 
 
-# In[8]:
+# In[ ]:
 
 
 plt.figure(figsize=(16, 14), dpi=100)

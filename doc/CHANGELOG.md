@@ -1,6 +1,40 @@
 # Punctured FEM: Change Log
 
 
+## [2023 Oct 27] v0.3.8
+### Features
+- [x] add `TracePlot` class
+- [x] add `MeshPlot` class
+- [x] add `GlobalFunctionPlot` class
+- [x] add `LocalFunctionPlot` class
+- [x] add `get_quad_dict()` function
+- [x] make `edgespaces` an optional parameter in `LocalFunctionSpace` init method
+### Examples
+- [x] `examples/ex1d-hat-tile.ipynb`: add example of hat tile local basis functions
+### Tests
+- [x] deprecate `unittest` in favor of `pytest`
+- [x] add `test_edge_space`
+- [x] add `test_solver`
+### Maintenance
+- [x] use enumerate to replace `range(len(...))` loops
+- [x] rectify nested min/max statements
+- [x] `locfun.locfunsp`: make interior value calculation optional
+- [x] use `functools.partial` to pass logarithmic terms to integrators
+- [x] `locfun.poly.poly`: use list of tuples for polynomial initialization
+- [x] clean up integration methods
+- [x] add safety check to `add_edge()` method in `PlanarMesh`
+- [x] `mesh.edgelib.teardrop`: pass `alpha` as keyword argument
+- [x] `solver.solver`:
+  - [x] move color printing to separate module
+  - [x] move plotting functions to separate module
+- [x] add init file for `util` subpackage
+- [x] rename classes to use CapWords convention
+- [x] fix invalid names introduced by class renaming
+- [x] fix type hints in tests
+### Bug fixes
+- [x] fix colorbar position in contour plots
+
+
 ## [2023 Oct 02] v0.3.7-alpha
 - [x] change exceptions to specific error types
 - [x] document TODO comments in `doc/TODO.md`
@@ -92,12 +126,12 @@
 * Overhaul of `cell` class
   * Added topological properties needed for mesh construction
   * Edge list replaced with `closed_contour` list
-* Added `planar_mesh` class
+* Added `PlanarMesh` class
   * Initialized as a collection of `edge` and `vert` objects
   * `cell` objects are constructed in situ using topological information from `edge` objects
 * Added `solver` class
   * Handles all aspects of solving a PDE on a mesh
-  * Initialized with a `planar_mesh` object and a `bilinear_form` object
+  * Initialized with a `PlanarMesh` object and a `bilinear_form` object
   * `solve` method solves the PDE on the mesh
   * `plot` method plots the solution
 * Added `bilinear_form` class

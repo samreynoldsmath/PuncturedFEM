@@ -1,13 +1,13 @@
 """
-global_key.py
+GlobalKey.py
 =============
 
-Module containing the global_key class, which is used to represent a global key,
+Module containing the GlobalKey class, which is used to represent a global key,
 which is used to index the global function space.
 """
 
 
-class global_key:
+class GlobalKey:
     """
     Represents a global key, which is used to index the global function space.
     """
@@ -29,20 +29,20 @@ class global_key:
         edge_space_idx: int = -1,
     ) -> None:
         """
-        Constructor for global_key class.
+        Constructor for GlobalKey class.
 
         Parameters
         ----------
         fun_type : str
-            Type of function, either 'vert', 'edge', or 'bubb'
+            Type of function, either 'Vert', 'Edge', or 'bubb'
         edge_idx : int, optional
-            Index of edge, by default -1
+            Index of Edge, by default -1
         vert_idx : int, optional
             Index of vertex, by default -1
         bubb_space_idx : int, optional
             Index of bubble space, by default -1
         edge_space_idx : int, optional
-            Index of edge space, by default -1
+            Index of Edge space, by default -1
         """
         self.set_fun_type(fun_type)
         self.set_vert_idx(vert_idx)
@@ -52,10 +52,10 @@ class global_key:
 
     def set_fun_type(self, fun_type: str) -> None:
         """
-        Set the function type, either 'vert', 'edge', or 'bubb'.
+        Set the function type, either 'Vert', 'Edge', or 'bubb'.
         """
-        if fun_type not in ["vert", "edge", "bubb"]:
-            raise ValueError("fun_type must be vert, edge, or bubb")
+        if fun_type not in ["Vert", "Edge", "bubb"]:
+            raise ValueError("fun_type must be Vert, Edge, or bubb")
         self.fun_type = fun_type
 
     def set_vert_idx(self, vert_idx: int) -> None:
@@ -64,29 +64,29 @@ class global_key:
         """
         if not isinstance(vert_idx, int):
             raise TypeError("vert_idx must be an integer")
-        if not self.fun_type == "vert":
+        if not self.fun_type == "Vert":
             self.vert_idx = -1
         else:
             self.vert_idx = vert_idx
 
     def set_edge_idx(self, edge_idx: int) -> None:
         """
-        Set the edge index.
+        Set the Edge index.
         """
         if not isinstance(edge_idx, int):
             raise TypeError("edge_idx must be an integer")
-        if not self.fun_type == "edge":
+        if not self.fun_type == "Edge":
             self.edge_idx = -1
         else:
             self.edge_idx = edge_idx
 
     def set_edge_space_idx(self, edge_space_idx: int) -> None:
         """
-        Set the edge space index.
+        Set the Edge space index.
         """
         if not isinstance(edge_space_idx, int):
             raise TypeError("edge_space_idx must be an integer")
-        if not self.fun_type == "edge":
+        if not self.fun_type == "Edge":
             self.edge_space_idx = -1
         else:
             self.edge_space_idx = edge_space_idx

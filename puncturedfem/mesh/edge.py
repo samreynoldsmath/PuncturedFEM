@@ -1,8 +1,8 @@
 """
-edge.py
+Edge.py
 =======
 
-Module containing the edge class, which represents an oriented edge in the
+Module containing the Edge class, which represents an oriented Edge in the
 plane.
 """
 
@@ -16,22 +16,23 @@ from .mesh_exceptions import (
     NotParameterizedError,
     SizeMismatchError,
 )
-from .quad import quad
-from .vert import vert
+from .quad import Quad
+from .vert import Vert
 
 
-class edge:
+class Edge:
     """
-    Oriented joining two vertices of a planar mesh. This class contains both
-    the parameterization of the edge as well as mesh topology information.
+    Oriented joining two Vertices of a planar mesh. This class contains both
+    the parameterization of the Edge as well as mesh topology information.
 
-    The orientation of the edge is from the anchor vertex to the endpnt vertex.
-    The positive cell is the cell such that the edge is oriented
-    counterclockwise on the boundary of the cell if the edge lies on the outer
-    boundary of the cell. If the edge lies on the inner boundary of the cell,
-    then the edge is oriented clockwise on the boundary of the positive cell.
-    The negative cell is the cell such that the boundary of the negative cell
-    intersects the boundary of the positive cell exactly on this edge.
+    The orientation of the Edge is from the anchor vertex to the endpnt vertex.
+    The positive MeshCell is the MeshCell such that the Edge is oriented
+    counterclockwise on the boundary of the MeshCell if the Edge lies on the
+    outer boundary of the MeshCell. If the Edge lies on the inner boundary of
+    the MeshCell, then the Edge is oriented clockwise on the boundary of the
+    positive MeshCell. The negative MeshCell is the MeshCell such that the
+    boundary of the negative MeshCell intersects the boundary of the positive
+    MeshCell exactly on this Edge.
 
     Usage
     -----
@@ -39,45 +40,45 @@ class edge:
 
     Attributes
     ----------
-    anchor : vert
-        The vertex at the start of the edge.
-    endpnt : vert
-        The vertex at the end of the edge.
+    anchor : Vert
+        The vertex at the start of the Edge.
+    endpnt : Vert
+        The vertex at the end of the Edge.
     pos_cell_idx : int
-        The index of the positively oriented cell.
+        The index of the positively oriented MeshCell.
     neg_cell_idx : int
-        The index of the negatively oriented cell.
+        The index of the negatively oriented MeshCell.
     curve_type : str
-        The type of curve used to parameterize the edge.
+        The type of curve used to parameterize the Edge.
     curve_opts : dict
         The options for the curve parameterization.
     quad_type : str
-        The type of quadrature used to parameterize the edge.
+        The type of Quadrature used to parameterize the Edge.
     idx : Any
-        The global index of the edge as it appears in the mesh.
+        The global index of the Edge as it appears in the mesh.
     is_on_mesh_boundary : bool
-        True if the edge is on the mesh boundary.
+        True if the Edge is on the mesh boundary.
     is_loop : bool
-        True if the edge is a loop.
+        True if the Edge is a loop.
     is_parameterized : bool
-        True if the edge is parameterized.
+        True if the Edge is parameterized.
     num_pts : int
-        The number of points sampled on the edge.
+        The number of points sampled on the Edge.
     x : np.ndarray
-        The sampled points on the edge.
+        The sampled points on the Edge.
     unit_tangent : np.ndarray
-        The unit tangent vector at each sampled point on the edge.
+        The unit tangent vector at each sampled point on the Edge.
     unit_normal : np.ndarray
-        The unit normal vector at each sampled point on the edge.
+        The unit normal vector at each sampled point on the Edge.
     dx_norm : np.ndarray
         The norm of the derivative of the parameterization at each sampled
-        point on the edge.
+        point on the Edge.
     curvature : np.ndarray
-        The signed curvature at each sampled point on the edge.
+        The signed curvature at each sampled point on the Edge.
     """
 
-    anchor: vert
-    endpnt: vert
+    anchor: Vert
+    endpnt: Vert
     pos_cell_idx: int
     neg_cell_idx: int
     curve_type: str
@@ -96,8 +97,8 @@ class edge:
 
     def __init__(
         self,
-        anchor: vert,
-        endpnt: vert,
+        anchor: Vert,
+        endpnt: Vert,
         pos_cell_idx: int = -1,
         neg_cell_idx: int = -1,
         curve_type: str = "line",
@@ -106,25 +107,25 @@ class edge:
         **curve_opts: Any,
     ) -> None:
         """
-        Constructor for the edge class.
+        Constructor for the Edge class.
 
         Parameters
         ----------
-        anchor : vert
-            The vertex at the start of the edge.
-        endpnt : vert
-            The vertex at the end of the edge.
+        anchor : Vert
+            The vertex at the start of the Edge.
+        endpnt : Vert
+            The vertex at the end of the Edge.
         pos_cell_idx : int, optional
-            The index of the positively oriented cell. Default is -1.
+            The index of the positively oriented MeshCell. Default is -1.
         neg_cell_idx : int, optional
-            The index of the negatively oriented cell. Default is -1.
+            The index of the negatively oriented MeshCell. Default is -1.
         curve_type : str, optional
-            The type of curve used to parameterize the edge. Default is "line".
+            The type of curve used to parameterize the Edge. Default is "line".
         quad_type : str, optional
-            The type of quadrature used to parameterize the edge. Default is
+            The type of Quadrature used to parameterize the Edge. Default is
             "kress".
         idx : Any, optional
-            The index of the edge as it appears in the mesh. Default is None.
+            The index of the Edge as it appears in the mesh. Default is None.
         """
         self.curve_type = curve_type
         self.quad_type = quad_type
@@ -133,9 +134,10 @@ class edge:
         self.set_verts(anchor, endpnt)
         self.set_cells(pos_cell_idx, neg_cell_idx)
         self.is_parameterized = False
+        self.num_pts = -1
 
     def __str__(self) -> str:
-        """Return a string representation of the edge"""
+        """Return a string representation of the Edge"""
         msg = ""
         msg += f"idx:         {self.idx}\n"
         msg += f"curve_type: {self.curve_type}\n"
@@ -146,7 +148,7 @@ class edge:
     # MESH TOPOLOGY ##########################################################
 
     def set_idx(self, idx: Any) -> None:
-        """Set the id of the edge"""
+        """Set the id of the Edge"""
         if idx is None:
             return
         if not isinstance(idx, int):
@@ -155,24 +157,16 @@ class edge:
             raise ValueError("idx must be nonnegative")
         self.idx = idx
 
-    def set_verts(self, anchor: vert, endpnt: vert) -> None:
-        """Set the anchor and endpnt vertices of the edge"""
+    def set_verts(self, anchor: Vert, endpnt: Vert) -> None:
+        """Set the anchor and endpnt Vertices of the Edge"""
         self.anchor = anchor
         self.endpnt = endpnt
         self.is_loop = self.anchor == self.endpnt
 
     def set_cells(self, pos_cell_idx: int, neg_cell_idx: int) -> None:
         """
-        Set the positively and negatively oriented cells of the edge.
+        Set the positively and negatively oriented MeshCells of the Edge.
         """
-
-        # check that cells are distinct
-        # TODO this warning should only happen in planar_mesh
-        # if pos_cell_idx < 0 and neg_cell_idx < 0:
-        #     raise ValueError(
-        #         'Edge must be boundary of at least one cell'
-        #     )
-
         self.pos_cell_idx = pos_cell_idx
         self.neg_cell_idx = neg_cell_idx
         self.is_on_mesh_boundary = (
@@ -181,26 +175,26 @@ class edge:
 
     # PARAMETERIZATION #######################################################
 
-    def parameterize(self, quad_dict: dict[str, quad]) -> None:
+    def parameterize(self, quad_dict: dict[str, Quad]) -> None:
         """
-        Parameterize the edge using the specified quadrature rule. The
+        Parameterize the Edge using the specified Quadrature rule. The
         parameterization is stored in the following attributes:
             x : np.ndarray
-                The sampled points on the edge.
+                The sampled points on the Edge.
             unit_tangent : np.ndarray
-                The unit tangent vector at each sampled point on the edge.
+                The unit tangent vector at each sampled point on the Edge.
             unit_normal : np.ndarray
-                The unit normal vector at each sampled point on the edge.
+                The unit normal vector at each sampled point on the Edge.
             dx_norm : np.ndarray
                 The norm of the derivative of the parameterization at each
-                sampled point on the edge.
+                sampled point on the Edge.
             curvature : np.ndarray
-                The signed curvature at each sampled point on the edge.
+                The signed curvature at each sampled point on the Edge.
         """
 
         q = quad_dict[self.quad_type]
 
-        # 2 * n + 1 points sampled per edge
+        # 2 * n + 1 points sampled per Edge
         self.num_pts = 2 * q.n + 1
 
         # retrieve function handles of parameterization and derivatives
@@ -247,7 +241,7 @@ class edge:
         self.quad_type = q.type
 
     def deparameterize(self) -> None:
-        """Reset the parameterization of the edge"""
+        """Reset the parameterization of the Edge"""
         self.num_pts = -1
         self.x = np.zeros((0,))
         self.unit_tangent = np.zeros((0,))
@@ -257,23 +251,27 @@ class edge:
         self.is_parameterized = False
 
     def get_sampled_points(self) -> tuple[np.ndarray, np.ndarray]:
-        """Return the sampled points on the edge"""
+        """Return the sampled points on the Edge"""
+        if not self.is_parameterized:
+            raise NotParameterizedError("getting sampled points")
         return self.x[0, :], self.x[1, :]
 
     def get_bounding_box(self) -> tuple[float, float, float, float]:
-        """Return the bounding box of the edge"""
+        """Return the bounding box of the Edge"""
+        if not self.is_parameterized:
+            raise NotParameterizedError("getting bounding box")
         return get_bounding_box(x=self.x[0, :], y=self.x[1, :])
 
     # TRANSFORMATIONS ########################################################
 
     def reverse_orientation(self) -> None:
         """
-        Reverse the orientation of this edge using the reparameterization
+        Reverse the orientation of this Edge using the reparameterization
         x(2 pi - t). The chain rule flips the sign of some derivative-based
         quantities.
         """
 
-        # check if edge is parameterized
+        # check if Edge is parameterized
         if not self.is_parameterized:
             raise NotParameterizedError("reversing orientation")
 
@@ -286,10 +284,10 @@ class edge:
         self.dx_norm = np.flip(self.dx_norm)
         self.curvature = -np.flip(self.curvature)
 
-    def join_points(self, a: vert, b: vert) -> None:
-        """Join the points a to b with this edge."""
+    def join_points(self, a: Vert, b: Vert) -> None:
+        """Join the points a to b with this Edge."""
 
-        # check if edge is parameterized
+        # check if Edge is parameterized
         if not self.is_parameterized:
             raise NotParameterizedError("joining points")
 
@@ -301,15 +299,15 @@ class edge:
         if ab_norm < TOL:
             raise EdgeTransformationError("a and b must be distinct points")
 
-        # check that endpoints of edge are distinct
+        # check that endpoints of Edge are distinct
         x = self.x[:, 0]
         y = self.x[:, self.num_pts - 1]
         xy_norm = np.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
         if xy_norm < TOL:
-            raise EdgeTransformationError("edge must have distinct endpoints")
+            raise EdgeTransformationError("Edge must have distinct endpoints")
 
         # anchor starting point to origin
-        self.translate(vert(x=-x[0], y=-x[1]))
+        self.translate(Vert(x=-x[0], y=-x[1]))
 
         # rotate
         theta = -np.arctan2(y[1] - x[1], y[0] - x[0])
@@ -324,13 +322,13 @@ class edge:
         # anchor at point a
         self.translate(a)
 
-        # set vertices
+        # set Vertices
         self.set_verts(a, b)
 
-    def translate(self, a: vert) -> None:
+    def translate(self, a: Vert) -> None:
         """Translate by a vector a"""
 
-        # check if edge is parameterized
+        # check if Edge is parameterized
         if not self.is_parameterized:
             raise NotParameterizedError("translating")
 
@@ -340,7 +338,7 @@ class edge:
     def dilate(self, alpha: float) -> None:
         """Dilate by a scalar alpha"""
 
-        # check if edge is parameterized
+        # check if Edge is parameterized
         if not self.is_parameterized:
             raise NotParameterizedError("dilating")
 
@@ -359,7 +357,7 @@ class edge:
     def rotate(self, theta: float) -> None:
         """Rotate counterclockwise by theta (degrees)"""
 
-        # check if edge is parameterized
+        # check if Edge is parameterized
         if not self.is_parameterized:
             raise NotParameterizedError("rotating")
 
@@ -375,7 +373,7 @@ class edge:
     def reflect_across_x_axis(self) -> None:
         """Reflect across the horizontal axis"""
 
-        # check if edge is parameterized
+        # check if Edge is parameterized
         if not self.is_parameterized:
             raise NotParameterizedError("reflecting across x axis")
 
@@ -400,7 +398,7 @@ class edge:
         as well as the curvature are invariant under such a transformation.
         """
 
-        # check if edge is parameterized
+        # check if Edge is parameterized
         if not self.is_parameterized:
             raise NotParameterizedError("applying orthogonal transformation")
 
@@ -433,7 +431,7 @@ class edge:
     def evaluate_function(
         self, fun: Callable, ignore_endpoint: bool = False
     ) -> np.ndarray:
-        """Return fun(x) for each sampled point on edge"""
+        """Return fun(x) for each sampled point on Edge"""
         if not self.is_parameterized:
             raise NotParameterizedError("evaluating function")
         if ignore_endpoint:
@@ -464,41 +462,46 @@ class edge:
         return vals * self.dx_norm
 
     def dot_with_tangent(
-        self, v1: np.ndarray, v2: np.ndarray, ignore_endpoint: bool = True
+        self, comp1: np.ndarray, comp2: np.ndarray, ignore_endpoint: bool = True
     ) -> np.ndarray:
-        """Returns the dot product (v1, v2) * unit_tangent"""
+        """Returns the dot product (comp1, comp2) * unit_tangent"""
         if not self.is_parameterized:
             raise NotParameterizedError("dotting with tangent")
         if ignore_endpoint:
             k = 1
         else:
             k = 0
-        if len(v1) != self.num_pts - k or len(v2) != self.num_pts - k:
+        if len(comp1) != self.num_pts - k or len(comp2) != self.num_pts - k:
             raise SizeMismatchError("vals must be same length as boundary")
-        return v1 * self.unit_tangent[0, :-k] + v2 * self.unit_tangent[1, :-k]
+        return (
+            comp1 * self.unit_tangent[0, :-k]
+            + comp2 * self.unit_tangent[1, :-k]
+        )
 
     def dot_with_normal(
-        self, v1: np.ndarray, v2: np.ndarray, ignore_endpoint: bool = True
+        self, comp1: np.ndarray, comp2: np.ndarray, ignore_endpoint: bool = True
     ) -> np.ndarray:
-        """Returns the dot product (v1, v2) * unit_normal"""
+        """Returns the dot product (comp1, comp2) * unit_normal"""
         if not self.is_parameterized:
             raise NotParameterizedError("dotting with normal")
         if ignore_endpoint:
             k = 1
         else:
             k = 0
-        if len(v1) != self.num_pts - k or len(v2) != self.num_pts - k:
+        if len(comp1) != self.num_pts - k or len(comp2) != self.num_pts - k:
             raise SizeMismatchError("vals must be same length as boundary")
-        return v1 * self.unit_normal[0, :-k] + v2 * self.unit_normal[1, :-k]
+        return (
+            comp1 * self.unit_normal[0, :-k] + comp2 * self.unit_normal[1, :-k]
+        )
 
     # INTEGRATION ############################################################
 
     def integrate_over_edge(
         self, vals: np.ndarray, ignore_endpoint: bool = False
     ) -> float:
-        """Integrate vals * dx_norm over the edge via trapezoidal rule"""
+        """Integrate vals * dx_norm over the Edge via trapezoidal rule"""
         if not self.is_parameterized:
-            raise NotParameterizedError("integrating over edge")
+            raise NotParameterizedError("integrating over Edge")
         vals_dx_norm = self.multiply_by_dx_norm(vals, ignore_endpoint)
         return self.integrate_over_edge_preweighted(
             vals_dx_norm, ignore_endpoint
@@ -507,19 +510,19 @@ class edge:
     def integrate_over_edge_preweighted(
         self, vals_dx_norm: np.ndarray, ignore_endpoint: bool = False
     ) -> float:
-        """Integrate vals_dx_norm over the edge via trapezoidal rule"""
+        """Integrate vals_dx_norm over the Edge via trapezoidal rule"""
         if not self.is_parameterized:
-            raise NotParameterizedError("integrating over edge")
+            raise NotParameterizedError("integrating over Edge")
         h = 2 * np.pi / (self.num_pts - 1)
         if ignore_endpoint:
             # left Riemann sum
             if len(vals_dx_norm) != self.num_pts - 1:
-                raise SizeMismatchError("vals must be same length as edge")
+                raise SizeMismatchError("vals must be same length as Edge")
             res = np.sum(h * vals_dx_norm[:-1])
         else:
             # trapezoidal rule
             if len(vals_dx_norm) != self.num_pts:
-                raise SizeMismatchError("vals must be same length as edge")
+                raise SizeMismatchError("vals must be same length as Edge")
             res = 0.5 * h * (vals_dx_norm[0] + vals_dx_norm[-1]) + np.sum(
                 h * vals_dx_norm[1:-1]
             )

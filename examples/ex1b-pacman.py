@@ -7,7 +7,7 @@
 # and $H^1$ inner products of implicitly-defined functions on a punctured
 # Pac-Man domain.
 
-# In[1]:
+# In[ ]:
 
 
 import sys
@@ -23,22 +23,22 @@ import matplotlib.pyplot as plt
 
 # define quadrature schemes
 n = 64
-q_trap = pf.quad(qtype="trap", n=n)
-q_kress = pf.quad(qtype="kress", n=n)
+q_trap = pf.Quad(qtype="trap", n=n)
+q_kress = pf.Quad(qtype="kress", n=n)
 quad_dict = {"kress": q_kress, "trap": q_trap}
 
 # define vertices
 verts = []
-verts.append(pf.vert(x=0.0, y=0.0))
-verts.append(pf.vert(x=(np.sqrt(3) / 2), y=0.5))
-verts.append(pf.vert(x=(np.sqrt(3) / 2), y=-0.5))
-verts.append(pf.vert(x=-0.1, y=0.5))
+verts.append(pf.Vert(x=0.0, y=0.0))
+verts.append(pf.Vert(x=(np.sqrt(3) / 2), y=0.5))
+verts.append(pf.Vert(x=(np.sqrt(3) / 2), y=-0.5))
+verts.append(pf.Vert(x=-0.1, y=0.5))
 
 # define edges
 edges = []
-edges.append(pf.edge(verts[0], verts[1], pos_cell_idx=0))
+edges.append(pf.Edge(verts[0], verts[1], pos_cell_idx=0))
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[1],
         verts[2],
         pos_cell_idx=0,
@@ -46,9 +46,9 @@ edges.append(
         theta0=300,
     )
 )
-edges.append(pf.edge(verts[2], verts[0], pos_cell_idx=0))
+edges.append(pf.Edge(verts[2], verts[0], pos_cell_idx=0))
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[3],
         verts[3],
         neg_cell_idx=0,
@@ -59,16 +59,16 @@ edges.append(
 )
 
 # define mesh cell
-K = pf.cell(id=0, edges=edges)
+K = pf.MeshCell(idx=0, edges=edges)
 
 # parameterize edges
 K.parameterize(quad_dict)
 
 # plot boundary
-pf.plot_edges(edges, orientation=True)
+pf.plot.MeshPlot(K.get_edges()).draw()
 
 # set up Nyström solver
-solver = pf.nystrom_solver(K, verbose=True)
+nyst = pf.NystromSolver(K, verbose=True)
 
 
 # ## Function with a gradient singularity
@@ -83,7 +83,7 @@ solver = pf.nystrom_solver(K, verbose=True)
 # the gradient $\nabla v$ has a singularity at the origin.
 # However, $v$ is harmonic everywhere else. 
 
-# In[2]:
+# In[ ]:
 
 
 # get Cartesian coordinates of points on boundary
@@ -98,10 +98,10 @@ alpha = 1 / 2
 v_trace = r**alpha * np.sin(alpha * th)
 
 # Laplacian of v (harmonic function)
-v_lap = pf.polynomial()
+v_lap = pf.Polynomial()
 
 # build local function
-v = pf.locfun(solver=solver, lap_poly=v_lap, has_poly_trace=False)
+v = pf.LocalFunction(nyst=nyst, lap_poly=v_lap, has_poly_trace=False)
 v.set_trace_values(v_trace)
 
 # compute all quantities needed for integration
@@ -111,20 +111,16 @@ v.compute_all()
 # Note that the normal derivative is unbounded near the origin.
 # Let's take a look at the weighted normal derivative.
 
-# In[3]:
+# In[ ]:
 
 
-quad_list = [
-    q_trap,
-    q_kress,
-]
-f_trace_list = [
-    v.harm_part_wnd,
-]
-fmt = ("k.",)
-legend = ("wnd",)
-title = "Weighted normal derivative"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+pf.plot.TracePlot(
+    traces=v.harm_part_wnd,
+    title="Weighted normal derivative",
+    fmt="k.",
+    K=K,
+    quad_dict=quad_dict,
+).draw()
 
 
 # ### $H^1$ seminorm
@@ -137,7 +133,7 @@ pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 # \end{align*}
 # with an approximate value obtained with *Mathematica*.
 
-# In[4]:
+# In[ ]:
 
 
 h1_norm_sq_computed = v.get_h1_semi_inner_prod(v)
@@ -158,7 +154,7 @@ print("Error in square H^1 seminorm = %.4e" % (h1_norm_sq_error))
 # 	~.
 # \end{align*}
 
-# In[5]:
+# In[ ]:
 
 
 l2_norm_sq_computed = v.get_l2_inner_prod(v)
@@ -185,7 +181,7 @@ print("Error in square L^2 seminorm = %.4e" % l2_norm_sq_error)
 # 
 # Not included in the paper.
 
-# In[6]:
+# In[ ]:
 
 
 y1 = K.int_x1

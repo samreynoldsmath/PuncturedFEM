@@ -7,7 +7,7 @@ Module containing exceptions for the mesh subpackage.
 
 
 class EdgeTransformationError(Exception):
-    """Exception raised if edge transformation is not valid"""
+    """Exception raised if Edge transformation is not valid"""
 
     def __init__(self, msg: str = "") -> None:
         super().__init__()

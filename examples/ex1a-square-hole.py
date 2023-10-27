@@ -36,7 +36,7 @@
 # and create a `cell` object accordingly. 
 # See `ex0-mesh-building` for details.
 
-# In[1]:
+# In[ ]:
 
 
 import sys
@@ -51,27 +51,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # define quadrature schemes
-n = 64
-q_trap = pf.quad(qtype="trap", n=n)
-q_kress = pf.quad(qtype="kress", n=n)
-quad_dict = {"kress": q_kress, "trap": q_trap}
+quad_dict = pf.get_quad_dict(n=64)
 
 # define vertices
-verts: list[pf.vert] = []
-verts.append(pf.vert(x=0.0, y=0.0))
-verts.append(pf.vert(x=1.0, y=0.0))
-verts.append(pf.vert(x=1.0, y=1.0))
-verts.append(pf.vert(x=0.0, y=1.0))
-verts.append(pf.vert(x=0.5, y=0.5))  # center of circle
+verts: list[pf.Vert] = []
+verts.append(pf.Vert(x=0.0, y=0.0))
+verts.append(pf.Vert(x=1.0, y=0.0))
+verts.append(pf.Vert(x=1.0, y=1.0))
+verts.append(pf.Vert(x=0.0, y=1.0))
+verts.append(pf.Vert(x=0.5, y=0.5))  # center of circle
 
 # define edges
-edges: list[pf.edge] = []
-edges.append(pf.edge(verts[0], verts[1], pos_cell_idx=0))
-edges.append(pf.edge(verts[1], verts[2], pos_cell_idx=0))
-edges.append(pf.edge(verts[2], verts[3], pos_cell_idx=0))
-edges.append(pf.edge(verts[3], verts[0], pos_cell_idx=0))
+edges: list[pf.Edge] = []
+edges.append(pf.Edge(verts[0], verts[1], pos_cell_idx=0))
+edges.append(pf.Edge(verts[1], verts[2], pos_cell_idx=0))
+edges.append(pf.Edge(verts[2], verts[3], pos_cell_idx=0))
+edges.append(pf.Edge(verts[3], verts[0], pos_cell_idx=0))
 edges.append(
-    pf.edge(
+    pf.Edge(
         verts[4],
         verts[4],
         neg_cell_idx=0,
@@ -82,13 +79,13 @@ edges.append(
 )
 
 # define mesh cell
-K = pf.cell(id=0, edges=edges)
+K = pf.MeshCell(idx=0, edges=edges)
 
 # parameterize edges
 K.parameterize(quad_dict)
 
 # plot boundary
-pf.plot_edges(edges, orientation=True)
+pf.plot.MeshPlot(K.get_edges()).draw()
 
 
 # ## Define a Local Function
@@ -119,7 +116,7 @@ pf.plot_edges(edges, orientation=True)
 # \end{align*}
 # First, let's compute the values of the Dirichlet trace of $v$:
 
-# In[2]:
+# In[ ]:
 
 
 # set target value of logarithmic coefficient
@@ -146,37 +143,37 @@ v_trace = (
 # \begin{align*}
 # 	\Delta v(x) = \Delta P(x) = 12 x_1 x_2~.
 # \end{align*}
-# We will encode this an a `polynomial` object with a multi-index 
+# We will encode this an a `Polynomial` object with a multi-index 
 # $\alpha = (1,1)$ and coefficient $c_\alpha = 12$.
 
-# In[3]:
+# In[ ]:
 
 
-# create polynomial object
-v_laplacian = pf.polynomial([[12.0, 1, 1]])
+# create Polynomial object
+v_laplacian = pf.Polynomial([[12.0, 1, 1]])
 
 
 # ### Define a Local Function
 # 
-# We are now ready to define $v$ as a `locfun` object:
+# We are now ready to define $v$ as a `LocalFunction` object:
 
-# In[4]:
-
-
-solver = pf.nystrom_solver(K)
+# In[ ]:
 
 
-# In[5]:
+nyst = pf.NystromSolver(K)
 
 
-v = pf.locfun(solver, lap_poly=v_laplacian, has_poly_trace=False)
+# In[ ]:
+
+
+v = pf.LocalFunction(nyst=nyst, lap_poly=v_laplacian, has_poly_trace=False)
 v.set_trace_values(v_trace)
 
 
 # To proceed with our calculations, we must determine a polynomial anti-Laplacian
 # of $\Delta v$, which we might expect to be $P(x) = x_1^3 x_2 + x_1 x_2^3$.
 
-# In[6]:
+# In[ ]:
 
 
 v.compute_polynomial_part()
@@ -230,7 +227,7 @@ print(v.get_polynomial_part())
 # The user does not need to know the specifics, but merely needs to call
 # the following two methods.
 
-# In[7]:
+# In[ ]:
 
 
 v.compute_polynomial_part_trace()
@@ -252,7 +249,7 @@ v.compute_harmonic_conjugate()
 # when we created $K$.
 # Therefore, we ought to find that $a_1 = a = 1$, which we can check now:
 
-# In[8]:
+# In[ ]:
 
 
 print("Computed logarithmic coefficient = ", v.log_coef[0])
@@ -270,7 +267,7 @@ print("Error = ", abs(v.log_coef[0] - a_exact))
 # We can use call `plot.traceplot.trace()` to plot the trace(s) 
 # of function(s) on the boundary.
 
-# In[9]:
+# In[ ]:
 
 
 # get computed value of psi_hat
@@ -280,18 +277,14 @@ psi_hat_computed = v.get_harmonic_conjugate()
 psi_hat_exact = np.exp(x1) * np.sin(x2)
 
 # plot harmonic conjugate
-quad_list = [
-    q_trap,
-    q_kress,
-]
-f_trace_list = [
-    psi_hat_exact,
-    psi_hat_computed,
-]
-fmt = ("g--", "k.")
-legend = ("exact", "computed")
-title = "Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+pf.plot.TracePlot(
+    traces=[psi_hat_exact, psi_hat_computed],
+    K=K,
+    fmt=["g--", "k."],
+    legend=("exact", "computed"),
+    title="Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$",
+    quad_dict=quad_dict,
+).draw()
 
 
 # **Note**: A harmonic conjugate is unique only up to an additive constant.
@@ -305,7 +298,7 @@ pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 # 	~.
 # \end{align*}
 
-# In[10]:
+# In[ ]:
 
 
 # average square distance between values
@@ -316,42 +309,39 @@ integrated_difference = K.integrate_over_boundary(
 c = -integrated_difference / boundary_length
 
 # plot harmonic conjugate
-quad_list = [
-    q_trap,
-    q_kress,
-]
-f_trace_list = [
-    psi_hat_exact,
-    psi_hat_computed - c,
-]
-fmt = ("g--", "k.")
-legend = ("exact", "computed")
-title = "Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+pf.plot.TracePlot(
+    traces=[psi_hat_exact, psi_hat_computed - c],
+    fmt=["g--", "k."],
+    legend=("exact", "computed"),
+    title="Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$",
+    K=K,
+    quad_dict=quad_dict,
+).draw()
 
 
 # Compute and plot the error in the computed harmonic conjugate.
 
-# In[11]:
+# In[ ]:
 
 
 # compute errors in harmonic conjugate
 psi_hat_error = np.abs(psi_hat_exact - psi_hat_computed + c)
 
 # plot harmonic conjugate error
-f_trace_list = [
-    psi_hat_error,
-]
-fmt = ("k.",)
-legend = ("error",)
-title = "Harmonic conjugate error"
-pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
+pf.plot.TracePlot(
+    traces=psi_hat_error,
+    fmt="k.",
+    title="Harmonic conjugate error",
+    K=K,
+    quad_dict=quad_dict,
+    log_scale=True,
+).draw()
 
 
 # The pointwise errors look alright. 
 # Let's compute the $L^2(\partial K)$ norm of the error:
 
-# In[12]:
+# In[ ]:
 
 
 max_hc_error = max(psi_hat_error)
@@ -407,7 +397,7 @@ print("L^2 norm of error = %.4e" % l2_hc_error)
 # Let's obtain the weighted normal derivative of $\phi$ by calling the 
 # `compute_harmonic_weighted_normal_derivative()` method.
 
-# In[13]:
+# In[ ]:
 
 
 # compute weighted normal derivative
@@ -427,7 +417,7 @@ v.compute_harmonic_weighted_normal_derivative()
 # \end{align*}
 # Let's compute these exact values for comparison.
 
-# In[14]:
+# In[ ]:
 
 
 # define the components of the gradient of phi
@@ -449,33 +439,30 @@ phi_wnd_computed = v.get_harmonic_weighted_normal_derivative()
 wnd_error = np.abs(phi_wnd_computed - phi_wnd_exact)
 
 # plot exact and computed weighted normal derivatives
-quad_list = [
-    q_trap,
-    q_kress,
-]
-f_trace_list = [
-    phi_wnd_exact,
-    phi_wnd_computed,
-]
-fmt = ("g--", "k.")
-legend = ("exact", "computed")
-title = "Weighted normal derivative"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+pf.plot.TracePlot(
+    traces=[phi_wnd_exact, phi_wnd_computed],
+    fmt=["g--", "k."],
+    legend=("exact", "computed"),
+    title="Weighted normal derivative",
+    K=K,
+    quad_dict=quad_dict,
+).draw()
 
 # plot errors
-f_trace_list = [
-    wnd_error,
-]
-fmt = ("k.",)
-legend = ("error",)
-title = "Weighted normal derivative error"
-pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
+pf.plot.TracePlot(
+    traces=wnd_error,
+    fmt="k.",
+    title="Weighted normal derivative error",
+    K=K,
+    quad_dict=quad_dict,
+    log_scale=True,
+).draw()
 
 
 # Let's look at the maximum pointwise error as well as the error in the
 # $L^2(\partial K)$ norm:
 
-# In[15]:
+# In[ ]:
 
 
 # compute and print errors
@@ -505,7 +492,7 @@ print("L^2 norm of wnd error = %.4e" % l2_wnd_error)
 # All of this handled internally when we call the 
 # `compute_anti_laplacian_harmonic_part()` method.
 
-# In[16]:
+# In[ ]:
 
 
 v.compute_anti_laplacian_harmonic_part()
@@ -520,7 +507,7 @@ v.compute_anti_laplacian_harmonic_part()
 # \end{align*}
 # which is an anti-Laplacian of $\phi$.
 
-# In[17]:
+# In[ ]:
 
 
 # an exact anti-Laplacian
@@ -533,15 +520,15 @@ PHI_exact = 0.25 * np.exp(x1) * (
 # computed anti-Laplacian
 PHI_computed = v.get_anti_laplacian_harmonic_part()
 
-quad_list = [
-    q_trap,
-    q_kress,
-]
-f_trace_list = [PHI_exact, PHI_computed]
-fmt = ("g--", "k.")
-legend = ("exact", "computed")
-title = "Anti-Laplacian"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+# plot exact and computed anti-Laplacian
+pf.plot.TracePlot(
+    traces=[PHI_exact, PHI_computed],
+    fmt=["g--", "k."],
+    legend=("exact", "computed"),
+    title="Anti-Laplacian",
+    K=K,
+    quad_dict=quad_dict,
+).draw()
 
 
 # In general, $\Phi$ is unique only up to the addition of a harmonic function.
@@ -561,7 +548,7 @@ pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
 # We will test this conjecture by performing a least squares best linear fit 
 # on the computed values of $\Psi - \widetilde\Psi$.
 
-# In[18]:
+# In[ ]:
 
 
 PHI_diff = PHI_exact - PHI_computed
@@ -574,35 +561,34 @@ Xy = np.transpose(X) @ PHI_diff
 aa = np.linalg.solve(XX, Xy)
 PHI_diff_fit = X @ aa
 
+# compute errors
 PHI_diff_error = np.abs(PHI_diff_fit - PHI_diff)
 
-quad_list = [
-    q_trap,
-    q_kress,
-]
-f_trace_list = [PHI_diff_fit, PHI_diff]
-fmt = ("b--", "k.")
-legend = ("least squares best linear fit", "exact - computed")
-title = "Anti-Laplacian difference"
-pf.plot_trace(f_trace_list, fmt, legend, title, K, quad_list)
+# plot exact and computed anti-Laplacian
+pf.plot.TracePlot(
+    traces=[PHI_diff_fit, PHI_diff],
+    fmt=["b--", "k."],
+    legend=("least squares best linear fit", "exact - computed"),
+    title="Anti-Laplacian difference",
+    K=K,
+    quad_dict=quad_dict,
+).draw()
 
-quad_list = [
-    q_trap,
-    q_kress,
-]
-f_trace_list = [
-    PHI_diff_error,
-]
-fmt = ("k.",)
-legend = ("exact - computed - linear fit",)
-title = "Anti-Laplacian error"
-pf.plot_trace_log(f_trace_list, fmt, legend, title, K, quad_list)
+# plot errors
+pf.plot.TracePlot(
+    traces=PHI_diff_error,
+    fmt="k.",
+    title="Anti-Laplacian difference error",
+    K=K,
+    quad_dict=quad_dict,
+    log_scale=True,
+).draw()
 
 
 # As before, let's compute the maximum pointwise error and the 
 # $L^2(\partial K)$ error.
 
-# In[19]:
+# In[ ]:
 
 
 max_PHI_error = max(PHI_diff_error)
@@ -614,7 +600,7 @@ print("L^2 norm of error = %.4e" % l2_PHI_error)
 # Before we use $v$ for computations, we need to compute the trace and 
 # weighted normal derivative of $P$, the polynomial part of $v = \phi + P$.
 
-# In[20]:
+# In[ ]:
 
 
 v.compute_polynomial_part_trace()
@@ -639,7 +625,7 @@ v.compute_polynomial_part_weighted_normal_derivative()
 # \end{align*}
 # (The notation "$\psi$" is being recycled here.)
 
-# In[21]:
+# In[ ]:
 
 
 # trace of w
@@ -648,17 +634,17 @@ w_trace = (
 )
 
 # define a monomial term by specifying its multi-index and coefficient
-w_laplacian = pf.polynomial([[8.0, 1, 0]])
+w_laplacian = pf.Polynomial([[8.0, 1, 0]])
 
 # declare w as local function object
-w = pf.locfun(solver, lap_poly=w_laplacian, has_poly_trace=False)
+w = pf.LocalFunction(nyst, lap_poly=w_laplacian, has_poly_trace=False)
 w.set_trace_values(w_trace)
 
 
 # For convenience, we don't need to call all of the `compute` methods we did for
 # $v$. Instead, we call `compute_all()`.
 
-# In[22]:
+# In[ ]:
 
 
 w.compute_all()
@@ -669,7 +655,7 @@ w.compute_all()
 # We are now ready to compute the $H^1$ semi-inner product between $v$ and $w$.
 # This can be done by calling the `compute_h1()` method from either function.
 
-# In[23]:
+# In[ ]:
 
 
 h1_vw_computed = v.get_h1_semi_inner_prod(w)
@@ -679,7 +665,7 @@ print("H^1 semi-inner product (vw) = ", h1_vw_computed)
 # In exact arithmetic, the $H^1$ semi-inner product is symmetric.
 # Let's check that we get the same thing if we compute in the opposite order.
 
-# In[24]:
+# In[ ]:
 
 
 h1_wv_computed = w.get_h1_semi_inner_prod(v)
@@ -688,7 +674,7 @@ print("H^1 semi-inner product (wv) = ", h1_wv_computed)
 
 # Here's the difference between the two:
 
-# In[25]:
+# In[ ]:
 
 
 print("Difference in computed H^1 = ", abs(h1_vw_computed - h1_wv_computed))
@@ -703,7 +689,7 @@ print("Difference in computed H^1 = ", abs(h1_vw_computed - h1_wv_computed))
 # where the value after "$\pm$" indicates the estimated error in this value
 # according to *Mathematica*.
 
-# In[26]:
+# In[ ]:
 
 
 h1_vw_exact = 4.46481780319135
@@ -721,7 +707,7 @@ print("H^1 error (wv) = ", abs(h1_wv_computed - h1_vw_exact))
 # \end{align*}
 # whose approximate value was obtained with *Mathematica*.
 
-# In[27]:
+# In[ ]:
 
 
 l2_vw_computed = v.get_l2_inner_prod(w)
@@ -749,10 +735,10 @@ print("L^2 error (wv) = ", abs(l2_wv_computed - l2_vw_exact))
 # |	32	|	3.5905e-13	|	2.3095e-09	|	1.0434e-08	|	1.9430e-09	|	1.0860e-09	|	2.8398e-11	|
 # |	64	|	1.8874e-14	|	1.6313e-12	|	6.4780e-11	|	7.0728e-12	|	9.5390e-13	|	1.1036e-13	|
 
-# In[28]:
+# In[ ]:
 
 
-print(q_kress.n)
+print(quad_dict["kress"].n)
 
 print("")
 
@@ -780,7 +766,7 @@ print("L^2 error (vw) = %.4e" % abs(l2_vw_computed - l2_vw_exact))
 # We can use this to evaluate $f = \psi + \mathfrak{i}\widehat\psi$,
 # and thereby determine the interior values of $v$. 
 
-# In[29]:
+# In[ ]:
 
 
 y1 = K.int_x1
@@ -803,7 +789,7 @@ plt.show()
 # we can plot the pointwise errors.
 # (Note that the scale is logarithmic.)
 
-# In[30]:
+# In[ ]:
 
 
 v_exact = (
@@ -824,7 +810,7 @@ plt.show()
 
 # Let's do the same for the components of the gradient:
 
-# In[31]:
+# In[ ]:
 
 
 v_x1_exact = (
@@ -843,7 +829,7 @@ plt.title("Gradient errors in $x_1$ ($\log_{10}$)")
 plt.show()
 
 
-# In[32]:
+# In[ ]:
 
 
 v_x2_exact = (
