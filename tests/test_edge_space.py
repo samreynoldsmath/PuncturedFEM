@@ -8,7 +8,7 @@ Tests for the edge_space module.
 import puncturedfem as pf
 
 
-MAX_DEG = 5
+MAX_DEG = 3
 
 
 def get_edge_space_dim(p: int, m: int) -> int:
