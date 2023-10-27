@@ -191,7 +191,13 @@ class EdgeSpace:
                 self.edge_fun_traces[j] -= a0 * ell[0] + a1 * ell[1]
 
                 # flip sign if necessary
-                self.edge_fun_traces[j] *= -1
+                avg_val = self.e.integrate_over_edge(
+                    self.edge_fun_traces[j].eval(
+                        x=self.e.x[0, :], y=self.e.x[1, :]
+                    )
+                )
+                if avg_val < 0:
+                    self.edge_fun_traces[j] *= -1
 
             # set vertex functions to barycentric coordinates
             self.vert_fun_traces.append(ell[0])
@@ -250,7 +256,7 @@ class EdgeSpace:
         M = self.get_gram_matrix()
 
         # replace M with a low-rank approximation
-        tol = 1e-8
+        tol = 1e-6
         if np.shape(M)[0] > 0:
             U, S, Vh = np.linalg.svd(M)
             S_max = np.max(S)
@@ -258,10 +264,6 @@ class EdgeSpace:
             S_idx = np.where(S > (tol * S_max))[0]
             S_low_rank[S_idx] = S[S_idx]
             M = U @ np.diag(S_low_rank) @ Vh
-
-        # DEBUG
-        # sigma = np.linalg.svd(M, compute_uv=False)
-        # print("singular values =", sigma)
 
         # find the index set of the pivot columns
         idx = self.get_basis_index_set(M)
@@ -272,14 +274,10 @@ class EdgeSpace:
             basis.append(self.edge_fun_traces[k])
         self.edge_fun_traces = basis
 
-    def get_gram_matrix(self, precond: bool = True) -> np.ndarray:
+    def get_gram_matrix(self) -> np.ndarray:
         """
         Return the mass matrix M_ij = int_e phi_i phi_j ds.
-        If precond is True (default), then the normalization preconditioner is
-        applied.
         """
-
-        # compute inner products
         m = len(self.edge_fun_traces)
         M = np.zeros((m, m))
         for i in range(m):
@@ -289,19 +287,13 @@ class EdgeSpace:
                     integrand.eval(x=self.e.x[0, :], y=self.e.x[1, :])
                 )
                 M[j, i] = M[i, j]
-
-        # eliminate rows and columns with zero diagonals
-        M = self.eliminate_zeros(M)
-
-        # apply normalization preconditioner
-        if precond:
-            M = self.diagonal_rescale(M)
-
         return M
 
     def diagonal_rescale(self, M: np.ndarray) -> np.ndarray:
         """
         Return the normalized mass matrix M_ij / sqrt(M_ii * M_jj).
+
+        (!) DEPRECATED
         """
         m = np.shape(M)[0]
         for i in range(m):
@@ -315,6 +307,8 @@ class EdgeSpace:
     def eliminate_zeros(self, M: np.ndarray, tol: float = 1e-12) -> np.ndarray:
         """
         Return the matrix M with rows and columns with zero diagonals removed.
+
+        (!) DEPRECATED
         """
         m = np.shape(M)[0]
         idx = []
@@ -330,7 +324,7 @@ class EdgeSpace:
         return N
 
     def get_basis_index_set(
-        self, M: np.ndarray, tol: float = 1e-12
+        self, M: np.ndarray, tol: float = 1e-6
     ) -> list[int]:
         """
         Return the index set of the pivot columns of the matrix M.
