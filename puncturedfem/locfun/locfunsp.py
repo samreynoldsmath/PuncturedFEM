@@ -64,27 +64,27 @@ class LocalFunctionSpace:
         edge_spaces : list[EdgeSpace], optional
             List of EdgeSpace objects for each Edge in K
         deg : int, optional
-            (DEPRECATED) Degree of Polynomial space, by default 1
+            Degree of polynomial space, by default 1
         verbose : bool, optional
             Print progress, by default True
         processes : int, optional
             Number of processes to use for parallel computation, by default 1
         """
 
-        # set up nyström Solver
-        self.solver = NystromSolver(K, verbose=verbose)
-
         # set degree of Polynomial space
         self.set_deg(deg)
-
-        # bubble functions: zero trace, Polynomial Laplacian
-        self.build_bubble_funs()
 
         # construct edge spaces, if not provided
         if edge_spaces is None:
             edge_spaces = []
             for e in K.get_edges():
                 edge_spaces.append(EdgeSpace(e, self.deg))
+
+        # set up nyström Solver
+        self.solver = NystromSolver(K, verbose=verbose)
+
+        # bubble functions: zero trace, Polynomial Laplacian
+        self.build_bubble_funs()
 
         # build vertex functions...')
         self.build_vert_funs(edge_spaces)
