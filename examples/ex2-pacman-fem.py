@@ -94,15 +94,15 @@ quad_dict = pf.get_quad_dict(n)
 # In[ ]:
 
 
-V = pf.GlobalFunctionSpace(T=T, deg=deg, quad_dict=quad_dict)
+V = pf.GlobalFunctionSpace(T, deg, quad_dict)
 
 
 # ## Define a bilinear form
 # The bilinear form 
 # \begin{align*}
 # 	B(u,v) = 
-# 	a \, \int_\Omega \nabla u \cdot \nabla v ~dx
-# 	+ c \, \int_\Omega u \, v ~dx
+# 	\int_\Omega a \, \nabla u \cdot \nabla v ~dx
+# 	+ \int_\Omega c \, u \, v ~dx
 # \end{align*}
 # and the right-hand side linear functional
 # \begin{align*}
@@ -116,11 +116,16 @@ V = pf.GlobalFunctionSpace(T=T, deg=deg, quad_dict=quad_dict)
 # In[ ]:
 
 
+a = 1.0
+c = 1.0
+f = pf.Polynomial([(1.0, 0, 0)])
+
 B = pf.BilinearForm(
-    diffusion_constant=1.0,
-    reaction_constant=1.0,
-    rhs_poly=pf.Polynomial([[1.0, 0, 0]]),
+    diffusion_constant=a,
+    reaction_constant=c,
+    rhs_poly=f,
 )
+
 print(B)
 
 
@@ -194,7 +199,7 @@ pf.plot.GlobalFunctionPlot(solver).draw()
 import numpy as np
 
 for idx in range(V.num_funs):
-    u = np.zeros(V.num_funs)
-    u[idx] = 1.0
-    pf.plot.GlobalFunctionPlot(solver, coef=u).draw()
+    coef = np.zeros(V.num_funs)
+    coef[idx] = 1.0
+    pf.plot.GlobalFunctionPlot(solver, coef).draw()
 
