@@ -49,8 +49,7 @@ import puncturedfem as pf
 
 # Let's set a few parameters before we go any further. 
 # `deg` is the polynomial degree of global Poisson space,
-# `n` is edge sampling parameter (as used in previous examples),
-# and `verbose` controls how much output we see.
+# `n` is edge sampling parameter (as used in previous examples).
 # 
 # **(!) WARNING:** 
 # Higher order spaces (`deg > 1`) are still under development.
@@ -60,7 +59,6 @@ import puncturedfem as pf
 
 deg = 1
 n = 64
-verbose = True
 
 
 # ## Mesh construction
@@ -72,7 +70,7 @@ verbose = True
 # In[ ]:
 
 
-T = pf.meshlib.pacman_subdiv(verbose=verbose)
+T = pf.meshlib.pacman_subdiv()
 
 
 # ## Build global function space 
@@ -96,7 +94,7 @@ quad_dict = pf.get_quad_dict(n)
 # In[ ]:
 
 
-V = pf.GlobalFunctionSpace(T=T, deg=deg, quad_dict=quad_dict, verbose=verbose)
+V = pf.GlobalFunctionSpace(T=T, deg=deg, quad_dict=quad_dict)
 
 
 # ## Define a bilinear form
@@ -132,7 +130,7 @@ print(B)
 # In[ ]:
 
 
-S = pf.Solver(V, B)
+solver = pf.Solver(V, B)
 
 
 # To assemble the matrix and right-hand side vector for the global system, we 
@@ -144,7 +142,7 @@ S = pf.Solver(V, B)
 # In[ ]:
 
 
-S.assemble(verbose=verbose)
+solver.assemble()
 
 
 # The `matplotlib.pyplot` module has a handy function for inspecting the sparsity
@@ -156,7 +154,7 @@ S.assemble(verbose=verbose)
 import matplotlib.pyplot as plt
 
 plt.figure()
-plt.spy(S.glob_mat)
+plt.spy(solver.glob_mat)
 plt.grid(True)
 plt.show()
 
@@ -168,7 +166,7 @@ plt.show()
 # In[ ]:
 
 
-S.solve()
+solver.solve()
 
 
 # ## Plot solution
@@ -184,7 +182,7 @@ S.solve()
 # In[ ]:
 
 
-pf.plot.GlobalFunctionPlot(solver=S, u=S.soln, fill=True).draw(show_plot=True)
+pf.plot.GlobalFunctionPlot(solver).draw()
 
 
 # ## Plot global basis functions
@@ -195,8 +193,8 @@ pf.plot.GlobalFunctionPlot(solver=S, u=S.soln, fill=True).draw(show_plot=True)
 
 import numpy as np
 
-for idx in range(S.num_funs):
+for idx in range(V.num_funs):
     u = np.zeros(V.num_funs)
     u[idx] = 1.0
-    pf.plot.GlobalFunctionPlot(solver=S, u=u, fill=True).draw(show_plot=True)
+    pf.plot.GlobalFunctionPlot(solver, coef=u).draw()
 

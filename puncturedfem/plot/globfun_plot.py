@@ -5,6 +5,8 @@ plot_global_solution.py
 Module for plotting the global solution.
 """
 
+from typing import Optional
+
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
 from numpy import inf, nanmax, nanmin, ndarray
@@ -15,32 +17,12 @@ from ..solver.solver import Solver
 class GlobalFunctionPlot:
     """
     Class for plotting a global function.
-
-    Parameters
-    ----------
-    solver : Solver
-        A Solver object, which contains the Mesh and the basis functions.
-    u : ndarray
-        The coefficients of the linear combination of basis functions.
-    fill : bool, optional
-        If True, a heatmap is plotted. If False, a contour plot is plotted.
-        Default is True.
-    title : str, optional
-        The title of the plot. Default is "", i.e. no title.
     """
 
     solver: Solver
-    u: ndarray
-    fill: bool
-    title: str
+    coef: ndarray
 
-    def __init__(
-        self,
-        solver: Solver,
-        u: ndarray,
-        fill: bool = True,
-        title: str = "",
-    ) -> None:
+    def __init__(self, solver: Solver, coef: Optional[ndarray] = None) -> None:
         """
         Constructor for the GlobalFunctionPlot class.
 
@@ -48,38 +30,44 @@ class GlobalFunctionPlot:
         ----------
         solver : Solver
             A Solver object, which contains the Mesh and the basis functions.
-        u : ndarray
+        coef : ndarray
             The coefficients of the linear combination of basis functions.
-        fill : bool, optional
-            If True, a heatmap is plotted. If False, a contour plot is plotted.
-            Default is True.
-        title : str, optional
-            The title of the plot. Default is "", i.e. no title.
         """
         self.set_solver(solver)
-        self.set_coefficients(u)
-        self.fill = fill
-        self.title = title
+        self.set_coefficients(coef)
 
     def set_solver(self, solver: Solver) -> None:
         """
-        Set the solver.
+        Set the solver object, which contains the mesh and the basis functions.
         """
         if not isinstance(solver, Solver):
             raise TypeError("solver must be of type Solver")
         self.solver = solver
 
-    def set_coefficients(self, u: ndarray) -> None:
+    def set_coefficients(self, coef: Optional[ndarray] = None) -> None:
         """
-        Set the coefficients.
+        Set the coefficients of the linear combination of basis functions.
         """
-        if not isinstance(u, ndarray):
+        if coef is None:
+            if not hasattr(self.solver, "soln"):
+                raise AttributeError(
+                    "solver must have attribute soln or u must be given"
+                )
+            coef = self.solver.soln
+        if not isinstance(coef, ndarray):
             raise TypeError("u must be of type ndarray")
-        if u.shape != (self.solver.V.num_funs,):
+        if coef.shape != (self.solver.V.num_funs,):
             raise ValueError("u must have shape (solver.V.N,)")
-        self.u = u
+        self.coef = coef
 
-    def draw(self, show_plot: bool = True, filename: str = "") -> None:
+    def draw(
+        self,
+        show_plot: bool = True,
+        filename: str = "",
+        fill: bool = True,
+        title: str = "",
+        show_colorbar: bool = True,
+    ) -> None:
         """
         Draw the plot.
 
@@ -89,15 +77,23 @@ class GlobalFunctionPlot:
             If True, the plot is shown. Default is True.
         filename : str, optional
             If not empty, the plot is saved to this file. Default is "".
+        fill : bool, optional
+            If True, a heatmap is plotted. If False, a contour plot is plotted.
+            Default is True.
+        title : str, optional
+            The title of the plot. Default is "", i.e. no title.
+        show_colorbar : bool, optional
+            If True, a colorbar is shown. Default is True.
         """
         _plot_linear_combo(
             self.solver,
-            self.u,
-            title=self.title,
+            self.coef,
+            title=title,
             show_fig=show_plot,
             save_fig=(len(filename) > 0),
             filename=filename,
-            fill=self.fill,
+            fill=fill,
+            show_colorbar=show_colorbar,
         )
 
 
@@ -109,6 +105,7 @@ def _plot_linear_combo(
     save_fig: bool = False,
     filename: str = "solution.pdf",
     fill: bool = True,
+    show_colorbar: bool = True,
 ) -> None:
     """
     Plot a linear combination of the basis functions.
@@ -149,8 +146,8 @@ def _plot_linear_combo(
                     K.int_x1,
                     K.int_x2,
                     vals_arr[abs_cell_idx],
-                    v_min=v_min,
-                    v_max=v_max,
+                    vmin=v_min,
+                    vmax=v_max,
                     levels=32,
                 )
             else:
@@ -158,16 +155,15 @@ def _plot_linear_combo(
                     K.int_x1,
                     K.int_x2,
                     vals_arr[abs_cell_idx],
-                    v_min=v_min,
-                    v_max=v_max,
+                    vmin=v_min,
+                    vmax=v_max,
                     levels=32,
                     colors="b",
                 )
-    if fill:
+    if fill and show_colorbar:
         sm = ScalarMappable(norm=plt.Normalize(vmin=v_min, vmax=v_max))
         plt.colorbar(
             mappable=sm,
-            # ax=fig.axes,
             ax=plt.gca(),
             fraction=0.046,
             pad=0.04,

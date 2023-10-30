@@ -1,6 +1,23 @@
 # Punctured FEM: Change Log
 
 
+## [yyyy mm dd] v0.4.0
+### Features
+- [ ] add trigonometric interpolation for cell boundary traces
+- [ ] add multiprocessing for batch computation of `LocalFunction` metadata
+- [ ] add option to turn axes in plots
+### Maintenance
+- [ ] add logging with `logging` module
+- [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
+- [ ] `locfun.locfun`: move interior value calculation to separate module
+- [x] make colorbar optional for `GlobalFunctionPlot` draw method
+- [x] make coefficients optional in `GlobalFunctionPlot` init method
+### Bug Fixes
+- [ ] close figure in `draw` methods for plotting classes
+- [ ] fix `show_plot=False` option not working in `draw` methods for plotting classes
+- [ ] make directory to save plots if it doesn't exist
+
+
 ## [2023 Oct 27] v0.3.8
 ### Features
 - [x] add `TracePlot` class
