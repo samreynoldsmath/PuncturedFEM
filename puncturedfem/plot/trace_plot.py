@@ -103,10 +103,11 @@ class TracePlot:
         self._make_title(self.title)
         self._make_axis_labels()
         plt.grid(self.show_grid)
-        if show_plot:
-            plt.show()
         if filename:
             plt.savefig(filename)
+        if show_plot:
+            plt.show()
+        plt.close()
 
     def set_traces(self, traces: np.ndarray | list[np.ndarray]) -> None:
         """

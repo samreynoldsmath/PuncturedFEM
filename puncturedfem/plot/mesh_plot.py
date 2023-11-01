@@ -61,10 +61,11 @@ class MeshPlot:
         plt.grid(self.show_grid)
         if self.title:
             plt.title(self.title)
-        if show_plot:
-            plt.show()
         if filename:
             plt.savefig(filename)
+        if show_plot:
+            plt.show()
+        plt.close()
 
     def set_edges(self, edges: list[Edge]) -> None:
         """

@@ -5,7 +5,9 @@
 ### Features
 - [ ] add trigonometric interpolation for cell boundary traces
 - [ ] add multiprocessing for batch computation of `LocalFunction` metadata
-- [ ] add option to turn axes in plots
+- [ ] add option to turn off axes in plots
+### Examples
+- [ ] add example of trigonometric interpolation and multiprocessing
 ### Maintenance
 - [ ] add logging with `logging` module
 - [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
@@ -13,8 +15,8 @@
 - [x] make colorbar optional for `GlobalFunctionPlot` draw method
 - [x] make coefficients optional in `GlobalFunctionPlot` init method
 ### Bug Fixes
-- [ ] close figure in `draw` methods for plotting classes
-- [ ] fix `show_plot=False` option not working in `draw` methods for plotting classes
+- [x] close figure in `draw` methods for plotting classes
+- [x] fix `show_plot=False` option not working in `draw` methods for plotting classes
 - [ ] make directory to save plots if it doesn't exist
 - [x] fix `LocalFunctionPlot` saving blank files
 

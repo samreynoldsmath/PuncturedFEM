@@ -72,6 +72,7 @@ class LocalFunctionPlot:
             plt.savefig(filename)
         if show_plot:
             plt.show()
+        plt.close()
 
     def draw_vals(
         self,

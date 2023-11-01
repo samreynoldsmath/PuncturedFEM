@@ -2,6 +2,11 @@
 
 
 ## [yyyy mm dd] v0.x
+### Examples
+- [ ] add example of "subdivision refinement"
+
+
+## [yyyy mm dd] v0.x
 ### Documentation
 - [ ] `README`: extend description, add references
 - [ ] add installation guide
