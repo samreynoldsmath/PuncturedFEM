@@ -68,10 +68,10 @@ class LocalFunctionPlot:
         plt.axis("equal")
         if title:
             plt.title(title)
-        if show_plot:
-            plt.show()
         if filename:
             plt.savefig(filename)
+        if show_plot:
+            plt.show()
 
     def draw_vals(
         self,

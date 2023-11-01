@@ -16,6 +16,7 @@
 - [ ] close figure in `draw` methods for plotting classes
 - [ ] fix `show_plot=False` option not working in `draw` methods for plotting classes
 - [ ] make directory to save plots if it doesn't exist
+- [x] fix `LocalFunctionPlot` saving blank files
 
 
 ## [2023 Oct 27] v0.3.8
