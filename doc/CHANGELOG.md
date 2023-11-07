@@ -2,12 +2,16 @@
 
 
 ## [yyyy mm dd] v0.4.0
+### Documentation
+- [x] update README, extend description, add references
 ### Features
+- [ ] add saving and loading local stiffness/mass matrices to/from file
 - [ ] add trigonometric interpolation for cell boundary traces
-- [ ] add multiprocessing for batch computation of `LocalFunction` metadata
 - [ ] add option to turn off axes in plots
 ### Examples
-- [ ] add example of trigonometric interpolation and multiprocessing
+- [ ] add example of trigonometric interpolation
+- [ ] add example of "subdivision refinement"
+- [ ] add example of loading matrices from file
 ### Maintenance
 - [ ] add logging with `logging` module
 - [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references

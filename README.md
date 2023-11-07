@@ -1,50 +1,87 @@
-```
-______                 _                      _______ ________  ___
-| ___ \               | |                    | |  ___|  ___|  \/  |
-| |_/ /   _ _ __   ___| |_ _   _ _ __ ___  __| | |_  | |__ |      |
-|  __/ | | | '_ \ / __| __| | | | '__/ _ \/ _  |  _| |  __|| |\/| |
-| |  | |_| | | | | (__| |_| |_| | | |  __/ (_| | |   | |___| |  | |
-\_|   \____|_| |_|\___|\__|\____|_|  \___|\____\_|   \____/\_|  |_/
-```
+# Punctured FEM
 https://github.com/samreynoldsmath/PuncturedFEM
+
+![pacman](doc/logo/pacman.svg)
+An approximate solution to $-\Delta u + u = 1$ on a rectangle with a zero Dirichlet boundary condition.
+The mesh consists of 11 cells, 5 of which are multiply connected, and all have curvilinear boundaries.
+See [examples/ex2-pacman-fem.ipynb](examples/ex2-pacman-fem.ipynb).
 
 ## Description
 A finite element method on meshes with curvilinear and multiply connected cells.
 
-## Examples used in publications
-* "Evaluation of inner products of implicitly-defined finite element functions
-  on multiply connected mesh cells," J. S. Ovall and S. E. Reynolds, in review.
-  * [Example 4.1 (Punctured Square)](examples/ex1a-square-hole.ipynb)
-  * [Example 4.2 (Pac-Man)](examples/ex1b-pacman.ipynb)
-  * [Example 4.3 (Ghost)](examples/ex1c-ghost.ipynb)
+One might call the method a "nonvirtual virtual element method" because it uses the same function spaces as the virtual element method [1], but works with basis functions directly, rather than projecting them and introducing stabilization terms.
+
+One advantage of our approach is the ability to find values of the basis functions (and therefore the finite element solution) in the interior of mesh cells, not just on the mesh skeleton.
+However, all essential calculations (such as entries of the stiffness and mass matrices) are occur entirely on cell boundaries, using single-dimensional quadrature.
+
+A disadvantage of our approach is that it is currently limited to planar domains. This is because we are able to exploit some results from complex analysis to compute the basis functions and their derivatives.
+
+Given a mesh cell $K \in \mathcal{T}$, the **local Poisson space** $V_p(K)$ consists of $v \in H^1(K)$ such that:
+
+- the Laplacian $\Delta v$ is a polynomial of degree at most $p-2$ on $K$,
+- the trace $v|_{\partial K}$ on the boundary of the mesh cell is continuous, and
+- the restriction $v|_{e}$ to each edge $e$ of the mesh cell is the trace a polynomial of degree at most $p$.
+
+One may see that $V_p(K)$ contains the space of polynomials of degree at most $p$ on $K$, but is typically a much richer space.
+The **global Poisson space** $V_p(\mathcal{T})$ is the space of continuous functions $v \in H^1(\Omega)$ such that $v|_K \in V_p(K)$ for all $K \in \mathcal{T}$, where $\mathcal{T}$ is a mesh of the domain $\Omega$.
+
+A discussion of the method, including interpolation estimates, is given in [3].
+A method of computing $L^2$ inner products and $H^1$ semi-inner products of functions in $V_p(K)$, with $K$ simply connected, is given in [2,4].
+The multiply connected case is discussed in [5].
+
+### Examples used in publications
+- Jeffrey S. Ovall, and Samuel E. Reynolds, "Evaluation of inner products of implicitly-defined finite element functions on multiply connected planar mesh cells" [4]
+  - [Example 4.1 (Punctured Square)](examples/ex1a-square-hole.ipynb)
+  - [Example 4.2 (Pac-Man)](examples/ex1b-pacman.ipynb)
+  - [Example 4.3 (Ghost)](examples/ex1c-ghost.ipynb)
+
+### References
+- **[1]** L. Beiriao da Veiga, F. Brezzi, A. Cangiani, G. Manzini, L. D. Marini, and A. Russo. "Basic principles of virtual element methods." Mathematical Models and Methods in Applied Sciences, 23(1):199–214, 2013.
+DOI: http://dx.doi.org/10.1142/S0218202512500492
+- **[2]** Jeffrey S. Ovall, and Samuel E. Reynolds, "A high-order method for evaluating derivatives of harmonic functions in planar domains," SIAM Journal on Scientific Computing (2018), Vol. 40(3), A1915–A1935.
+DOI: https://doi.org/10.1137/17M1141825
+- **[3]** Akash Anand, Jeffrey S. Ovall, Samuel E. Reynolds, and Steffen Weisser, "Trefftz Finite Elements on Curvilinear Polygons," SIAM Journal on Scientific Computing (2020), Vol. 42(2), pp. A1289–A1316.
+DOI: https://doi.org/10.1137/19M1294046
+- **[4]** Jeffrey S. Ovall, and Samuel E. Reynolds, "Quadrature for Implicitly-defined Finite Element Functions on Curvilinear Polygons," Computers & Mathematics with Applications (2022), Vol. 107 (1), pp. 1–16.
+DOI: https://doi.org/10.1016/j.camwa.2021.12.003
+- **[5]** Jeffrey S. Ovall, and Samuel E. Reynolds, "Evaluation of inner products of implicitly-defined finite element functions on multiply connected planar mesh cells," accepted for publication in SIAM Journal on Scientific Computing (2023).
+DOI: https://doi.org/10.48550/arXiv.2303.07591
 
 ## Dependencies
 This project is written in Python 3.11 and uses the following packages:
-* [matplotlib](https://matplotlib.org/)
-* [numpy](https://numpy.org/)
-* [scipy](https://www.scipy.org/)
-* [jupyter](https://jupyter.org/) (optional)
-* [tqdm](https://tqdm.github.io/) (optional)
+- [matplotlib](https://matplotlib.org/)
+(plotting)
+- [numpy](https://numpy.org/)
+(arrays, FFT)
+- [scipy](https://www.scipy.org/)
+(sparse matrices, GMRES)
+- [jupyter](https://jupyter.org/)
+(interactive examples)
+- [tqdm](https://tqdm.github.io/)
+(progress bars)
 
 See [requirements.txt](requirements.txt) for a complete list of dependencies.
 
-## Authors
-[Jeffrey S. Ovall](https://sites.google.com/pdx.edu/jeffovall)
-and
-[Samuel E. Reynolds](https://sites.google.com/view/samreynolds)
+## Contributors
+- [Jeffrey S. Ovall](https://sites.google.com/pdx.edu/jeffovall) (1):
+principal investigator
+- [Samuel E. Reynolds](https://sites.google.com/view/samreynolds) (1):
+lead developer
 
-## Affiliation
-Fariborz Maseeh Department of Mathematics and Statistics<br>
-Portland State University<br>
-Portland, Oregon, USA
+### Affiliation
+(1) [Fariborz Maseeh Department of Mathematics and Statistics, Portland State University](https://www.pdx.edu/math/)
 
 ## Acknowledgements
+<img src="./doc/logo/NSF_Official_logo.svg" width="100">
+
 Funding for this project was provided by the National Science Foundation through
-**NSF grant DMS-2012285** and **NSF RTG grant DMS-2136228**.
+
+- **NSF grant DMS-2012285**
+- **NSF RTG grant DMS-2136228**
 
 ## Disclaimers
-* This code is intended to serve as a prototype, and has not necessarily been optimized for performance.
-* This project is under heavy development, which may result to changes in to the API. Consult the examples for the latest suggested usage.
+- This code is intended to serve as a prototype, and has not necessarily been optimized for performance.
+- This project is under heavy development, which may result to changes in to the API. Consult the examples for the latest suggested usage.
 
 ## License
 Copyright (C) 2022 - 2023 Jeffrey S. Ovall and Samuel E. Reynolds.
