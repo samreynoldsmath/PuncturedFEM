@@ -1,7 +1,9 @@
 # Punctured FEM
+
 https://github.com/samreynoldsmath/PuncturedFEM
 
-![pacman](doc/logo/pacman.svg)
+<img src="./doc/logo/pacman.svg">
+
 An approximate solution to $-\Delta u + u = 1$ on a rectangle with a zero Dirichlet boundary condition.
 The mesh consists of 11 cells, 5 of which are multiply connected, and all have curvilinear boundaries.
 See [examples/ex2-pacman-fem.ipynb](examples/ex2-pacman-fem.ipynb).
