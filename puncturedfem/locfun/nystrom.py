@@ -302,8 +302,11 @@ class NystromSolver:
             for i in range(e.num_pts - 1):
                 for j in range(j_start, f.num_pts - 1):
                     ij = abs(i - j)
-                    if ij == 0:
-                        B_edge[i, i] = 2 * np.log(e.dx_norm[i])
+                    if qm.t[ij] < 1e-14:
+                        if e.dx_norm[i] < 1e-14:
+                            B_edge[i, i] = 0.0
+                        else:
+                            B_edge[i, i] = 2 * np.log(e.dx_norm[j])
                     else:
                         xy = e.x[:, i] - f.x[:, j]
                         xy2 = np.dot(xy, xy)
