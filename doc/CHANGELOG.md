@@ -18,7 +18,7 @@
 - [ ] `locfun.locfun`: move interior value calculation to separate module
 - [x] make colorbar optional for `GlobalFunctionPlot` draw method
 - [x] make coefficients optional in `GlobalFunctionPlot` init method
-- [ ] add warning for `nystrom_solver` when `n > 128`
+- [x] add warning for `Quad` class when `n > 128`
 - [x] use kwargs for plotting options
 ### Bug Fixes
 - [x] close figure in `draw` methods for plotting classes

@@ -9,6 +9,7 @@ objects.
 """
 
 from __future__ import annotations
+from warnings import warn
 
 import numpy as np
 
@@ -73,7 +74,7 @@ class Quad:
             Kress parameter. Default is 7.
         """
         self.type = qtype
-        self.n = n
+        self._set_n(n)
         self.h = np.pi / n
         self.t = np.linspace(0, 2 * np.pi, 2 * n + 1)
         if self.type == "kress":
@@ -90,6 +91,15 @@ class Quad:
         """
         msg = f"Quad object \n\ttype\t{self.type} \n\tn\t{self.n}"
         return msg
+
+    def _set_n(self, n: int) -> None:
+        if not isinstance(n, int):
+            raise TypeError("Quad parameter n must be an integer")
+        if n < 4:
+            raise ValueError("Quad parameter n must be at least 4")
+        if n > 128:
+            warn("Quad parameter n > 128 is not recommended")
+        self.n = n
 
     def trap(self) -> None:
         """
