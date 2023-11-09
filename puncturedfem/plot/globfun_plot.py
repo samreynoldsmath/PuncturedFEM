@@ -5,13 +5,14 @@ plot_global_solution.py
 Module for plotting the global solution.
 """
 
-from typing import Optional
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
 from numpy import inf, nanmax, nanmin, ndarray
 
 from ..solver.solver import Solver
+from .plot_util import get_axis_limits, get_figure_size
 
 
 class GlobalFunctionPlot:
@@ -21,6 +22,10 @@ class GlobalFunctionPlot:
 
     solver: Solver
     coef: ndarray
+    fill: bool
+    title: str
+    show_colorbar: bool
+    show_axis: bool
 
     def __init__(self, solver: Solver, coef: Optional[ndarray] = None) -> None:
         """
@@ -60,13 +65,17 @@ class GlobalFunctionPlot:
             raise ValueError("u must have shape (solver.V.N,)")
         self.coef = coef
 
+    def _unpack_kwargs(self, kwargs: dict) -> None:
+        """
+        Unpack the keyword arguments.
+        """
+        self.fill = kwargs.get("fill", True)
+        self.title = kwargs.get("title", "")
+        self.show_colorbar = kwargs.get("show_colorbar", True)
+        self.show_axis = kwargs.get("show_axis", True)
+
     def draw(
-        self,
-        show_plot: bool = True,
-        filename: str = "",
-        fill: bool = True,
-        title: str = "",
-        show_colorbar: bool = True,
+        self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
         """
         Draw the plot.
@@ -85,15 +94,16 @@ class GlobalFunctionPlot:
         show_colorbar : bool, optional
             If True, a colorbar is shown. Default is True.
         """
+        self._unpack_kwargs(kwargs)
         _plot_linear_combo(
             self.solver,
             self.coef,
-            title=title,
+            title=self.title,
             show_fig=show_plot,
             save_fig=(len(filename) > 0),
             filename=filename,
-            fill=fill,
-            show_colorbar=show_colorbar,
+            fill=self.fill,
+            show_colorbar=self.show_colorbar,
         )
 
 
@@ -124,8 +134,8 @@ def _plot_linear_combo(
         v_max = max(v_max, nanmax(vals))
 
     # determine axes and figure size
-    min_x, max_x, min_y, max_y = _get_axis_limits(solver)
-    w, h = _get_figure_size(min_x, max_x, min_y, max_y)
+    min_x, max_x, min_y, max_y = get_axis_limits(solver.V.T.edges)
+    w, h = get_figure_size(min_x, max_x, min_y, max_y)
 
     # get figure object
     fig = plt.figure(figsize=(w, h))
@@ -187,46 +197,46 @@ def _plot_linear_combo(
     plt.close(fig)
 
 
-def _get_axis_limits(solver: Solver) -> tuple[float, float, float, float]:
-    """
-    Get the axis limits.
-    """
-    min_x = inf
-    max_x = -inf
-    min_y = inf
-    max_y = -inf
-    for e in solver.V.T.edges:
-        min_x = _update_min(min_x, e.x[0, :])
-        max_x = _update_max(max_x, e.x[0, :])
-        min_y = _update_min(min_y, e.x[1, :])
-        max_y = _update_max(max_y, e.x[1, :])
-    return min_x, max_x, min_y, max_y
+# def _get_axis_limits(solver: Solver) -> tuple[float, float, float, float]:
+#     """
+#     Get the axis limits.
+#     """
+#     min_x = inf
+#     max_x = -inf
+#     min_y = inf
+#     max_y = -inf
+#     for e in solver.V.T.edges:
+#         min_x = _update_min(min_x, e.x[0, :])
+#         max_x = _update_max(max_x, e.x[0, :])
+#         min_y = _update_min(min_y, e.x[1, :])
+#         max_y = _update_max(max_y, e.x[1, :])
+#     return min_x, max_x, min_y, max_y
 
 
-def _update_min(current_min: float, candidates: ndarray) -> float:
-    """
-    Update the minimum value.
-    """
-    min_candidate = min(candidates)
-    return min(current_min, min_candidate)
+# def _update_min(current_min: float, candidates: ndarray) -> float:
+#     """
+#     Update the minimum value.
+#     """
+#     min_candidate = min(candidates)
+#     return min(current_min, min_candidate)
 
 
-def _update_max(current_max: float, candidates: ndarray) -> float:
-    """
-    Update the maximum value.
-    """
-    max_candidate = max(candidates)
-    return max(current_max, max_candidate)
+# def _update_max(current_max: float, candidates: ndarray) -> float:
+#     """
+#     Update the maximum value.
+#     """
+#     max_candidate = max(candidates)
+#     return max(current_max, max_candidate)
 
 
-def _get_figure_size(
-    min_x: float, max_x: float, min_y: float, max_y: float
-) -> tuple[float, float]:
-    """
-    Get the figure size.
-    """
-    dx = max_x - min_x
-    dy = max_y - min_y
-    h = 4.0
-    w = h * dx / dy
-    return w, h
+# def _get_figure_size(
+#     min_x: float, max_x: float, min_y: float, max_y: float
+# ) -> tuple[float, float]:
+#     """
+#     Get the figure size.
+#     """
+#     dx = max_x - min_x
+#     dy = max_y - min_y
+#     h = 4.0
+#     w = h * dx / dy
+#     return w, h
