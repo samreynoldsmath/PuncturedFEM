@@ -13,7 +13,7 @@ import numpy as np
 
 from ..mesh.quad import Quad, get_quad_dict
 from ..mesh.edge import Edge
-from .plot_util import get_axis_limits, get_figure_size
+from .plot_util import get_axis_limits, get_figure_size, save_figure
 
 
 class MeshPlot:
@@ -86,7 +86,7 @@ class MeshPlot:
         if not self.show_axis:
             plt.axis("off")
         if filename:
-            plt.savefig(filename)
+            save_figure(filename)
         if show_plot:
             plt.show()
         if not self.keep_open:

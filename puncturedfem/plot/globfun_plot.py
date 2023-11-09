@@ -12,7 +12,7 @@ from matplotlib.cm import ScalarMappable
 from numpy import inf, nanmax, nanmin, ndarray
 
 from ..solver.solver import Solver
-from .plot_util import get_axis_limits, get_figure_size
+from .plot_util import get_axis_limits, get_figure_size, save_figure
 
 
 class GlobalFunctionPlot:
@@ -189,7 +189,7 @@ def _plot_linear_combo(
         plt.title(title)
 
     if save_fig:
-        plt.savefig(filename)
+        save_figure(filename)
 
     if show_fig:
         plt.show()

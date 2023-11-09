@@ -13,6 +13,7 @@ import numpy as np
 
 from ..locfun.locfun import LocalFunction
 from .mesh_plot import MeshPlot
+from .plot_util import save_figure
 
 
 class LocalFunctionPlot:
@@ -86,7 +87,7 @@ class LocalFunctionPlot:
         if not self.show_axis:
             plt.axis("off")
         if filename:
-            plt.savefig(filename)
+            save_figure(filename)
         if show_plot:
             plt.show()
         plt.close()

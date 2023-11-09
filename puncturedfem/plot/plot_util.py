@@ -5,9 +5,23 @@ plot_util.py
 Module containing utility functions for plotting.
 """
 
+import os
+
 import numpy as np
+import matplotlib.pyplot as plt
 
 from ..mesh.edge import Edge
+
+
+def save_figure(
+    filename: str, dpi: int = 300, bbox_inches: str = "tight"
+) -> None:
+    """
+    Save a figure to a file.
+    """
+    if not os.path.exists(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename))
+    plt.savefig(filename, dpi=dpi, bbox_inches=bbox_inches)
 
 
 def get_axis_limits(

@@ -23,7 +23,7 @@
 ### Bug Fixes
 - [x] close figure in `draw` methods for plotting classes
 - [x] fix `show_plot=False` option not working in `draw` methods for plotting classes
-- [ ] make directory to save plots if it doesn't exist
+- [x] make directory to save plots if it doesn't exist
 - [x] fix `LocalFunctionPlot` saving blank files
 - [x] fix Martensen quadrature for large values of n
 
