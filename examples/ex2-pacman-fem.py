@@ -73,6 +73,14 @@ n = 64
 T = pf.meshlib.pacman_subdiv()
 
 
+# Let's take a look at the mesh by using the `MeshPlot` class.
+
+# In[ ]:
+
+
+pf.plot.MeshPlot(T.edges, n).draw(show_axis=False, pad=0.0)
+
+
 # ## Build global function space 
 # The global function space $V_p(\mathcal{T})\subset H^1(\Omega)$ 
 # is the space of continuous functions such that each function belongs to 
@@ -187,7 +195,7 @@ solver.solve()
 # In[ ]:
 
 
-pf.plot.GlobalFunctionPlot(solver).draw()
+pf.plot.GlobalFunctionPlot(solver).draw(pad=0.0, show_axis=False)
 
 
 # ## Plot global basis functions
@@ -201,5 +209,5 @@ import numpy as np
 for idx in range(V.num_funs):
     coef = np.zeros(V.num_funs)
     coef[idx] = 1.0
-    pf.plot.GlobalFunctionPlot(solver, coef).draw()
+    pf.plot.GlobalFunctionPlot(solver, coef).draw(pad=0.0, show_axis=False)
 

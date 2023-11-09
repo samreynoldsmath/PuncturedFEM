@@ -19,7 +19,7 @@
 # We begin by importing the `puncturedfem` package, 
 # as well as `numpy` and `matplotlib` for the sake of this example.
 
-# In[31]:
+# In[ ]:
 
 
 import sys
@@ -38,7 +38,7 @@ import matplotlib.pyplot as plt
 # The simplest type of edge is a straight line segment, which is the default
 # when initializing an `edge` object.
 
-# In[32]:
+# In[ ]:
 
 
 # define vertices
@@ -58,7 +58,7 @@ e1 = pf.Edge(v1, v2)
 # For instance, we can create a circular arc corresponding to a $120^\circ$ angle
 # as follows:
 
-# In[33]:
+# In[ ]:
 
 
 # create a circular arc
@@ -83,7 +83,7 @@ e2 = pf.Edge(v1, v2, curve_type="circular_arc_deg", theta0=120)
 # For now, we will use the trapezoid rule, which uses the equispacing 
 # $t_k = hk$, where $h=\pi / n$ for a chosen natural number $n$.
 
-# In[34]:
+# In[ ]:
 
 
 n = 32
@@ -99,7 +99,7 @@ quad_dict = {"kress": q_kress, "trap": q_trap}
 # an edge.
 # We can see that the Kress scheme samples points more heavily near the endpoints: 
 
-# In[35]:
+# In[ ]:
 
 
 plt.figure()
@@ -111,7 +111,7 @@ plt.show()
 
 # We are now prepared to parameterize our edges.
 
-# In[36]:
+# In[ ]:
 
 
 e1.parameterize(quad_dict)
@@ -120,7 +120,7 @@ e2.parameterize(quad_dict)
 
 # We can plot the edges using the `MeshPlot` class:
 
-# In[37]:
+# In[ ]:
 
 
 pf.plot.MeshPlot([e1, e2]).draw()
@@ -131,17 +131,17 @@ pf.plot.MeshPlot([e1, e2]).draw()
 # We can also introduce grid lines by setting the `show_grid` keyword argument
 # to `True`.
 
-# In[38]:
+# In[ ]:
 
 
-pf.plot.MeshPlot([e1, e2], show_orientation=True, show_grid=True).draw()
+pf.plot.MeshPlot([e1, e2]).draw(show_orientation=True, show_grid=True)
 
 
 # ## Creating a mesh
 # 
 # First we begin by defining the vertices of the mesh.
 
-# In[39]:
+# In[ ]:
 
 
 verts: list[pf.Vert] = []
@@ -218,7 +218,7 @@ verts.append(
 
 # We need to label our vertices:
 
-# In[40]:
+# In[ ]:
 
 
 # TODO: future versions should do this automatically.
@@ -228,7 +228,7 @@ for k in range(len(verts)):
 
 # Let's visualized these points:
 
-# In[41]:
+# In[ ]:
 
 
 plt.figure()
@@ -246,7 +246,7 @@ plt.show()
 # no such cell, `pos_cell_idx = -1` is taken as the default argument.
 # The `neg_cell_idx` is the index of the cell where the opposite is true. 
 
-# In[42]:
+# In[ ]:
 
 
 edges: list[pf.Edge] = []
@@ -370,7 +370,7 @@ edges.append(
 # With all of the edges of the mesh defined, we are prepared to define a
 # `planar_mesh` object.
 
-# In[43]:
+# In[ ]:
 
 
 T = pf.PlanarMesh(edges)
@@ -379,7 +379,7 @@ T = pf.PlanarMesh(edges)
 # Let's visualize the mesh skeleton, but first we should remember to parameterize
 # the edges.
 
-# In[44]:
+# In[ ]:
 
 
 # parameterize all edges of the mesh
@@ -387,12 +387,12 @@ for e in T.edges:
     e.parameterize(quad_dict)
 
 # plot the skeleton
-pf.plot.MeshPlot(T.edges).draw()
+pf.plot.MeshPlot(T.edges).draw(show_axis=False)
 
 
 # Moreover, we can visualize an individual cell of the mesh:
 
-# In[47]:
+# In[ ]:
 
 
 cell_idx = 8

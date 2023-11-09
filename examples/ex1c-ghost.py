@@ -210,45 +210,18 @@ y2 = K.int_x2
 
 v.compute_interior_values()
 
-v_computed = v.int_vals
-v_x1_computed = v.int_grad1
-v_x2_computed = v.int_grad2
-
-plt.figure()
-for e in K.get_edges():
-    e_x1, e_x2 = e.get_sampled_points()
-    plt.plot(e_x1, e_x2, "k")
-plt.contour(y1, y2, v_computed, levels=50)
-plt.colorbar()
-plt.title("Interior values of $v$")
-plt.axis("equal")
-plt.ylim([-0.15, 1.35])
-
-plt.figure()
-for e in K.get_edges():
-    e_x1, e_x2 = e.get_sampled_points()
-    plt.plot(e_x1, e_x2, "k")
-plt.contour(y1, y2, v_x1_computed, levels=50)
-plt.colorbar()
-plt.title("First component of grad $v$")
-plt.axis("equal")
-plt.ylim([-0.15, 1.35])
-
-plt.figure()
-for e in K.get_edges():
-    e_x1, e_x2 = e.get_sampled_points()
-    plt.plot(e_x1, e_x2, "k")
-plt.contour(y1, y2, v_x2_computed, levels=50)
-plt.colorbar()
-plt.title("Second component of grad $v$")
-plt.axis("equal")
-plt.ylim([-0.15, 1.35])
-
-plt.show()
+pf.plot.LocalFunctionPlot(v).draw()
+pf.plot.LocalFunctionPlot(v).draw_grad_x1()
+pf.plot.LocalFunctionPlot(v).draw_grad_x2()
 
 
 # In[ ]:
 
+
+# computed values
+v_computed = v.int_vals
+v_x1_computed = v.int_grad1
+v_x2_computed = v.int_grad2
 
 # exact values
 v_exact = (

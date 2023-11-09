@@ -7,7 +7,7 @@
 ### Features
 - [ ] add saving and loading local stiffness/mass matrices to/from file
 - [ ] add trigonometric interpolation for cell boundary traces
-- [ ] add option to turn off axes in plots
+- [x] add option to turn off axes in plots
 ### Examples
 - [ ] add example of trigonometric interpolation
 - [ ] add example of "subdivision refinement"
@@ -18,6 +18,8 @@
 - [ ] `locfun.locfun`: move interior value calculation to separate module
 - [x] make colorbar optional for `GlobalFunctionPlot` draw method
 - [x] make coefficients optional in `GlobalFunctionPlot` init method
+- [ ] add warning for `nystrom_solver` when `n > 128`
+- [x] use kwargs for plotting options
 ### Bug Fixes
 - [x] close figure in `draw` methods for plotting classes
 - [x] fix `show_plot=False` option not working in `draw` methods for plotting classes

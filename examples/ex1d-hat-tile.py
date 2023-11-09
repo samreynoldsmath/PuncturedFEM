@@ -18,7 +18,7 @@
 # As usual, we import the `puncturedfem` package. 
 # We will also need `numpy` and `matplotlib`.
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -42,7 +42,7 @@ import matplotlib.pyplot as plt
 # We will generate all such points, including those we don't need, and then 
 # joining a subset of them to form the boundary of the hat tile.
 
-# In[2]:
+# In[ ]:
 
 
 r = np.sqrt(0.5 * (1 + np.cos(np.pi / 3.0)))
@@ -71,7 +71,7 @@ for shift, i in zip([0, 1, 1], [0, 0, 1]):
 
 # We have generated some redudant points, so let's remove them.
 
-# In[3]:
+# In[ ]:
 
 
 unique_verts: list[pf.Vert] = []
@@ -91,7 +91,7 @@ for i, v in enumerate(verts):
 # Let's plot the points to make sure we have what we want. We will also include 
 # the indices of the points, so we know which ones to connect with edges.
 
-# In[4]:
+# In[ ]:
 
 
 plt.figure()
@@ -105,7 +105,7 @@ plt.show()
 
 # Next, we make a list of the vertices that we want to connect with edges.
 
-# In[5]:
+# In[ ]:
 
 
 path_idx: list[int] = [0, 8, 9, 11, 12, 23, 25, 21, 20, 13, 19, 3, 4, 0]
@@ -113,7 +113,7 @@ path_idx: list[int] = [0, 8, 9, 11, 12, 23, 25, 21, 20, 13, 19, 3, 4, 0]
 
 # We are finally prepared to join the vertices with edges. 
 
-# In[6]:
+# In[ ]:
 
 
 path: list[pf.Vert] = []
@@ -128,7 +128,7 @@ edges = [
 
 # With the edges defined, let's make the mesh cell $K$.
 
-# In[7]:
+# In[ ]:
 
 
 K = pf.MeshCell(idx=0, edges=edges)
@@ -137,12 +137,12 @@ K = pf.MeshCell(idx=0, edges=edges)
 # Let's parameterize the edges, and plot the edges to check that we have what we 
 # want.
 
-# In[8]:
+# In[ ]:
 
 
-quad_dict = pf.get_quad_dict(n=16)
+quad_dict = pf.get_quad_dict(n=128)
 K.parameterize(quad_dict)
-pf.plot.MeshPlot(K.get_edges()).draw()
+pf.plot.MeshPlot(K.get_edges()).draw(show_grid=True)
 
 
 # ## Build local Poisson space
@@ -154,7 +154,7 @@ pf.plot.MeshPlot(K.get_edges()).draw()
 # Depending on the degree and the edge discretization parameter `n` we chose 
 # above, this may take a couple of minutes.
 
-# In[9]:
+# In[ ]:
 
 
 V = pf.LocalFunctionSpace(K, deg=3)
@@ -189,7 +189,7 @@ V = pf.LocalFunctionSpace(K, deg=3)
 # 
 # Let's verify that the dimension of the local Poisson space is what we expect.
 
-# In[10]:
+# In[ ]:
 
 
 print(f"polynomial degree: p = {V.deg}")
@@ -200,12 +200,15 @@ print(f"dim(V_{V.deg}(K)) = {V.num_funs}")
 # ## Plot the basis functions
 # Let's plot the basis functions to see what they look like.
 
-# In[11]:
+# In[ ]:
 
 
 for i, v in enumerate(V.get_basis()):
-    pf.plot.LocalFunctionPlot(v).draw_vals(
+    pf.plot.LocalFunctionPlot(v).draw(
         filename=f"out/monotile_deg{V.deg}_{v.key.fun_type}_{i}.pdf",
         show_plot=True,
+        fill=False,
+        show_colorbar=False,
+        show_axis=False,
     )
 
