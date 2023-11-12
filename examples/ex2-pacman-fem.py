@@ -195,7 +195,8 @@ solver.solve()
 # In[ ]:
 
 
-pf.plot.GlobalFunctionPlot(solver).draw(pad=0.0, show_axis=False)
+cm = plt.colormaps["seismic"]
+pf.plot.GlobalFunctionPlot(solver).draw(pad=0.0, show_axis=False, colormap=cm)
 
 
 # ## Plot global basis functions
