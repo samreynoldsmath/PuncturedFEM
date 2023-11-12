@@ -9,6 +9,7 @@ from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Colormap
 from numpy import inf, nanmax, nanmin, ndarray
 
 from ..solver.solver import Solver
@@ -26,6 +27,7 @@ class GlobalFunctionPlot:
     title: str
     show_colorbar: bool
     show_axis: bool
+    colormap: Optional[Colormap]
 
     def __init__(self, solver: Solver, coef: Optional[ndarray] = None) -> None:
         """
@@ -73,6 +75,7 @@ class GlobalFunctionPlot:
         self.title = kwargs.get("title", "")
         self.show_colorbar = kwargs.get("show_colorbar", True)
         self.show_axis = kwargs.get("show_axis", True)
+        self.colormap = kwargs.get("colormap", None)
 
     def draw(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
@@ -104,6 +107,7 @@ class GlobalFunctionPlot:
             filename=filename,
             fill=self.fill,
             show_colorbar=self.show_colorbar,
+            colormap=self.colormap,
         )
 
 
@@ -116,6 +120,7 @@ def _plot_linear_combo(
     filename: str = "solution.pdf",
     fill: bool = True,
     show_colorbar: bool = True,
+    colormap: Optional[Colormap] = None,
 ) -> None:
     """
     Plot a linear combination of the basis functions.
@@ -159,6 +164,7 @@ def _plot_linear_combo(
                     vmin=v_min,
                     vmax=v_max,
                     levels=32,
+                    cmap=colormap,
                 )
             else:
                 plt.contour(
@@ -168,10 +174,12 @@ def _plot_linear_combo(
                     vmin=v_min,
                     vmax=v_max,
                     levels=32,
-                    colors="b",
+                    cmap=colormap,
                 )
     if fill and show_colorbar:
-        sm = ScalarMappable(norm=plt.Normalize(vmin=v_min, vmax=v_max))
+        sm = ScalarMappable(
+            norm=plt.Normalize(vmin=v_min, vmax=v_max), cmap=colormap
+        )
         plt.colorbar(
             mappable=sm,
             ax=plt.gca(),

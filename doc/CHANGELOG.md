@@ -8,6 +8,7 @@
 - [ ] add saving and loading local stiffness/mass matrices to/from file
 - [ ] add trigonometric interpolation for cell boundary traces
 - [x] add option to turn off axes in plots
+- [x] add colormap option to contour plot methods
 ### Examples
 - [ ] add example of trigonometric interpolation
 - [ ] add example of "subdivision refinement"

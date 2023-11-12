@@ -5,11 +5,12 @@ plot_global_solution.py
 Module for plotting the global solution.
 """
 
-from typing import Any
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
+from matplotlib.colors import Colormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from ..locfun.locfun import LocalFunction
 from .mesh_plot import MeshPlot
@@ -27,6 +28,7 @@ class LocalFunctionPlot:
     levels: int
     show_colorbar: bool
     show_axis: bool
+    colormap: Optional[Colormap]
 
     def __init__(self, v: LocalFunction) -> None:
         """
@@ -56,6 +58,7 @@ class LocalFunctionPlot:
         self.levels = kwargs.get("levels", 32)
         self.show_colorbar = kwargs.get("show_colorbar", True)
         self.show_axis = kwargs.get("show_axis", True)
+        self.colormap = kwargs.get("colormap", None)
 
     def _draw_generic(
         self,
@@ -68,16 +71,15 @@ class LocalFunctionPlot:
         Draw the plot.
         """
         self._unpack_kwargs(kwargs)
-        # plt.figure()
         edges = self.v.nyst.K.get_edges()
         MeshPlot(edges).draw(show_plot=False, keep_open=True)
         x1 = self.v.nyst.K.int_x1
         x2 = self.v.nyst.K.int_x2
         vals = self.v.int_vals
         if self.fill:
-            plt.contourf(x1, x2, vals, levels=self.levels)
+            plt.contourf(x1, x2, vals, levels=self.levels, cmap=self.colormap)
         else:
-            plt.contour(x1, x2, vals, levels=self.levels)
+            plt.contour(x1, x2, vals, levels=self.levels, cmap=self.colormap)
         if self.show_colorbar:
             divider = make_axes_locatable(plt.gca())
             colorbar_axes = divider.append_axes("right", size="5%", pad=0.05)
