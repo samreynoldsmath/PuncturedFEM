@@ -11,8 +11,8 @@ from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..mesh.quad import Quad, get_quad_dict
 from ..mesh.edge import Edge
+from ..mesh.quad import Quad, get_quad_dict
 from .plot_util import get_axis_limits, get_figure_size, save_figure
 
 
