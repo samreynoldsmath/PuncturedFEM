@@ -32,7 +32,7 @@ A method of computing $L^2$ inner products and $H^1$ semi-inner products of func
 The multiply connected case is discussed in [5].
 
 ### Examples used in publications
-- Jeffrey S. Ovall, and Samuel E. Reynolds, "Evaluation of inner products of implicitly-defined finite element functions on multiply connected planar mesh cells" [4]
+- Jeffrey S. Ovall, and Samuel E. Reynolds, "Evaluation of inner products of implicitly-defined finite element functions on multiply connected planar mesh cells" [5]
   - [Example 4.1 (Punctured Square)](examples/ex1a-square-hole.ipynb)
   - [Example 4.2 (Pac-Man)](examples/ex1b-pacman.ipynb)
   - [Example 4.3 (Ghost)](examples/ex1c-ghost.ipynb)
@@ -51,14 +51,14 @@ DOI: https://doi.org/10.48550/arXiv.2303.07591
 
 ## Dependencies
 This project is written in Python 3.11 and uses the following packages:
+- [jupyter](https://jupyter.org/)
+(interactive examples)
 - [matplotlib](https://matplotlib.org/)
 (plotting)
 - [numpy](https://numpy.org/)
 (arrays, FFT)
 - [scipy](https://www.scipy.org/)
 (sparse matrices, GMRES)
-- [jupyter](https://jupyter.org/)
-(interactive examples)
 - [tqdm](https://tqdm.github.io/)
 (progress bars)
 
@@ -76,8 +76,7 @@ lead developer
 ## Acknowledgements
 <img src="./doc/logo/NSF_Official_logo.svg" width="100">
 
-Funding for this project was provided by the National Science Foundation through
-
+Funding for this project was provided by the National Science Foundation through:
 - **NSF grant DMS-2012285**
 - **NSF RTG grant DMS-2136228**
 
@@ -86,7 +85,7 @@ Funding for this project was provided by the National Science Foundation through
 - This project is under heavy development, which may result to changes in to the API. Consult the examples for the latest suggested usage.
 
 ## License
-Copyright (C) 2022 - 2023 Jeffrey S. Ovall and Samuel E. Reynolds.
+Copyright (C) 2022 - 2024, Jeffrey S. Ovall and Samuel E. Reynolds.
 
 This program is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free

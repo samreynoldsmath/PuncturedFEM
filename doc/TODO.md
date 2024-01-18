@@ -3,14 +3,25 @@
 
 ## [yyyy mm dd] v0.x
 ### Features
+- [ ] automatically identify repeated cells in a mesh (up to scaling and rigid motion)
+- [ ] add ability to define edge parameterizations symbolically with `sympy`
+
+
+## [yyyy mm dd] v0.x
+### Features
+- [ ] p-refinement: different polynomial degree on different cells/edges
+
+
+## [yyyy mm dd] v0.x
+### Features
 - [ ] add mixed zero Dirichlet/Neumann boundary conditions
 - [ ] edge space interpolation
 - [ ] nonhomogeneous boundary conditions
 
 
 ## [yyyy mm dd] v0.x
-### Improvements
-- [ ] automatically identify repeated cells in a mesh (up to scaling and rigid motion)
+### Maintenance
+- [ ] add logging with `logging` module
 
 
 ## [yyyy mm dd] v0.x
@@ -22,11 +33,6 @@
 ## [yyyy mm dd] v0.x
 ### Features
 - [ ] a posteriori error estimation
-
-
-## [yyyy mm dd] v0.x
-### Features
-- [ ] p-refinement: different polynomial degree on different cells/edges
 
 
 ## [yyyy mm dd] v0.x
