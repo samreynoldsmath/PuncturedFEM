@@ -53,6 +53,7 @@ from .locfun.edge_space import EdgeSpace
 from .locfun.locfun import LocalFunction
 from .locfun.locfunsp import LocalFunctionSpace
 from .locfun.nystrom import NystromSolver
+from .locfun.poly.piecewise_poly import PiecewisePolynomial
 from .locfun.poly.poly import Polynomial
 from .mesh import meshlib
 from .mesh.cell import MeshCell
@@ -69,6 +70,7 @@ __all__ = [
     "EdgeSpace",
     "LocalFunction",
     "LocalFunctionSpace",
+    "PiecewisePolynomial",
     "Polynomial",
     "NystromSolver",
     "MeshCell",

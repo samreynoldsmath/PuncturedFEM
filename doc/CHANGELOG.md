@@ -1,7 +1,7 @@
 # Punctured FEM: Change Log
 
 
-## [yyyy mm dd] v0.4.0
+## [2024 mmm dd] v0.4.0
 ### Documentation
 - [x] update README, extend description, add references
 ### Features
@@ -11,16 +11,13 @@
 - [x] add colormap option to contour plot methods
 ### Examples
 - [ ] add example of trigonometric interpolation
-- [ ] add example of "subdivision refinement"
 - [ ] add example of loading matrices from file
 ### Maintenance
-- [ ] `locfun.poly.poly`: use enum for `x` and `y` variable references
-- [ ] `locfun.locfun`: move interior value calculation to separate module
 - [x] make colorbar optional for `GlobalFunctionPlot` draw method
 - [x] make coefficients optional in `GlobalFunctionPlot` init method
 - [x] add warning for `Quad` class when `n > 128`
 - [x] use kwargs for plotting options
-- [ ] add PiecewisePolynomial class to init file
+- [x] add PiecewisePolynomial class to init file
 ### Bug Fixes
 - [x] close figure in `draw` methods for plotting classes
 - [x] fix `show_plot=False` option not working in `draw` methods for plotting classes

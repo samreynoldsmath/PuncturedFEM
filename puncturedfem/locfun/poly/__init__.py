@@ -25,5 +25,6 @@ poly
 """
 
 from .poly import Polynomial
+from .piecewise_poly import PiecewisePolynomial
 
-__all__ = ["Polynomial"]
+__all__ = ["Polynomial", "PiecewisePolynomial"]
