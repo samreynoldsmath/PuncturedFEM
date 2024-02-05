@@ -38,16 +38,11 @@ The multiply connected case is discussed in [5].
   - [Example 4.3 (Ghost)](examples/ex1c-ghost.ipynb)
 
 ### References
-- **[1]** L. Beiriao da Veiga, F. Brezzi, A. Cangiani, G. Manzini, L. D. Marini, and A. Russo. "Basic principles of virtual element methods." Mathematical Models and Methods in Applied Sciences, 23(1):199–214, 2013.
-DOI: http://dx.doi.org/10.1142/S0218202512500492
-- **[2]** Jeffrey S. Ovall, and Samuel E. Reynolds, "A high-order method for evaluating derivatives of harmonic functions in planar domains," SIAM Journal on Scientific Computing (2018), Vol. 40(3), A1915–A1935.
-DOI: https://doi.org/10.1137/17M1141825
-- **[3]** Akash Anand, Jeffrey S. Ovall, Samuel E. Reynolds, and Steffen Weisser, "Trefftz Finite Elements on Curvilinear Polygons," SIAM Journal on Scientific Computing (2020), Vol. 42(2), pp. A1289–A1316.
-DOI: https://doi.org/10.1137/19M1294046
-- **[4]** Jeffrey S. Ovall, and Samuel E. Reynolds, "Quadrature for Implicitly-defined Finite Element Functions on Curvilinear Polygons," Computers & Mathematics with Applications (2022), Vol. 107 (1), pp. 1–16.
-DOI: https://doi.org/10.1016/j.camwa.2021.12.003
-- **[5]** Jeffrey S. Ovall, and Samuel E. Reynolds, "Evaluation of inner products of implicitly-defined finite element functions on multiply connected planar mesh cells," accepted for publication in SIAM Journal on Scientific Computing (2023).
-DOI: https://doi.org/10.48550/arXiv.2303.07591
+- **[1]** [L. Beiriao da Veiga, F. Brezzi, A. Cangiani, G. Manzini, L. D. Marini, and A. Russo. Basic principles of virtual element methods. *Mathematical Models and Methods in Applied Sciences*, 23(1):199–214, 2013.](http://dx.doi.org/10.1142/S0218202512500492)
+- **[2]** [Jeffrey S. Ovall, and Samuel E. Reynolds. A high-order method for evaluating derivatives of harmonic functions in planar domains. *SIAM Journal on Scientific Computing* , Vol. 40(3), A1915–A1935, 2018.](https://doi.org/10.1137/17M1141825)
+- **[3]** [Akash Anand, Jeffrey S. Ovall, Samuel E. Reynolds, and Steffen Weisser. Trefftz Finite Elements on Curvilinear Polygons. *SIAM Journal on Scientific Computing*, Vol. 42(2), pp. A1289–A1316, 2020.](https://doi.org/10.1137/19M1294046)
+- **[4]** [Jeffrey S. Ovall, and Samuel E. Reynolds. Quadrature for Implicitly-defined Finite Element Functions on Curvilinear Polygons. *Computers & Mathematics with Applications*, Vol. 107 (1), pp. 1–16, 2022.](https://doi.org/10.1016/j.camwa.2021.12.003)
+- **[5]** [Jeffrey S. Ovall, and Samuel E. Reynolds. Evaluation of inner products of implicitly-defined finite element functions on multiply connected planar mesh cells. *SIAM Journal on Scientific Computing*, Vol. 46 (1), pp. A338–A359, 2024](https://doi.org/10.1137/23M1569332)
 
 ## Dependencies
 This project is written in Python 3.11 and uses the following packages:
