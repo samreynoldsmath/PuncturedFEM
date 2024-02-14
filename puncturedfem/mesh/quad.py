@@ -36,11 +36,11 @@ def get_quad_dict(n: int = 16, p: int = 7, interp: int = 1) -> dict[str, Quad]:
     quad_dict : dict
         Dictionary of Quad objects.
     """
-    _check_interp(interp)
+    _check_interp(interp, n)
     q_trap = Quad(qtype="trap", n=n)
-    q_trap_interp = Quad(qtype="trap", n=n * interp)
+    q_trap_interp = Quad(qtype="trap", n=n // interp)
     q_kress = Quad(qtype="kress", n=n, p=p)
-    q_kress_interp = Quad(qtype="kress", n=n * interp, p=p)
+    q_kress_interp = Quad(qtype="kress", n=n // interp, p=p)
     quad_dict = {
         "trap": q_trap,
         "trap_interp": q_trap_interp,
@@ -50,14 +50,15 @@ def get_quad_dict(n: int = 16, p: int = 7, interp: int = 1) -> dict[str, Quad]:
     return quad_dict
 
 
-def _check_interp(interp: int) -> None:
-    msg = "Interpolation parameter must be an integer power of 2"
+def _check_interp(interp: int, n: int) -> None:
+    msg = "interp must be an integer dividing n such that n / interp >= 4"
     if not isinstance(interp, int):
         raise TypeError(msg)
     if interp < 1:
         raise ValueError(msg)
-    log2interp = np.log2(interp)
-    if not abs(log2interp - np.round(log2interp)) < 1e-12:
+    if not n % interp == 0:
+        raise ValueError(msg)
+    if n // interp < 4:
         raise ValueError(msg)
 
 
