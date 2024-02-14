@@ -65,7 +65,6 @@ class MeshCell:
     int_x1: np.ndarray
     int_x2: np.ndarray
     is_inside: np.ndarray
-    quad_dict: QuadDict
 
     def __init__(self, idx: int, edges: list[Edge]) -> None:
         """
@@ -245,9 +244,8 @@ class MeshCell:
 
     def parameterize(self, quad_dict: QuadDict) -> None:
         """Parameterize each Edge"""
-        self.quad_dict = quad_dict
         for c in self.components:
-            c.parameterize(self.quad_dict)
+            c.parameterize(quad_dict)
         self.find_num_pts()
         self.find_interp()
         self.find_outer_boundary()
