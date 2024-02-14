@@ -24,7 +24,7 @@ poly
     Defines the Polynomial class.
 """
 
-from .poly import Polynomial
 from .piecewise_poly import PiecewisePolynomial
+from .poly import Polynomial
 
 __all__ = ["Polynomial", "PiecewisePolynomial"]
