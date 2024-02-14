@@ -111,6 +111,7 @@ class ClosedContour:
             if self.edge_orients[i] == -1:
                 self.edges[i].reverse_orientation()
         self.find_num_pts()
+        self.find_interp()
         self.find_local_vert_idx()
         self.find_closest_local_vertex_index()
         self.find_interior_point()

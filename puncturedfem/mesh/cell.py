@@ -247,6 +247,7 @@ class MeshCell:
         for c in self.components:
             c.parameterize(quad_dict)
         self.find_num_pts()
+        self.find_interp()
         self.find_outer_boundary()
         self.find_component_start_idx()
         self.find_closest_vert_idx()
