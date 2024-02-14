@@ -64,14 +64,19 @@ class NystromSolver:
             if K.num_edges > 1:
                 msg += "s"
             print(msg)
-        if not isinstance(K, MeshCell):
-            raise TypeError("K must be a MeshCell")
-        self.K = K
+        self.set_K(K)
         self.build_single_layer_mat()
         self.build_double_layer_mat()
         self.build_single_and_double_layer_ops()
         if self.K.num_holes > 0:
             self.compute_log_terms()
+
+    def set_K(self, K: MeshCell) -> None:
+        """Set the MeshCell"""
+        if not isinstance(K, MeshCell):
+            raise TypeError("K must be a MeshCell")
+        self.K = K
+        self.interp = self.K.interp
 
     def build_single_and_double_layer_ops(self) -> None:
         """
