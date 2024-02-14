@@ -36,10 +36,29 @@ def get_quad_dict(n: int = 16, p: int = 7, interp: int = 1) -> dict[str, Quad]:
     quad_dict : dict
         Dictionary of Quad objects.
     """
-    q_trap = Quad(qtype="trap", n=n, interp=interp)
-    q_kress = Quad(qtype="kress", n=n, p=p, interp=interp)
-    quad_dict = {"kress": q_kress, "trap": q_trap}
+    _check_interp(interp)
+    q_trap = Quad(qtype="trap", n=n)
+    q_trap_interp = Quad(qtype="trap", n=n * interp)
+    q_kress = Quad(qtype="kress", n=n, p=p)
+    q_kress_interp = Quad(qtype="kress", n=n * interp, p=p)
+    quad_dict = {
+        "trap": q_trap,
+        "trap_interp": q_trap_interp,
+        "kress": q_kress,
+        "kress_interp": q_kress_interp,
+    }
     return quad_dict
+
+
+def _check_interp(interp: int) -> None:
+    msg = "Interpolation parameter must be an integer power of 2"
+    if not isinstance(interp, int):
+        raise TypeError(msg)
+    if interp < 1:
+        raise ValueError(msg)
+    log2interp = np.log2(interp)
+    if not abs(log2interp - np.round(log2interp)) < 1e-12:
+        raise ValueError(msg)
 
 
 class Quad:
@@ -62,13 +81,12 @@ class Quad:
     type: str
     n: int
     interp: int
+    N: int
     h: float
     t: np.ndarray
     wgt: np.ndarray
 
-    def __init__(
-        self, qtype: str = "trap", n: int = 16, p: int = 7, interp: int = 1
-    ) -> None:
+    def __init__(self, qtype: str = "trap", n: int = 16, p: int = 7) -> None:
         """
         Constructor for Quad object.
 
@@ -82,13 +100,9 @@ class Quad:
         p : int, optional
             Kress parameter.
             Default is 7.
-        interp : int, optional
-            Interpolation parameter (aka zeta). Must be a power of 2.
-            Default is 1, which is equivalent to no interpolation.
         """
         self.type = qtype
         self._set_n(n)
-        self._set_interp(interp)
         self.h = np.pi / n
         self.t = np.linspace(0, 2 * np.pi, 2 * n + 1)
         if self.type == "kress":
@@ -114,17 +128,6 @@ class Quad:
         if n > 128:
             warn("Quad parameter n > 128 is not recommended")
         self.n = n
-
-    def _set_interp(self, interp: int) -> None:
-        msg = "Interpolation parameter must be an integer power of 2"
-        if not isinstance(interp, int):
-            raise TypeError(msg)
-        if interp < 1:
-            raise ValueError(msg)
-        log2interp = np.log2(interp)
-        if not abs(log2interp - np.round(log2interp)) < 1e-12:
-            raise ValueError(msg)
-        self.interp = interp
 
     def trap(self) -> None:
         """
