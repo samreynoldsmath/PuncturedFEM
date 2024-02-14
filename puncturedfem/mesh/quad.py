@@ -15,7 +15,7 @@ from warnings import warn
 import numpy as np
 
 
-def get_quad_dict(n: int = 16, p: int = 7) -> dict[str, Quad]:
+def get_quad_dict(n: int = 16, p: int = 7, interp: int = 1) -> dict[str, Quad]:
     """
     Return a dictionary of Quad objects.
 
@@ -25,15 +25,19 @@ def get_quad_dict(n: int = 16, p: int = 7) -> dict[str, Quad]:
         Interval sampled at 2*n points, excluding the last endpoint.
         Default is 16.
     p : int, optional
-        Kress parameter. Default is 7.
+        Kress parameter.
+        Default is 7.
+    interp : int, optional
+        Interpolation parameter (aka zeta). Must be a power of 2.
+        Default is 1, which is equivalent to no interpolation.
 
     Returns
     -------
     quad_dict : dict
         Dictionary of Quad objects.
     """
-    q_trap = Quad(qtype="trap", n=n)
-    q_kress = Quad(qtype="kress", n=n, p=p)
+    q_trap = Quad(qtype="trap", n=n, interp=interp)
+    q_kress = Quad(qtype="kress", n=n, p=p, interp=interp)
     quad_dict = {"kress": q_kress, "trap": q_trap}
     return quad_dict
 
@@ -52,15 +56,19 @@ class Quad:
     Comment:
         Defaults to the trapezoid rule with n = 16.
         Kress parameter defaults to p = 7.
+        Interpolation parameter defaults to 1.
     """
 
     type: str
     n: int
+    interp: int
     h: float
     t: np.ndarray
     wgt: np.ndarray
 
-    def __init__(self, qtype: str = "trap", n: int = 16, p: int = 7) -> None:
+    def __init__(
+        self, qtype: str = "trap", n: int = 16, p: int = 7, interp: int = 1
+    ) -> None:
         """
         Constructor for Quad object.
 
@@ -72,10 +80,15 @@ class Quad:
             Interval sampled at 2*n points, excluding the last endpoint.
             Default is 16.
         p : int, optional
-            Kress parameter. Default is 7.
+            Kress parameter.
+            Default is 7.
+        interp : int, optional
+            Interpolation parameter (aka zeta). Must be a power of 2.
+            Default is 1, which is equivalent to no interpolation.
         """
         self.type = qtype
         self._set_n(n)
+        self._set_interp(interp)
         self.h = np.pi / n
         self.t = np.linspace(0, 2 * np.pi, 2 * n + 1)
         if self.type == "kress":
@@ -101,6 +114,17 @@ class Quad:
         if n > 128:
             warn("Quad parameter n > 128 is not recommended")
         self.n = n
+
+    def _set_interp(self, interp: int) -> None:
+        msg = "Interpolation parameter must be an integer power of 2"
+        if not isinstance(interp, int):
+            raise TypeError(msg)
+        if interp < 1:
+            raise ValueError(msg)
+        log2interp = np.log2(interp)
+        if not abs(log2interp - np.round(log2interp)) < 1e-12:
+            raise ValueError(msg)
+        self.interp = interp
 
     def trap(self) -> None:
         """
@@ -144,7 +168,8 @@ class Quad:
         """
         Martensen Quadrature
 
-        E. Martensen, Über eine Methode zum räumlichen Neumannschen Problem
+        E. Martensen, Über eine M
+        ethode zum räumlichen Neumannschen Problem
         mit einer An-wendung für torusartige Berandungen, Acta Math., 109
         (1963), pp. 75-135.
         """
