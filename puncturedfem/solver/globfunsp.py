@@ -11,7 +11,7 @@ from tqdm import tqdm
 from ..locfun.edge_space import EdgeSpace
 from ..locfun.locfunsp import LocalFunctionSpace
 from ..mesh.planar_mesh import PlanarMesh
-from ..mesh.quad import Quad
+from ..mesh.quad import QuadDict
 from .globkey import GlobalKey
 
 
@@ -22,7 +22,7 @@ class GlobalFunctionSpace:
 
     T: PlanarMesh
     deg: int
-    quad_dict: dict[str, Quad]
+    quad_dict: QuadDict
     num_funs: int
     num_vert_funs: int
     num_edge_funs: int
@@ -35,7 +35,7 @@ class GlobalFunctionSpace:
         self,
         T: PlanarMesh,
         deg: int,
-        quad_dict: dict[str, Quad],
+        quad_dict: QuadDict,
         verbose: bool = True,
     ) -> None:
         """

@@ -16,7 +16,7 @@ from .mesh_exceptions import (
     NotParameterizedError,
     SizeMismatchError,
 )
-from .quad import Quad
+from .quad import QuadDict
 from .vert import Vert
 
 
@@ -64,6 +64,8 @@ class Edge:
         True if the Edge is parameterized.
     num_pts : int
         The number of points sampled on the Edge.
+    interp : int
+        The interpolation parameter
     x : np.ndarray
         The sampled points on the Edge.
     unit_tangent : np.ndarray
@@ -89,6 +91,7 @@ class Edge:
     is_loop: bool
     is_parameterized: bool
     num_pts: int
+    interp: int
     x: np.ndarray
     unit_tangent: np.ndarray
     unit_normal: np.ndarray
@@ -175,7 +178,7 @@ class Edge:
 
     # PARAMETERIZATION #######################################################
 
-    def parameterize(self, quad_dict: dict[str, Quad]) -> None:
+    def parameterize(self, quad_dict: QuadDict) -> None:
         """
         Parameterize the Edge using the specified Quadrature rule. The
         parameterization is stored in the following attributes:
@@ -192,10 +195,18 @@ class Edge:
                 The signed curvature at each sampled point on the Edge.
         """
 
-        q = quad_dict[self.quad_type]
+        # check for acceptable quadrature type
+        if self.quad_type not in ["trap", "kress"]:
+            raise ValueError("Quad type not recognized")
+
+        # set quadrature object
+        q = quad_dict[self.quad_type]  # type: ignore
 
         # 2 * n + 1 points sampled per Edge
         self.num_pts = 2 * q.n + 1
+
+        # set interpolation parameter
+        self.interp = quad_dict["interp"]
 
         # retrieve function handles of parameterization and derivatives
         gamma = __import__(

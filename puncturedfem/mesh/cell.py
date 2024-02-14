@@ -16,6 +16,7 @@ from .mesh_exceptions import (
     NotParameterizedError,
     SizeMismatchError,
 )
+from .quad import QuadDict
 
 
 class MeshCell:
@@ -40,6 +41,8 @@ class MeshCell:
         The number of edges on the cell boundary.
     num_pts : int
         The number of sampled points on the cell boundary.
+    interp : int
+        The interpolation parameter.
     component_start_idx : list[int]
         The index of the first sampled point on each boundary component.
     closest_vert_idx : np.ndarray
@@ -54,6 +57,7 @@ class MeshCell:
     num_holes: int
     num_edges: int
     num_pts: int
+    interp: int
     component_start_idx: list[int]
     closest_vert_idx: np.ndarray
     edge_orients: list[int]
@@ -238,7 +242,7 @@ class MeshCell:
         """Returns True if the cell is parameterized"""
         return all(c.is_parameterized() for c in self.components)
 
-    def parameterize(self, quad_dict: dict) -> None:
+    def parameterize(self, quad_dict: QuadDict) -> None:
         """Parameterize each Edge"""
         for c in self.components:
             c.parameterize(quad_dict)
@@ -260,6 +264,15 @@ class MeshCell:
         if not self.is_parameterized():
             raise NotParameterizedError("finding num_pts")
         self.num_pts = sum(c.num_pts for c in self.components)
+
+    def find_interp(self) -> None:
+        """Record the interpolation parameter (same for all edges)"""
+        self.interp = self.components[0].interp
+        for c in self.components:
+            if c.interp != self.interp:
+                raise ValueError(
+                    "All components must have the same interpolation parameter"
+                )
 
     def find_component_start_idx(self) -> None:
         """Find the index of sampled points corresponding to each component"""

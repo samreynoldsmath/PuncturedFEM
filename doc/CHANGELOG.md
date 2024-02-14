@@ -17,7 +17,10 @@
 - [x] make coefficients optional in `GlobalFunctionPlot` init method
 - [x] add warning for `Quad` class when `n > 128`
 - [x] use kwargs for plotting options
-- [x] add PiecewisePolynomial class to init file
+- [x] add `PiecewisePolynomial` class to init file
+- [x] create `QuadDict` object to standardize quadrature collections
+### Tests
+- [ ] add test for trigonometric interpolation
 ### Bug Fixes
 - [x] close figure in `draw` methods for plotting classes
 - [x] fix `show_plot=False` option not working in `draw` methods for plotting classes

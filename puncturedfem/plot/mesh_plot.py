@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..mesh.edge import Edge
-from ..mesh.quad import Quad, get_quad_dict
+from ..mesh.quad import QuadDict, get_quad_dict
 from .plot_util import get_axis_limits, get_figure_size, save_figure
 
 
@@ -22,7 +22,7 @@ class MeshPlot:
     """
 
     edges: list[Edge]
-    quad_dict: dict[str, Quad]
+    quad_dict: QuadDict
     title: str
     show_orientation: bool
     show_grid: bool

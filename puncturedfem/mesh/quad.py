@@ -10,12 +10,23 @@ objects.
 
 from __future__ import annotations
 
+from typing import TypedDict
 from warnings import warn
 
 import numpy as np
 
 
-def get_quad_dict(n: int = 16, p: int = 7, interp: int = 1) -> dict[str, Quad]:
+class QuadDict(TypedDict):
+    """Dictionary holding quadratures"""
+
+    interp: int
+    trap: Quad
+    trap_interp: Quad
+    kress: Quad
+    kress_interp: Quad
+
+
+def get_quad_dict(n: int = 16, p: int = 7, interp: int = 1) -> QuadDict:
     """
     Return a dictionary of Quad objects.
 
@@ -41,7 +52,7 @@ def get_quad_dict(n: int = 16, p: int = 7, interp: int = 1) -> dict[str, Quad]:
     q_trap_interp = Quad(qtype="trap", n=n // interp)
     q_kress = Quad(qtype="kress", n=n, p=p)
     q_kress_interp = Quad(qtype="kress", n=n // interp, p=p)
-    quad_dict = {
+    quad_dict: QuadDict = {
         "interp": interp,
         "trap": q_trap,
         "trap_interp": q_trap_interp,
