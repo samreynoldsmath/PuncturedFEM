@@ -42,6 +42,7 @@ def get_quad_dict(n: int = 16, p: int = 7, interp: int = 1) -> dict[str, Quad]:
     q_kress = Quad(qtype="kress", n=n, p=p)
     q_kress_interp = Quad(qtype="kress", n=n // interp, p=p)
     quad_dict = {
+        "interp": interp,
         "trap": q_trap,
         "trap_interp": q_trap_interp,
         "kress": q_kress,
