@@ -1,7 +1,7 @@
 # Punctured FEM: Change Log
 
 
-## [2024 mmm dd] v0.4.0
+## [2024 Feb 23] v0.4.0
 ### Documentation
 - [x] update README, extend description, add references
 ### Features
