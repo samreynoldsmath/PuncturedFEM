@@ -19,6 +19,7 @@
 - [x] use kwargs for plotting options
 - [x] add `PiecewisePolynomial` class to init file
 - [x] create `QuadDict` object to standardize quadrature collections
+- [x] split `Edge` class into parameterized and nonparameterized classes
 ### Tests
 - [ ] add test for trigonometric interpolation
 ### Bug Fixes
