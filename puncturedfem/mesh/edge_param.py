@@ -28,7 +28,7 @@ class ParameterizedEdge:
     curvature: np.ndarray
 
     def __init__(
-        self, anchor: Vert, endpnt: Vert, q: Quad, gamma, **curve_opts: Any
+        self, anchor: Vert, endpnt: Vert, q: Quad, gamma: Any, **curve_opts: Any
     ) -> None:
         """
         Parameterize the Edge using the specified Quadrature rule. The
