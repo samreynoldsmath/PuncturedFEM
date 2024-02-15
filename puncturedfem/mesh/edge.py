@@ -209,7 +209,7 @@ class Edge:
         elif quad_dict["interp"] > 1:
             # set quadrature object for reduced sampled points
             q_interp: Quad = quad_dict[
-                self.quad_type + "_interp" # type: ignore
+                self.quad_type + "_interp"  # type: ignore
             ]
 
             # set parameterized edge object with reduced points
