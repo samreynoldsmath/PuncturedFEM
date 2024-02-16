@@ -52,7 +52,7 @@ class EdgeSpace:
     num_edge_funs: int
     num_funs: int
 
-    def __init__(self, e: Edge, deg: int) -> None:
+    def __init__(self, e: Edge, deg: int, interp: int) -> None:
         """
         Constructor for EdgeSpace class.
 
@@ -67,8 +67,8 @@ class EdgeSpace:
         self.vert_fun_traces = []
         self.set_edge(e)
         self.set_deg(deg)
-        self.build_spanning_set()
-        self.reduce_to_basis()
+        self.build_spanning_set(interp)
+        self.reduce_to_basis(interp)
         self.compute_num_vert_funs()
         self.compute_num_edge_funs()
         self.generate_vert_fun_global_keys()
@@ -127,7 +127,7 @@ class EdgeSpace:
                 GlobalKey("Edge", edge_idx=self.e.idx, edge_space_idx=k)
             )
 
-    def build_spanning_set(self) -> None:
+    def build_spanning_set(self, interp: int) -> None:
         """
         Spanning set of P_p(e) using traces of
                 L_m(x_1) * L_n(x_2) - a * ell_0 - b * ell_1
@@ -175,26 +175,26 @@ class EdgeSpace:
         # different cases for closed loops and edges with distinct endpoints
         if not self.e.is_loop:
             # compute barycentric coordinates
-            ell = barycentric_coordinates_edge(self.e)
+            ell = barycentric_coordinates_edge(self.e, interp)
 
             # correct Edge functions to vanish at endpoints
             for j in range(2, len(self.edge_fun_traces)):
                 # get values of Legendre tensor products at the endpoints
                 a0 = self.edge_fun_traces[j].eval(
-                    self.e.x[0, 0], self.e.x[1, 0]
+                    x=self.e.anchor.x, y=self.e.anchor.y
                 )
                 a1 = self.edge_fun_traces[j].eval(
-                    self.e.x[0, -1], self.e.x[1, -1]
+                    x=self.e.endpnt.x, y=self.e.endpnt.y
                 )
 
                 # force values at endpoints to be zero
                 self.edge_fun_traces[j] -= a0 * ell[0] + a1 * ell[1]
 
                 # flip sign if necessary
+                ex, ey = self.e.get_sampled_points(interp)
                 avg_val = self.e.integrate_over_edge(
-                    self.edge_fun_traces[j].eval(
-                        x=self.e.x[0, :], y=self.e.x[1, :]
-                    )
+                    self.edge_fun_traces[j].eval(x=ex, y=ey),  # type: ignore
+                    interp,
                 )
                 if avg_val < 0:
                     self.edge_fun_traces[j] *= -1
@@ -248,12 +248,12 @@ class EdgeSpace:
         for j, f in enumerate(self.edge_fun_traces):
             self.edge_fun_traces[j] = f.compose(qx, qy)
 
-    def reduce_to_basis(self) -> None:
+    def reduce_to_basis(self, interp: int) -> None:
         """
         Reduce spanning set to basis by determining the pivot columns of the
         mass matrix.
         """
-        M = self.get_gram_matrix()
+        M = self.get_gram_matrix(interp)
 
         # replace M with a low-rank approximation
         tol = 1e-6
@@ -274,17 +274,18 @@ class EdgeSpace:
             basis.append(self.edge_fun_traces[k])
         self.edge_fun_traces = basis
 
-    def get_gram_matrix(self) -> np.ndarray:
+    def get_gram_matrix(self, interp: int) -> np.ndarray:
         """
         Return the mass matrix M_ij = int_e phi_i phi_j ds.
         """
         m = len(self.edge_fun_traces)
         M = np.zeros((m, m))
+        ex, ey = self.e.get_sampled_points(interp)
         for i in range(m):
             for j in range(i, m):
                 integrand = self.edge_fun_traces[i] * self.edge_fun_traces[j]
                 M[i, j] = self.e.integrate_over_edge(
-                    integrand.eval(x=self.e.x[0, :], y=self.e.x[1, :])
+                    integrand.eval(x=ex, y=ey), interp  # type: ignore
                 )
                 M[j, i] = M[i, j]
         return M

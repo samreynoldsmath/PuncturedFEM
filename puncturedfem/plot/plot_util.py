@@ -38,10 +38,11 @@ def get_axis_limits(
 
     # update values
     for e in edges:
-        min_x = _update_min(min_x, e.x[0, :])
-        max_x = _update_max(max_x, e.x[0, :])
-        min_y = _update_min(min_y, e.x[1, :])
-        max_y = _update_max(max_y, e.x[1, :])
+        ex, ey = e.get_sampled_points(interp=1)
+        min_x = _update_min(min_x, ex)
+        max_x = _update_max(max_x, ex)
+        min_y = _update_min(min_y, ey)
+        max_y = _update_max(max_y, ey)
 
     # add padding
     if pad > 0.0:

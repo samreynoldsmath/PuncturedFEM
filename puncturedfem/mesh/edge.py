@@ -65,21 +65,6 @@ class Edge:
         True if the Edge is a loop.
     is_parameterized : bool
         True if the Edge is parameterized.
-    # num_pts : int
-    #     The number of points sampled on the Edge.
-    # interp : int
-    #     The interpolation parameter
-    # x : np.ndarray
-    #     The sampled points on the Edge.
-    # unit_tangent : np.ndarray
-    #     The unit tangent vector at each sampled point on the Edge.
-    # unit_normal : np.ndarray
-    #     The unit normal vector at each sampled point on the Edge.
-    # dx_norm : np.ndarray
-    #     The norm of the derivative of the parameterization at each sampled
-    #     point on the Edge.
-    # curvature : np.ndarray
-    #     The signed curvature at each sampled point on the Edge.
     """
 
     anchor: Vert
@@ -185,6 +170,7 @@ class Edge:
     # PARAMETERIZATION #######################################################
 
     def parameterize(self, quad_dict: QuadDict) -> None:
+        """Parameterize the curve"""
         self.is_parameterized = True
         gamma = __import__(
             f"puncturedfem.mesh.edgelib.{self.curve_type}",
@@ -225,6 +211,16 @@ class Edge:
         self.param_edge = None
         self.param_edge_interp = None
 
+    def get_num_pts(self, interp: int) -> int:
+        """Returns the number of sampled points"""
+        if not self.is_parameterized:
+            raise NotParameterizedError("getting num_pts")
+        if interp == 1 and self.param_edge:
+            return self.param_edge.num_pts
+        if interp > 1 and self.param_edge_interp:
+            return self.param_edge_interp.num_pts
+        raise ValueError("Invalid interpolation factor")
+
     # FUNCTION EVALUATION ####################################################
 
     def _apply_to_one_parameterized_edge(
@@ -239,22 +235,36 @@ class Edge:
             return getattr(self.param_edge_interp, method_name)(args)
         raise ValueError("Invalid interpolation factor")
 
-    def get_sampled_points(
-        self, interp: int = 1
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def get_sampled_points(self, interp: int) -> tuple[np.ndarray, np.ndarray]:
         """Return the sampled points on the Edge"""
         return self._apply_to_one_parameterized_edge(
             "get_sampled_points", interp
         )
 
-    def get_bounding_box(self) -> tuple[float, float, float, float]:
-        """Return the bounding box of the Edge"""
+    def get_sampled_points_vec(self, interp: int) -> np.ndarray:
+        """Return the sampled points on the Edge"""
         return self._apply_to_one_parameterized_edge(
-            "get_bounding_box", interp=1
+            "get_sampled_points_vec", interp
         )
 
+    def get_dx_norm(self, interp: int) -> np.ndarray:
+        """Return the norm of the first derivative"""
+        return self._apply_to_one_parameterized_edge("get_dx_norm", interp)
+
+    def get_curvature(self, interp: int) -> np.ndarray:
+        """Return the signed curvature"""
+        return self._apply_to_one_parameterized_edge("get_curvature", interp)
+
+    def get_unit_normal(self, interp: int) -> np.ndarray:
+        """Return the unit normal vector"""
+        return self._apply_to_one_parameterized_edge("get_unit_normal", interp)
+
+    def get_bounding_box(self) -> tuple[float, float, float, float]:
+        """Return the bounding box of the Edge"""
+        return self.param_edge.get_bounding_box()
+
     def evaluate_function(
-        self, fun: Callable, ignore_endpoint: bool = False, interp: int = 1
+        self, fun: Callable, interp: int, ignore_endpoint: bool = False
     ) -> np.ndarray:
         """Return fun(x) for each sampled point on Edge"""
         return self._apply_to_one_parameterized_edge(
@@ -262,7 +272,7 @@ class Edge:
         )
 
     def multiply_by_dx_norm(
-        self, vals: np.ndarray, ignore_endpoint: bool = True, interp: int = 1
+        self, vals: np.ndarray, interp: int, ignore_endpoint: bool = True
     ) -> np.ndarray:
         """
         Returns f multiplied against the norm of the derivative of
@@ -276,8 +286,8 @@ class Edge:
         self,
         comp1: np.ndarray,
         comp2: np.ndarray,
+        interp: int,
         ignore_endpoint: bool = True,
-        interp: int = 1,
     ) -> np.ndarray:
         """Returns the dot product (comp1, comp2) * unit_tangent"""
         return self._apply_to_one_parameterized_edge(
@@ -288,8 +298,8 @@ class Edge:
         self,
         comp1: np.ndarray,
         comp2: np.ndarray,
+        interp: int,
         ignore_endpoint: bool = True,
-        interp: int = 1,
     ) -> np.ndarray:
         """Returns the dot product (comp1, comp2) * unit_normal"""
         return self._apply_to_one_parameterized_edge(
@@ -299,7 +309,7 @@ class Edge:
     # INTEGRATION ############################################################
 
     def integrate_over_edge(
-        self, vals: np.ndarray, ignore_endpoint: bool = False, interp: int = 1
+        self, vals: np.ndarray, interp: int, ignore_endpoint: bool = False
     ) -> float:
         """Integrate vals * dx_norm over the Edge via trapezoidal rule"""
         return self._apply_to_one_parameterized_edge(
@@ -309,8 +319,8 @@ class Edge:
     def integrate_over_edge_preweighted(
         self,
         vals_dx_norm: np.ndarray,
+        interp: int,
         ignore_endpoint: bool = False,
-        interp: int = 1,
     ) -> float:
         """Integrate vals_dx_norm over the Edge via trapezoidal rule"""
         return self._apply_to_one_parameterized_edge(

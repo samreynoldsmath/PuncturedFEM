@@ -191,6 +191,7 @@ class Solver:
             # build local function space
             V_K = self.V.build_local_function_space(
                 cell_idx,
+                interp=self.V.interp,
                 verbose=verbose,
                 compute_interior_values=compute_interior_values,
             )
@@ -221,7 +222,7 @@ class Solver:
                     self.interior_values[abs_cell_idx][i] = v.int_vals
 
                 # evaluate local right-hand side
-                f_i = self.a.eval_rhs(v)
+                f_i = self.a.eval_rhs(v, interp=self.V.interp)
 
                 # add to global right-hand side vector
                 self.rhs_idx.append(v.key.glob_idx)

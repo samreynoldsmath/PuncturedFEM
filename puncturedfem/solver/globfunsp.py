@@ -30,6 +30,7 @@ class GlobalFunctionSpace:
     edge_spaces: list[EdgeSpace]
     edge_fun_cumsum: list[int]
     cell_dofs: list[list[GlobalKey]]
+    interp: int
 
     def __init__(
         self,
@@ -52,13 +53,14 @@ class GlobalFunctionSpace:
         verbose : bool, optional
             If True, print progress bars, by default True
         """
+        self.interp = quad_dict["interp"]
         self.bubb_fun_counter = 0
         self.edge_fun_counter = 0
         self.quad_dict = quad_dict
         self.cell_dofs = [[] for _ in range(T.num_cells)]
         self.set_mesh(T)
         self.set_deg(deg)
-        self.build_edge_spaces(verbose=verbose)
+        self.build_edge_spaces(interp=self.interp, verbose=verbose)
         self.compute_dimension()
         self.compute_edge_fun_cumsum()
         if verbose:
@@ -99,7 +101,7 @@ class GlobalFunctionSpace:
 
     # BUILD LOCAL FUNCTION SPACES ############################################
 
-    def build_edge_spaces(self, verbose: bool = True) -> None:
+    def build_edge_spaces(self, interp: int, verbose: bool = True) -> None:
         """
         Builds the Edge spaces for each Edge in the mesh.
         """
@@ -108,17 +110,18 @@ class GlobalFunctionSpace:
             print("Building Edge spaces...")
             for e in tqdm(self.T.edges):
                 e.parameterize(quad_dict=self.quad_dict)
-                self.edge_spaces.append(EdgeSpace(e, self.deg))
+                self.edge_spaces.append(EdgeSpace(e, self.deg, interp))
                 e.deparameterize()
         else:
             for e in self.T.edges:
                 e.parameterize(quad_dict=self.quad_dict)
-                self.edge_spaces.append(EdgeSpace(e, self.deg))
+                self.edge_spaces.append(EdgeSpace(e, self.deg, interp))
                 e.deparameterize()
 
     def build_local_function_space(
         self,
         cell_idx: int,
+        interp: int,
         verbose: bool = True,
         compute_interior_values: bool = True,
     ) -> LocalFunctionSpace:
@@ -134,6 +137,7 @@ class GlobalFunctionSpace:
             edge_spaces.append(b)
         V_K = LocalFunctionSpace(
             K,
+            interp,
             edge_spaces,
             self.deg,
             verbose=verbose,

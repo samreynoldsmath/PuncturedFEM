@@ -42,7 +42,7 @@ class NystromSolver:
     T1_dlam_dt: np.ndarray
     Sn_lam: np.ndarray
 
-    def __init__(self, K: MeshCell, verbose: bool = False) -> None:
+    def __init__(self, K: MeshCell, interp: int, verbose: bool = False) -> None:
         """
         Constructor for Nyström Solver. This constructor computes the single
         and double layer operators, as well as the logarithmic terms (if K has
@@ -65,11 +65,11 @@ class NystromSolver:
                 msg += "s"
             print(msg)
         self.set_K(K)
-        self.build_single_layer_mat()
-        self.build_double_layer_mat()
+        self.build_single_layer_mat(interp)
+        self.build_double_layer_mat(interp)
         self.build_single_and_double_layer_ops()
         if self.K.num_holes > 0:
-            self.compute_log_terms()
+            self.compute_log_terms(interp)
 
     def set_K(self, K: MeshCell) -> None:
         """Set the MeshCell"""
@@ -97,7 +97,9 @@ class NystromSolver:
 
     # SOLVERS ################################################################
 
-    def solve_neumann_zero_average(self, u_wnd: np.ndarray) -> np.ndarray:
+    def solve_neumann_zero_average(
+        self, u_wnd: np.ndarray, interp: int
+    ) -> np.ndarray:
         """Solve the Neumann problem with zero average on the boundary"""
 
         # RHS
@@ -106,7 +108,7 @@ class NystromSolver:
         # define linear operator for Neumann problem
         def A_fun(u: np.ndarray) -> np.ndarray:
             y = self.double_layer_op(u)
-            y += self.K.integrate_over_boundary(u)
+            y += self.K.integrate_over_boundary(u, interp)
             return y
 
         # build linear operator object
@@ -124,7 +126,7 @@ class NystromSolver:
         return u
 
     def get_harmonic_conjugate(
-        self, phi: np.ndarray
+        self, phi: np.ndarray, interp: int
     ) -> tuple[np.ndarray, np.ndarray]:
         """Obtain a harmonic conjugate of phi on K"""
 
@@ -133,13 +135,17 @@ class NystromSolver:
 
         # simply/multiply connected cases handled separately
         if self.K.num_holes == 0:  # simply connected
-            return self.solve_neumann_zero_average(-1 * phi_wtd), np.zeros((0,))
+            return self.solve_neumann_zero_average(
+                -1 * phi_wtd, interp
+            ), np.zeros((0,))
         if self.K.num_holes > 0:  # multiply connected
-            return self.get_harmonic_conjugate_multiply_connected(phi, phi_wtd)
+            return self.get_harmonic_conjugate_multiply_connected(
+                phi, phi_wtd, interp
+            )
         raise ValueError("K.num_holes < 0")
 
     def get_harmonic_conjugate_multiply_connected(
-        self, phi: np.ndarray, dphi_dt_wgt: np.ndarray
+        self, phi: np.ndarray, dphi_dt_wgt: np.ndarray, interp: int
     ) -> tuple[np.ndarray, np.ndarray]:
         """
         Solve the Neumann problem for a harmonic conjugate of phi if K is
@@ -160,7 +166,7 @@ class NystromSolver:
             a = x[N:]
             y = np.zeros((N + m,))
             y[:N] = self.double_layer_op(psi_hat)
-            y[:N] += self.K.integrate_over_boundary(psi_hat)
+            y[:N] += self.K.integrate_over_boundary(psi_hat, interp)
             y[:N] -= self.T1_dlam_dt @ a
             y[N:] = -self.St(psi_hat) + self.Sn_lam @ a
             return y
@@ -182,21 +188,23 @@ class NystromSolver:
         return psi_hat, a
 
     # LOGARITHMIC TERMS #####################################################
-    def compute_log_terms(self) -> None:
+    def compute_log_terms(self, interp: int) -> None:
         """
         Compute and store logarithmic terms for multiply connected domains.
         """
 
         # traces and gradients of logarithmic corrections
-        self.lam_trace = log_terms.get_log_trace(self.K)
-        self.lam_x1_trace, self.lam_x2_trace = log_terms.get_log_grad(self.K)
+        self.lam_trace = log_terms.get_log_trace(self.K, interp)
+        self.lam_x1_trace, self.lam_x2_trace = log_terms.get_log_grad(
+            self.K, interp
+        )
 
         # tangential and normal derivatives of logarithmic terms
         self.dlam_dt_wgt = log_terms.get_dlam_dt_wgt(
-            self.K, self.lam_x1_trace, self.lam_x2_trace
+            self.K, self.lam_x1_trace, self.lam_x2_trace, interp
         )
         self.dlam_dn_wgt = log_terms.get_dlam_dn_wgt(
-            self.K, self.lam_x1_trace, self.lam_x2_trace
+            self.K, self.lam_x1_trace, self.lam_x2_trace, interp
         )
 
         # single layer operator applied to tangential derivatives of log terms
@@ -246,7 +254,7 @@ class NystromSolver:
         """
         return self.single_layer_mat @ u
 
-    def build_single_layer_mat(self) -> None:
+    def build_single_layer_mat(self, interp: int) -> None:
         """
         Construct the single layer operator matrix.
         """
@@ -259,9 +267,11 @@ class NystromSolver:
                 jj2 = self.K.component_start_idx[j + 1]
                 self.single_layer_mat[
                     ii1:ii2, jj1:jj2
-                ] = self.single_layer_component_block(i, j)
+                ] = self.single_layer_component_block(i, j, interp)
 
-    def single_layer_component_block(self, i: int, j: int) -> np.ndarray:
+    def single_layer_component_block(
+        self, i: int, j: int, interp: int
+    ) -> np.ndarray:
         """
         Block of the single layer operator matrix corresponding to the i-th
         and j-th components of the boundary of K.
@@ -274,28 +284,32 @@ class NystromSolver:
             kk2 = self.K.components[i].vert_idx[k + 1]
             e = self.K.components[i].edges[k]
             # Martensen Quadrature
-            nm = (self.K.components[i].edges[k].num_pts - 1) // 2
+            nm = (self.K.components[i].edges[k].get_num_pts(interp) - 1) // 2
             qm = Quad(qtype="mart", n=nm)
             for ell in range(self.K.components[j].num_edges):
                 ll1 = self.K.components[j].vert_idx[ell]
                 ll2 = self.K.components[j].vert_idx[ell + 1]
                 f = self.K.components[j].edges[ell]
                 B_comp[kk1:kk2, ll1:ll2] = self.single_layer_edge_block(
-                    e, f, qm
+                    e, f, qm, interp
                 )
         return B_comp
 
-    def single_layer_edge_block(self, e: Edge, f: Edge, qm: Quad) -> np.ndarray:
+    def single_layer_edge_block(
+        self, e: Edge, f: Edge, qm: Quad, interp: int
+    ) -> np.ndarray:
         """
         Block of the single layer operator matrix corresponding to the edges e
         and f. The Quadrature object qm is the Martensen Quadrature.
         """
 
         # allocate block
-        B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
+        B_edge = np.zeros(
+            (e.get_num_pts(interp) - 1, f.get_num_pts(interp) - 1)
+        )
 
         # trapezoid weight: pi in integrand cancels
-        h = -0.5 / (f.num_pts - 1)
+        h = -0.5 / (f.get_num_pts(interp) - 1)
 
         # adapt Quadrature to accommodate both trapezoid and Kress
         if f.quad_type[0:5] == "kress":
@@ -303,26 +317,31 @@ class NystromSolver:
         else:
             j_start = 0
 
+        # get sampled points
+        e_x = e.get_sampled_points_vec(interp)
+        f_x = f.get_sampled_points_vec(interp)
+
         if e == f:  # Kress and Martensen
-            for i in range(e.num_pts - 1):
-                for j in range(j_start, f.num_pts - 1):
+            e_dx_norm = e.get_dx_norm(interp)
+            for i in range(e.get_num_pts(interp) - 1):
+                for j in range(j_start, f.get_num_pts(interp) - 1):
                     ij = abs(i - j)
                     if qm.t[ij] < 1e-14:
-                        if e.dx_norm[i] < 1e-14:
+                        if e_dx_norm[i] < 1e-14:
                             B_edge[i, i] = 0.0
                         else:
-                            B_edge[i, i] = 2 * np.log(e.dx_norm[j])
+                            B_edge[i, i] = 2 * np.log(e_dx_norm[j])
                     else:
-                        xy = e.x[:, i] - f.x[:, j]
+                        xy = e_x[:, i] - f_x[:, j]
                         xy2 = np.dot(xy, xy)
                         B_edge[i, j] = np.log(xy2 / qm.t[ij])
                     B_edge[i, j] *= h
                     B_edge[i, j] += qm.wgt[ij]
 
         else:  # different edges: Kress only
-            for i in range(e.num_pts - 1):
-                for j in range(j_start, f.num_pts - 1):
-                    xy = e.x[:, i] - f.x[:, j]
+            for i in range(e.get_num_pts(interp) - 1):
+                for j in range(j_start, f.get_num_pts(interp) - 1):
+                    xy = e_x[:, i] - f_x[:, j]
                     xy2 = np.dot(xy, xy)
                     B_edge[i, j] = np.log(xy2) * h
 
@@ -340,7 +359,7 @@ class NystromSolver:
         res -= corner_values * self.double_layer_sum
         return res
 
-    def build_double_layer_mat(self) -> None:
+    def build_double_layer_mat(self, interp: int) -> None:
         """
         Construct the double layer operator matrix.
         """
@@ -354,11 +373,11 @@ class NystromSolver:
                 self.double_layer_mat[
                     ii1:ii2, jj1:jj2
                 ] = self.double_layer_component_block(
-                    self.K.components[i], self.K.components[j]
+                    self.K.components[i], self.K.components[j], interp
                 )
 
     def double_layer_component_block(
-        self, ci: ClosedContour, cj: ClosedContour
+        self, ci: ClosedContour, cj: ClosedContour, interp: int
     ) -> np.ndarray:
         """
         Block of the double layer operator matrix corresponding to the i-th
@@ -372,21 +391,25 @@ class NystromSolver:
                 ll1 = cj.vert_idx[ell]
                 ll2 = cj.vert_idx[ell + 1]
                 B_comp[kk1:kk2, ll1:ll2] = self.double_layer_edge_block(
-                    ci.edges[k], cj.edges[ell]
+                    ci.edges[k], cj.edges[ell], interp
                 )
         return B_comp
 
-    def double_layer_edge_block(self, e: Edge, f: Edge) -> np.ndarray:
+    def double_layer_edge_block(
+        self, e: Edge, f: Edge, interp: int
+    ) -> np.ndarray:
         """
         Block of the double layer operator matrix corresponding to the edges e
         and f.
         """
 
         # allocate block
-        B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
+        B_edge = np.zeros(
+            (e.get_num_pts(interp) - 1, f.get_num_pts(interp) - 1)
+        )
 
         # trapezoid step size
-        h = 1 / (f.num_pts - 1)
+        h = 1 / (f.get_num_pts(interp) - 1)
 
         # check if edges are the same Edge
         same_edge = e == f
@@ -397,16 +420,21 @@ class NystromSolver:
         else:
             j_start = 0
 
-        #
-        for i in range(e.num_pts - 1):
-            for j in range(j_start, f.num_pts - 1):
+        # compute entries
+        e_x = e.get_sampled_points_vec(interp)
+        f_x = f.get_sampled_points_vec(interp)
+        f_dx_norm = f.get_dx_norm(interp)
+        f_curvature = f.get_curvature(interp)
+        f_unit_normal = f.get_unit_normal(interp)
+        for i in range(e.get_num_pts(interp) - 1):
+            for j in range(j_start, f.get_num_pts(interp) - 1):
                 if same_edge and i == j:
-                    B_edge[i, i] = 0.5 * e.curvature[i]
+                    B_edge[i, i] = 0.5 * f_curvature[i]
                 else:
-                    xy = e.x[:, i] - f.x[:, j]
+                    xy = e_x[:, i] - f_x[:, j]
                     xy2 = np.dot(xy, xy)
-                    B_edge[i, j] = np.dot(xy, f.unit_normal[:, j]) / xy2
+                    B_edge[i, j] = np.dot(xy, f_unit_normal[:, j]) / xy2
 
-                B_edge[i, j] *= f.dx_norm[j] * h
+                B_edge[i, j] *= f_dx_norm[j] * h
 
         return B_edge

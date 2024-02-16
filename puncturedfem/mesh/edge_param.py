@@ -16,6 +16,27 @@ from .vert import Vert
 
 
 class ParameterizedEdge:
+    """
+    Parameterized curve in the plane.
+
+    Attributes:
+    -----------
+    num_pts : int
+        The number of points sampled on the Edge.
+    interp : int
+        The interpolation parameter
+    x : np.ndarray
+        The sampled points on the Edge.
+    unit_tangent : np.ndarray
+        The unit tangent vector at each sampled point on the Edge.
+    unit_normal : np.ndarray
+        The unit normal vector at each sampled point on the Edge.
+    dx_norm : np.ndarray
+        The norm of the derivative of the parameterization at each sampled
+        point on the Edge.
+    curvature : np.ndarray
+        The signed curvature at each sampled point on the Edge.
+    """
     anchor: Vert
     endpnt: Vert
     is_loop: bool
@@ -95,6 +116,22 @@ class ParameterizedEdge:
     def get_sampled_points(self) -> tuple[np.ndarray, np.ndarray]:
         """Return the sampled points on the Edge"""
         return self.x[0, :], self.x[1, :]
+
+    def get_sampled_points_vec(self) -> np.ndarray:
+        """Return the sampled points on the Edge"""
+        return self.x
+
+    def get_dx_norm(self) -> np.ndarray:
+        """Return the norm of the first derivative."""
+        return self.dx_norm
+
+    def get_curvature(self) -> np.ndarray:
+        """Return the signed curvature"""
+        return self.curvature
+
+    def get_unit_normal(self) -> np.ndarray:
+        """Return the unit normal vector"""
+        return self.unit_normal
 
     def get_bounding_box(self) -> tuple[float, float, float, float]:
         """Return the bounding box of the Edge"""

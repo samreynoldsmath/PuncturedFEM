@@ -8,7 +8,7 @@ Polynomials in two variables, and is basically a list of Monomials.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 
@@ -160,11 +160,21 @@ class Polynomial:
         """
         self.monos = []
 
-    def eval(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    def eval(
+        self, x: Union[np.ndarray, float], y: Union[np.ndarray, float]
+    ) -> Union[np.ndarray, float]:
         """
         Evaluates the Polynomial at the point (x, y)
         """
-        val = np.zeros(np.shape(x))
+        val: Union[np.ndarray, float]
+        if isinstance(x, float) and isinstance(y, float):
+            val = 0.0
+        elif isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
+            if np.shape(x) != np.shape(y):
+                raise ValueError("x and y must be the same shape")
+            val = np.zeros(np.shape(x))
+        else:
+            raise TypeError("x and y must be either floats or numpy arrays")
         for m in self.monos:
             val += m.eval(x, y)
         return val
@@ -259,16 +269,18 @@ class Polynomial:
 
         return new
 
-    def get_weighted_normal_derivative(self, K: MeshCell) -> np.ndarray:
+    def get_weighted_normal_derivative(
+        self, K: MeshCell, interp: int
+    ) -> np.ndarray:
         """
         TODO: this belongs elsewhere
         """
-        x1, x2 = K.get_boundary_points()
+        x1, x2 = K.get_boundary_points(interp)
         gx, gy = self.grad()
         gx_trace = gx.eval(x1, x2)
         gy_trace = gy.eval(x1, x2)
-        nd = K.dot_with_normal(gx_trace, gy_trace)
-        return K.multiply_by_dx_norm(nd)
+        nd = K.dot_with_normal(gx_trace, gy_trace, interp)  # type: ignore
+        return K.multiply_by_dx_norm(nd, interp)
 
     def __repr__(self) -> str:
         """

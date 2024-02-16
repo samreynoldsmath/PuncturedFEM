@@ -21,15 +21,16 @@ from .poly_exceptions import DegenerateTriangleError
 ROOT3OVER2 = sqrt(3) / 2
 
 
-def barycentric_coordinates_edge(e: Edge) -> list[Polynomial]:
+def barycentric_coordinates_edge(e: Edge, interp: int) -> list[Polynomial]:
     """
     Returns the barcentric coordinates ell = [ell0, ell1, ell2]
     where ellj is a Polynomial object and the point z2 is constructed
     from z0,z1 to form an equilateral triangle, with z0,z1 being the
     endpoints of the Edge e.
     """
-    z0 = e.x[:, 0]
-    z1 = e.x[:, -1]
+    ex, ey = e.get_sampled_points(interp)
+    z0 = array([ex[0], ey[0]])
+    z1 = array([ex[-1], ey[-1]])
     R = array([[0, 1], [-1, 0]])
     z2 = 0.5 * (z1 + z0) - ROOT3OVER2 * R @ (z1 - z0)
     return barycentric_coordinates(z0, z1, z2)
@@ -75,7 +76,7 @@ def barycentric_coordinates(
     return ell
 
 
-def barycentric_products(e: Edge, deg: int) -> list[ndarray]:
+def barycentric_products(e: Edge, deg: int, interp: int) -> list[ndarray]:
     """
     DEPRECATED
 
@@ -85,10 +86,11 @@ def barycentric_products(e: Edge, deg: int) -> list[ndarray]:
     if deg > 3:
         raise NotImplementedError("Only implemented for deg <= 3")
 
-    ell = barycentric_coordinates_edge(e)
-    ell_trace = zeros((3, e.num_pts))
+    ell = barycentric_coordinates_edge(e, interp)
+    ell_trace = zeros((3, e.get_num_pts(interp)))
     for j in range(3):
-        ell_trace[j, :] = ell[j].eval(x=e.x[0, :], y=e.x[1, :])
+        ex, ey = e.get_sampled_points(interp)
+        ell_trace[j, :] = ell[j].eval(x=ex, y=ey)
 
     spanning_trace = []
     for j in range(3):

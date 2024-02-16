@@ -43,6 +43,7 @@ class LocalFunctionSpace:
     def __init__(
         self,
         K: MeshCell,
+        interp: int,
         edge_spaces: Optional[list[EdgeSpace]] = None,
         deg: int = 1,
         compute_interior_values: bool = True,
@@ -78,10 +79,10 @@ class LocalFunctionSpace:
         if edge_spaces is None:
             edge_spaces = []
             for e in K.get_edges():
-                edge_spaces.append(EdgeSpace(e, self.deg))
+                edge_spaces.append(EdgeSpace(e, self.deg, interp))
 
         # set up nyström Solver
-        self.solver = NystromSolver(K, verbose=verbose)
+        self.solver = NystromSolver(K, interp, verbose=verbose)
 
         # bubble functions: zero trace, Polynomial Laplacian
         self.build_bubble_funs()
@@ -96,7 +97,7 @@ class LocalFunctionSpace:
         self.compute_num_funs()
 
         # compute all function metadata
-        self.compute_all(verbose=verbose, processes=processes)
+        self.compute_all(interp, verbose=verbose, processes=processes)
 
         # find interior values
         if compute_interior_values:
@@ -138,28 +139,30 @@ class LocalFunctionSpace:
             self.num_vert_funs + self.num_edge_funs + self.num_bubb_funs
         )
 
-    def compute_all(self, verbose: bool = True, processes: int = 1) -> None:
+    def compute_all(
+        self, interp: int, verbose: bool = True, processes: int = 1
+    ) -> None:
         """
         Equivalent to running v.compute_all(K) for eachLocalFunction v.
         """
         if processes == 1:
-            self.compute_all_sequential(verbose=verbose)
+            self.compute_all_sequential(interp, verbose=verbose)
         elif processes > 1:
             self.compute_all_parallel(verbose=verbose, processes=processes)
         else:
             raise ValueError("processes must be a positive integer")
 
-    def compute_all_sequential(self, verbose: bool = True) -> None:
+    def compute_all_sequential(self, interp: int, verbose: bool = True) -> None:
         """
         Equivalent to running v.compute_all(K) for eachLocalFunction v.
         """
         if verbose:
             print("Computing function metadata...")
             for v in tqdm(self.get_basis()):
-                v.compute_all()
+                v.compute_all(interp)
         else:
             for v in self.get_basis():
-                v.compute_all()
+                v.compute_all(interp)
 
     def compute_all_parallel(
         self, verbose: bool = True, processes: int = 1
