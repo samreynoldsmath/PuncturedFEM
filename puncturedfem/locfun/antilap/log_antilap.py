@@ -47,7 +47,7 @@ def _log_antilap_x2(x: np.ndarray, xi: Vert) -> np.ndarray:
     return 0.25 * (np.log(x_xi_norm_sq) - 1) * x_xi[1]
 
 
-def get_log_antilap(K: MeshCell, interp: int) -> np.ndarray:
+def get_log_antilap(K: MeshCell) -> np.ndarray:
     """
     Returns traces of an anti-Laplacian of logarithmic terms on the boundary
             Lambda(x) = 1/4 |x|^2 (ln|x|-1)
@@ -55,15 +55,12 @@ def get_log_antilap(K: MeshCell, interp: int) -> np.ndarray:
     LAM_trace = np.zeros((K.num_pts, K.num_holes))
     for j in range(K.num_holes):
         LAM_trace[:, j] = K.evaluate_function_on_boundary(
-            fun=partial(_log_antilap, xi=K.components[j + 1].interior_point),
-            interp=interp,
+            fun=partial(_log_antilap, xi=K.components[j + 1].interior_point)
         )
     return LAM_trace
 
 
-def get_log_antilap_weighted_normal_derivative(
-    K: MeshCell, interp: int
-) -> np.ndarray:
+def get_log_antilap_weighted_normal_derivative(K: MeshCell) -> np.ndarray:
     """
     Returns traces of an anti-Laplacian of logarithmic terms on the boundary:
             Lambda(x) = 1/4 |x|^2 (ln|x|-1)
@@ -71,15 +68,13 @@ def get_log_antilap_weighted_normal_derivative(
     dLAM_dn_wgt = np.zeros((K.num_pts, K.num_holes))
     for j in range(K.num_holes):
         LAM_x1_trace = K.evaluate_function_on_boundary(
-            fun=partial(_log_antilap_x1, xi=K.components[j + 1].interior_point),
-            interp=interp,
+            fun=partial(_log_antilap_x1, xi=K.components[j + 1].interior_point)
         )
         LAM_x2_trace = K.evaluate_function_on_boundary(
-            fun=partial(_log_antilap_x2, xi=K.components[j + 1].interior_point),
-            interp=interp,
+            fun=partial(_log_antilap_x2, xi=K.components[j + 1].interior_point)
         )
 
-        dLAM_dn = K.dot_with_normal(LAM_x1_trace, LAM_x2_trace, interp)
-        dLAM_dn_wgt[:, j] = K.multiply_by_dx_norm(dLAM_dn, interp)
+        dLAM_dn = K.dot_with_normal(LAM_x1_trace, LAM_x2_trace)
+        dLAM_dn_wgt[:, j] = K.multiply_by_dx_norm(dLAM_dn)
 
     return dLAM_dn_wgt

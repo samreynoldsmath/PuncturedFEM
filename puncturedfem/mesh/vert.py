@@ -5,8 +5,6 @@ Vert.py
 Module for the Vert class, which represents a vertex in a planar mesh.
 """
 
-from __future__ import annotations
-
 
 class Vert:
     """
@@ -79,7 +77,7 @@ class Vert:
             return diff.norm() < 1e-12
         raise TypeError("Subtraction against Vert must return a Vert")
 
-    def __add__(self, other: object) -> Vert:
+    def __add__(self, other: object) -> object:
         """
         Returns a new Vert with coordinates equal to the sum of the
         coordinates of the two Verts.
@@ -88,7 +86,7 @@ class Vert:
             raise TypeError("Cannot add non-Vert to Vert")
         return Vert(self.x + other.x, self.y + other.y)
 
-    def __sub__(self, other: object) -> Vert:
+    def __sub__(self, other: object) -> object:
         """
         Returns a new Vert with coordinates equal to the difference of the
         coordinates of the two Verts.
@@ -97,7 +95,7 @@ class Vert:
             raise TypeError("Cannot subtract non-Vert from Vert")
         return Vert(self.x - other.x, self.y - other.y)
 
-    def __mul__(self, other: object) -> Vert:
+    def __mul__(self, other: object) -> object:
         """
         Returns a new Vert with coordinates equal to the product of the
         coordinates of the two Verts, or the coordinates of the Vert multiplied
@@ -111,7 +109,7 @@ class Vert:
             "Multiplication against Vert must be by int, float, or Vert"
         )
 
-    def __rmul__(self, other: object) -> Vert:
+    def __rmul__(self, other: object) -> object:
         """
         Returns a new Vert with coordinates equal to the product of the
         coordinates of the two Verts, or the coordinates of the Vert multiplied
@@ -125,7 +123,7 @@ class Vert:
             "Multiplication against Vert must be by int, float, or Vert"
         )
 
-    def __truediv__(self, other: object) -> Vert:
+    def __truediv__(self, other: object) -> object:
         """
         Returns a new Vert with coordinates equal to the quotient of the
         coordinates of the two Verts, or the coordinates of the Vert divided by

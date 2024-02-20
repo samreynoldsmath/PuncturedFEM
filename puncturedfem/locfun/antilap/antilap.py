@@ -21,11 +21,7 @@ from . import log_antilap
 
 
 def get_anti_laplacian_harmonic(
-    K: MeshCell,
-    psi: np.ndarray,
-    psi_hat: np.ndarray,
-    a: np.ndarray,
-    interp: int,
+    K: MeshCell, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns the trace and weighted normal derivative of an anti-Laplacian of a
@@ -37,15 +33,15 @@ def get_anti_laplacian_harmonic(
     """
 
     if K.num_holes == 0:
-        PHI, PHI_wnd = _antilap_simply_connected(K, psi, psi_hat, interp)
+        PHI, PHI_wnd = _antilap_simply_connected(K, psi, psi_hat)
     else:
-        PHI, PHI_wnd = _antilap_multiply_connected(K, psi, psi_hat, a, interp)
+        PHI, PHI_wnd = _antilap_multiply_connected(K, psi, psi_hat, a)
 
     return PHI, PHI_wnd
 
 
 def _antilap_simply_connected(
-    K: MeshCell, phi: np.ndarray, phi_hat: np.ndarray, interp: int
+    K: MeshCell, phi: np.ndarray, phi_hat: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns anti-Laplacian and its weighted normal derivative of a harmonic
@@ -56,17 +52,17 @@ def _antilap_simply_connected(
     interval_length = 2 * np.pi * K.num_edges
 
     # integrate tangential derivative of rho
-    rho_td = K.dot_with_tangent(phi, -phi_hat, interp)
-    rho_wtd = K.multiply_by_dx_norm(rho_td, interp)
+    rho_td = K.dot_with_tangent(phi, -phi_hat)
+    rho_wtd = K.multiply_by_dx_norm(rho_td)
     rho = fft_antiderivative(rho_wtd, interval_length)
 
     # integrate tangential derivative of rho_hat
-    rho_hat_td = K.dot_with_tangent(phi_hat, phi, interp)
-    rho_hat_wtd = K.multiply_by_dx_norm(rho_hat_td, interp)
+    rho_hat_td = K.dot_with_tangent(phi_hat, phi)
+    rho_hat_wtd = K.multiply_by_dx_norm(rho_hat_td)
     rho_hat = fft_antiderivative(rho_hat_wtd, interval_length)
 
     # coordinates of boundary points
-    x1, x2 = K.get_boundary_points(interp)
+    x1, x2 = K.get_boundary_points()
 
     # construct anti-Laplacian
     PHI = 0.25 * (x1 * rho + x2 * rho_hat)
@@ -76,18 +72,14 @@ def _antilap_simply_connected(
     PHI_x2 = 0.25 * (rho_hat + x2 * phi - x1 * phi_hat)
 
     # weighted normal derivative of anti-Laplacian
-    PHI_nd = K.dot_with_normal(PHI_x1, PHI_x2, interp)
-    PHI_wnd = K.multiply_by_dx_norm(PHI_nd, interp)
+    PHI_nd = K.dot_with_normal(PHI_x1, PHI_x2)
+    PHI_wnd = K.multiply_by_dx_norm(PHI_nd)
 
     return PHI, PHI_wnd
 
 
 def _antilap_multiply_connected(
-    K: MeshCell,
-    psi: np.ndarray,
-    psi_hat: np.ndarray,
-    a: np.ndarray,
-    interp: int,
+    K: MeshCell, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns anti-Laplacian and its weighted normal derivative of a harmonic
@@ -95,8 +87,8 @@ def _antilap_multiply_connected(
     """
 
     # compute F * t and \hat F * t
-    F_t = K.dot_with_tangent(psi, -psi_hat, interp)
-    F_hat_t = K.dot_with_tangent(psi_hat, psi, interp)
+    F_t = K.dot_with_tangent(psi, -psi_hat)
+    F_hat_t = K.dot_with_tangent(psi_hat, psi)
 
     # compute b_j and c_j
     b = np.zeros((K.num_holes,))
@@ -106,15 +98,13 @@ def _antilap_multiply_connected(
         kp1 = K.component_start_idx[j + 2]
         F_hat_t_j = F_hat_t[k:kp1]
         F_t_j = F_t[k:kp1]
-        b[j] = K.components[j + 1].integrate_over_closed_contour(
-            F_hat_t_j, interp
-        )
-        c[j] = K.components[j + 1].integrate_over_closed_contour(F_t_j, interp)
+        b[j] = K.components[j + 1].integrate_over_closed_contour(F_hat_t_j)
+        c[j] = K.components[j + 1].integrate_over_closed_contour(F_t_j)
     b /= -2 * np.pi
     c /= 2 * np.pi
 
     # compute mu_j and hat_mu_j
-    mu, mu_hat = get_log_grad(K, interp)
+    mu, mu_hat = get_log_grad(K)
     mu_hat *= -1
 
     # compute psi_0 and hat_psi_0
@@ -122,26 +112,26 @@ def _antilap_multiply_connected(
     psi_hat_0 = psi_hat - (mu @ c + mu_hat @ b)
 
     # compute weighted normal derivatives of rho and rho_hat
-    rho_nd_0 = K.dot_with_normal(psi_0, -psi_hat_0, interp)
-    rho_wnd_0 = K.multiply_by_dx_norm(rho_nd_0, interp)
-    rho_hat_nd_0 = K.dot_with_normal(psi_hat_0, psi_0, interp)
-    rho_hat_wnd_0 = K.multiply_by_dx_norm(rho_hat_nd_0, interp)
+    rho_nd_0 = K.dot_with_normal(psi_0, -psi_hat_0)
+    rho_wnd_0 = K.multiply_by_dx_norm(rho_nd_0)
+    rho_hat_nd_0 = K.dot_with_normal(psi_hat_0, psi_0)
+    rho_hat_wnd_0 = K.multiply_by_dx_norm(rho_hat_nd_0)
 
     # TODO initialize Solver inLocalFunctionSpace and pass it to antilap
-    Solver = NystromSolver(K, interp)
+    Solver = NystromSolver(K)
 
     # solve for rho_0 and rho_hat_0
-    rho_0 = Solver.solve_neumann_zero_average(rho_wnd_0, interp)
-    rho_hat_0 = Solver.solve_neumann_zero_average(rho_hat_wnd_0, interp)
+    rho_0 = Solver.solve_neumann_zero_average(rho_wnd_0)
+    rho_hat_0 = Solver.solve_neumann_zero_average(rho_hat_wnd_0)
 
     # compute anti-Laplacian of psi_0
-    x1, x2 = K.get_boundary_points(interp)
+    x1, x2 = K.get_boundary_points()
 
     PHI = 0.25 * (x1 * rho_0 + x2 * rho_hat_0)
     PHI_x1 = 0.25 * (rho_0 + x1 * psi_0 + x2 * psi_hat_0)
     PHI_x2 = 0.25 * (rho_hat_0 + x2 * psi_0 - x1 * psi_hat_0)
-    PHI_nd = K.dot_with_normal(PHI_x1, PHI_x2, interp)
-    PHI_wnd = K.multiply_by_dx_norm(PHI_nd, interp)
+    PHI_nd = K.dot_with_normal(PHI_x1, PHI_x2)
+    PHI_wnd = K.multiply_by_dx_norm(PHI_nd)
 
     # compute M = sum_j M_j
     for j in range(K.num_holes):
@@ -160,13 +150,11 @@ def _antilap_multiply_connected(
             0.5 * (b[j] * mu[:, j] - c[j] * mu_hat[:, j]) * x_xi_2
             + 0.5 * c[j] * log_x_xi_norm
         )
-        M_nd = K.dot_with_normal(M_x1, M_x2, interp)
-        PHI_wnd += K.multiply_by_dx_norm(M_nd, interp)
+        M_nd = K.dot_with_normal(M_x1, M_x2)
+        PHI_wnd += K.multiply_by_dx_norm(M_nd)
 
     # compute Lambda_j
-    PHI += log_antilap.get_log_antilap(K, interp) @ a
-    PHI_wnd += (
-        log_antilap.get_log_antilap_weighted_normal_derivative(K, interp) @ a
-    )
+    PHI += log_antilap.get_log_antilap(K) @ a
+    PHI_wnd += log_antilap.get_log_antilap_weighted_normal_derivative(K) @ a
 
     return PHI, PHI_wnd

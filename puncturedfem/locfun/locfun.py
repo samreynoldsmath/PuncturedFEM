@@ -197,19 +197,19 @@ class LocalFunction:
             raise TypeError("nyst must be a NystromSolver")
         self.nyst = nyst
 
-    def compute_all(self, interp: int) -> None:
+    def compute_all(self) -> None:
         """
         Computes all relevant data for reducing volumetric integrals
         to boundary integrals
         """
         if self.has_poly_trace:
-            self.compute_trace_values(interp)
+            self.compute_trace_values()
         self.compute_polynomial_part()
-        self.compute_polynomial_part_trace(interp)
-        self.compute_polynomial_part_weighted_normal_derivative(interp)
-        self.compute_harmonic_conjugate(interp)
-        self.compute_harmonic_weighted_normal_derivative(interp)
-        self.compute_anti_laplacian_harmonic_part(interp)
+        self.compute_polynomial_part_trace()
+        self.compute_polynomial_part_weighted_normal_derivative()
+        self.compute_harmonic_conjugate()
+        self.compute_harmonic_weighted_normal_derivative()
+        self.compute_anti_laplacian_harmonic_part()
 
     def clear(self) -> None:
         """
@@ -261,7 +261,7 @@ class LocalFunction:
         """
         return self.trace
 
-    def compute_trace_values(self, interp: int) -> None:
+    def compute_trace_values(self) -> None:
         """
         Computes the Dirichlet trace values from the piecewise Polynomial trace
         and stores them in self.trace.
@@ -283,11 +283,9 @@ class LocalFunction:
             for j in range(c.num_edges):
                 k_start = self.nyst.K.component_start_idx[i] + c.vert_idx[j]
                 k_end = self.nyst.K.component_start_idx[i] + c.vert_idx[j + 1]
-                ex, ey = c.edges[j].get_sampled_points(interp)
                 self.trace[k_start:k_end] = self.poly_trace.polys[
                     edge_idx
-                ].eval(x=ex, y=ey)
-                # ].eval(c.edges[j].x[0, :-1], c.edges[j].x[1, :-1]) # HUH?
+                ].eval(c.edges[j].x[0, :-1], c.edges[j].x[1, :-1])
                 edge_idx += 1
 
     # Laplacian (Polynomial) #################################################
@@ -341,13 +339,13 @@ class LocalFunction:
         """
         return self.poly_part_trace
 
-    def compute_polynomial_part_trace(self, interp: int) -> None:
+    def compute_polynomial_part_trace(self) -> None:
         """
         Computes the Dirichlet trace values of the Polynomial part and stores
         them in self.poly_part_trace.
         """
-        x1, x2 = self.nyst.K.get_boundary_points(interp)
-        self.poly_part_trace = self.poly_part.eval(x1, x2)  # type: ignore
+        x1, x2 = self.nyst.K.get_boundary_points()
+        self.poly_part_trace = self.poly_part.eval(x1, x2)
 
     # Polynomial part weighted normal derivative #############################
     def set_polynomial_part_weighted_normal_derivative(
@@ -365,19 +363,15 @@ class LocalFunction:
         """
         return self.poly_part_wnd
 
-    def compute_polynomial_part_weighted_normal_derivative(
-        self, interp: int
-    ) -> None:
+    def compute_polynomial_part_weighted_normal_derivative(self) -> None:
         """
         Computes the weighted normal derivative of the Polynomial part and
         stores it in self.poly_part_wnd.
         """
-        x1, x2 = self.nyst.K.get_boundary_points(interp)
+        x1, x2 = self.nyst.K.get_boundary_points()
         g1, g2 = self.poly_part.grad()
-        P_nd = self.nyst.K.dot_with_normal(
-            g1.eval(x1, x2), g2.eval(x1, x2) # type: ignore
-        )
-        self.poly_part_wnd = self.nyst.K.multiply_by_dx_norm(P_nd, interp)
+        P_nd = self.nyst.K.dot_with_normal(g1.eval(x1, x2), g2.eval(x1, x2))
+        self.poly_part_wnd = self.nyst.K.multiply_by_dx_norm(P_nd)
 
     # harmonic conjugate #####################################################
     def set_harmonic_conjugate(self, hc_vals: ndarray) -> None:
@@ -394,14 +388,14 @@ class LocalFunction:
         """
         return self.conj_trace
 
-    def compute_harmonic_conjugate(self, interp: int) -> None:
+    def compute_harmonic_conjugate(self) -> None:
         """
         Computes the Dirichlet trace values of the harmonic conjugate of the
         harmonic part and stores them in self.conj_trace.
         """
         phi_trace = self.trace - self.poly_part_trace
         self.conj_trace, self.log_coef = self.nyst.get_harmonic_conjugate(
-            phi_trace, interp
+            phi_trace
         )
 
     # logarithmic coefficients ###############################################
@@ -433,7 +427,7 @@ class LocalFunction:
         """
         return self.harm_part_wnd
 
-    def compute_harmonic_weighted_normal_derivative(self, interp: int) -> None:
+    def compute_harmonic_weighted_normal_derivative(self) -> None:
         """
         Computes the weighted normal derivative of the harmonic part and stores
         it in self.harm_part_wnd.
@@ -443,18 +437,16 @@ class LocalFunction:
                 self.nyst.K, self.conj_trace
             )
         )
-        lam_x1, lam_x2 = d2n.log_terms.get_log_grad(self.nyst.K, interp)
-        lam_wnd = d2n.log_terms.get_dlam_dn_wgt(
-            self.nyst.K, lam_x1, lam_x2, interp
-        )
+        lam_x1, lam_x2 = d2n.log_terms.get_log_grad(self.nyst.K)
+        lam_wnd = d2n.log_terms.get_dlam_dn_wgt(self.nyst.K, lam_x1, lam_x2)
         self.harm_part_wnd += lam_wnd @ self.log_coef
 
     # harmonic conjugable part psi ###########################################
-    def get_conjugable_part(self, interp: int) -> ndarray:
+    def get_conjugable_part(self) -> ndarray:
         """
         Returns the harmonic conjugable part psi.
         """
-        lam = d2n.log_terms.get_log_trace(self.nyst.K, interp)
+        lam = d2n.log_terms.get_log_trace(self.nyst.K)
         return self.trace - self.poly_part_trace - lam @ self.log_coef
 
     # anti-Laplacian #########################################################
@@ -474,21 +466,17 @@ class LocalFunction:
         """
         return self.antilap_trace
 
-    def compute_anti_laplacian_harmonic_part(self, interp: int) -> None:
+    def compute_anti_laplacian_harmonic_part(self) -> None:
         """
         Computes the Dirichlet trace values of an anti-Laplacian of the
         harmonic part and stores them in self.antilap_trace.
         """
-        psi = self.get_conjugable_part(interp)
+        psi = self.get_conjugable_part()
         (
             self.antilap_trace,
             self.antilap_wnd,
         ) = antilap.antilap.get_anti_laplacian_harmonic(
-            self.nyst.K,
-            psi=psi,
-            psi_hat=self.conj_trace,
-            a=self.log_coef,
-            interp=interp,
+            self.nyst.K, psi=psi, psi_hat=self.conj_trace, a=self.log_coef
         )
 
     # H^1 semi-inner product #################################################
@@ -499,13 +487,13 @@ class LocalFunction:
         """
 
         if not isinstance(other, LocalFunction):
-            raise TypeError("other must be a LocalFunction")
+            raise TypeError("other must be aLocalFunction")
 
         # Polynomial part
         Px, Py = self.poly_part.grad()
         Qx, Qy = other.poly_part.grad()
         gradP_gradQ = Px * Qx + Py * Qy
-        val = integrate_poly_over_mesh(gradP_gradQ, self.nyst.K, interp=1)
+        val = integrate_poly_over_mesh(gradP_gradQ, self.nyst.K)
 
         # remaining terms
         integrand = (
@@ -526,11 +514,11 @@ class LocalFunction:
         if not isinstance(other, LocalFunction):
             raise TypeError("other must be aLocalFunction")
 
-        x1, x2 = self.nyst.K.get_boundary_points(interp=1)
+        x1, x2 = self.nyst.K.get_boundary_points()
 
         # P * Q
         PQ = self.poly_part * other.poly_part
-        val = integrate_poly_over_mesh(PQ, self.nyst.K, interp=1)
+        val = integrate_poly_over_mesh(PQ, self.nyst.K)
 
         # phi * psi
         integrand = (
@@ -540,7 +528,7 @@ class LocalFunction:
         # phi * Q
         R = other.poly_part.anti_laplacian()
         R_trace = R.eval(x1, x2)
-        R_wnd = R.get_weighted_normal_derivative(self.nyst.K, interp=1)
+        R_wnd = R.get_weighted_normal_derivative(self.nyst.K)
         integrand += (
             self.trace - self.poly_part_trace
         ) * R_wnd - R_trace * self.harm_part_wnd
@@ -548,7 +536,7 @@ class LocalFunction:
         # psi * P
         R = self.poly_part.anti_laplacian()
         R_trace = R.eval(x1, x2)
-        R_wnd = R.get_weighted_normal_derivative(self.nyst.K, interp=1)
+        R_wnd = R.get_weighted_normal_derivative(self.nyst.K)
         integrand += (
             other.trace - other.poly_part_trace
         ) * R_wnd - R_trace * other.harm_part_wnd
@@ -586,10 +574,10 @@ class LocalFunction:
         int_x2 = self.nyst.K.int_x2
 
         # boundary points
-        bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points(interp=1)
+        bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points()
 
         # conjugable part
-        psi = self.get_conjugable_part(interp=1)
+        psi = self.get_conjugable_part()
         psi_hat = self.get_harmonic_conjugate()
 
         # Polynomial gradient
@@ -636,9 +624,9 @@ class LocalFunction:
         xy_norm_sq = xy1 * xy1 + xy2 * xy2
         eta = (xy1 * psi + xy2 * psi_hat) / xy_norm_sq
         eta_hat = (xy1 * psi_hat - xy2 * psi) / xy_norm_sq
-        integrand = self.nyst.K.dot_with_tangent(eta_hat, eta, interp=1)
+        integrand = self.nyst.K.dot_with_tangent(eta_hat, eta)
         self.int_vals[i, j] = (
-            self.nyst.K.integrate_over_boundary(integrand, interp=1) * 0.5 / pi
+            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / pi
         )
 
         # Polynomial part
@@ -655,13 +643,13 @@ class LocalFunction:
         # Cauchy's integral formula for gradient
         omega = (xy1 * eta + xy2 * eta_hat) / xy_norm_sq
         omega_hat = (xy1 * eta_hat - xy2 * eta) / xy_norm_sq
-        integrand = self.nyst.K.dot_with_tangent(omega_hat, omega, interp=1)
+        integrand = self.nyst.K.dot_with_tangent(omega_hat, omega)
         self.int_grad1[i, j] = (
-            self.nyst.K.integrate_over_boundary(integrand, interp=1) * 0.5 / pi
+            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / pi
         )
-        integrand = self.nyst.K.dot_with_tangent(omega, -omega_hat, interp=1)
+        integrand = self.nyst.K.dot_with_tangent(omega, -omega_hat)
         self.int_grad2[i, j] = (
-            self.nyst.K.integrate_over_boundary(integrand, interp=1) * 0.5 / pi
+            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / pi
         )
 
         # gradient Polynomial part

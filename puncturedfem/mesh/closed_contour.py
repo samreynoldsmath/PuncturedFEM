@@ -103,18 +103,18 @@ class ClosedContour:
         """Returns true if all edges are parameterized"""
         return all(e.is_parameterized for e in self.edges)
 
-    def parameterize(self, quad_dict: QuadDict, interp: int) -> None:
+    def parameterize(self, quad_dict: QuadDict) -> None:
         """Parameterize each Edge"""
         # TODO: eliminate redundant calls to parameterize
         for i in range(self.num_edges):
             self.edges[i].parameterize(quad_dict)
             if self.edge_orients[i] == -1:
                 self.edges[i].reverse_orientation()
-        self.find_num_pts(interp)
+        self.find_num_pts()
         self.find_interp()
-        self.find_local_vert_idx(interp)
-        self.find_closest_local_vertex_index(interp)
-        self.find_interior_point(interp)
+        self.find_local_vert_idx()
+        self.find_closest_local_vertex_index()
+        self.find_interior_point()
 
     def deparameterize(self) -> None:
         """Deparameterize each Edge"""
@@ -123,13 +123,13 @@ class ClosedContour:
         self.num_pts = 0
         self.closest_vert_idx = np.zeros((0,))
 
-    def find_num_pts(self, interp: int) -> None:
+    def find_num_pts(self) -> None:
         """Record the total number of sampled points on the boundary"""
         if not self.is_parameterized():
             raise NotParameterizedError("finding num_pts")
         self.num_pts = 0
         for e in self.edges:
-            self.num_pts += e.get_num_pts(interp) - 1
+            self.num_pts += e.num_pts - 1
 
     def find_interp(self) -> None:
         """Record the interpolation parameter (same for all edges)"""
@@ -140,15 +140,15 @@ class ClosedContour:
                     "All edges must have the same interpolation parameter"
                 )
 
-    def find_local_vert_idx(self, interp: int) -> None:
+    def find_local_vert_idx(self) -> None:
         """Get the index of the starting point of each Edge"""
         if not self.is_parameterized():
             raise NotParameterizedError("finding vert_idx")
         self.vert_idx = [0]
         for e in self.edges:
-            self.vert_idx.append(self.vert_idx[-1] + e.get_num_pts(interp) - 1)
+            self.vert_idx.append(self.vert_idx[-1] + e.num_pts - 1)
 
-    def find_closest_local_vertex_index(self, interp: int) -> None:
+    def find_closest_local_vertex_index(self) -> None:
         """Find the index of the closest vertex for each sampled point"""
         if not self.is_parameterized():
             raise NotParameterizedError("finding closest_vert_idx")
@@ -156,7 +156,7 @@ class ClosedContour:
         # get midpoint indices
         mid_idx = np.zeros((self.num_edges,), dtype=int)
         for i in range(self.num_edges):
-            n = self.edges[i].get_num_pts(interp) // 2  # 2n points per Edge
+            n = self.edges[i].num_pts // 2  # 2n points per Edge
             mid_idx[i] = self.vert_idx[i] + n
 
         # on first half of an Edge, the closest vertex is the starting
@@ -172,21 +172,18 @@ class ClosedContour:
             )
 
     # INTERIOR POINTS ########################################################
-    def get_distance_to_boundary(
-        self, x: float, y: float, interp: int
-    ) -> float:
+    def get_distance_to_boundary(self, x: float, y: float) -> float:
         """Minimum distance from (x,y) to a point on the boundary"""
         if not self.is_parameterized():
             raise NotParameterizedError("finding distance to boundary")
         dist = np.inf
         for e in self.edges:
-            ex, ey = e.get_sampled_points(interp)
-            dist2e = min((ex - x) ** 2 + (ey - y) ** 2)
+            dist2e = min((e.x[0, :] - x) ** 2 + (e.x[1, :] - y) ** 2)
             dist = min([dist, dist2e])
         return np.sqrt(dist)
 
     def is_in_interior_contour(
-        self, x: np.ndarray, y: np.ndarray, interp: int
+        self, x: np.ndarray, y: np.ndarray
     ) -> np.ndarray:
         """
         Returns a boolean array indicating whether each point (x[i], y[i]) is
@@ -196,7 +193,7 @@ class ClosedContour:
             raise SizeMismatchError("x and y must have same size")
 
         is_inside = np.zeros(x.shape, dtype=bool)
-        x1, x2 = self.get_sampled_points(interp)
+        x1, x2 = self.get_sampled_points()
         p = path.Path(np.array([x1, x2]).transpose())
 
         if len(x.shape) == 1:
@@ -213,7 +210,7 @@ class ClosedContour:
 
         return is_inside
 
-    def find_interior_point(self, interp: int) -> None:
+    def find_interior_point(self) -> None:
         """Finds an interior point."""
 
         # NOTE: Uses a brute force search. There is likely a more efficient way.
@@ -222,7 +219,7 @@ class ClosedContour:
             raise NotParameterizedError("finding interior point")
 
         # find region of interest
-        x, y = self.get_sampled_points(interp)
+        x, y = self.get_sampled_points()
         xmin, xmax, ymin, ymax = get_bounding_box(x, y)
 
         # set minimum desired distance to the boundary
@@ -242,7 +239,7 @@ class ClosedContour:
             x, y = np.meshgrid(x_coord, y_coord)
 
             # determine which points are in the interior
-            is_inside = self.is_in_interior_contour(x, y, interp)
+            is_inside = self.is_in_interior_contour(x, y)
 
             # for each interior point in grid, compute distance to the boundary
             dist = np.zeros(np.shape(x))
@@ -250,7 +247,7 @@ class ClosedContour:
                 for j in range(N):
                     if is_inside[i, j]:
                         dist[i, j] = self.get_distance_to_boundary(
-                            x[i, j], y[i, j], interp
+                            x[i, j], y[i, j]
                         )
 
             # pick a point farthest from the boundary
@@ -270,9 +267,7 @@ class ClosedContour:
             self.interior_point = Vert(x=x[ii, jj], y=y[ii, jj])
 
     # FUNCTION EVALUATION ####################################################
-    def evaluate_function_on_contour(
-        self, fun: Callable, interp: int
-    ) -> np.ndarray:
+    def evaluate_function_on_contour(self, fun: Callable) -> np.ndarray:
         """Return fun(x) for each sampled point on contour"""
         if not self.is_parameterized():
             raise NotParameterizedError("evaluating function on contour")
@@ -280,19 +275,19 @@ class ClosedContour:
         for j in range(self.num_edges):
             y[self.vert_idx[j] : self.vert_idx[j + 1]] = self.edges[
                 j
-            ].evaluate_function(fun, interp, ignore_endpoint=True)
+            ].evaluate_function(fun, ignore_endpoint=True)
         return y
 
-    def get_sampled_points(self, interp: int) -> tuple[np.ndarray, np.ndarray]:
+    def get_sampled_points(self) -> tuple[np.ndarray, np.ndarray]:
         """Returns the x1 and x2 coordinates of the boundary points"""
         if not self.is_parameterized():
             raise NotParameterizedError("getting boundary points")
-        x1 = self.evaluate_function_on_contour(lambda x: x[0], interp)
-        x2 = self.evaluate_function_on_contour(lambda x: x[1], interp)
+        x1 = self.evaluate_function_on_contour(lambda x: x[0])
+        x2 = self.evaluate_function_on_contour(lambda x: x[1])
         return x1, x2
 
     def dot_with_tangent(
-        self, comp1: np.ndarray, comp2: np.ndarray, interp: int
+        self, comp1: np.ndarray, comp2: np.ndarray
     ) -> np.ndarray:
         """Returns the dot product (comp1, comp2) * unit_tangent"""
         if not self.is_parameterized():
@@ -302,12 +297,12 @@ class ClosedContour:
             j = self.vert_idx[i]
             jp1 = self.vert_idx[i + 1]
             res[j:jp1] = self.edges[i].dot_with_tangent(
-                comp1[j:jp1], comp2[j:jp1], interp
+                comp1[j:jp1], comp2[j:jp1]
             )
         return res
 
     def dot_with_normal(
-        self, comp1: np.ndarray, comp2: np.ndarray, interp: int
+        self, comp1: np.ndarray, comp2: np.ndarray
     ) -> np.ndarray:
         """Returns the dot product (comp1, comp2) * unit_normal"""
         if not self.is_parameterized():
@@ -317,11 +312,11 @@ class ClosedContour:
             j = self.vert_idx[i]
             jp1 = self.vert_idx[i + 1]
             res[j:jp1] = self.edges[i].dot_with_normal(
-                comp1[j:jp1], comp2[j:jp1], interp
+                comp1[j:jp1], comp2[j:jp1]
             )
         return res
 
-    def multiply_by_dx_norm(self, vals: np.ndarray, interp: int) -> np.ndarray:
+    def multiply_by_dx_norm(self, vals: np.ndarray) -> np.ndarray:
         """
         Returns f multiplied against the norm of the derivative of
         the curve parameterization
@@ -334,25 +329,19 @@ class ClosedContour:
         for i in range(self.num_edges):
             j = self.vert_idx[i]
             jp1 = self.vert_idx[i + 1]
-            vals_dx_norm[j:jp1] = self.edges[i].multiply_by_dx_norm(
-                vals[j:jp1], interp
-            )
+            vals_dx_norm[j:jp1] = self.edges[i].multiply_by_dx_norm(vals[j:jp1])
         return vals_dx_norm
 
     # INTEGRATION ############################################################
-    def integrate_over_closed_contour(
-        self, vals: np.ndarray, interp: int
-    ) -> float:
+    def integrate_over_closed_contour(self, vals: np.ndarray) -> float:
         """Contour integral of vals"""
         if not self.is_parameterized():
             raise NotParameterizedError("integrating over boundary")
-        vals_dx_norm = self.multiply_by_dx_norm(vals, interp)
-        return self.integrate_over_closed_contour_preweighted(
-            vals_dx_norm, interp
-        )
+        vals_dx_norm = self.multiply_by_dx_norm(vals)
+        return self.integrate_over_closed_contour_preweighted(vals_dx_norm)
 
     def integrate_over_closed_contour_preweighted(
-        self, vals_dx_norm: np.ndarray, interp: int
+        self, vals_dx_norm: np.ndarray
     ) -> float:
         """Contour integral of vals_dx_norm"""
 
@@ -367,7 +356,7 @@ class ClosedContour:
         # NOTE: numpy.sum() is more stable, but this uses more memory
         y = np.zeros((self.num_pts,))
         for i in range(self.num_edges):
-            h = 2 * np.pi / (self.edges[i].get_num_pts(interp) - 1)
+            h = 2 * np.pi / (self.edges[i].num_pts - 1)
             y[self.vert_idx[i] : self.vert_idx[i + 1]] = (
                 h * vals_dx_norm[self.vert_idx[i] : self.vert_idx[i + 1]]
             )

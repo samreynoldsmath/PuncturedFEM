@@ -38,7 +38,6 @@ class TracePlot:
         traces: np.ndarray | list[np.ndarray],
         K: MeshCell,
         quad_dict: dict[str, Quad],
-        interp: int,
         fmt: str | list[str] = "k-",
         legend: tuple = (),
         title: str = "",
@@ -78,7 +77,7 @@ class TracePlot:
             which displays a grid.
         """
         self._set_num_pts(K)
-        self._find_t_parameter(K, quad_dict, interp)
+        self._find_t_parameter(K, quad_dict)
         self._find_ticks_and_labels(K.num_edges)
         self.set_traces(traces)
         self.set_format(fmt)
@@ -204,17 +203,17 @@ class TracePlot:
             )
 
     def _find_t_parameter(
-        self, K: MeshCell, quad_dict: dict[str, Quad], interp: int
+        self, K: MeshCell, quad_dict: dict[str, Quad]
     ) -> None:
         self.t = np.zeros((K.num_pts,))
         t0 = 0.0
         idx_start = 0
         for c in K.components:
             for e in c.edges:
-                self.t[idx_start : (idx_start + e.get_num_pts(interp) - 1)] = (
+                self.t[idx_start : (idx_start + e.num_pts - 1)] = (
                     t0 + quad_dict[e.quad_type].t[:-1]
                 )
-                idx_start += e.get_num_pts(interp) - 1
+                idx_start += e.num_pts - 1
                 t0 += 2 * np.pi
 
     def _find_ticks_and_labels(self, num_edges: int) -> None:

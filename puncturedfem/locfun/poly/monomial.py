@@ -12,7 +12,7 @@ where alpha = (alpha_1, alpha_2) is a multi-index and c is a scalar.
 
 from __future__ import annotations
 
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 
@@ -79,21 +79,11 @@ class Monomial:
         alpha.set_from_idx(idx)
         self.set_multidx(alpha)
 
-    def eval(
-        self, x: Union[np.ndarray, float], y: Union[np.ndarray, float]
-    ) -> Union[np.ndarray, float]:
+    def eval(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
         Evaluate the Monomial at the point (x, y).
         """
-        val: Union[np.ndarray, float]
-        if isinstance(x, float) and isinstance(y, float):
-            val = self.coef
-        elif isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
-            if np.shape(x) != np.shape(y):
-                raise ValueError("x and y must be the same shape")
-            val = self.coef * np.ones(np.shape(x))
-        else:
-            raise TypeError("x and y must be either floats or numpy arrays")
+        val = self.coef * np.ones(np.shape(x))
         if self.alpha.x > 0:
             val *= x**self.alpha.x
         if self.alpha.y > 0:

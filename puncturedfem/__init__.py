@@ -60,7 +60,7 @@ from .mesh.cell import MeshCell
 from .mesh.edge import Edge
 from .mesh.meshlib.__builder__ import mesh_builder
 from .mesh.planar_mesh import PlanarMesh
-from .mesh.quad import Quad, QuadDict, get_quad_dict
+from .mesh.quad import Quad, get_quad_dict
 from .mesh.vert import Vert
 from .solver.bilinear_form import BilinearForm
 from .solver.globfunsp import GlobalFunctionSpace

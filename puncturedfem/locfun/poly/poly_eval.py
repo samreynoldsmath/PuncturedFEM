@@ -17,14 +17,11 @@ from ...mesh.mesh_exceptions import SizeMismatchError
 from .poly import Polynomial
 
 
-def get_poly_traces_edge(
-    e: Edge, polys: list[Polynomial], interp: int
-) -> np.ndarray:
+def get_poly_traces_edge(e: Edge, polys: list[Polynomial]) -> np.ndarray:
     """
     Evaluates the Polynomials in polys on the Edge e.
     """
-    ex, ey = e.get_sampled_points(interp)
-    return get_poly_vals(x=ex, y=ey, polys=polys)
+    return get_poly_vals(x=e.x[0, :], y=e.x[1, :], polys=polys)
 
 
 def get_poly_vals(

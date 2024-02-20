@@ -83,7 +83,7 @@ class BilinearForm:
         l2 = u.get_l2_inner_prod(v)
         return self.diffusion_constant * h1 + self.reaction_constant * l2
 
-    def eval_rhs(self, v: LocalFunction, interp: int) -> float:
+    def eval_rhs(self, v: LocalFunction) -> float:
         """
         Evaluates the right-hand side Polynomial f on aLocalFunction object v.
         """
@@ -97,5 +97,5 @@ class BilinearForm:
             lap_poly=self.rhs_poly.laplacian(),
             poly_trace=poly_trace,
         )
-        f.compute_all(interp)
+        f.compute_all()
         return f.get_l2_inner_prod(v)

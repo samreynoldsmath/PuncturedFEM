@@ -147,8 +147,7 @@ def _plot_linear_combo(
 
     # plot mesh edges
     for e in solver.V.T.edges:
-        ex, ey = e.get_sampled_points(interp=1)
-        plt.plot(ex, ey, "k")
+        plt.plot(e.x[0, :], e.x[1, :], "k")
 
     # plot interior values on each MeshCell
     for cell_idx in solver.V.T.cell_idx_list:

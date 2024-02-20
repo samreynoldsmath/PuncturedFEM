@@ -74,7 +74,7 @@ class PiecewisePolynomial:
         else:
             self.polys = polys
 
-    def eval_on_edges(self, edges: list[Edge], interp: int) -> ndarray:
+    def eval_on_edges(self, edges: list[Edge]) -> ndarray:
         """
         Evaluates the PiecewisePolynomial on a list of edges.
         """
@@ -87,19 +87,18 @@ class PiecewisePolynomial:
         num_pts = 0
         for i in range(m):
             e = edges[i]
-            num_pts += e.get_num_pts(interp)
-            ex, ey = e.get_sampled_points(interp)
-            vals_arr.append(self.polys[i].eval(x=ex, y=ey))
+            num_pts += e.num_pts
+            vals_arr.append(self.polys[i].eval(x=e.x[0, :], y=e.x[1, :]))
         vals = zeros((num_pts,))
         idx = 0
         for i in range(m):
             e = edges[i]
-            vals[idx : idx + e.get_num_pts(interp)] = vals_arr[i]
+            vals[idx : idx + e.num_pts] = vals_arr[i]
         return vals
 
-    def eval_on_mesh_boundary(self, K: MeshCell, interp: int) -> ndarray:
+    def eval_on_mesh_boundary(self, K: MeshCell) -> ndarray:
         """
         Evaluates the PiecewisePolynomial on the boundary of a MeshCell.
         """
         edges = K.get_edges()
-        return self.eval_on_edges(edges, interp)
+        return self.eval_on_edges(edges)
