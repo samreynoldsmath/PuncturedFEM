@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 
 # ## Creating an edge
 # The simplest type of edge is a straight line segment, which is the default
-# when initializing an `edge` object.
+# when initializing an `Edge` object.
 
 # In[ ]:
 
@@ -77,38 +77,48 @@ e2 = pf.Edge(v1, v2, curve_type="circular_arc_deg", theta0=120)
 # 
 # To define a custom `curvetype`, see the appendix at the end of this notebook.
 
-# ## Parameterizing an edge with `quad` objects
+# ## `Quad` objects
 # To create the points $0=t_0 < t_1 < \cdots < t_{2n}=2\pi$ where $x(t)$ 
-# will be sampled, we will declare a quadrature scheme with a `quad` object.
-# For now, we will use the trapezoid rule, which uses the equispacing 
+# will be sampled, we will create a `QuadDict` object using the `get_quad_dict()` function.
+# The `QuadDict` object is a dictionary containing `Quad` objects, which are used to sample the curve parameterization.
+# It also contains an interpolation parameter, which will be discussed later.
+
+# In[ ]:
+
+
+quad_dict = pf.get_quad_dict(n=32)
+print(quad_dict)
+
+
+# The points for the trapezoidal (`"trap"`) quadrature scheme are,
+# of course, sampled at equidistant nodes 
 # $t_k = hk$, where $h=\pi / n$ for a chosen natural number $n$.
 
 # In[ ]:
 
 
-n = 32
-q_trap = pf.Quad(qtype="trap", n=n)
-q_kress = pf.Quad(qtype="kress", n=n)
-quad_dict = {"kress": q_kress, "trap": q_trap}
+plt.figure()
+plt.plot(quad_dict["trap"].t, "k.")
+plt.title("Trapezoid quadrature points")
+plt.grid("on")
+plt.show()
 
 
-# The points for the trapezoidal (`'trap'`) quadrature scheme are,
-# of course, sampled at equidistance nodes. The Kress (`'kress'`) 
-# quadrature should be used to parameterized edges that terminate at a corner.
-# Since this is the most common case, it is the default method to parameterize 
-# an edge.
+# The Kress (`"kress"`) quadrature should always be used to parameterized edges that terminate at a corner.
+# Since this is the most common case in practice, it is the default method to parameterize an edge.
 # We can see that the Kress scheme samples points more heavily near the endpoints: 
 
 # In[ ]:
 
 
 plt.figure()
-plt.plot(q_kress.t, "k.")
+plt.plot(quad_dict["kress"].t, "k.")
 plt.title("Kress quadrature points")
 plt.grid("on")
 plt.show()
 
 
+# ## Parameterizing an `Edge` object
 # We are now prepared to parameterize our edges.
 
 # In[ ]:
@@ -429,41 +439,42 @@ pf.plot.MeshPlot(K.get_edges()).draw()
 # 6. Unpack any additional arguments from `**kwargs`.
 # 
 # The contents of `mycurve.py` will look generically like the following:
+# ```python
+# """
+# A short description of the curve.
 # 
-# 	"""
-# 	A short description of the curve.
+# A description of any parameters that are used.
+# """
 # 
-# 	A description of any parameters that are used.
-# 	"""
+# import numpy as np
 # 
-# 	import numpy as np
+# def X(t, **kwargs):
 # 
-# 	def X(t, **kwargs):
+#    my_parameter = kwargs["my_parameter"]
 # 
-# 		my_parameter = kwargs['my_parameter']
+#    x = np.zeros((2,len(t)))
+#    x[0,:] = 	# the x_1 component
+#    x[1,:] = 	# the x_2 component
 # 
-# 		x = np.zeros((2,len(t)))
-# 		x[0,:] = 	# the x_1 component
-# 		x[1,:] = 	# the x_2 component
+#    return x
 # 
-# 		return x
+# def DX(t, **kwargs):
 # 
-# 	def DX(t, **kwargs):
+#    my_parameter = kwargs["my_parameter"]
 # 
-# 		my_parameter = kwargs['my_parameter']
+#    dx = np.zeros((2,len(t)))
+#    dx[0,:] = 	# the derivative of the x_1 component wrt t
+#    dx[1,:] = 	# the derivative of the x_2 component wrt t
 # 
-# 		dx = np.zeros((2,len(t)))
-# 		dx[0,:] = 	# the derivative of the x_1 component wrt t
-# 		dx[1,:] = 	# the derivative of the x_2 component wrt t
+#    return dx
 # 
-# 		return dx
+# def DDX(t, **kwargs):
 # 
-# 	def DDX(t, **kwargs):
+#    my_parameter = kwargs["my_parameter"]
 # 
-# 		my_parameter = kwargs['my_parameter']
+#    ddx = np.zeros((2,len(t)))
+#    ddx[0,:] = 	# the second derivative of the x_1 component wrt t
+#    ddx[1,:] = 	# the second derivative of the x_2 component wrt t
 # 
-# 		ddx = np.zeros((2,len(t)))
-# 		ddx[0,:] = 	# the second derivative of the x_1 component wrt t
-# 		ddx[1,:] = 	# the second derivative of the x_2 component wrt t
-# 		
-# 		return ddx
+#    return ddx
+# ```
