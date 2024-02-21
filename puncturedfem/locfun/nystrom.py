@@ -91,7 +91,6 @@ class NystromSolver:
         else:
             self.K_interp = self.K
 
-
     def build_single_and_double_layer_ops(self) -> None:
         """
         Build linear operator objects for the single and double layer
@@ -125,7 +124,9 @@ class NystromSolver:
 
         # build linear operator object
         A = LinearOperator(
-            dtype=float, shape=(self.K_interp.num_pts, self.K_interp.num_pts), matvec=A_fun
+            dtype=float,
+            shape=(self.K_interp.num_pts, self.K_interp.num_pts),
+            matvec=A_fun,
         )
 
         # solve Nystrom system using GMRES
@@ -214,12 +215,16 @@ class NystromSolver:
         )
 
         # single layer operator applied to tangential derivatives of log terms
-        self.T1_dlam_dt = np.zeros((self.K_interp.num_pts, self.K_interp.num_holes))
+        self.T1_dlam_dt = np.zeros(
+            (self.K_interp.num_pts, self.K_interp.num_holes)
+        )
         for i in range(self.K_interp.num_holes):
             self.T1_dlam_dt[:, i] = self.single_layer_op(self.dlam_dt_wgt[:, i])
 
         # H1 seminorms of logarithmic terms
-        self.Sn_lam = np.zeros((self.K_interp.num_holes, self.K_interp.num_holes))
+        self.Sn_lam = np.zeros(
+            (self.K_interp.num_holes, self.K_interp.num_holes)
+        )
         for i in range(self.K_interp.num_holes):
             self.Sn_lam[:, i] = self.Sn(self.lam_trace[:, i])
 
@@ -264,7 +269,9 @@ class NystromSolver:
         """
         Construct the single layer operator matrix.
         """
-        self.single_layer_mat = np.zeros((self.K_interp.num_pts, self.K_interp.num_pts))
+        self.single_layer_mat = np.zeros(
+            (self.K_interp.num_pts, self.K_interp.num_pts)
+        )
         for i in range(self.K_interp.num_holes + 1):
             ii1 = self.K_interp.component_start_idx[i]
             ii2 = self.K_interp.component_start_idx[i + 1]
@@ -281,7 +288,10 @@ class NystromSolver:
         and j-th components of the boundary of K.
         """
         B_comp = np.zeros(
-            (self.K_interp.components[i].num_pts, self.K_interp.components[j].num_pts)
+            (
+                self.K_interp.components[i].num_pts,
+                self.K_interp.components[j].num_pts,
+            )
         )
         for k in range(self.K_interp.components[i].num_edges):
             kk1 = self.K_interp.components[i].vert_idx[k]
@@ -358,7 +368,9 @@ class NystromSolver:
         """
         Construct the double layer operator matrix.
         """
-        self.double_layer_mat = np.zeros((self.K_interp.num_pts, self.K_interp.num_pts))
+        self.double_layer_mat = np.zeros(
+            (self.K_interp.num_pts, self.K_interp.num_pts)
+        )
         for i in range(self.K_interp.num_holes + 1):
             ii1 = self.K_interp.component_start_idx[i]
             ii2 = self.K_interp.component_start_idx[i + 1]
