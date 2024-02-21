@@ -6,6 +6,7 @@ Module containing the NystromSolver class, which is used to represent a
 Nyström Solver for a given mesh cell K.
 """
 
+from copy import deepcopy
 
 import numpy as np
 from scipy.sparse.linalg import LinearOperator, gmres
@@ -29,6 +30,7 @@ class NystromSolver:
     # TODO use multiprocessing to speed up computation
 
     K: MeshCell
+    K_interp: MeshCell
     single_layer_mat: np.ndarray
     double_layer_mat: np.ndarray
     single_layer_op: LinearOperator
@@ -65,10 +67,11 @@ class NystromSolver:
                 msg += "s"
             print(msg)
         self.set_K(K)
+        self.set_K_interp()
         self.build_single_layer_mat()
         self.build_double_layer_mat()
         self.build_single_and_double_layer_ops()
-        if self.K.num_holes > 0:
+        if self.K_interp.num_holes > 0:
             self.compute_log_terms()
 
     def set_K(self, K: MeshCell) -> None:
@@ -78,6 +81,17 @@ class NystromSolver:
         self.K = K
         self.interp = self.K.interp
 
+    def set_K_interp(self) -> None:
+        """
+        Set the MeshCell to be used for interpolation (with few sampled points)
+        """
+        if self.interp > 1:
+            self.K_interp = deepcopy(self.K)
+            self.K_interp.reparameterize(use_interp=True)
+        else:
+            self.K_interp = self.K
+
+
     def build_single_and_double_layer_ops(self) -> None:
         """
         Build linear operator objects for the single and double layer
@@ -86,12 +100,12 @@ class NystromSolver:
         self.double_layer_sum = np.sum(self.double_layer_mat, 1)
         self.single_layer_op = LinearOperator(
             dtype=float,
-            shape=(self.K.num_pts, self.K.num_pts),
+            shape=(self.K_interp.num_pts, self.K_interp.num_pts),
             matvec=self.linop4singlelayer,
         )
         self.double_layer_op = LinearOperator(
             dtype=float,
-            shape=(self.K.num_pts, self.K.num_pts),
+            shape=(self.K_interp.num_pts, self.K_interp.num_pts),
             matvec=self.linop4doublelayer,
         )
 
@@ -106,12 +120,12 @@ class NystromSolver:
         # define linear operator for Neumann problem
         def A_fun(u: np.ndarray) -> np.ndarray:
             y = self.double_layer_op(u)
-            y += self.K.integrate_over_boundary(u)
+            y += self.K_interp.integrate_over_boundary(u)
             return y
 
         # build linear operator object
         A = LinearOperator(
-            dtype=float, shape=(self.K.num_pts, self.K.num_pts), matvec=A_fun
+            dtype=float, shape=(self.K_interp.num_pts, self.K_interp.num_pts), matvec=A_fun
         )
 
         # solve Nystrom system using GMRES
@@ -132,9 +146,9 @@ class NystromSolver:
         phi_wtd = get_weighted_tangential_derivative_from_trace(self.K, phi)
 
         # simply/multiply connected cases handled separately
-        if self.K.num_holes == 0:  # simply connected
+        if self.K_interp.num_holes == 0:  # simply connected
             return self.solve_neumann_zero_average(-1 * phi_wtd), np.zeros((0,))
-        if self.K.num_holes > 0:  # multiply connected
+        if self.K_interp.num_holes > 0:  # multiply connected
             return self.get_harmonic_conjugate_multiply_connected(phi, phi_wtd)
         raise ValueError("K.num_holes < 0")
 
@@ -146,8 +160,8 @@ class NystromSolver:
         multiply connected.
         """
         # array sizes
-        N = self.K.num_pts
-        m = self.K.num_holes
+        N = self.K_interp.num_pts
+        m = self.K_interp.num_holes
 
         # block RHS
         b = np.zeros((N + m,))
@@ -160,7 +174,7 @@ class NystromSolver:
             a = x[N:]
             y = np.zeros((N + m,))
             y[:N] = self.double_layer_op(psi_hat)
-            y[:N] += self.K.integrate_over_boundary(psi_hat)
+            y[:N] += self.K_interp.integrate_over_boundary(psi_hat)
             y[:N] -= self.T1_dlam_dt @ a
             y[N:] = -self.St(psi_hat) + self.Sn_lam @ a
             return y
@@ -200,13 +214,13 @@ class NystromSolver:
         )
 
         # single layer operator applied to tangential derivatives of log terms
-        self.T1_dlam_dt = np.zeros((self.K.num_pts, self.K.num_holes))
-        for i in range(self.K.num_holes):
+        self.T1_dlam_dt = np.zeros((self.K_interp.num_pts, self.K_interp.num_holes))
+        for i in range(self.K_interp.num_holes):
             self.T1_dlam_dt[:, i] = self.single_layer_op(self.dlam_dt_wgt[:, i])
 
         # H1 seminorms of logarithmic terms
-        self.Sn_lam = np.zeros((self.K.num_holes, self.K.num_holes))
-        for i in range(self.K.num_holes):
+        self.Sn_lam = np.zeros((self.K_interp.num_holes, self.K_interp.num_holes))
+        for i in range(self.K_interp.num_holes):
             self.Sn_lam[:, i] = self.Sn(self.lam_trace[:, i])
 
     def Su(self, vals: np.ndarray, dlam_du_wgt: np.ndarray) -> np.ndarray:
@@ -215,9 +229,9 @@ class NystromSolver:
             S_u = int_{dK} u (d_lambda / du) ds
         where u is a vector field defined on the boundary of K.
         """
-        out = np.zeros((self.K.num_holes,))
-        for i in range(self.K.num_holes):
-            out[i] = self.K.integrate_over_boundary_preweighted(
+        out = np.zeros((self.K_interp.num_holes,))
+        for i in range(self.K_interp.num_holes):
+            out[i] = self.K_interp.integrate_over_boundary_preweighted(
                 vals * dlam_du_wgt[:, i]
             )
         return out
@@ -250,13 +264,13 @@ class NystromSolver:
         """
         Construct the single layer operator matrix.
         """
-        self.single_layer_mat = np.zeros((self.K.num_pts, self.K.num_pts))
-        for i in range(self.K.num_holes + 1):
-            ii1 = self.K.component_start_idx[i]
-            ii2 = self.K.component_start_idx[i + 1]
-            for j in range(self.K.num_holes + 1):
-                jj1 = self.K.component_start_idx[j]
-                jj2 = self.K.component_start_idx[j + 1]
+        self.single_layer_mat = np.zeros((self.K_interp.num_pts, self.K_interp.num_pts))
+        for i in range(self.K_interp.num_holes + 1):
+            ii1 = self.K_interp.component_start_idx[i]
+            ii2 = self.K_interp.component_start_idx[i + 1]
+            for j in range(self.K_interp.num_holes + 1):
+                jj1 = self.K_interp.component_start_idx[j]
+                jj2 = self.K_interp.component_start_idx[j + 1]
                 self.single_layer_mat[
                     ii1:ii2, jj1:jj2
                 ] = self.single_layer_component_block(i, j)
@@ -267,19 +281,19 @@ class NystromSolver:
         and j-th components of the boundary of K.
         """
         B_comp = np.zeros(
-            (self.K.components[i].num_pts, self.K.components[j].num_pts)
+            (self.K_interp.components[i].num_pts, self.K_interp.components[j].num_pts)
         )
-        for k in range(self.K.components[i].num_edges):
-            kk1 = self.K.components[i].vert_idx[k]
-            kk2 = self.K.components[i].vert_idx[k + 1]
-            e = self.K.components[i].edges[k]
+        for k in range(self.K_interp.components[i].num_edges):
+            kk1 = self.K_interp.components[i].vert_idx[k]
+            kk2 = self.K_interp.components[i].vert_idx[k + 1]
+            e = self.K_interp.components[i].edges[k]
             # Martensen Quadrature
-            nm = (self.K.components[i].edges[k].num_pts - 1) // 2
+            nm = (self.K_interp.components[i].edges[k].num_pts - 1) // 2
             qm = Quad(qtype="mart", n=nm)
-            for ell in range(self.K.components[j].num_edges):
-                ll1 = self.K.components[j].vert_idx[ell]
-                ll2 = self.K.components[j].vert_idx[ell + 1]
-                f = self.K.components[j].edges[ell]
+            for ell in range(self.K_interp.components[j].num_edges):
+                ll1 = self.K_interp.components[j].vert_idx[ell]
+                ll2 = self.K_interp.components[j].vert_idx[ell + 1]
+                f = self.K_interp.components[j].edges[ell]
                 B_comp[kk1:kk2, ll1:ll2] = self.single_layer_edge_block(
                     e, f, qm
                 )
@@ -334,7 +348,7 @@ class NystromSolver:
         """
         Operator for the double layer potential applied to u.
         """
-        corner_values = u[self.K.closest_vert_idx]
+        corner_values = u[self.K_interp.closest_vert_idx]
         res = 0.5 * (u - corner_values)
         res += self.double_layer_mat @ u
         res -= corner_values * self.double_layer_sum
@@ -344,17 +358,17 @@ class NystromSolver:
         """
         Construct the double layer operator matrix.
         """
-        self.double_layer_mat = np.zeros((self.K.num_pts, self.K.num_pts))
-        for i in range(self.K.num_holes + 1):
-            ii1 = self.K.component_start_idx[i]
-            ii2 = self.K.component_start_idx[i + 1]
-            for j in range(self.K.num_holes + 1):
-                jj1 = self.K.component_start_idx[j]
-                jj2 = self.K.component_start_idx[j + 1]
+        self.double_layer_mat = np.zeros((self.K_interp.num_pts, self.K_interp.num_pts))
+        for i in range(self.K_interp.num_holes + 1):
+            ii1 = self.K_interp.component_start_idx[i]
+            ii2 = self.K_interp.component_start_idx[i + 1]
+            for j in range(self.K_interp.num_holes + 1):
+                jj1 = self.K_interp.component_start_idx[j]
+                jj2 = self.K_interp.component_start_idx[j + 1]
                 self.double_layer_mat[
                     ii1:ii2, jj1:jj2
                 ] = self.double_layer_component_block(
-                    self.K.components[i], self.K.components[j]
+                    self.K_interp.components[i], self.K_interp.components[j]
                 )
 
     def double_layer_component_block(
