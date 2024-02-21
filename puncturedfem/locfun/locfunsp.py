@@ -225,9 +225,7 @@ class LocalFunctionSpace:
                 v_trace = b.edge_fun_traces[k]
 
                 # create harmonicLocalFunction
-                v = LocalFunction(
-                    nyst=self.nyst, key=b.edge_fun_global_keys[k]
-                )
+                v = LocalFunction(nyst=self.nyst, key=b.edge_fun_global_keys[k])
 
                 # set Dirichlet data
                 v.poly_trace.polys[edge_idx] = v_trace
