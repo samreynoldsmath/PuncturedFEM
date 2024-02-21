@@ -103,11 +103,13 @@ class ClosedContour:
         """Returns true if all edges are parameterized"""
         return all(e.is_parameterized for e in self.edges)
 
-    def parameterize(self, quad_dict: QuadDict) -> None:
+    def parameterize(
+        self, quad_dict: QuadDict, use_interp: bool = False
+    ) -> None:
         """Parameterize each Edge"""
         # TODO: eliminate redundant calls to parameterize
         for i in range(self.num_edges):
-            self.edges[i].parameterize(quad_dict)
+            self.edges[i].parameterize(quad_dict, use_interp)
             if self.edge_orients[i] == -1:
                 self.edges[i].reverse_orientation()
         self.find_num_pts()

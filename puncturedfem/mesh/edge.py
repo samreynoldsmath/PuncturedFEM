@@ -178,7 +178,9 @@ class Edge:
 
     # PARAMETERIZATION #######################################################
 
-    def parameterize(self, quad_dict: QuadDict) -> None:
+    def parameterize(
+        self, quad_dict: QuadDict, use_interp: bool = False
+    ) -> None:
         """
         Parameterize the Edge using the specified Quadrature rule. The
         parameterization is stored in the following attributes:
@@ -200,7 +202,11 @@ class Edge:
             raise ValueError("Quad type not recognized")
 
         # set quadrature object
-        q = quad_dict[self.quad_type]  # type: ignore
+        if use_interp:
+            interp_str = "_interp"
+        else:
+            interp_str = ""
+        q = quad_dict[self.quad_type + interp_str]  # type: ignore
 
         # 2 * n + 1 points sampled per Edge
         self.num_pts = 2 * q.n + 1

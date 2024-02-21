@@ -58,6 +58,7 @@ class MeshCell:
     num_edges: int
     num_pts: int
     interp: int
+    quad_dict: QuadDict
     component_start_idx: list[int]
     closest_vert_idx: np.ndarray
     edge_orients: list[int]
@@ -242,16 +243,29 @@ class MeshCell:
         """Returns True if the cell is parameterized"""
         return all(c.is_parameterized() for c in self.components)
 
-    def parameterize(self, quad_dict: QuadDict) -> None:
+    def parameterize(
+        self, quad_dict: QuadDict, use_interp: bool = False
+    ) -> None:
         """Parameterize each Edge"""
         for c in self.components:
-            c.parameterize(quad_dict)
+            c.parameterize(quad_dict, use_interp)
         self.find_num_pts()
         self.find_interp()
         self.find_outer_boundary()
         self.find_component_start_idx()
         self.find_closest_vert_idx()
         self.generate_interior_points()
+        self.quad_dict = quad_dict
+
+    def reparameterize(self, use_interp: bool) -> None:
+        """
+        Overwrite parameterization, switch between interpolated versions.
+        """
+        for c in self.components:
+            c.parameterize(self.quad_dict, use_interp)
+        self.find_num_pts()
+        self.find_component_start_idx()
+        self.find_closest_vert_idx()
 
     def deparameterize(self) -> None:
         """Remove parameterization of each Edge"""
