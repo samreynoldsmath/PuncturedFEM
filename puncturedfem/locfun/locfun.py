@@ -373,6 +373,21 @@ class LocalFunction:
         P_nd = self.nyst.K.dot_with_normal(g1.eval(x1, x2), g2.eval(x1, x2))
         self.poly_part_wnd = self.nyst.K.multiply_by_dx_norm(P_nd)
 
+    # harmonic part ##########################################################
+    def get_harmonic_part_trace(self, interp: int = 1) -> ndarray:
+        """
+        Returns the Dirichlet trace of the harmonic part.
+        If interp > 1, then a subset of the sampled values are returned,
+        with indices [::interp], e.g. for interp=2, every other sampled value is
+        returned, starting from 0.
+        """
+        if not isinstance(interp, int):
+            raise TypeError("interp must be an integer >= 1")
+        if interp < 1:
+            raise ValueError("interp must be an integer >= 1")
+        phi_trace = self.trace - self.poly_part_trace
+        return phi_trace[::interp]
+
     # harmonic conjugate #####################################################
     def set_harmonic_conjugate(self, hc_vals: ndarray) -> None:
         """
@@ -393,7 +408,8 @@ class LocalFunction:
         Computes the Dirichlet trace values of the harmonic conjugate of the
         harmonic part and stores them in self.conj_trace.
         """
-        phi_trace = self.trace - self.poly_part_trace
+        interp = self.nyst.K.interp
+        phi_trace = self.get_harmonic_part_trace(interp)
         self.conj_trace, self.log_coef = self.nyst.get_harmonic_conjugate(
             phi_trace
         )
