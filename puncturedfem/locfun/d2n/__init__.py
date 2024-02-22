@@ -15,6 +15,11 @@ trace2tangential
     Obtain a tangential derivative from a trace.
 """
 
-from . import fft_deriv, log_terms, trace2tangential
+from . import fft_deriv, fft_interp, log_terms, trace2tangential
 
-__all__ = ["log_terms", "trace2tangential", "fft_deriv"]
+__all__ = [
+    "fft_deriv",
+    "fft_interp",
+    "log_terms",
+    "trace2tangential",
+]
