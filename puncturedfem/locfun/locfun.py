@@ -413,6 +413,9 @@ class LocalFunction:
         self.conj_trace, self.log_coef = self.nyst.get_harmonic_conjugate(
             phi_trace
         )
+        self.conj_trace = d2n.fft_interp.fft_interpolation(
+            self.conj_trace, interp
+        )
 
     # logarithmic coefficients ###############################################
     def set_logarithmic_coefficients(self, log_coef: ndarray) -> None:
