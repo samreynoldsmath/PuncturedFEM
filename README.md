@@ -64,6 +64,8 @@ See [requirements.txt](requirements.txt) for a complete list of dependencies.
 principal investigator
 - [Samuel E. Reynolds](https://sites.google.com/view/samreynolds) (1):
 lead developer
+- [Zack Kenyon](https://github.com/zackkenyon) (1):
+junior developer
 
 ### Affiliation
 (1) [Fariborz Maseeh Department of Mathematics and Statistics, Portland State University](https://www.pdx.edu/math/)
