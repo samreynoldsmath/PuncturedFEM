@@ -60,12 +60,12 @@ def get_interpolation_error(
 
     if SAVE_PLOT:
         plt.figure()
-        plt.subplot(2,1,1)
+        plt.subplot(2, 1, 1)
         plt.plot(ab.T, X_computed, "ro")
         plt.plot(ab.T, X, "k.")
-        plt.subplot(2,1,2)
+        plt.subplot(2, 1, 2)
         if np.linalg.norm(X_error) > 1e-12:
-            plt.semilogy(ab.T,X_error, "ro")
+            plt.semilogy(ab.T, X_error, "ro")
         else:
             plt.plot(ab.T, X_error, "ro")
         plt.savefig("tests/figs/" + fig_name)

@@ -28,7 +28,7 @@ def fft_interpolation(f: np.ndarray, interp: int) -> np.ndarray:
     omega = np.fft.fft(f)
     omega = np.fft.fftshift(omega)
     omega_interp = np.zeros((M,), dtype=complex)
-    omega_interp[(M -N)//2:(M-N)//2+N] = omega
+    omega_interp[(M - N) // 2 : (M - N) // 2 + N] = omega
     omega_interp = np.fft.ifftshift(omega_interp)
     F = np.real(np.fft.ifft(omega_interp)) * interp
 
