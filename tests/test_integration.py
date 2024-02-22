@@ -18,7 +18,7 @@ TOL = 1e-10
 
 
 def compute_boundary_length(
-    K: pf.MeshCell, quad_dict: dict[str, pf.Quad]
+    K: pf.MeshCell, quad_dict: pf.QuadDict
 ) -> float:
     """
     Compute the length of the boundary of a mesh cell by integrating 1 over the
