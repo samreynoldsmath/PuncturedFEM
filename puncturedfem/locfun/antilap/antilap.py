@@ -48,23 +48,23 @@ def _antilap_simply_connected(
     function on a simply connected domain.
     """
 
-    K = nyst.K
+    K_interp = nyst.K_interp
 
     # length of interval of integration in parameter space
-    interval_length = 2 * np.pi * K.num_edges
+    interval_length = 2 * np.pi * K_interp.num_edges
 
     # integrate tangential derivative of rho
-    rho_td = K.dot_with_tangent(phi, -phi_hat)
-    rho_wtd = K.multiply_by_dx_norm(rho_td)
+    rho_td = K_interp.dot_with_tangent(phi, -phi_hat)
+    rho_wtd = K_interp.multiply_by_dx_norm(rho_td)
     rho = fft_antiderivative(rho_wtd, interval_length)
 
     # integrate tangential derivative of rho_hat
-    rho_hat_td = K.dot_with_tangent(phi_hat, phi)
-    rho_hat_wtd = K.multiply_by_dx_norm(rho_hat_td)
+    rho_hat_td = K_interp.dot_with_tangent(phi_hat, phi)
+    rho_hat_wtd = K_interp.multiply_by_dx_norm(rho_hat_td)
     rho_hat = fft_antiderivative(rho_hat_wtd, interval_length)
 
     # coordinates of boundary points
-    x1, x2 = K.get_boundary_points()
+    x1, x2 = K_interp.get_boundary_points()
 
     # construct anti-Laplacian
     PHI = 0.25 * (x1 * rho + x2 * rho_hat)
@@ -74,8 +74,12 @@ def _antilap_simply_connected(
     PHI_x2 = 0.25 * (rho_hat + x2 * phi - x1 * phi_hat)
 
     # weighted normal derivative of anti-Laplacian
-    PHI_nd = K.dot_with_normal(PHI_x1, PHI_x2)
-    PHI_wnd = K.multiply_by_dx_norm(PHI_nd)
+    PHI_nd = K_interp.dot_with_normal(PHI_x1, PHI_x2)
+    PHI_wnd = K_interp.multiply_by_dx_norm(PHI_nd)
+
+    # trig interpolation
+    PHI = interpolate_on_boundary(PHI, nyst.K, nyst.K_interp)
+    PHI_wnd = interpolate_on_boundary(PHI_wnd, nyst.K, nyst.K_interp)
 
     return PHI, PHI_wnd
 
