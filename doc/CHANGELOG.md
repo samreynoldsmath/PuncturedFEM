@@ -5,13 +5,11 @@
 ### Documentation
 - [x] update README, extend description, add references
 ### Features
-- [ ] add saving and loading local stiffness/mass matrices to/from file
-- [ ] add trigonometric interpolation for cell boundary traces
+- [x] add trigonometric interpolation for cell boundary traces
 - [x] add option to turn off axes in plots
 - [x] add colormap option to contour plot methods
 ### Examples
 - [ ] add example of trigonometric interpolation
-- [ ] add example of loading matrices from file
 ### Maintenance
 - [x] make colorbar optional for `GlobalFunctionPlot` draw method
 - [x] make coefficients optional in `GlobalFunctionPlot` init method
@@ -19,8 +17,9 @@
 - [x] use kwargs for plotting options
 - [x] add `PiecewisePolynomial` class to init file
 - [x] create `QuadDict` object to standardize quadrature collections
+- [ ] modify Nystrom matrix near-diagonals
 ### Tests
-- [ ] add test for trigonometric interpolation
+- [x] add test for trigonometric interpolation
 ### Bug Fixes
 - [x] close figure in `draw` methods for plotting classes
 - [x] fix `show_plot=False` option not working in `draw` methods for plotting classes
