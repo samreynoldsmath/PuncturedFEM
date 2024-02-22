@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Finite Elements on a Pac-Man Mesh
+# # Example 2: Finite Elements on a Pac-Man Mesh
+# ### Sam Reynolds, 2023
+# 
 # This example demonstrates how to set up and solve a finite element problem on a
 # punctured mesh. 
 # The model problem under consideration is a simple diffusion-reaction problem

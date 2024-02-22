@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Example 1-D: Hat tile
+# # Example 1.D: Hat tile
+# ### Sam Reynolds, 2023
+# 
 # This example generates a basis of the local Poisson space $V_p(K)$ on a "hat tile" $K$.
 # The hat tile has been shown to nonperiodically tile the plane:
 # [D. Smith, J. S. Myers, C. S. Kaplan, and C. Goodman-Strauss. An aperiodic monotile, 2023.](https://arxiv.org/abs/2303.10798)

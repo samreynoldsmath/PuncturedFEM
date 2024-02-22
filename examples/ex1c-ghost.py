@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Example 1-C: Ghost
+# # Example 1.C: Ghost
+# ### Sam Reynolds, 2023
 # 
 # This example computes the $H^1$ and $L^2$ (semi-)inner products of two 
 # functions, $v,w$ with the property that they are the sum of a harmonic 

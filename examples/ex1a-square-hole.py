@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Example 1-A: Square with a Circular Hole
+# # Example 1.A: Square with a Circular Hole
+# ### Sam Reynolds, 2023
 # 
 # Given an open, bounded, connected region $K \subset \mathbb{R}^2$
 # with a sufficiently "nice" boundary, let $v,w : K \to \mathbb{R}$
