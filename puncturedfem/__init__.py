@@ -78,6 +78,7 @@ __all__ = [
     "meshlib",
     "PlanarMesh",
     "Quad",
+    "QuadDict",
     "get_quad_dict",
     "Vert",
     "mesh_builder",
