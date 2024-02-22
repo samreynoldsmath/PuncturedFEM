@@ -17,9 +17,7 @@ from .build_cell import build_circle, build_square, build_punctured_square
 TOL = 1e-10
 
 
-def compute_boundary_length(
-    K: pf.MeshCell, quad_dict: pf.QuadDict
-) -> float:
+def compute_boundary_length(K: pf.MeshCell, quad_dict: pf.QuadDict) -> float:
     """
     Compute the length of the boundary of a mesh cell by integrating 1 over the
     boundary.
