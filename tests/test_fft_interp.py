@@ -14,7 +14,7 @@ from puncturedfem.locfun.d2n.fft_interp import fft_interpolation
 
 TOL = 1e-6
 
-SAVE_PLOT = True
+SAVE_PLOT = False
 
 
 @dataclass
