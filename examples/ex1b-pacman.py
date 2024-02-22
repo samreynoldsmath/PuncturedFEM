@@ -22,10 +22,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # define quadrature schemes
-n = 64
-q_trap = pf.Quad(qtype="trap", n=n)
-q_kress = pf.Quad(qtype="kress", n=n)
-quad_dict = {"kress": q_kress, "trap": q_trap}
+quad_dict = pf.get_quad_dict(n=64)
 
 # define vertices
 verts = []
