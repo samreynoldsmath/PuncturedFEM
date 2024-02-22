@@ -413,8 +413,8 @@ class LocalFunction:
         self.conj_trace, self.log_coef = self.nyst.get_harmonic_conjugate(
             phi_trace
         )
-        self.conj_trace = d2n.fft_interp.fft_interpolation(
-            self.conj_trace, interp
+        self.conj_trace = d2n.fft_interp.interpolate_on_boundary(
+            self.conj_trace, self.nyst.K, self.nyst.K_interp
         )
 
     # logarithmic coefficients ###############################################
@@ -461,12 +461,16 @@ class LocalFunction:
         self.harm_part_wnd += lam_wnd @ self.log_coef
 
     # harmonic conjugable part psi ###########################################
-    def get_conjugable_part(self) -> ndarray:
+    def get_conjugable_part(self, interp: int) -> ndarray:
         """
         Returns the harmonic conjugable part psi.
         """
-        lam = d2n.log_terms.get_log_trace(self.nyst.K)
-        return self.trace - self.poly_part_trace - lam @ self.log_coef
+        if interp == 1:
+            lam = d2n.log_terms.get_log_trace(self.nyst.K)
+        elif interp > 1:
+            lam = d2n.log_terms.get_log_trace(self.nyst.K_interp)
+        phi = self.get_harmonic_part_trace(interp)
+        return phi - lam @ self.log_coef
 
     # anti-Laplacian #########################################################
     def set_anti_laplacian_harmonic_part(
@@ -490,12 +494,14 @@ class LocalFunction:
         Computes the Dirichlet trace values of an anti-Laplacian of the
         harmonic part and stores them in self.antilap_trace.
         """
-        psi = self.get_conjugable_part()
+        interp = self.nyst.interp
+        psi = self.get_conjugable_part(interp)
+        psi_hat = self.conj_trace[::interp]
         (
             self.antilap_trace,
             self.antilap_wnd,
         ) = antilap.antilap.get_anti_laplacian_harmonic(
-            self.nyst.K, psi=psi, psi_hat=self.conj_trace, a=self.log_coef
+            self.nyst, psi, psi_hat, a=self.log_coef
         )
 
     # H^1 semi-inner product #################################################
@@ -596,7 +602,7 @@ class LocalFunction:
         bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points()
 
         # conjugable part
-        psi = self.get_conjugable_part()
+        psi = self.get_conjugable_part(interp=1)
         psi_hat = self.get_harmonic_conjugate()
 
         # Polynomial gradient

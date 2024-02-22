@@ -144,7 +144,9 @@ class NystromSolver:
         """Obtain a harmonic conjugate of phi on K"""
 
         # weighted tangential derivative of phi
-        phi_wtd = get_weighted_tangential_derivative_from_trace(self.K, phi)
+        phi_wtd = get_weighted_tangential_derivative_from_trace(
+            self.K_interp, phi
+        )
 
         # simply/multiply connected cases handled separately
         if self.K_interp.num_holes == 0:  # simply connected
@@ -203,15 +205,17 @@ class NystromSolver:
         """
 
         # traces and gradients of logarithmic corrections
-        self.lam_trace = log_terms.get_log_trace(self.K)
-        self.lam_x1_trace, self.lam_x2_trace = log_terms.get_log_grad(self.K)
+        self.lam_trace = log_terms.get_log_trace(self.K_interp)
+        self.lam_x1_trace, self.lam_x2_trace = log_terms.get_log_grad(
+            self.K_interp
+        )
 
         # tangential and normal derivatives of logarithmic terms
         self.dlam_dt_wgt = log_terms.get_dlam_dt_wgt(
-            self.K, self.lam_x1_trace, self.lam_x2_trace
+            self.K_interp, self.lam_x1_trace, self.lam_x2_trace
         )
         self.dlam_dn_wgt = log_terms.get_dlam_dn_wgt(
-            self.K, self.lam_x1_trace, self.lam_x2_trace
+            self.K_interp, self.lam_x1_trace, self.lam_x2_trace
         )
 
         # single layer operator applied to tangential derivatives of log terms
