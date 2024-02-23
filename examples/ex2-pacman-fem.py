@@ -61,6 +61,7 @@ import puncturedfem as pf
 
 deg = 1
 n = 64
+interp = 4
 
 
 # ## Mesh construction
