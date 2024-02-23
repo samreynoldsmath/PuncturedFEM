@@ -10,15 +10,14 @@
 - [x] add colormap option to contour plot methods
 - [x] add global stiffness and mass matrices to `solver` class
 ### Examples
-- [ ] add example of trigonometric interpolation
+- [x] add example of trigonometric interpolation
 ### Maintenance
 - [x] make colorbar optional for `GlobalFunctionPlot` draw method
 - [x] make coefficients optional in `GlobalFunctionPlot` init method
-- [x] add warning for `Quad` class when `n > 128`
+- [x] add warning for `Quad` class when `n > 128 * interp`
 - [x] use kwargs for plotting options
 - [x] add `PiecewisePolynomial` class to init file
 - [x] create `QuadDict` object to standardize quadrature collections
-- [ ] modify Nystrom matrix near-diagonals
 ### Tests
 - [x] add test for trigonometric interpolation
 ### Bug Fixes

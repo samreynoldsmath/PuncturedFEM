@@ -72,6 +72,8 @@ def _check_interp(interp: int, n: int) -> None:
         raise ValueError(msg)
     if n // interp < 4:
         raise ValueError(msg)
+    if n // interp > 128:
+        warn("Quad: n > 128 * interp may cause numerical instability")
 
 
 class Quad:
@@ -138,8 +140,6 @@ class Quad:
             raise TypeError("Quad parameter n must be an integer")
         if n < 4:
             raise ValueError("Quad parameter n must be at least 4")
-        if n > 128:
-            warn("Quad parameter n > 128 is not recommended")
         self.n = n
 
     def trap(self) -> None:
