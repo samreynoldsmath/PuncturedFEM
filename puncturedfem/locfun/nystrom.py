@@ -427,14 +427,15 @@ class NystromSolver:
         else:
             j_start = 0
 
-        #
+        # compute entries
         for i in range(e.num_pts - 1):
             for j in range(j_start, f.num_pts - 1):
-                if same_edge and i == j:
-                    B_edge[i, i] = 0.5 * e.curvature[i]
+                xy = e.x[:, i] - f.x[:, j]
+                xy2 = np.dot(xy, xy)
+                if same_edge and xy2 < 1e-12:
+                    B_edge[i, j] = 0.5 * e.curvature[j]
+                # TODO: fix for case with xy2 < TOL near corners
                 else:
-                    xy = e.x[:, i] - f.x[:, j]
-                    xy2 = np.dot(xy, xy)
                     B_edge[i, j] = np.dot(xy, f.unit_normal[:, j]) / xy2
 
                 B_edge[i, j] *= f.dx_norm[j] * h
