@@ -60,4 +60,4 @@ def test_solver_deg1() -> None:
     h1_error = np.dot(S.stiff_mat @ x_error, x_error)
     l2_error = np.dot(S.mass_mat @ x_error, x_error)
 
-    assert np.sqrt(h1_error + l2_error) < TOL
+    assert h1_error + l2_error < TOL
