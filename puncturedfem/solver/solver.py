@@ -239,8 +239,8 @@ class Solver:
                     w = loc_basis[j]
 
                     # evaluate local bilinear form
-                    h1_ij = self.a.eval_h1(v,w)
-                    l2_ij = self.a.eval_l2(v,w)
+                    h1_ij = self.a.eval_h1(v, w)
+                    l2_ij = self.a.eval_l2(v, w)
                     a_ij = self.a.eval_with_h1_and_l2(h1_ij, l2_ij)
 
                     # add to matrices
