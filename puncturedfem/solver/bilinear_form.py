@@ -75,13 +75,34 @@ class BilinearForm:
         """
         self.rhs_poly = f_poly
 
+    # EVALUATION ##############################################################
+
+    def eval_h1(self, u: LocalFunction, v: LocalFunction) -> float:
+        """
+        Returns the H^1 semi-inner product of twoLocalFunction objects u and v.
+        """
+        return u.get_h1_semi_inner_prod(v)
+
+    def eval_l2(self, u: LocalFunction, v: LocalFunction) -> float:
+        """
+        Returns the L^2 inner product of twoLocalFunction objects u and v.
+        """
+        return u.get_l2_inner_prod(v)
+
+    def eval_with_h1_and_l2(self, h1: float, l2: float) -> float:
+        """
+        Returns the bilinear form a(u,v) given the h1 and l2 (semi-)inner
+        products of u and v.
+        """
+        return self.diffusion_constant * h1 + self.reaction_constant * l2
+
     def eval(self, u: LocalFunction, v: LocalFunction) -> float:
         """
         Evaluates the bilinear form on twoLocalFunction objects u and v.
         """
         h1 = u.get_h1_semi_inner_prod(v)
         l2 = u.get_l2_inner_prod(v)
-        return self.diffusion_constant * h1 + self.reaction_constant * l2
+        return self.eval_with_h1_and_l2(h1, l2)
 
     def eval_rhs(self, v: LocalFunction) -> float:
         """

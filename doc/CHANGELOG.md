@@ -8,6 +8,7 @@
 - [x] add trigonometric interpolation for cell boundary traces
 - [x] add option to turn off axes in plots
 - [x] add colormap option to contour plot methods
+- [x] add global stiffness and mass matrices to `solver` class
 ### Examples
 - [ ] add example of trigonometric interpolation
 ### Maintenance

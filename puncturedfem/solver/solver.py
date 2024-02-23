@@ -50,11 +50,15 @@ class Solver:
 
     V: GlobalFunctionSpace
     a: BilinearForm
+    stiff_mat: csr_matrix
+    mass_mat: csr_matrix
     glob_mat: csr_matrix
     glob_rhs: csr_matrix
     row_idx: list[int]
     col_idx: list[int]
     mat_vals: list[float]
+    stiff_vals: list[float]
+    mass_vals: list[float]
     rhs_idx: list[int]
     rhs_vals: list[float]
     num_funs: int
@@ -131,6 +135,8 @@ class Solver:
         )
         self.find_num_funs()
         self.build_matrix_and_rhs()
+        self.build_stiffness_matrix()
+        self.build_mass_matrix()
 
     def build_values_and_indexes(
         self,
@@ -175,6 +181,8 @@ class Solver:
         self.row_idx = []
         self.col_idx = []
         self.mat_vals = []
+        self.stiff_vals = []
+        self.mass_vals = []
 
         self.interior_values = [[] for _ in range(self.V.T.num_cells)]
 
@@ -231,18 +239,24 @@ class Solver:
                     w = loc_basis[j]
 
                     # evaluate local bilinear form
-                    a_ij = self.a.eval(v, w)
+                    h1_ij = self.a.eval_h1(v,w)
+                    l2_ij = self.a.eval_l2(v,w)
+                    a_ij = self.a.eval_with_h1_and_l2(h1_ij, l2_ij)
 
-                    # add to global stiffness matrix
+                    # add to matrices
                     self.row_idx.append(v.key.glob_idx)
                     self.col_idx.append(w.key.glob_idx)
                     self.mat_vals.append(a_ij)
+                    self.stiff_vals.append(h1_ij)
+                    self.mass_vals.append(l2_ij)
 
                     # symmetry
                     if j > i:
                         self.row_idx.append(w.key.glob_idx)
                         self.col_idx.append(v.key.glob_idx)
                         self.mat_vals.append(a_ij)
+                        self.stiff_vals.append(h1_ij)
+                        self.mass_vals.append(l2_ij)
 
         # TODO this is a hacky way to impose a zero Dirichlet BC
         for abs_cell_idx in range(self.V.T.num_cells):
@@ -297,6 +311,20 @@ class Solver:
         self.glob_rhs = csr_matrix(
             (self.rhs_vals, (self.rhs_idx, [0] * len(self.rhs_idx))),
             shape=(self.num_funs, 1),
+        )
+
+    def build_stiffness_matrix(self) -> None:
+        """Build stiffness matrix"""
+        self.stiff_mat = csr_matrix(
+            (self.stiff_vals, (self.row_idx, self.col_idx)),
+            shape=(self.num_funs, self.num_funs),
+        )
+
+    def build_mass_matrix(self) -> None:
+        """Build mass matrix"""
+        self.mass_mat = csr_matrix(
+            (self.mass_vals, (self.row_idx, self.col_idx)),
+            shape=(self.num_funs, self.num_funs),
         )
 
     # COMPUTE LINEAR COMBINATION #############################################
