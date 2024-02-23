@@ -5,8 +5,6 @@
   - Use boundary data to interpolate
 
 ## Mesh refinement
-- edge subdivision
-- reparameterization of new edges
 - cell subdivision
 - create two new cells by introducing an edge between vertices
 

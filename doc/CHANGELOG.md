@@ -5,10 +5,13 @@
 ### Documentation
 - [x] update README, extend description, add references
 ### Features
-- [x] add trigonometric interpolation for cell boundary traces
+- [x] add ability to define an edge parameterization using a cubic spline to interpolate points
+- [ ] edge subdivision
+- [ ] reparameterization of new edges
+- [x] add global stiffness and mass matrices to `solver` class
 - [x] add option to turn off axes in plots
 - [x] add colormap option to contour plot methods
-- [x] add global stiffness and mass matrices to `solver` class
+- [x] add trigonometric interpolation for cell boundary traces
 ### Examples
 - [x] add example of trigonometric interpolation
 ### Maintenance
