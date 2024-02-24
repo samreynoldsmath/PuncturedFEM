@@ -6,7 +6,8 @@ Module containing the Edge class, which represents an oriented Edge in the
 plane.
 """
 
-from typing import Any, Callable
+from os import path
+from typing import Any, Callable, Optional
 
 import numpy as np
 
@@ -18,6 +19,9 @@ from .mesh_exceptions import (
 )
 from .quad import QuadDict
 from .vert import Vert
+
+# tolerance for floating point comparisons
+TOL = 1e-12
 
 
 class Edge:
@@ -97,6 +101,9 @@ class Edge:
     unit_normal: np.ndarray
     dx_norm: np.ndarray
     curvature: np.ndarray
+    gamma: Any
+    t_bounds: tuple[float, float]
+    transform: list[tuple[str, tuple]]
 
     def __init__(
         self,
@@ -107,6 +114,8 @@ class Edge:
         curve_type: str = "line",
         quad_type: str = "kress",
         idx: Any = None,
+        t_bounds: tuple[float, float] = (0.0, 2 * np.pi),
+        transform: Optional[list] = None,
         **curve_opts: Any,
     ) -> None:
         """
@@ -133,7 +142,11 @@ class Edge:
         self.curve_type = curve_type
         self.quad_type = quad_type
         self.curve_opts = curve_opts
+        if transform is None:
+            transform = []
         self.set_idx(idx)
+        self.set_t_bounds(t_bounds)
+        self.set_transform(transform)
         self.set_verts(anchor, endpnt)
         self.set_cells(pos_cell_idx, neg_cell_idx)
         self.is_parameterized = False
@@ -178,6 +191,45 @@ class Edge:
 
     # PARAMETERIZATION #######################################################
 
+    def set_curve_type(self, curve_type: str) -> None:
+        """
+        Set the curve_type string.
+        """
+        if not isinstance(curve_type, str):
+            raise ValueError("curve type must be a str")
+        dirname = path.dirname(__file__)
+        filename = path.join(dirname, "edgelib/" + self.curve_type + ".py")
+        if not path.exists(filename):
+            raise FileExistsError(filename + "does not exist")
+        self.curve_type = curve_type
+
+    def set_t_bounds(self, t_bounds: tuple[float, float]) -> None:
+        """
+        Set the bounds on t, where x(t) parameterizes the curve.
+        """
+        msg = "t_bounds must be a pair of floats with t_bounds[0] < t_bounds[1]"
+        a, b = t_bounds
+        if not (isinstance(a, (float, int)) and isinstance(b, (float, int))):
+            raise ValueError(msg, t_bounds)
+        if a >= b:
+            raise ValueError(msg, t_bounds)
+        self.t_bounds = t_bounds
+
+    def set_transform(self, transform: list) -> None:
+        """
+        Sets the transformation dictionary.
+        """
+        self.transform = transform
+
+    def get_parameterization_module(self) -> Any:
+        """
+        Returns the module with the functions X, DX, DDX
+        """
+        return __import__(
+            f"puncturedfem.mesh.edgelib.{self.curve_type}",
+            fromlist=f"mesh.edgelib.{self.curve_type}",
+        )
+
     def parameterize(
         self, quad_dict: QuadDict, use_interp: bool = False
     ) -> None:
@@ -214,17 +266,18 @@ class Edge:
         # set interpolation parameter
         self.interp = quad_dict["interp"]
 
-        # retrieve function handles of parameterization and derivatives
-        gamma = __import__(
-            f"puncturedfem.mesh.edgelib.{self.curve_type}",
-            fromlist=f"mesh.edgelib.{self.curve_type}",
-        )
+        # rescale sampling interval
+        a, b = self.t_bounds
+        dt = 0.5 * (b - a) / np.pi
+        t = dt * q.t
+
+        gamma = self.get_parameterization_module()
 
         # points on the boundary
-        self.x = gamma.X(q.t, **self.curve_opts)
+        self.x = gamma.X(t, **self.curve_opts)
 
         # unweighted square norm of derivative
-        dx = gamma.DX(q.t, **self.curve_opts)
+        dx = dt * gamma.DX(t, **self.curve_opts)
         dx2 = dx[0, :] ** 2 + dx[1, :] ** 2
 
         # norm of derivative (with chain rule)
@@ -239,7 +292,7 @@ class Edge:
         self.unit_normal[1, :] = -self.unit_tangent[0, :]
 
         # signed curvature
-        ddx = gamma.DDX(q.t, **self.curve_opts)
+        ddx = dt**2 * gamma.DDX(t, **self.curve_opts)
         self.curvature = (
             ddx[0, :] * self.unit_normal[0, :]
             + ddx[1, :] * self.unit_normal[1, :]
@@ -279,27 +332,7 @@ class Edge:
             raise NotParameterizedError("getting bounding box")
         return get_bounding_box(x=self.x[0, :], y=self.x[1, :])
 
-    # TRANSFORMATIONS ########################################################
-
-    def reverse_orientation(self) -> None:
-        """
-        Reverse the orientation of this Edge using the reparameterization
-        x(2 pi - t). The chain rule flips the sign of some derivative-based
-        quantities.
-        """
-
-        # check if Edge is parameterized
-        if not self.is_parameterized:
-            raise NotParameterizedError("reversing orientation")
-
-        # vector quantities
-        self.x = np.fliplr(self.x)
-        self.unit_tangent = -np.fliplr(self.unit_tangent)
-        self.unit_normal = -np.fliplr(self.unit_normal)
-
-        # scalar quantities
-        self.dx_norm = np.flip(self.dx_norm)
-        self.curvature = -np.flip(self.curvature)
+    # TRANSFORMATION CONVENIENCE METHODS ######################################
 
     def join_points(self, a: Vert, b: Vert) -> None:
         """Join the points a to b with this Edge."""
@@ -307,9 +340,6 @@ class Edge:
         # check if Edge is parameterized
         if not self.is_parameterized:
             raise NotParameterizedError("joining points")
-
-        # tolerance for floating point comparisons
-        TOL = 1e-12
 
         # check that specified endpoints are distinct
         ab_norm = np.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
@@ -339,37 +369,8 @@ class Edge:
         # anchor at point a
         self.translate(a)
 
-        # set Vertices
+        # set vertices
         self.set_verts(a, b)
-
-    def translate(self, a: Vert) -> None:
-        """Translate by a vector a"""
-
-        # check if Edge is parameterized
-        if not self.is_parameterized:
-            raise NotParameterizedError("translating")
-
-        self.x[0, :] += a.x
-        self.x[1, :] += a.y
-
-    def dilate(self, alpha: float) -> None:
-        """Dilate by a scalar alpha"""
-
-        # check if Edge is parameterized
-        if not self.is_parameterized:
-            raise NotParameterizedError("dilating")
-
-        # tolerance for floating point comparisons
-        TOL = 1e-12
-
-        if np.abs(alpha) < TOL:
-            raise EdgeTransformationError(
-                "Dilation factor alpha must be nonzero"
-            )
-
-        self.x *= alpha
-        self.dx_norm *= np.abs(alpha)
-        self.curvature *= 1 / alpha
 
     def rotate(self, theta: float) -> None:
         """Rotate counterclockwise by theta (degrees)"""
@@ -405,6 +406,66 @@ class Edge:
         A = np.array([[-1, 0], [0, 1]])
         self.apply_orthogonal_transformation(A)
 
+    # TRANSFORMATION BASE METHODS #############################################
+
+    def reverse_orientation(self) -> None:
+        """
+        Reverse the orientation of this Edge using the reparameterization
+        x(2 pi - t). The chain rule flips the sign of some derivative-based
+        quantities.
+        """
+
+        # check if Edge is parameterized
+        if not self.is_parameterized:
+            raise NotParameterizedError("reversing orientation")
+
+        # vector quantities
+        self.x = np.fliplr(self.x)
+        self.unit_tangent = -np.fliplr(self.unit_tangent)
+        self.unit_normal = -np.fliplr(self.unit_normal)
+
+        # scalar quantities
+        self.dx_norm = np.flip(self.dx_norm)
+        self.curvature = -np.flip(self.curvature)
+
+        # record in transformation diary
+        self.transform.append((__name__, ()))
+
+    def translate(self, a: Vert) -> None:
+        """Translate by a vector a"""
+
+        # check if Edge is parameterized
+        if not self.is_parameterized:
+            raise NotParameterizedError("translating")
+
+        self.x[0, :] += a.x
+        self.x[1, :] += a.y
+
+        # set vertices
+        # self.set_verts(a + self.anchor, a + self.anchor)
+
+        # record in transformation diary
+        self.transform.append((__name__, (a,)))
+
+    def dilate(self, alpha: float) -> None:
+        """Dilate by a scalar alpha"""
+
+        # check if Edge is parameterized
+        if not self.is_parameterized:
+            raise NotParameterizedError("dilating")
+
+        if np.abs(alpha) < TOL:
+            raise EdgeTransformationError(
+                "Dilation factor alpha must be nonzero"
+            )
+
+        self.x *= alpha
+        self.dx_norm *= np.abs(alpha)
+        self.curvature *= 1 / alpha
+
+        # record in transformation diary
+        self.transform.append((__name__, (alpha,)))
+
     def apply_orthogonal_transformation(self, A: np.ndarray) -> None:
         """
         Transforms 2-dimensional space with the linear map
@@ -418,9 +479,6 @@ class Edge:
         # check if Edge is parameterized
         if not self.is_parameterized:
             raise NotParameterizedError("applying orthogonal transformation")
-
-        # tolerance for floating point comparisons
-        TOL = 1e-12
 
         # safety checks
         msg = "A must be a 2 by 2 orthogonal matrix"
@@ -442,6 +500,9 @@ class Edge:
         d = A[1, 1]
         if np.abs(b - c) < TOL and np.abs(a + d) < TOL:
             self.curvature *= -1
+
+        # record in transformation diary
+        self.transform.append((__name__, (A,)))
 
     # FUNCTION EVALUATION ####################################################
 
