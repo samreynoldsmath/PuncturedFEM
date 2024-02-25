@@ -7,6 +7,7 @@ meshes.
 """
 
 from typing import Any
+from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,7 +31,9 @@ class MeshPlot:
     keep_open: bool
     pad: float
 
-    def __init__(self, edges: list[Edge], n: int = 32) -> None:
+    def __init__(
+        self, edges: list[Edge], n: int = 32, reparameterize: bool = False
+    ) -> None:
         """
         Constructor for MeshPlot class.
 
@@ -40,9 +43,9 @@ class MeshPlot:
             The edges to be plotted
         """
         self.quad_dict = get_quad_dict(n)
-        self.set_edges(edges)
+        self.set_edges(deepcopy(edges))
         for e in self.edges:
-            if not e.is_parameterized:
+            if reparameterize or not e.is_parameterized:
                 e.parameterize(self.quad_dict)
 
     def _unpack_kwargs(self, kwargs: dict[str, Any]) -> None:
