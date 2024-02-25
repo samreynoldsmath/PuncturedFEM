@@ -78,11 +78,30 @@ e2 = pf.Edge(v1, v2, curve_type="circular_arc_deg", theta0=120)
 # 
 # To define a custom `curvetype`, see the appendix at the end of this notebook.
 
-# ## `Quad` objects
+# ## Visualizing Edges
+# We can plot the edges using the `MeshPlot` class:
+
+# In[ ]:
+
+
+pf.plot.MeshPlot([e1, e2]).draw()
+
+
+# We can visualize the orientation of each edge by setting the 
+# `show_orientation` keyword argument to `True`. 
+# We can also introduce grid lines by setting the `show_grid` keyword argument
+# to `True`.
+
+# In[ ]:
+
+
+pf.plot.MeshPlot([e1, e2]).draw(show_orientation=True, show_grid=True)
+
+
+# ## Custom parameterizations
 # To create the points $0=t_0 < t_1 < \cdots < t_{2n}=2\pi$ where $x(t)$ 
 # will be sampled, we will create a `QuadDict` object using the `get_quad_dict()` function.
 # The `QuadDict` object is a dictionary containing `Quad` objects, which are used to sample the curve parameterization.
-# It also contains an interpolation parameter, which will be discussed later.
 
 # In[ ]:
 
@@ -119,33 +138,50 @@ plt.grid("on")
 plt.show()
 
 
-# ## Parameterizing an `Edge` object
-# We are now prepared to parameterize our edges.
+# ## Splitting an Edge
+# 
+# We can use the `split_edge()` function to split an `Edge` into two separate `Edge`s.
 
 # In[ ]:
 
 
-e1.parameterize(quad_dict)
-e2.parameterize(quad_dict)
+anchor = pf.Vert(x=1, y=1)
+endpnt = pf.Vert(x=3, y=2)
+e3 = pf.Edge(
+    anchor=anchor, endpnt=endpnt, curve_type="sine_wave", amp=0.2, freq=7
+)
+pf.plot.MeshPlot(
+    [
+        e3,
+    ]
+).draw(show_orientation=True, show_grid=True)
 
 
-# We can plot the edges using the `MeshPlot` class:
+# We provide the `Edge` object we wish to split, and `t_split`, the value of $t$ where we wish to split the edge parameterized by $x(t)$.
+# Curves defined in `puncturedfem`'s edge library are by default defined from $0$ to $2\pi$.
+# The default value of `t_split` is $\pi$.
 
 # In[ ]:
 
 
-pf.plot.MeshPlot([e1, e2]).draw()
+e4, e5 = pf.split_edge(e3, t_split=np.pi / 2)
 
 
-# We can visualize the orientation of each edge by setting the 
-# `show_orientation` keyword argument to `True`. 
-# We can also introduce grid lines by setting the `show_grid` keyword argument
-# to `True`.
+# The new `Edge`s are not yet parameterized, so let's do that and plot them.
 
 # In[ ]:
 
 
-pf.plot.MeshPlot([e1, e2]).draw(show_orientation=True, show_grid=True)
+pf.plot.MeshPlot(
+    [
+        e4,
+    ]
+).draw(show_orientation=True, show_grid=True)
+pf.plot.MeshPlot(
+    [
+        e5,
+    ]
+).draw(show_orientation=True, show_grid=True)
 
 
 # ## Creating a mesh
@@ -393,11 +429,6 @@ T = pf.PlanarMesh(edges)
 # In[ ]:
 
 
-# parameterize all edges of the mesh
-for e in T.edges:
-    e.parameterize(quad_dict)
-
-# plot the skeleton
 pf.plot.MeshPlot(T.edges).draw(show_axis=False)
 
 
