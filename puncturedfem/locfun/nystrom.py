@@ -354,6 +354,10 @@ class NystromSolver:
                     xy2 = np.dot(xy, xy)
                     B_edge[i, j] = np.log(xy2) * h
 
+        # raise exception when non-numeric value encountered
+        if np.isnan(B_edge).any() or np.isinf(B_edge).any():
+            raise ZeroDivisionError("Nystrom system could not be constructed")
+
         return B_edge
 
     # DOUBLE LAYER OPERATOR ##################################################
@@ -437,7 +441,10 @@ class NystromSolver:
                 # TODO: fix for case with xy2 < TOL near corners
                 else:
                     B_edge[i, j] = np.dot(xy, f.unit_normal[:, j]) / xy2
-
                 B_edge[i, j] *= f.dx_norm[j] * h
+
+        # raise exception when non-numeric value encountered
+        if np.isnan(B_edge).any() or np.isinf(B_edge).any():
+            raise ZeroDivisionError("Nystrom system could not be constructed")
 
         return B_edge

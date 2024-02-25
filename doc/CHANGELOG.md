@@ -6,7 +6,7 @@
 - [x] update README, extend description, add references
 ### Features
 - [x] add ability to define an edge parameterization using a cubic spline to interpolate points (thanks, Zack!)
-- [x] edge subdivision
+- [x] add edge splitting
 - [x] add transformation diary to `Edge` class
 - [x] add global stiffness and mass matrices to `solver` class
 - [x] add option to turn off axes in plots
@@ -14,6 +14,7 @@
 - [x] add trigonometric interpolation for cell boundary traces
 ### Examples
 - [x] add space-filling curve example (thanks, Zack!)
+- [x] add `ex1e` to demonstrate heavy sampling of edges via edge splitting
 ### Maintenance
 - [x] make colorbar optional for `GlobalFunctionPlot` draw method
 - [x] make coefficients optional in `GlobalFunctionPlot` init method
@@ -29,6 +30,7 @@
 - [x] make directory to save plots if it doesn't exist
 - [x] fix `LocalFunctionPlot` saving blank files
 - [x] fix Martensen quadrature for large values of n
+- [x] raise exception when Nystrom solver encounters non-numeric values
 
 
 ## [2023 Oct 27] v0.3.8
