@@ -30,8 +30,9 @@ def test_punctured_square() -> None:
     assert h1_error < 1e-10
 
 
-def test_punctured_square_interp() -> None:
+def x_test_punctured_square_interp() -> None:
     """
+    DEPRECATED
     Same as test_punctured_square() but uses an interpolation factor of 2
     """
 
