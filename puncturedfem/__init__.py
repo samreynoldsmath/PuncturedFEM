@@ -61,6 +61,7 @@ from .mesh.edge import Edge
 from .mesh.meshlib.__builder__ import mesh_builder
 from .mesh.planar_mesh import PlanarMesh
 from .mesh.quad import Quad, QuadDict, get_quad_dict
+from .mesh.split_edge import split_edge
 from .mesh.vert import Vert
 from .solver.bilinear_form import BilinearForm
 from .solver.globfunsp import GlobalFunctionSpace
@@ -75,6 +76,7 @@ __all__ = [
     "NystromSolver",
     "MeshCell",
     "Edge",
+    "split_edge",
     "meshlib",
     "PlanarMesh",
     "Quad",

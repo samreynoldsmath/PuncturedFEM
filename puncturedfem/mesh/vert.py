@@ -68,6 +68,12 @@ class Vert:
         """
         return f"[vert{self.idx}]({self.x}, {self.y})"
 
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the vertex.
+        """
+        return self.__str__()
+
     def __eq__(self, other: object) -> bool:
         """
         Returns True if two Vertices have the same coordinates.

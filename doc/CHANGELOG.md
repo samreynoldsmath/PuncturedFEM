@@ -5,15 +5,15 @@
 ### Documentation
 - [x] update README, extend description, add references
 ### Features
-- [x] add ability to define an edge parameterization using a cubic spline to interpolate points
-- [ ] edge subdivision
-- [ ] reparameterization of new edges
+- [x] add ability to define an edge parameterization using a cubic spline to interpolate points (thanks, Zack!)
+- [x] edge subdivision
+- [x] add transformation diary to `Edge` class
 - [x] add global stiffness and mass matrices to `solver` class
 - [x] add option to turn off axes in plots
 - [x] add colormap option to contour plot methods
 - [x] add trigonometric interpolation for cell boundary traces
 ### Examples
-- [x] add example of trigonometric interpolation
+- [x] add space-filling curve example (thanks, Zack!)
 ### Maintenance
 - [x] make colorbar optional for `GlobalFunctionPlot` draw method
 - [x] make coefficients optional in `GlobalFunctionPlot` init method

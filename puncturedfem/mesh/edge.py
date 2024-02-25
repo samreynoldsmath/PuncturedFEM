@@ -7,7 +7,7 @@ plane.
 """
 
 from os import path
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import numpy as np
 
@@ -103,7 +103,7 @@ class Edge:
     curvature: np.ndarray
     gamma: Any
     t_bounds: tuple[float, float]
-    transform: list[tuple[str, tuple]]
+    diary: list[tuple[str, tuple]]
 
     def __init__(
         self,
@@ -115,7 +115,6 @@ class Edge:
         quad_type: str = "kress",
         idx: Any = None,
         t_bounds: tuple[float, float] = (0.0, 2 * np.pi),
-        transform: Optional[list] = None,
         **curve_opts: Any,
     ) -> None:
         """
@@ -142,11 +141,9 @@ class Edge:
         self.curve_type = curve_type
         self.quad_type = quad_type
         self.curve_opts = curve_opts
-        if transform is None:
-            transform = []
+        self.diary = []
         self.set_idx(idx)
         self.set_t_bounds(t_bounds)
-        self.set_transform(transform)
         self.set_verts(anchor, endpnt)
         self.set_cells(pos_cell_idx, neg_cell_idx)
         self.is_parameterized = False
@@ -155,7 +152,8 @@ class Edge:
     def __str__(self) -> str:
         """Return a string representation of the Edge"""
         msg = ""
-        msg += f"idx:         {self.idx}\n"
+        if hasattr(self, "idx"):
+            msg += f"idx:         {self.idx}\n"
         msg += f"curve_type: {self.curve_type}\n"
         msg += f"quad_type:  {self.quad_type}\n"
         msg += f"num_pts:    {self.num_pts}\n"
@@ -178,6 +176,10 @@ class Edge:
         self.anchor = anchor
         self.endpnt = endpnt
         self.is_loop = self.anchor == self.endpnt
+        if self.is_loop:
+            self.diary = [("translate", (anchor,))]
+        else:
+            self.diary = [("join_points", (anchor, endpnt))]
 
     def set_cells(self, pos_cell_idx: int, neg_cell_idx: int) -> None:
         """
@@ -215,11 +217,67 @@ class Edge:
             raise ValueError(msg, t_bounds)
         self.t_bounds = t_bounds
 
-    def set_transform(self, transform: list) -> None:
+    # def set_diary(self, diary: list) -> None:
+    #     """
+    #     Sets the transformation diary.
+    #     """
+    #     self.diary = diary
+
+    # def _make_diary_from_verts(self) -> None:
+    #     if self.is_loop:
+    #         self.set_diary([("translate", (self.anchor,))])
+    #     else:
+    #         self.set_diary(
+    #             self._get_diary_for_join_points(a=self.anchor, b=self.endpnt)
+    #         )
+
+    # def _get_diary_for_join_points(self, a: Vert, b: Vert) -> list:
+    #     # check that specified endpoints are distinct
+    #     ab_norm = (a - b).norm()
+    #     if ab_norm < TOL:
+    #         raise EdgeTransformationError("a and b must be distinct points")
+
+    #     # get start and end points of parameterization
+    #     gamma = self.get_parameterization_module()
+    #     t = np.array([self.t_bounds[0], self.t_bounds[1]])
+    #     X = gamma.X(t, **self.curve_opts)
+    #     x = X[:, 0]
+    #     y = X[:, 1]
+
+    #     # check that endpoints of edge are distinct
+    #     xy_norm = np.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
+    #     if xy_norm < TOL:
+    #         raise EdgeTransformationError("Edge must have distinct endpoints")
+
+    #     # initialize diary
+    #     diary: list[tuple[str, tuple]] = []
+
+    #     # anchor starting point to origin
+    #     back_shift = -1 * Vert(x=-x[0], y=-x[1])
+    #     diary.append(("translate", (back_shift,)))
+
+    #     # rotate
+    #     theta = -np.arctan2(y[1] - x[1], y[0] - x[0])
+    #     theta += np.arctan2(b.y - a.y, b.x - a.x)
+    #     theta *= 180 / np.pi
+    #     diary.append(("rotate", (theta,)))
+
+    #     # rescale
+    #     alpha = ab_norm / xy_norm
+    #     diary.append(("dilate", (alpha,)))
+
+    #     # anchor at point a
+    #     diary.append(("translate", (a,)))
+
+    #     return diary
+
+    def run_transform_diary(self) -> None:
         """
-        Sets the transformation dictionary.
+        Execute all the transformations in the diary.
         """
-        self.transform = transform
+        for method_name, args in self.diary:
+            method = getattr(self, method_name)
+            method(*args, write_diary=False)
 
     def get_parameterization_module(self) -> Any:
         """
@@ -269,8 +327,9 @@ class Edge:
         # rescale sampling interval
         a, b = self.t_bounds
         dt = 0.5 * (b - a) / np.pi
-        t = dt * q.t
+        t = dt * q.t + a
 
+        # load module with X, DX, DDX functions
         gamma = self.get_parameterization_module()
 
         # points on the boundary
@@ -301,11 +360,13 @@ class Edge:
         # toggle parameterization flag
         self.is_parameterized = True
 
-        # set endpoints
-        if self.is_loop:
-            self.translate(a=self.anchor)
-        else:
-            self.join_points(a=self.anchor, b=self.endpnt)
+        # apply transformations
+        self.run_transform_diary()
+
+        # if self.is_loop:
+        #     self.translate(self.anchor)
+        # else:
+        #     self.join_points(self.anchor, self.endpnt)
 
         # store parameterization type
         self.quad_type = q.type
@@ -334,139 +395,144 @@ class Edge:
 
     # TRANSFORMATION CONVENIENCE METHODS ######################################
 
-    def join_points(self, a: Vert, b: Vert) -> None:
+    def join_points(self, a: Vert, b: Vert, write_diary: bool = True) -> None:
         """Join the points a to b with this Edge."""
-
-        # check if Edge is parameterized
-        if not self.is_parameterized:
-            raise NotParameterizedError("joining points")
 
         # check that specified endpoints are distinct
         ab_norm = np.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
         if ab_norm < TOL:
             raise EdgeTransformationError("a and b must be distinct points")
 
-        # check that endpoints of Edge are distinct
-        x = self.x[:, 0]
-        y = self.x[:, self.num_pts - 1]
-        xy_norm = np.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
-        if xy_norm < TOL:
-            raise EdgeTransformationError("Edge must have distinct endpoints")
+        # record in transformation diary
+        if write_diary:
+            self.diary.append(("join_points", (a, b)))
 
-        # anchor starting point to origin
-        self.translate(Vert(x=-x[0], y=-x[1]))
+        # apply to sampled points
+        if self.is_parameterized:
+            # check that endpoints of sampled points are distinct
+            x = self.x[:, 0]
+            y = self.x[:, self.num_pts - 1]
+            xy_norm = np.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
+            if xy_norm < TOL:
+                raise EdgeTransformationError(
+                    "Edge must have distinct endpoints"
+                )
 
-        # rotate
-        theta = -np.arctan2(y[1] - x[1], y[0] - x[0])
-        theta += np.arctan2(b.y - a.y, b.x - a.x)
-        theta *= 180 / np.pi
-        self.rotate(theta)
+            # anchor starting point to origin
+            self.translate(Vert(x=-x[0], y=-x[1]), write_diary=False)
 
-        # rescale
-        alpha = ab_norm / xy_norm
-        self.dilate(alpha)
+            # rotate
+            theta = -np.arctan2(y[1] - x[1], y[0] - x[0])
+            theta += np.arctan2(b.y - a.y, b.x - a.x)
+            theta *= 180 / np.pi
+            self.rotate(theta, write_diary=False)
 
-        # anchor at point a
-        self.translate(a)
+            # rescale
+            alpha = ab_norm / xy_norm
+            self.dilate(alpha, write_diary=False)
 
-        # set vertices
-        self.set_verts(a, b)
+            # anchor at point a
+            self.translate(a, write_diary=False)
 
-    def rotate(self, theta: float) -> None:
+            # set vertices
+            self.set_verts(a, b)
+
+    def rotate(self, theta: float, write_diary: bool = True) -> None:
         """Rotate counterclockwise by theta (degrees)"""
 
-        # check if Edge is parameterized
-        if not self.is_parameterized:
-            raise NotParameterizedError("rotating")
+        # record in transformation diary
+        if write_diary:
+            self.diary.append(("rotate", (theta,)))
 
-        if theta % 360 == 0:
-            return
+        # apply to sampled points
+        if self.is_parameterized:
+            c = np.cos(theta * np.pi / 180)
+            s = np.sin(theta * np.pi / 180)
+            R = np.array([[c, -s], [s, c]])
+            self.apply_orthogonal_transformation(R, write_diary=False)
 
-        c = np.cos(theta * np.pi / 180)
-        s = np.sin(theta * np.pi / 180)
-        R = np.array([[c, -s], [s, c]])
-
-        self.apply_orthogonal_transformation(R)
-
-    def reflect_across_x_axis(self) -> None:
+    def reflect_across_x_axis(self, write_diary: bool = True) -> None:
         """Reflect across the horizontal axis"""
 
-        # check if Edge is parameterized
-        if not self.is_parameterized:
-            raise NotParameterizedError("reflecting across x axis")
+        # record in transformation diary
+        if write_diary:
+            self.diary.append(("reflect_across_x_axis", ()))
 
-        A = np.array([[1, 0], [0, -1]])
-        self.apply_orthogonal_transformation(A)
+        # apply to sampled points
+        if self.is_parameterized:
+            A = np.array([[1, 0], [0, -1]])
+            self.apply_orthogonal_transformation(A, write_diary=False)
 
-    def reflect_across_y_axis(self) -> None:
+    def reflect_across_y_axis(self, write_diary: bool = True) -> None:
         """Reflect across the vertical axis"""
-        if not self.is_parameterized:
-            raise NotParameterizedError("reflecting across y axis")
 
-        A = np.array([[-1, 0], [0, 1]])
-        self.apply_orthogonal_transformation(A)
+        # record in transformation diary
+        if write_diary:
+            self.diary.append(("reflect_across_y_axis", ()))
+
+        # apply to sampled points
+        if self.is_parameterized:
+            A = np.array([[-1, 0], [0, 1]])
+            self.apply_orthogonal_transformation(A, write_diary=False)
 
     # TRANSFORMATION BASE METHODS #############################################
 
-    def reverse_orientation(self) -> None:
+    def reverse_orientation(self, write_diary: bool = True) -> None:
         """
         Reverse the orientation of this Edge using the reparameterization
         x(2 pi - t). The chain rule flips the sign of some derivative-based
         quantities.
         """
 
-        # check if Edge is parameterized
-        if not self.is_parameterized:
-            raise NotParameterizedError("reversing orientation")
-
-        # vector quantities
-        self.x = np.fliplr(self.x)
-        self.unit_tangent = -np.fliplr(self.unit_tangent)
-        self.unit_normal = -np.fliplr(self.unit_normal)
-
-        # scalar quantities
-        self.dx_norm = np.flip(self.dx_norm)
-        self.curvature = -np.flip(self.curvature)
-
         # record in transformation diary
-        self.transform.append((__name__, ()))
+        if write_diary:
+            self.diary.append(("reverse_orientation", ()))
 
-    def translate(self, a: Vert) -> None:
+        # apply to sampled points
+        if self.is_parameterized:
+            # vector quantities
+            self.x = np.fliplr(self.x)
+            self.unit_tangent = -np.fliplr(self.unit_tangent)
+            self.unit_normal = -np.fliplr(self.unit_normal)
+
+            # scalar quantities
+            self.dx_norm = np.flip(self.dx_norm)
+            self.curvature = -np.flip(self.curvature)
+
+    def translate(self, a: Vert, write_diary: bool = True) -> None:
         """Translate by a vector a"""
 
-        # check if Edge is parameterized
-        if not self.is_parameterized:
-            raise NotParameterizedError("translating")
-
-        self.x[0, :] += a.x
-        self.x[1, :] += a.y
-
-        # set vertices
-        # self.set_verts(a + self.anchor, a + self.anchor)
-
         # record in transformation diary
-        self.transform.append((__name__, (a,)))
+        if write_diary:
+            self.diary.append(("translate", (a,)))
 
-    def dilate(self, alpha: float) -> None:
+        # apply to sampled points
+        if self.is_parameterized:
+            self.x[0, :] += a.x
+            self.x[1, :] += a.y
+
+    def dilate(self, alpha: float, write_diary: bool = True) -> None:
         """Dilate by a scalar alpha"""
 
-        # check if Edge is parameterized
-        if not self.is_parameterized:
-            raise NotParameterizedError("dilating")
-
+        # check that alpha is nonzero
         if np.abs(alpha) < TOL:
             raise EdgeTransformationError(
                 "Dilation factor alpha must be nonzero"
             )
 
-        self.x *= alpha
-        self.dx_norm *= np.abs(alpha)
-        self.curvature *= 1 / alpha
-
         # record in transformation diary
-        self.transform.append((__name__, (alpha,)))
+        if write_diary:
+            self.diary.append(("dilate", (alpha,)))
 
-    def apply_orthogonal_transformation(self, A: np.ndarray) -> None:
+        # apply to sampled points
+        if self.is_parameterized:
+            self.x *= alpha
+            self.dx_norm *= np.abs(alpha)
+            self.curvature *= 1 / alpha
+
+    def apply_orthogonal_transformation(
+        self, A: np.ndarray, write_diary: bool = True
+    ) -> None:
         """
         Transforms 2-dimensional space with the linear map
                 x mapsto A * x
@@ -476,10 +542,6 @@ class Edge:
         as well as the curvature are invariant under such a transformation.
         """
 
-        # check if Edge is parameterized
-        if not self.is_parameterized:
-            raise NotParameterizedError("applying orthogonal transformation")
-
         # safety checks
         msg = "A must be a 2 by 2 orthogonal matrix"
         if np.shape(A) != (2, 2):
@@ -487,22 +549,24 @@ class Edge:
         if np.linalg.norm(np.transpose(A) @ A - np.eye(2)) > TOL:
             raise EdgeTransformationError(msg)
 
-        # apply transformation to vector quantities
-        self.x = A @ self.x
-        self.unit_tangent = A @ self.unit_tangent
-        self.unit_normal[0, :] = self.unit_tangent[1, :]
-        self.unit_normal[1, :] = -self.unit_tangent[0, :]
-
-        # determine if the sign of curvature has flipped
-        a = A[0, 0]
-        b = A[0, 1]
-        c = A[1, 0]
-        d = A[1, 1]
-        if np.abs(b - c) < TOL and np.abs(a + d) < TOL:
-            self.curvature *= -1
-
         # record in transformation diary
-        self.transform.append((__name__, (A,)))
+        if write_diary:
+            self.diary.append(("apply_orthogonal_transformation", (A,)))
+
+        # apply to sampled points
+        if self.is_parameterized:
+            self.x = A @ self.x
+            self.unit_tangent = A @ self.unit_tangent
+            self.unit_normal[0, :] = self.unit_tangent[1, :]
+            self.unit_normal[1, :] = -self.unit_tangent[0, :]
+
+            # determine if the sign of curvature has flipped
+            a = A[0, 0]
+            b = A[0, 1]
+            c = A[1, 0]
+            d = A[1, 1]
+            if np.abs(b - c) < TOL and np.abs(a + d) < TOL:
+                self.curvature *= -1
 
     # FUNCTION EVALUATION ####################################################
 
