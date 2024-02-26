@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Example 1-D: Hat tile
+# # Example 1.D: Hat tile
+# ### Sam Reynolds, 2023
+# 
 # This example generates a basis of the local Poisson space $V_p(K)$ on a "hat tile" $K$.
 # The hat tile has been shown to nonperiodically tile the plane:
 # [D. Smith, J. S. Myers, C. S. Kaplan, and C. Goodman-Strauss. An aperiodic monotile, 2023.](https://arxiv.org/abs/2303.10798)
@@ -140,9 +142,9 @@ K = pf.MeshCell(idx=0, edges=edges)
 # In[ ]:
 
 
-quad_dict = pf.get_quad_dict(n=16)
+quad_dict = pf.get_quad_dict(n=128)
 K.parameterize(quad_dict)
-pf.plot.MeshPlot(K.get_edges()).draw()
+pf.plot.MeshPlot(K.get_edges()).draw(show_grid=True)
 
 
 # ## Build local Poisson space
@@ -203,6 +205,12 @@ print(f"dim(V_{V.deg}(K)) = {V.num_funs}")
 # In[ ]:
 
 
-for v in V.edge_funs:
-    pf.plot.LocalFunctionPlot(v).draw_vals(title=f"{v.key.fun_type}")
+for i, v in enumerate(V.get_basis()):
+    pf.plot.LocalFunctionPlot(v).draw(
+        filename=f"out/monotile_deg{V.deg}_{v.key.fun_type}_{i}.pdf",
+        show_plot=True,
+        fill=False,
+        show_colorbar=False,
+        show_axis=False,
+    )
 

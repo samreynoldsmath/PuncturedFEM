@@ -49,11 +49,15 @@ def test_solver_deg1() -> None:
     Test the solver class.
     """
 
-    # TODO: test assemble and solve methods separately
-
     S = build_solver()
     S.assemble(verbose=False, compute_interior_values=False)
     S.solve()
 
-    x = np.loadtxt("tests/data/glob_soln_n16.txt")
-    assert np.linalg.norm(S.soln - x) < TOL
+    x_computed = S.soln
+    x_exact = np.loadtxt("tests/data/glob_soln_n16.txt")
+    x_error = x_exact - x_computed
+
+    h1_error = np.dot(S.stiff_mat @ x_error, x_error)
+    l2_error = np.dot(S.mass_mat @ x_error, x_error)
+
+    assert h1_error + l2_error < TOL

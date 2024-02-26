@@ -1,6 +1,38 @@
 # Punctured FEM: Change Log
 
 
+## [2024 Feb 25] v0.4.0
+### Documentation
+- [x] update README, extend description, add references
+### Features
+- [x] add ability to define an edge parameterization using a cubic spline to interpolate points (thanks, Zack!)
+- [x] add edge splitting
+- [x] add transformation diary to `Edge` class
+- [x] add global stiffness and mass matrices to `solver` class
+- [x] add option to turn off axes in plots
+- [x] add colormap option to contour plot methods
+- [x] add trigonometric interpolation for cell boundary traces
+### Examples
+- [x] add space-filling curve example (thanks, Zack!)
+- [x] add `ex1e` to demonstrate heavy sampling of edges via edge splitting
+### Maintenance
+- [x] make colorbar optional for `GlobalFunctionPlot` draw method
+- [x] make coefficients optional in `GlobalFunctionPlot` init method
+- [x] add warning for `Quad` class when `n > 128 * interp`
+- [x] use kwargs for plotting options
+- [x] add `PiecewisePolynomial` class to init file
+- [x] create `QuadDict` object to standardize quadrature collections
+### Tests
+- [x] add test for trigonometric interpolation
+### Bug Fixes
+- [x] close figure in `draw` methods for plotting classes
+- [x] fix `show_plot=False` option not working in `draw` methods for plotting classes
+- [x] make directory to save plots if it doesn't exist
+- [x] fix `LocalFunctionPlot` saving blank files
+- [x] fix Martensen quadrature for large values of n
+- [x] raise exception when Nystrom solver encounters non-numeric values
+
+
 ## [2023 Oct 27] v0.3.8
 ### Features
 - [x] add `TracePlot` class

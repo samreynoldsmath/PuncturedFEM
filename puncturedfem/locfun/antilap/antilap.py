@@ -13,15 +13,15 @@ _antilap_multiply_connected(K, psi, psi_hat, a)
 
 import numpy as np
 
-from ...mesh.cell import MeshCell
 from ..d2n.fft_deriv import fft_antiderivative
+from ..d2n.fft_interp import interpolate_on_boundary
 from ..d2n.log_terms import get_log_grad
 from ..nystrom import NystromSolver
 from . import log_antilap
 
 
 def get_anti_laplacian_harmonic(
-    K: MeshCell, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
+    nyst: NystromSolver, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns the trace and weighted normal derivative of an anti-Laplacian of a
@@ -32,37 +32,39 @@ def get_anti_laplacian_harmonic(
     (When K is simply connected, phi = psi and a is an empty list)
     """
 
-    if K.num_holes == 0:
-        PHI, PHI_wnd = _antilap_simply_connected(K, psi, psi_hat)
+    if nyst.K.num_holes == 0:
+        PHI, PHI_wnd = _antilap_simply_connected(nyst, psi, psi_hat)
     else:
-        PHI, PHI_wnd = _antilap_multiply_connected(K, psi, psi_hat, a)
+        PHI, PHI_wnd = _antilap_multiply_connected(nyst, psi, psi_hat, a)
 
     return PHI, PHI_wnd
 
 
 def _antilap_simply_connected(
-    K: MeshCell, phi: np.ndarray, phi_hat: np.ndarray
+    nyst: NystromSolver, phi: np.ndarray, phi_hat: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns anti-Laplacian and its weighted normal derivative of a harmonic
     function on a simply connected domain.
     """
 
+    K_interp = nyst.K_interp
+
     # length of interval of integration in parameter space
-    interval_length = 2 * np.pi * K.num_edges
+    interval_length = 2 * np.pi * K_interp.num_edges
 
     # integrate tangential derivative of rho
-    rho_td = K.dot_with_tangent(phi, -phi_hat)
-    rho_wtd = K.multiply_by_dx_norm(rho_td)
+    rho_td = K_interp.dot_with_tangent(phi, -phi_hat)
+    rho_wtd = K_interp.multiply_by_dx_norm(rho_td)
     rho = fft_antiderivative(rho_wtd, interval_length)
 
     # integrate tangential derivative of rho_hat
-    rho_hat_td = K.dot_with_tangent(phi_hat, phi)
-    rho_hat_wtd = K.multiply_by_dx_norm(rho_hat_td)
+    rho_hat_td = K_interp.dot_with_tangent(phi_hat, phi)
+    rho_hat_wtd = K_interp.multiply_by_dx_norm(rho_hat_td)
     rho_hat = fft_antiderivative(rho_hat_wtd, interval_length)
 
     # coordinates of boundary points
-    x1, x2 = K.get_boundary_points()
+    x1, x2 = K_interp.get_boundary_points()
 
     # construct anti-Laplacian
     PHI = 0.25 * (x1 * rho + x2 * rho_hat)
@@ -72,39 +74,47 @@ def _antilap_simply_connected(
     PHI_x2 = 0.25 * (rho_hat + x2 * phi - x1 * phi_hat)
 
     # weighted normal derivative of anti-Laplacian
-    PHI_nd = K.dot_with_normal(PHI_x1, PHI_x2)
-    PHI_wnd = K.multiply_by_dx_norm(PHI_nd)
+    PHI_nd = K_interp.dot_with_normal(PHI_x1, PHI_x2)
+    PHI_wnd = K_interp.multiply_by_dx_norm(PHI_nd)
+
+    # trig interpolation
+    PHI = interpolate_on_boundary(PHI, nyst.K, nyst.K_interp)
+    PHI_wnd = interpolate_on_boundary(PHI_wnd, nyst.K, nyst.K_interp)
 
     return PHI, PHI_wnd
 
 
 def _antilap_multiply_connected(
-    K: MeshCell, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
+    nyst: NystromSolver, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns anti-Laplacian and its weighted normal derivative of a harmonic
     function on a multiply connected domain.
     """
 
+    K_interp = nyst.K_interp
+
     # compute F * t and \hat F * t
-    F_t = K.dot_with_tangent(psi, -psi_hat)
-    F_hat_t = K.dot_with_tangent(psi_hat, psi)
+    F_t = K_interp.dot_with_tangent(psi, -psi_hat)
+    F_hat_t = K_interp.dot_with_tangent(psi_hat, psi)
 
     # compute b_j and c_j
-    b = np.zeros((K.num_holes,))
-    c = np.zeros((K.num_holes,))
-    for j in range(K.num_holes):
-        k = K.component_start_idx[j + 1]
-        kp1 = K.component_start_idx[j + 2]
+    b = np.zeros((K_interp.num_holes,))
+    c = np.zeros((K_interp.num_holes,))
+    for j in range(K_interp.num_holes):
+        k = K_interp.component_start_idx[j + 1]
+        kp1 = K_interp.component_start_idx[j + 2]
         F_hat_t_j = F_hat_t[k:kp1]
         F_t_j = F_t[k:kp1]
-        b[j] = K.components[j + 1].integrate_over_closed_contour(F_hat_t_j)
-        c[j] = K.components[j + 1].integrate_over_closed_contour(F_t_j)
+        b[j] = K_interp.components[j + 1].integrate_over_closed_contour(
+            F_hat_t_j
+        )
+        c[j] = K_interp.components[j + 1].integrate_over_closed_contour(F_t_j)
     b /= -2 * np.pi
     c /= 2 * np.pi
 
     # compute mu_j and hat_mu_j
-    mu, mu_hat = get_log_grad(K)
+    mu, mu_hat = get_log_grad(K_interp)
     mu_hat *= -1
 
     # compute psi_0 and hat_psi_0
@@ -112,31 +122,27 @@ def _antilap_multiply_connected(
     psi_hat_0 = psi_hat - (mu @ c + mu_hat @ b)
 
     # compute weighted normal derivatives of rho and rho_hat
-    rho_nd_0 = K.dot_with_normal(psi_0, -psi_hat_0)
-    rho_wnd_0 = K.multiply_by_dx_norm(rho_nd_0)
-    rho_hat_nd_0 = K.dot_with_normal(psi_hat_0, psi_0)
-    rho_hat_wnd_0 = K.multiply_by_dx_norm(rho_hat_nd_0)
-
-    # TODO initialize Solver inLocalFunctionSpace and pass it to antilap
-    Solver = NystromSolver(K)
+    rho_nd_0 = K_interp.dot_with_normal(psi_0, -psi_hat_0)
+    rho_wnd_0 = K_interp.multiply_by_dx_norm(rho_nd_0)
+    rho_hat_nd_0 = K_interp.dot_with_normal(psi_hat_0, psi_0)
+    rho_hat_wnd_0 = K_interp.multiply_by_dx_norm(rho_hat_nd_0)
 
     # solve for rho_0 and rho_hat_0
-    rho_0 = Solver.solve_neumann_zero_average(rho_wnd_0)
-    rho_hat_0 = Solver.solve_neumann_zero_average(rho_hat_wnd_0)
+    rho_0 = nyst.solve_neumann_zero_average(rho_wnd_0)
+    rho_hat_0 = nyst.solve_neumann_zero_average(rho_hat_wnd_0)
 
     # compute anti-Laplacian of psi_0
-    x1, x2 = K.get_boundary_points()
+    x1, x2 = K_interp.get_boundary_points()
 
     PHI = 0.25 * (x1 * rho_0 + x2 * rho_hat_0)
     PHI_x1 = 0.25 * (rho_0 + x1 * psi_0 + x2 * psi_hat_0)
     PHI_x2 = 0.25 * (rho_hat_0 + x2 * psi_0 - x1 * psi_hat_0)
-    PHI_nd = K.dot_with_normal(PHI_x1, PHI_x2)
-    PHI_wnd = K.multiply_by_dx_norm(PHI_nd)
+    PHI_nd = K_interp.dot_with_normal(PHI_x1, PHI_x2)
+    PHI_wnd = K_interp.multiply_by_dx_norm(PHI_nd)
 
     # compute M = sum_j M_j
-    for j in range(K.num_holes):
-        # xi = K.hole_int_pts[:, j]
-        xi = K.components[j + 1].interior_point
+    for j in range(K_interp.num_holes):
+        xi = K_interp.components[j + 1].interior_point
         x_xi_1 = np.array(x1 - xi.x)
         x_xi_2 = np.array(x2 - xi.y)
         x_xi_norm_sq = x_xi_1**2 + x_xi_2**2
@@ -150,11 +156,17 @@ def _antilap_multiply_connected(
             0.5 * (b[j] * mu[:, j] - c[j] * mu_hat[:, j]) * x_xi_2
             + 0.5 * c[j] * log_x_xi_norm
         )
-        M_nd = K.dot_with_normal(M_x1, M_x2)
-        PHI_wnd += K.multiply_by_dx_norm(M_nd)
+        M_nd = K_interp.dot_with_normal(M_x1, M_x2)
+        PHI_wnd += K_interp.multiply_by_dx_norm(M_nd)
 
     # compute Lambda_j
-    PHI += log_antilap.get_log_antilap(K) @ a
-    PHI_wnd += log_antilap.get_log_antilap_weighted_normal_derivative(K) @ a
+    PHI += log_antilap.get_log_antilap(K_interp) @ a
+    PHI_wnd += (
+        log_antilap.get_log_antilap_weighted_normal_derivative(K_interp) @ a
+    )
+
+    # trig interpolation
+    PHI = interpolate_on_boundary(PHI, nyst.K, nyst.K_interp)
+    PHI_wnd = interpolate_on_boundary(PHI_wnd, nyst.K, nyst.K_interp)
 
     return PHI, PHI_wnd

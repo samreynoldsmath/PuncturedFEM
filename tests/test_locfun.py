@@ -11,8 +11,6 @@ import puncturedfem as pf
 
 from .build_cell import build_punctured_square
 
-TOL = 1e-10
-
 
 def test_punctured_square() -> None:
     """
@@ -25,6 +23,37 @@ def test_punctured_square() -> None:
 
     # parameterize edges
     quad_dict = pf.get_quad_dict(n=64)
+
+    l2_error, h1_error = get_l2_and_h1_errors(K, quad_dict, cell_data)
+
+    assert l2_error < 1e-10
+    assert h1_error < 1e-10
+
+
+def x_test_punctured_square_interp() -> None:
+    """
+    DEPRECATED
+    Same as test_punctured_square() but uses an interpolation factor of 2
+    """
+
+    # set up mesh cell
+    K, cell_data = build_punctured_square()
+
+    # parameterize edges
+    quad_dict = pf.get_quad_dict(n=64, interp=2)
+
+    l2_error, h1_error = get_l2_and_h1_errors(K, quad_dict, cell_data)
+
+    assert l2_error < 1e-8
+    assert h1_error < 1e-8
+
+
+def get_l2_and_h1_errors(
+    K: pf.MeshCell, quad_dict: pf.QuadDict, cell_data: dict
+) -> tuple[float, float]:
+    """
+    Gets the L^2 and H^1 errors for the punctured square
+    """
     K.parameterize(quad_dict)
 
     # set up solver
@@ -84,5 +113,4 @@ def test_punctured_square() -> None:
     h1_vw_computed = v.get_h1_semi_inner_prod(w)
     h1_error = abs(h1_vw_computed - h1_vw_exact)
 
-    assert l2_error < TOL
-    assert h1_error < TOL
+    return l2_error, h1_error

@@ -18,6 +18,7 @@ from .mesh_exceptions import (
     NotParameterizedError,
     SizeMismatchError,
 )
+from .quad import QuadDict
 from .vert import Vert
 
 
@@ -32,6 +33,7 @@ class ClosedContour:
     edge_orient: list[int]
     interior_point: Vert
     num_pts: int
+    interp: int
     vert_idx: list[int]
     local_vert_idx: list[int]
     closest_vert_idx: np.ndarray
@@ -101,14 +103,17 @@ class ClosedContour:
         """Returns true if all edges are parameterized"""
         return all(e.is_parameterized for e in self.edges)
 
-    def parameterize(self, quad_dict: dict) -> None:
+    def parameterize(
+        self, quad_dict: QuadDict, use_interp: bool = False
+    ) -> None:
         """Parameterize each Edge"""
         # TODO: eliminate redundant calls to parameterize
         for i in range(self.num_edges):
-            self.edges[i].parameterize(quad_dict)
+            self.edges[i].parameterize(quad_dict, use_interp)
             if self.edge_orients[i] == -1:
                 self.edges[i].reverse_orientation()
         self.find_num_pts()
+        self.find_interp()
         self.find_local_vert_idx()
         self.find_closest_local_vertex_index()
         self.find_interior_point()
@@ -127,6 +132,15 @@ class ClosedContour:
         self.num_pts = 0
         for e in self.edges:
             self.num_pts += e.num_pts - 1
+
+    def find_interp(self) -> None:
+        """Record the interpolation parameter (same for all edges)"""
+        self.interp = self.edges[0].interp
+        for e in self.edges:
+            if e.interp != self.interp:
+                raise ValueError(
+                    "All edges must have the same interpolation parameter"
+                )
 
     def find_local_vert_idx(self) -> None:
         """Get the index of the starting point of each Edge"""

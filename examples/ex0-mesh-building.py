@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Mesh Construction
+# # Example 0: Mesh Construction
+# ### Sam Reynolds, 2023
 # 
 # This tutorial introduces the construction and manipulation of curvilinear 
 # meshes.
@@ -19,7 +20,7 @@
 # We begin by importing the `puncturedfem` package, 
 # as well as `numpy` and `matplotlib` for the sake of this example.
 
-# In[31]:
+# In[ ]:
 
 
 import sys
@@ -36,9 +37,9 @@ import matplotlib.pyplot as plt
 
 # ## Creating an edge
 # The simplest type of edge is a straight line segment, which is the default
-# when initializing an `edge` object.
+# when initializing an `Edge` object.
 
-# In[32]:
+# In[ ]:
 
 
 # define vertices
@@ -58,7 +59,7 @@ e1 = pf.Edge(v1, v2)
 # For instance, we can create a circular arc corresponding to a $120^\circ$ angle
 # as follows:
 
-# In[33]:
+# In[ ]:
 
 
 # create a circular arc
@@ -77,50 +78,10 @@ e2 = pf.Edge(v1, v2, curve_type="circular_arc_deg", theta0=120)
 # 
 # To define a custom `curvetype`, see the appendix at the end of this notebook.
 
-# ## Parameterizing an edge with `quad` objects
-# To create the points $0=t_0 < t_1 < \cdots < t_{2n}=2\pi$ where $x(t)$ 
-# will be sampled, we will declare a quadrature scheme with a `quad` object.
-# For now, we will use the trapezoid rule, which uses the equispacing 
-# $t_k = hk$, where $h=\pi / n$ for a chosen natural number $n$.
-
-# In[34]:
-
-
-n = 32
-q_trap = pf.Quad(qtype="trap", n=n)
-q_kress = pf.Quad(qtype="kress", n=n)
-quad_dict = {"kress": q_kress, "trap": q_trap}
-
-
-# The points for the trapezoidal (`'trap'`) quadrature scheme are,
-# of course, sampled at equidistance nodes. The Kress (`'kress'`) 
-# quadrature should be used to parameterized edges that terminate at a corner.
-# Since this is the most common case, it is the default method to parameterize 
-# an edge.
-# We can see that the Kress scheme samples points more heavily near the endpoints: 
-
-# In[35]:
-
-
-plt.figure()
-plt.plot(q_kress.t, "k.")
-plt.title("Kress quadrature points")
-plt.grid("on")
-plt.show()
-
-
-# We are now prepared to parameterize our edges.
-
-# In[36]:
-
-
-e1.parameterize(quad_dict)
-e2.parameterize(quad_dict)
-
-
+# ## Visualizing Edges
 # We can plot the edges using the `MeshPlot` class:
 
-# In[37]:
+# In[ ]:
 
 
 pf.plot.MeshPlot([e1, e2]).draw()
@@ -131,17 +92,103 @@ pf.plot.MeshPlot([e1, e2]).draw()
 # We can also introduce grid lines by setting the `show_grid` keyword argument
 # to `True`.
 
-# In[38]:
+# In[ ]:
 
 
-pf.plot.MeshPlot([e1, e2], show_orientation=True, show_grid=True).draw()
+pf.plot.MeshPlot([e1, e2]).draw(show_orientation=True, show_grid=True)
+
+
+# ## Custom parameterizations
+# To create the points $0=t_0 < t_1 < \cdots < t_{2n}=2\pi$ where $x(t)$ 
+# will be sampled, we will create a `QuadDict` object using the `get_quad_dict()` function.
+# The `QuadDict` object is a dictionary containing `Quad` objects, which are used to sample the curve parameterization.
+
+# In[ ]:
+
+
+quad_dict = pf.get_quad_dict(n=32)
+print(quad_dict)
+
+
+# The points for the trapezoidal (`"trap"`) quadrature scheme are,
+# of course, sampled at equidistant nodes 
+# $t_k = hk$, where $h=\pi / n$ for a chosen natural number $n$.
+
+# In[ ]:
+
+
+plt.figure()
+plt.plot(quad_dict["trap"].t, "k.")
+plt.title("Trapezoid quadrature points")
+plt.grid("on")
+plt.show()
+
+
+# The Kress (`"kress"`) quadrature should always be used to parameterized edges that terminate at a corner.
+# Since this is the most common case in practice, it is the default method to parameterize an edge.
+# We can see that the Kress scheme samples points more heavily near the endpoints: 
+
+# In[ ]:
+
+
+plt.figure()
+plt.plot(quad_dict["kress"].t, "k.")
+plt.title("Kress quadrature points")
+plt.grid("on")
+plt.show()
+
+
+# ## Splitting an Edge
+# 
+# We can use the `split_edge()` function to split an `Edge` into two separate `Edge`s.
+
+# In[ ]:
+
+
+anchor = pf.Vert(x=1, y=1)
+endpnt = pf.Vert(x=3, y=2)
+e3 = pf.Edge(
+    anchor=anchor, endpnt=endpnt, curve_type="sine_wave", amp=0.2, freq=7
+)
+pf.plot.MeshPlot(
+    [
+        e3,
+    ]
+).draw(show_orientation=True, show_grid=True)
+
+
+# We provide the `Edge` object we wish to split, and `t_split`, the value of $t$ where we wish to split the edge parameterized by $x(t)$.
+# Curves defined in `puncturedfem`'s edge library are by default defined from $0$ to $2\pi$.
+# The default value of `t_split` is $\pi$.
+
+# In[ ]:
+
+
+e4, e5 = pf.split_edge(e3, t_split=np.pi / 2)
+
+
+# The new `Edge`s are not yet parameterized, so let's do that and plot them.
+
+# In[ ]:
+
+
+pf.plot.MeshPlot(
+    [
+        e4,
+    ]
+).draw(show_orientation=True, show_grid=True)
+pf.plot.MeshPlot(
+    [
+        e5,
+    ]
+).draw(show_orientation=True, show_grid=True)
 
 
 # ## Creating a mesh
 # 
 # First we begin by defining the vertices of the mesh.
 
-# In[39]:
+# In[ ]:
 
 
 verts: list[pf.Vert] = []
@@ -218,7 +265,7 @@ verts.append(
 
 # We need to label our vertices:
 
-# In[40]:
+# In[ ]:
 
 
 # TODO: future versions should do this automatically.
@@ -228,7 +275,7 @@ for k in range(len(verts)):
 
 # Let's visualized these points:
 
-# In[41]:
+# In[ ]:
 
 
 plt.figure()
@@ -246,7 +293,7 @@ plt.show()
 # no such cell, `pos_cell_idx = -1` is taken as the default argument.
 # The `neg_cell_idx` is the index of the cell where the opposite is true. 
 
-# In[42]:
+# In[ ]:
 
 
 edges: list[pf.Edge] = []
@@ -370,7 +417,7 @@ edges.append(
 # With all of the edges of the mesh defined, we are prepared to define a
 # `planar_mesh` object.
 
-# In[43]:
+# In[ ]:
 
 
 T = pf.PlanarMesh(edges)
@@ -379,20 +426,15 @@ T = pf.PlanarMesh(edges)
 # Let's visualize the mesh skeleton, but first we should remember to parameterize
 # the edges.
 
-# In[44]:
+# In[ ]:
 
 
-# parameterize all edges of the mesh
-for e in T.edges:
-    e.parameterize(quad_dict)
-
-# plot the skeleton
-pf.plot.MeshPlot(T.edges).draw()
+pf.plot.MeshPlot(T.edges).draw(show_axis=False)
 
 
 # Moreover, we can visualize an individual cell of the mesh:
 
-# In[47]:
+# In[ ]:
 
 
 cell_idx = 8
@@ -429,41 +471,42 @@ pf.plot.MeshPlot(K.get_edges()).draw()
 # 6. Unpack any additional arguments from `**kwargs`.
 # 
 # The contents of `mycurve.py` will look generically like the following:
+# ```python
+# """
+# A short description of the curve.
 # 
-# 	"""
-# 	A short description of the curve.
+# A description of any parameters that are used.
+# """
 # 
-# 	A description of any parameters that are used.
-# 	"""
+# import numpy as np
 # 
-# 	import numpy as np
+# def X(t, **kwargs):
 # 
-# 	def X(t, **kwargs):
+#    my_parameter = kwargs["my_parameter"]
 # 
-# 		my_parameter = kwargs['my_parameter']
+#    x = np.zeros((2,len(t)))
+#    x[0,:] = 	# the x_1 component
+#    x[1,:] = 	# the x_2 component
 # 
-# 		x = np.zeros((2,len(t)))
-# 		x[0,:] = 	# the x_1 component
-# 		x[1,:] = 	# the x_2 component
+#    return x
 # 
-# 		return x
+# def DX(t, **kwargs):
 # 
-# 	def DX(t, **kwargs):
+#    my_parameter = kwargs["my_parameter"]
 # 
-# 		my_parameter = kwargs['my_parameter']
+#    dx = np.zeros((2,len(t)))
+#    dx[0,:] = 	# the derivative of the x_1 component wrt t
+#    dx[1,:] = 	# the derivative of the x_2 component wrt t
 # 
-# 		dx = np.zeros((2,len(t)))
-# 		dx[0,:] = 	# the derivative of the x_1 component wrt t
-# 		dx[1,:] = 	# the derivative of the x_2 component wrt t
+#    return dx
 # 
-# 		return dx
+# def DDX(t, **kwargs):
 # 
-# 	def DDX(t, **kwargs):
+#    my_parameter = kwargs["my_parameter"]
 # 
-# 		my_parameter = kwargs['my_parameter']
+#    ddx = np.zeros((2,len(t)))
+#    ddx[0,:] = 	# the second derivative of the x_1 component wrt t
+#    ddx[1,:] = 	# the second derivative of the x_2 component wrt t
 # 
-# 		ddx = np.zeros((2,len(t)))
-# 		ddx[0,:] = 	# the second derivative of the x_1 component wrt t
-# 		ddx[1,:] = 	# the second derivative of the x_2 component wrt t
-# 		
-# 		return ddx
+#    return ddx
+# ```

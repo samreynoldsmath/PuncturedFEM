@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Example 1-C: Ghost
+# # Example 1.C: Ghost
+# ### Sam Reynolds, 2023
 # 
 # This example computes the $H^1$ and $L^2$ (semi-)inner products of two 
 # functions, $v,w$ with the property that they are the sum of a harmonic 
@@ -201,54 +202,48 @@ print("L^2 error (vw) = %.4e" % l2_vw_error)
 
 
 # ## Interior values
+# The interior values are not computed by default with the `compute_all()` method.
+# We need to call the `compute_interior_values()` method.
 
 # In[ ]:
 
 
-y1 = K.int_x1
-y2 = K.int_x2
-
 v.compute_interior_values()
 
+
+# Let's choose a color map.
+
+# In[ ]:
+
+
+cmap_name = "seismic"
+cm = plt.colormaps[cmap_name]
+
+
+# We can use the `LocalFunctionPlot` class to plot the local function values and 
+# the gradient components.
+
+# In[ ]:
+
+
+pf.plot.LocalFunctionPlot(v).draw(colormap=cm)
+pf.plot.LocalFunctionPlot(v).draw_grad_x1(colormap=cm)
+pf.plot.LocalFunctionPlot(v).draw_grad_x2(colormap=cm)
+
+
+# To compute the pointwise errors, we will need to define the exact values and compute the difference.  
+
+# In[ ]:
+
+
+# computed values
 v_computed = v.int_vals
 v_x1_computed = v.int_grad1
 v_x2_computed = v.int_grad2
 
-plt.figure()
-for e in K.get_edges():
-    e_x1, e_x2 = e.get_sampled_points()
-    plt.plot(e_x1, e_x2, "k")
-plt.contour(y1, y2, v_computed, levels=50)
-plt.colorbar()
-plt.title("Interior values of $v$")
-plt.axis("equal")
-plt.ylim([-0.15, 1.35])
-
-plt.figure()
-for e in K.get_edges():
-    e_x1, e_x2 = e.get_sampled_points()
-    plt.plot(e_x1, e_x2, "k")
-plt.contour(y1, y2, v_x1_computed, levels=50)
-plt.colorbar()
-plt.title("First component of grad $v$")
-plt.axis("equal")
-plt.ylim([-0.15, 1.35])
-
-plt.figure()
-for e in K.get_edges():
-    e_x1, e_x2 = e.get_sampled_points()
-    plt.plot(e_x1, e_x2, "k")
-plt.contour(y1, y2, v_x2_computed, levels=50)
-plt.colorbar()
-plt.title("Second component of grad $v$")
-plt.axis("equal")
-plt.ylim([-0.15, 1.35])
-
-plt.show()
-
-
-# In[ ]:
-
+# coordinates of interior points
+y1 = K.int_x1
+y2 = K.int_x2
 
 # exact values
 v_exact = (
@@ -267,52 +262,60 @@ v_x2_exact = (
     + 2 * y2
 )
 
-# interior value errors
+# compute errors (log scale)
 v_error = np.log10(np.abs(v_computed - v_exact))
+v_x1_error = np.log10(np.abs(v_x1_computed - v_x1_exact))
+v_x2_error = np.log10(np.abs(v_x2_computed - v_x2_exact))
+v_grad_error = (v_x1_computed - v_x1_exact) ** 2 + (
+    v_x2_computed - v_x2_exact
+) ** 2
+v_grad_error = 0.5 * np.log10(v_grad_error)
+
+
+# We are ready to plot the errors using the `matplotlib` library.
+
+# In[ ]:
+
+
+# interior value errors
 plt.figure()
 for e in K.get_edges():
     e_x1, e_x2 = e.get_sampled_points()
     plt.plot(e_x1, e_x2, "k")
-plt.contourf(y1, y2, v_error, levels=50)
+plt.contourf(y1, y2, v_error, levels=50, cmap=cm)
 plt.colorbar()
 plt.title("Interior errors ($\log_{10}$)")
 plt.axis("equal")
 plt.ylim([-0.15, 1.35])
 
 # first component of gradient errors
-v_x1_error = np.log10(np.abs(v_x1_computed - v_x1_exact))
 plt.figure()
 for e in K.get_edges():
     e_x1, e_x2 = e.get_sampled_points()
     plt.plot(e_x1, e_x2, "k")
-plt.contourf(y1, y2, v_x1_error, levels=50)
+plt.contourf(y1, y2, v_x1_error, levels=50, cmap=cm)
 plt.colorbar()
 plt.title("Gradient errors in $x_1$ ($\log_{10}$)")
 plt.axis("equal")
 plt.ylim([-0.15, 1.35])
 
 # second component of gradient errors
-v_x2_error = np.log10(np.abs(v_x2_computed - v_x2_exact))
 plt.figure()
 for e in K.get_edges():
     e_x1, e_x2 = e.get_sampled_points()
     plt.plot(e_x1, e_x2, "k")
-plt.contourf(y1, y2, v_x2_error, levels=50)
+plt.contourf(y1, y2, v_x2_error, levels=50, cmap=cm)
 plt.colorbar()
 plt.title("Gradient errors in $x_2$ ($\log_{10}$)")
 plt.axis("equal")
 plt.ylim([-0.15, 1.35])
 
 # norm of gradient errors
-v_grad_error = (v_x1_computed - v_x1_exact) ** 2 + (
-    v_x2_computed - v_x2_exact
-) ** 2
-v_grad_error = 0.5 * np.log10(v_grad_error)
 plt.figure()
 for e in K.get_edges():
     e_x1, e_x2 = e.get_sampled_points()
     plt.plot(e_x1, e_x2, "k")
-plt.contourf(y1, y2, v_grad_error, levels=50)
+plt.contourf(y1, y2, v_grad_error, levels=50, cmap=cm)
 plt.colorbar()
 plt.title("Norm of gradient errors ($\log_{10}$)")
 plt.axis("equal")
@@ -320,6 +323,8 @@ plt.ylim([-0.15, 1.35])
 
 plt.show()
 
+
+# Let's collect all of the above figures in a single figure.
 
 # In[ ]:
 
@@ -330,7 +335,7 @@ plt.subplot(2, 3, 1)
 for e in K.get_edges():
     e_x1, e_x2 = e.get_sampled_points()
     plt.plot(e_x1, e_x2, "k")
-plt.contourf(y1, y2, v_computed, levels=np.linspace(-7, 7, 28 + 1))
+plt.contourf(y1, y2, v_computed, levels=np.linspace(-7, 7, 28 + 1), cmap=cm)
 plt.colorbar(location="bottom")
 plt.title("Interior values of $v$")
 plt.axis("equal")
@@ -340,7 +345,7 @@ plt.subplot(2, 3, 2)
 for e in K.get_edges():
     e_x1, e_x2 = e.get_sampled_points()
     plt.plot(e_x1, e_x2, "k")
-plt.contourf(y1, y2, v_x1_computed, levels=50)
+plt.contourf(y1, y2, v_x1_computed, levels=50, cmap=cm)
 plt.colorbar(location="bottom")
 plt.title("First component of grad $v$")
 plt.axis("equal")
@@ -350,7 +355,7 @@ plt.subplot(2, 3, 3)
 for e in K.get_edges():
     e_x1, e_x2 = e.get_sampled_points()
     plt.plot(e_x1, e_x2, "k")
-plt.contourf(y1, y2, v_x2_computed, levels=50)
+plt.contourf(y1, y2, v_x2_computed, levels=50, cmap=cm)
 plt.colorbar(location="bottom")
 plt.title("Second component of grad $v$")
 plt.axis("equal")
@@ -361,7 +366,7 @@ plt.subplot(2, 3, 4)
 for e in K.get_edges():
     e_x1, e_x2 = e.get_sampled_points()
     plt.plot(e_x1, e_x2, "k")
-plt.contourf(y1, y2, v_error, levels=np.linspace(-16, 1, 18))
+plt.contourf(y1, y2, v_error, levels=np.linspace(-16, 1, 18), cmap=cm)
 plt.colorbar(location="bottom")
 plt.title("Interior errors ($\log_{10}$)")
 plt.axis("equal")
@@ -372,7 +377,7 @@ plt.subplot(2, 3, 5)
 for e in K.get_edges():
     e_x1, e_x2 = e.get_sampled_points()
     plt.plot(e_x1, e_x2, "k")
-plt.contourf(y1, y2, v_x1_error, levels=np.linspace(-16, 1, 18))
+plt.contourf(y1, y2, v_x1_error, levels=np.linspace(-16, 1, 18), cmap=cm)
 plt.colorbar(location="bottom")
 plt.title("Gradient errors in $x_1$ ($\log_{10}$)")
 plt.axis("equal")
@@ -383,13 +388,15 @@ plt.subplot(2, 3, 6)
 for e in K.get_edges():
     e_x1, e_x2 = e.get_sampled_points()
     plt.plot(e_x1, e_x2, "k")
-plt.contourf(y1, y2, v_x2_error, levels=np.linspace(-16, 1, 18))
+plt.contourf(y1, y2, v_x2_error, levels=np.linspace(-16, 1, 18), cmap=cm)
 plt.colorbar(location="bottom")
 plt.title("Gradient errors in $x_2$ ($\log_{10}$)")
 plt.axis("equal")
 plt.ylim([-0.15, 1.35])
 
-# plt.savefig('ghost-fig.pdf', format='pdf', bbox_inches='tight')
+# save figure as PDF
+plt.savefig(f"ghost-fig-{cmap_name}.pdf", format="pdf", bbox_inches="tight")
 
+# show figure
 plt.show()
 

@@ -38,7 +38,7 @@ class LocalFunctionSpace:
     vert_funs: list[LocalFunction]
     edge_funs: list[LocalFunction]
     bubb_funs: list[LocalFunction]
-    solver: NystromSolver
+    nyst: NystromSolver
 
     def __init__(
         self,
@@ -80,8 +80,8 @@ class LocalFunctionSpace:
             for e in K.get_edges():
                 edge_spaces.append(EdgeSpace(e, self.deg))
 
-        # set up nyström Solver
-        self.solver = NystromSolver(K, verbose=verbose)
+        # set up Nyström solver
+        self.nyst = NystromSolver(K, verbose=verbose)
 
         # bubble functions: zero trace, Polynomial Laplacian
         self.build_bubble_funs()
@@ -177,7 +177,7 @@ class LocalFunctionSpace:
         self.bubb_funs = []
         for k in range(num_bubb):
             v_key = GlobalKey(fun_type="bubb", bubb_space_idx=k)
-            v = LocalFunction(nyst=self.solver, key=v_key)
+            v = LocalFunction(nyst=self.nyst, key=v_key)
             p = Polynomial()
             p.add_monomial_with_idx(coef=-1.0, idx=k)
             v.set_laplacian_polynomial(p)
@@ -188,7 +188,7 @@ class LocalFunctionSpace:
 
         # find all Vertices on MeshCell
         vert_idx_set = set()
-        for c in self.solver.K.components:
+        for c in self.nyst.K.components:
             for e in c.edges:
                 if not e.is_loop:
                     vert_idx_set.add(e.anchor.idx)
@@ -200,7 +200,7 @@ class LocalFunctionSpace:
         # initialize list of vertex functions and set traces
         self.vert_funs = []
         for vert_key in vert_keys:
-            v = LocalFunction(nyst=self.solver, key=vert_key)
+            v = LocalFunction(nyst=self.nyst, key=vert_key)
             for j, b in enumerate(edge_spaces):
                 for k in range(b.num_vert_funs):
                     if b.vert_fun_global_keys[k].vert_idx == vert_key.vert_idx:
@@ -217,7 +217,7 @@ class LocalFunctionSpace:
         for b in edge_spaces:
             # locate Edge within MeshCell
             glob_edge_idx = b.e.idx
-            glob_edge_idx_list = [e.idx for e in self.solver.K.get_edges()]
+            glob_edge_idx_list = [e.idx for e in self.nyst.K.get_edges()]
             edge_idx = glob_edge_idx_list.index(glob_edge_idx)
 
             # loop over Edge functions
@@ -225,9 +225,7 @@ class LocalFunctionSpace:
                 v_trace = b.edge_fun_traces[k]
 
                 # create harmonicLocalFunction
-                v = LocalFunction(
-                    nyst=self.solver, key=b.edge_fun_global_keys[k]
-                )
+                v = LocalFunction(nyst=self.nyst, key=b.edge_fun_global_keys[k])
 
                 # set Dirichlet data
                 v.poly_trace.polys[edge_idx] = v_trace

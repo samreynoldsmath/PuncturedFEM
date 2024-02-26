@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Finite Elements on a Pac-Man Mesh
+# # Example 2: Finite Elements on a Pac-Man Mesh
+# ### Sam Reynolds, 2023
+# 
 # This example demonstrates how to set up and solve a finite element problem on a
 # punctured mesh. 
 # The model problem under consideration is a simple diffusion-reaction problem
@@ -49,8 +51,7 @@ import puncturedfem as pf
 
 # Let's set a few parameters before we go any further. 
 # `deg` is the polynomial degree of global Poisson space,
-# `n` is edge sampling parameter (as used in previous examples),
-# and `verbose` controls how much output we see.
+# `n` is edge sampling parameter (as used in previous examples).
 # 
 # **(!) WARNING:** 
 # Higher order spaces (`deg > 1`) are still under development.
@@ -60,7 +61,6 @@ import puncturedfem as pf
 
 deg = 1
 n = 64
-verbose = True
 
 
 # ## Mesh construction
@@ -72,7 +72,15 @@ verbose = True
 # In[ ]:
 
 
-T = pf.meshlib.pacman_subdiv(verbose=verbose)
+T = pf.meshlib.pacman_subdiv()
+
+
+# Let's take a look at the mesh by using the `MeshPlot` class.
+
+# In[ ]:
+
+
+pf.plot.MeshPlot(T.edges, n).draw(show_axis=False, pad=0.0)
 
 
 # ## Build global function space 
@@ -96,15 +104,15 @@ quad_dict = pf.get_quad_dict(n)
 # In[ ]:
 
 
-V = pf.GlobalFunctionSpace(T=T, deg=deg, quad_dict=quad_dict, verbose=verbose)
+V = pf.GlobalFunctionSpace(T, deg, quad_dict)
 
 
 # ## Define a bilinear form
 # The bilinear form 
 # \begin{align*}
 # 	B(u,v) = 
-# 	a \, \int_\Omega \nabla u \cdot \nabla v ~dx
-# 	+ c \, \int_\Omega u \, v ~dx
+# 	\int_\Omega a \, \nabla u \cdot \nabla v ~dx
+# 	+ \int_\Omega c \, u \, v ~dx
 # \end{align*}
 # and the right-hand side linear functional
 # \begin{align*}
@@ -118,11 +126,16 @@ V = pf.GlobalFunctionSpace(T=T, deg=deg, quad_dict=quad_dict, verbose=verbose)
 # In[ ]:
 
 
+a = 1.0
+c = 1.0
+f = pf.Polynomial([(1.0, 0, 0)])
+
 B = pf.BilinearForm(
-    diffusion_constant=1.0,
-    reaction_constant=1.0,
-    rhs_poly=pf.Polynomial([[1.0, 0, 0]]),
+    diffusion_constant=a,
+    reaction_constant=c,
+    rhs_poly=f,
 )
+
 print(B)
 
 
@@ -132,7 +145,7 @@ print(B)
 # In[ ]:
 
 
-S = pf.Solver(V, B)
+solver = pf.Solver(V, B)
 
 
 # To assemble the matrix and right-hand side vector for the global system, we 
@@ -144,7 +157,7 @@ S = pf.Solver(V, B)
 # In[ ]:
 
 
-S.assemble(verbose=verbose)
+solver.assemble()
 
 
 # The `matplotlib.pyplot` module has a handy function for inspecting the sparsity
@@ -156,7 +169,7 @@ S.assemble(verbose=verbose)
 import matplotlib.pyplot as plt
 
 plt.figure()
-plt.spy(S.glob_mat)
+plt.spy(solver.glob_mat)
 plt.grid(True)
 plt.show()
 
@@ -168,7 +181,7 @@ plt.show()
 # In[ ]:
 
 
-S.solve()
+solver.solve()
 
 
 # ## Plot solution
@@ -184,7 +197,8 @@ S.solve()
 # In[ ]:
 
 
-pf.plot.GlobalFunctionPlot(solver=S, u=S.soln, fill=True).draw(show_plot=True)
+cm = plt.colormaps["seismic"]
+pf.plot.GlobalFunctionPlot(solver).draw(pad=0.0, show_axis=False, colormap=cm)
 
 
 # ## Plot global basis functions
@@ -195,8 +209,8 @@ pf.plot.GlobalFunctionPlot(solver=S, u=S.soln, fill=True).draw(show_plot=True)
 
 import numpy as np
 
-for idx in range(S.num_funs):
-    u = np.zeros(V.num_funs)
-    u[idx] = 1.0
-    pf.plot.GlobalFunctionPlot(solver=S, u=u, fill=True).draw(show_plot=True)
+for idx in range(V.num_funs):
+    coef = np.zeros(V.num_funs)
+    coef[idx] = 1.0
+    pf.plot.GlobalFunctionPlot(solver, coef).draw(pad=0.0, show_axis=False)
 

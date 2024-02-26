@@ -6,10 +6,15 @@ Module containing the MeshPlot class, which is used to plot edges, cells, and
 meshes.
 """
 
+from typing import Any
+from copy import deepcopy
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 from ..mesh.edge import Edge
+from ..mesh.quad import QuadDict, get_quad_dict
+from .plot_util import get_axis_limits, get_figure_size, save_figure
 
 
 class MeshPlot:
@@ -17,12 +22,17 @@ class MeshPlot:
     Class for plotting lists of edges, such as cell boundaries and meshes.
     """
 
+    edges: list[Edge]
+    quad_dict: QuadDict
+    title: str
+    show_orientation: bool
+    show_grid: bool
+    show_axis: bool
+    keep_open: bool
+    pad: float
+
     def __init__(
-        self,
-        edges: list[Edge],
-        show_orientation: bool = False,
-        show_grid: bool = False,
-        title: str = "",
+        self, edges: list[Edge], n: int = 32, reparameterize: bool = False
     ) -> None:
         """
         Constructor for MeshPlot class.
@@ -31,19 +41,27 @@ class MeshPlot:
         ----------
         edges : list of Edge
             The edges to be plotted
-        show_orientation : bool, optional
-            Whether to plot the orientation of the edges. The default is False.
-        show_grid : bool, optional
-            Whether to plot a grid. The default is False.
-        title : str, optional
-            The title of the plot. The default is "", which results in no title.
         """
-        self.set_edges(edges)
-        self.title = title
-        self.show_orientation = show_orientation
-        self.show_grid = show_grid
+        self.quad_dict = get_quad_dict(n)
+        self.set_edges(deepcopy(edges))
+        for e in self.edges:
+            if reparameterize or not e.is_parameterized:
+                e.parameterize(self.quad_dict)
 
-    def draw(self, show_plot: bool = True, filename: str = "") -> None:
+    def _unpack_kwargs(self, kwargs: dict[str, Any]) -> None:
+        """
+        Unpack the keyword arguments.
+        """
+        self.title = kwargs.get("title", "")
+        self.show_orientation = kwargs.get("show_orientation", False)
+        self.show_grid = kwargs.get("show_grid", False)
+        self.show_axis = kwargs.get("show_axis", True)
+        self.keep_open = kwargs.get("keep_open", False)
+        self.pad = kwargs.get("pad", 0.1)
+
+    def draw(
+        self, show_plot: bool = True, filename: str = "", **kwargs: Any
+    ) -> None:
         """
         Creates the plot.
 
@@ -55,16 +73,27 @@ class MeshPlot:
             The filename to save the plot to. The default is "", which results
             in no file being saved.
         """
-        plt.figure()
+        self._unpack_kwargs(kwargs)
+
+        # determine axes and figure size
+        min_x, max_x, min_y, max_y = get_axis_limits(self.edges, self.pad)
+        w, h = get_figure_size(min_x, max_x, min_y, max_y)
+
+        # create figure
+        plt.figure(figsize=(w, h))
         self._plot_edges()
-        plt.axis("equal")
+        plt.axis((min_x, max_x, min_y, max_y))
         plt.grid(self.show_grid)
         if self.title:
             plt.title(self.title)
+        if not self.show_axis:
+            plt.axis("off")
+        if filename:
+            save_figure(filename)
         if show_plot:
             plt.show()
-        if filename:
-            plt.savefig(filename)
+        if not self.keep_open:
+            plt.close()
 
     def set_edges(self, edges: list[Edge]) -> None:
         """

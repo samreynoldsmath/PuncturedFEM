@@ -53,13 +53,15 @@ from .locfun.edge_space import EdgeSpace
 from .locfun.locfun import LocalFunction
 from .locfun.locfunsp import LocalFunctionSpace
 from .locfun.nystrom import NystromSolver
+from .locfun.poly.piecewise_poly import PiecewisePolynomial
 from .locfun.poly.poly import Polynomial
 from .mesh import meshlib
 from .mesh.cell import MeshCell
 from .mesh.edge import Edge
 from .mesh.meshlib.__builder__ import mesh_builder
 from .mesh.planar_mesh import PlanarMesh
-from .mesh.quad import Quad, get_quad_dict
+from .mesh.quad import Quad, QuadDict, get_quad_dict
+from .mesh.split_edge import split_edge
 from .mesh.vert import Vert
 from .solver.bilinear_form import BilinearForm
 from .solver.globfunsp import GlobalFunctionSpace
@@ -69,13 +71,16 @@ __all__ = [
     "EdgeSpace",
     "LocalFunction",
     "LocalFunctionSpace",
+    "PiecewisePolynomial",
     "Polynomial",
     "NystromSolver",
     "MeshCell",
     "Edge",
+    "split_edge",
     "meshlib",
     "PlanarMesh",
     "Quad",
+    "QuadDict",
     "get_quad_dict",
     "Vert",
     "mesh_builder",
