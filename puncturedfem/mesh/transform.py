@@ -6,8 +6,9 @@ A module containing functions for rigid motions and dilations in the plane.
 """
 
 import numpy as np
-from .vert import Vert
+
 from .mesh_exceptions import EdgeTransformationError
+from .vert import Vert
 
 TOL = 1e-12
 
