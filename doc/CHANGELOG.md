@@ -1,7 +1,7 @@
 # Punctured FEM: Change Log
 
 
-## [2024 mmm dd] v0.4.1
+## [2024 Feb 25] v0.4.1
 ### Examples
 - [x] add cubic spline interpolation example to `ex0`
 ### Maintenance
