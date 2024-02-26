@@ -6,7 +6,7 @@
 - [ ] add cubic spline interpolation example to `ex0`
 ### Maintenance
 - [x] remove trigonometric interpolation
-- [ ] remove trigonometric interpolation tests
+- [x] remove trigonometric interpolation tests
 - [x] format `edgelib/spline`
 
 
