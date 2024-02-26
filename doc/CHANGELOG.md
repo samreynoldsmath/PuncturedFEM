@@ -2,9 +2,12 @@
 
 
 ## [2024 mmm dd] v0.4.1
+### Examples
+- [ ] add cubic spline interpolation example to `ex0`
 ### Maintenance
-- [ ] remove interpolation parameter
-- [ ] remove interpolation tests
+- [x] remove trigonometric interpolation
+- [ ] remove trigonometric interpolation tests
+- [x] format `edgelib/spline`
 
 
 ## [2024 Feb 25] v0.4.0

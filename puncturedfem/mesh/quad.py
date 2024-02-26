@@ -19,14 +19,11 @@ import numpy as np
 class QuadDict(TypedDict):
     """Dictionary holding quadratures"""
 
-    interp: int
     trap: Quad
-    trap_interp: Quad
     kress: Quad
-    kress_interp: Quad
 
 
-def get_quad_dict(n: int = 16, p: int = 7, interp: int = 1) -> QuadDict:
+def get_quad_dict(n: int = 16, p: int = 7) -> QuadDict:
     """
     Return a dictionary of Quad objects.
 
@@ -38,42 +35,17 @@ def get_quad_dict(n: int = 16, p: int = 7, interp: int = 1) -> QuadDict:
     p : int, optional
         Kress parameter.
         Default is 7.
-    interp : int, optional
-        Interpolation parameter (aka zeta). Must be a power of 2.
-        Default is 1, which is equivalent to no interpolation.
 
     Returns
     -------
     quad_dict : dict
         Dictionary of Quad objects.
     """
-    _check_interp(interp, n)
-    q_trap = Quad(qtype="trap", n=n)
-    q_trap_interp = Quad(qtype="trap", n=n // interp)
-    q_kress = Quad(qtype="kress", n=n, p=p)
-    q_kress_interp = Quad(qtype="kress", n=n // interp, p=p)
     quad_dict: QuadDict = {
-        "interp": interp,
-        "trap": q_trap,
-        "trap_interp": q_trap_interp,
-        "kress": q_kress,
-        "kress_interp": q_kress_interp,
+        "trap": Quad(qtype="trap", n=n),
+        "kress": Quad(qtype="kress", n=n, p=p),
     }
     return quad_dict
-
-
-def _check_interp(interp: int, n: int) -> None:
-    msg = "interp must be an integer dividing n such that n / interp >= 4"
-    if not isinstance(interp, int):
-        raise TypeError(msg)
-    if interp < 1:
-        raise ValueError(msg)
-    if not n % interp == 0:
-        raise ValueError(msg)
-    if n // interp < 4:
-        raise ValueError(msg)
-    if n // interp > 128:
-        warn("Quad: n > 128 * interp may cause numerical instability")
 
 
 class Quad:
@@ -90,12 +62,10 @@ class Quad:
     Comment:
         Defaults to the trapezoid rule with n = 16.
         Kress parameter defaults to p = 7.
-        Interpolation parameter defaults to 1.
     """
 
     type: str
     n: int
-    interp: int
     N: int
     h: float
     t: np.ndarray
@@ -140,6 +110,8 @@ class Quad:
             raise TypeError("Quad parameter n must be an integer")
         if n < 4:
             raise ValueError("Quad parameter n must be at least 4")
+        if n > 128:
+            warn("Quad: n > 128 may cause numerical instability")
         self.n = n
 
     def trap(self) -> None:
