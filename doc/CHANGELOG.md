@@ -3,7 +3,7 @@
 
 ## [2024 mmm dd] v0.4.1
 ### Examples
-- [ ] add cubic spline interpolation example to `ex0`
+- [x] add cubic spline interpolation example to `ex0`
 ### Maintenance
 - [x] remove trigonometric interpolation
 - [x] remove trigonometric interpolation tests
