@@ -1,6 +1,12 @@
 # Punctured FEM: Change Log
 
 
+## [2024 mmm dd] v0.4.1
+### Maintenance
+- [ ] remove interpolation parameter
+- [ ] remove interpolation tests
+
+
 ## [2024 Feb 25] v0.4.0
 ### Documentation
 - [x] update README, extend description, add references
