@@ -1,6 +1,15 @@
 # Punctured FEM: Change Log
 
 
+## [2024 mmm dd] v0.4.1
+### Examples
+- [x] add cubic spline interpolation example to `ex0`
+### Maintenance
+- [x] remove trigonometric interpolation
+- [x] remove trigonometric interpolation tests
+- [x] format `edgelib/spline`
+
+
 ## [2024 Feb 25] v0.4.0
 ### Documentation
 - [x] update README, extend description, add references

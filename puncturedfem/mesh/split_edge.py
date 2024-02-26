@@ -7,9 +7,9 @@ Module containing the split_edge() function.
 
 import numpy as np
 
+from . import transform
 from .edge import Edge
 from .vert import Vert
-from . import transform
 
 
 def split_edge(e: Edge, t_split: float = np.pi) -> tuple[Edge, Edge]:

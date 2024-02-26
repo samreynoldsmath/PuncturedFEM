@@ -68,8 +68,6 @@ class Edge:
         True if the Edge is parameterized.
     num_pts : int
         The number of points sampled on the Edge.
-    interp : int
-        The interpolation parameter
     x : np.ndarray
         The sampled points on the Edge.
     unit_tangent : np.ndarray
@@ -95,7 +93,6 @@ class Edge:
     is_loop: bool
     is_parameterized: bool
     num_pts: int
-    interp: int
     x: np.ndarray
     unit_tangent: np.ndarray
     unit_normal: np.ndarray
@@ -217,60 +214,6 @@ class Edge:
             raise ValueError(msg, t_bounds)
         self.t_bounds = t_bounds
 
-    # def set_diary(self, diary: list) -> None:
-    #     """
-    #     Sets the transformation diary.
-    #     """
-    #     self.diary = diary
-
-    # def _make_diary_from_verts(self) -> None:
-    #     if self.is_loop:
-    #         self.set_diary([("translate", (self.anchor,))])
-    #     else:
-    #         self.set_diary(
-    #             self._get_diary_for_join_points(a=self.anchor, b=self.endpnt)
-    #         )
-
-    # def _get_diary_for_join_points(self, a: Vert, b: Vert) -> list:
-    #     # check that specified endpoints are distinct
-    #     ab_norm = (a - b).norm()
-    #     if ab_norm < TOL:
-    #         raise EdgeTransformationError("a and b must be distinct points")
-
-    #     # get start and end points of parameterization
-    #     gamma = self.get_parameterization_module()
-    #     t = np.array([self.t_bounds[0], self.t_bounds[1]])
-    #     X = gamma.X(t, **self.curve_opts)
-    #     x = X[:, 0]
-    #     y = X[:, 1]
-
-    #     # check that endpoints of edge are distinct
-    #     xy_norm = np.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
-    #     if xy_norm < TOL:
-    #         raise EdgeTransformationError("Edge must have distinct endpoints")
-
-    #     # initialize diary
-    #     diary: list[tuple[str, tuple]] = []
-
-    #     # anchor starting point to origin
-    #     back_shift = -1 * Vert(x=-x[0], y=-x[1])
-    #     diary.append(("translate", (back_shift,)))
-
-    #     # rotate
-    #     theta = -np.arctan2(y[1] - x[1], y[0] - x[0])
-    #     theta += np.arctan2(b.y - a.y, b.x - a.x)
-    #     theta *= 180 / np.pi
-    #     diary.append(("rotate", (theta,)))
-
-    #     # rescale
-    #     alpha = ab_norm / xy_norm
-    #     diary.append(("dilate", (alpha,)))
-
-    #     # anchor at point a
-    #     diary.append(("translate", (a,)))
-
-    #     return diary
-
     def run_transform_diary(self) -> None:
         """
         Execute all the transformations in the diary.
@@ -288,9 +231,7 @@ class Edge:
             fromlist=f"mesh.edgelib.{self.curve_type}",
         )
 
-    def parameterize(
-        self, quad_dict: QuadDict, use_interp: bool = False
-    ) -> None:
+    def parameterize(self, quad_dict: QuadDict) -> None:
         """
         Parameterize the Edge using the specified Quadrature rule. The
         parameterization is stored in the following attributes:
@@ -312,17 +253,10 @@ class Edge:
             raise ValueError("Quad type not recognized")
 
         # set quadrature object
-        if use_interp:
-            interp_str = "_interp"
-        else:
-            interp_str = ""
-        q = quad_dict[self.quad_type + interp_str]  # type: ignore
+        q = quad_dict[self.quad_type]  # type: ignore
 
         # 2 * n + 1 points sampled per Edge
         self.num_pts = 2 * q.n + 1
-
-        # set interpolation parameter
-        self.interp = quad_dict["interp"]
 
         # rescale sampling interval
         a, b = self.t_bounds

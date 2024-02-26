@@ -30,24 +30,6 @@ def test_punctured_square() -> None:
     assert h1_error < 1e-10
 
 
-def x_test_punctured_square_interp() -> None:
-    """
-    DEPRECATED
-    Same as test_punctured_square() but uses an interpolation factor of 2
-    """
-
-    # set up mesh cell
-    K, cell_data = build_punctured_square()
-
-    # parameterize edges
-    quad_dict = pf.get_quad_dict(n=64, interp=2)
-
-    l2_error, h1_error = get_l2_and_h1_errors(K, quad_dict, cell_data)
-
-    assert l2_error < 1e-8
-    assert h1_error < 1e-8
-
-
 def get_l2_and_h1_errors(
     K: pf.MeshCell, quad_dict: pf.QuadDict, cell_data: dict
 ) -> tuple[float, float]:

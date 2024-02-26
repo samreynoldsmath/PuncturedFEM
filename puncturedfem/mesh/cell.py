@@ -41,8 +41,6 @@ class MeshCell:
         The number of edges on the cell boundary.
     num_pts : int
         The number of sampled points on the cell boundary.
-    interp : int
-        The interpolation parameter.
     component_start_idx : list[int]
         The index of the first sampled point on each boundary component.
     closest_vert_idx : np.ndarray
@@ -57,7 +55,6 @@ class MeshCell:
     num_holes: int
     num_edges: int
     num_pts: int
-    interp: int
     quad_dict: QuadDict
     component_start_idx: list[int]
     closest_vert_idx: np.ndarray
@@ -243,29 +240,16 @@ class MeshCell:
         """Returns True if the cell is parameterized"""
         return all(c.is_parameterized() for c in self.components)
 
-    def parameterize(
-        self, quad_dict: QuadDict, use_interp: bool = False
-    ) -> None:
+    def parameterize(self, quad_dict: QuadDict) -> None:
         """Parameterize each Edge"""
         for c in self.components:
-            c.parameterize(quad_dict, use_interp)
+            c.parameterize(quad_dict)
         self.find_num_pts()
-        self.find_interp()
         self.find_outer_boundary()
         self.find_component_start_idx()
         self.find_closest_vert_idx()
         self.generate_interior_points()
         self.quad_dict = quad_dict
-
-    def reparameterize(self, use_interp: bool) -> None:
-        """
-        Overwrite parameterization, switch between interpolated versions.
-        """
-        for c in self.components:
-            c.parameterize(self.quad_dict, use_interp)
-        self.find_num_pts()
-        self.find_component_start_idx()
-        self.find_closest_vert_idx()
 
     def deparameterize(self) -> None:
         """Remove parameterization of each Edge"""
@@ -279,15 +263,6 @@ class MeshCell:
         if not self.is_parameterized():
             raise NotParameterizedError("finding num_pts")
         self.num_pts = sum(c.num_pts for c in self.components)
-
-    def find_interp(self) -> None:
-        """Record the interpolation parameter (same for all edges)"""
-        self.interp = self.components[0].interp
-        for c in self.components:
-            if c.interp != self.interp:
-                raise ValueError(
-                    "All components must have the same interpolation parameter"
-                )
 
     def find_component_start_idx(self) -> None:
         """Find the index of sampled points corresponding to each component"""

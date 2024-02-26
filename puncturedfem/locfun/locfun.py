@@ -374,19 +374,11 @@ class LocalFunction:
         self.poly_part_wnd = self.nyst.K.multiply_by_dx_norm(P_nd)
 
     # harmonic part ##########################################################
-    def get_harmonic_part_trace(self, interp: int = 1) -> ndarray:
+    def get_harmonic_part_trace(self) -> ndarray:
         """
         Returns the Dirichlet trace of the harmonic part.
-        If interp > 1, then a subset of the sampled values are returned,
-        with indices [::interp], e.g. for interp=2, every other sampled value is
-        returned, starting from 0.
         """
-        if not isinstance(interp, int):
-            raise TypeError("interp must be an integer >= 1")
-        if interp < 1:
-            raise ValueError("interp must be an integer >= 1")
-        phi_trace = self.trace - self.poly_part_trace
-        return phi_trace[::interp]
+        return self.trace - self.poly_part_trace
 
     # harmonic conjugate #####################################################
     def set_harmonic_conjugate(self, hc_vals: ndarray) -> None:
@@ -408,13 +400,9 @@ class LocalFunction:
         Computes the Dirichlet trace values of the harmonic conjugate of the
         harmonic part and stores them in self.conj_trace.
         """
-        interp = self.nyst.K.interp
-        phi_trace = self.get_harmonic_part_trace(interp)
+        phi_trace = self.get_harmonic_part_trace()
         self.conj_trace, self.log_coef = self.nyst.get_harmonic_conjugate(
             phi_trace
-        )
-        self.conj_trace = d2n.fft_interp.interpolate_on_boundary(
-            self.conj_trace, self.nyst.K, self.nyst.K_interp
         )
 
     # logarithmic coefficients ###############################################
@@ -461,15 +449,12 @@ class LocalFunction:
         self.harm_part_wnd += lam_wnd @ self.log_coef
 
     # harmonic conjugable part psi ###########################################
-    def get_conjugable_part(self, interp: int) -> ndarray:
+    def get_conjugable_part(self) -> ndarray:
         """
         Returns the harmonic conjugable part psi.
         """
-        if interp == 1:
-            lam = d2n.log_terms.get_log_trace(self.nyst.K)
-        elif interp > 1:
-            lam = d2n.log_terms.get_log_trace(self.nyst.K_interp)
-        phi = self.get_harmonic_part_trace(interp)
+        lam = d2n.log_terms.get_log_trace(self.nyst.K)
+        phi = self.get_harmonic_part_trace()
         return phi - lam @ self.log_coef
 
     # anti-Laplacian #########################################################
@@ -494,9 +479,8 @@ class LocalFunction:
         Computes the Dirichlet trace values of an anti-Laplacian of the
         harmonic part and stores them in self.antilap_trace.
         """
-        interp = self.nyst.interp
-        psi = self.get_conjugable_part(interp)
-        psi_hat = self.conj_trace[::interp]
+        psi = self.get_conjugable_part()
+        psi_hat = self.conj_trace
         (
             self.antilap_trace,
             self.antilap_wnd,
@@ -602,7 +586,7 @@ class LocalFunction:
         bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points()
 
         # conjugable part
-        psi = self.get_conjugable_part(interp=1)
+        psi = self.get_conjugable_part()
         psi_hat = self.get_harmonic_conjugate()
 
         # Polynomial gradient

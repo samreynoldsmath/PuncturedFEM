@@ -20,7 +20,7 @@
 # We begin by importing the `puncturedfem` package, 
 # as well as `numpy` and `matplotlib` for the sake of this example.
 
-# In[ ]:
+# In[1]:
 
 
 import sys
@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 # The simplest type of edge is a straight line segment, which is the default
 # when initializing an `Edge` object.
 
-# In[ ]:
+# In[2]:
 
 
 # define vertices
@@ -59,7 +59,7 @@ e1 = pf.Edge(v1, v2)
 # For instance, we can create a circular arc corresponding to a $120^\circ$ angle
 # as follows:
 
-# In[ ]:
+# In[3]:
 
 
 # create a circular arc
@@ -81,7 +81,7 @@ e2 = pf.Edge(v1, v2, curve_type="circular_arc_deg", theta0=120)
 # ## Visualizing Edges
 # We can plot the edges using the `MeshPlot` class:
 
-# In[ ]:
+# In[4]:
 
 
 pf.plot.MeshPlot([e1, e2]).draw()
@@ -92,7 +92,7 @@ pf.plot.MeshPlot([e1, e2]).draw()
 # We can also introduce grid lines by setting the `show_grid` keyword argument
 # to `True`.
 
-# In[ ]:
+# In[5]:
 
 
 pf.plot.MeshPlot([e1, e2]).draw(show_orientation=True, show_grid=True)
@@ -103,7 +103,7 @@ pf.plot.MeshPlot([e1, e2]).draw(show_orientation=True, show_grid=True)
 # will be sampled, we will create a `QuadDict` object using the `get_quad_dict()` function.
 # The `QuadDict` object is a dictionary containing `Quad` objects, which are used to sample the curve parameterization.
 
-# In[ ]:
+# In[6]:
 
 
 quad_dict = pf.get_quad_dict(n=32)
@@ -114,7 +114,7 @@ print(quad_dict)
 # of course, sampled at equidistant nodes 
 # $t_k = hk$, where $h=\pi / n$ for a chosen natural number $n$.
 
-# In[ ]:
+# In[7]:
 
 
 plt.figure()
@@ -128,7 +128,7 @@ plt.show()
 # Since this is the most common case in practice, it is the default method to parameterize an edge.
 # We can see that the Kress scheme samples points more heavily near the endpoints: 
 
-# In[ ]:
+# In[8]:
 
 
 plt.figure()
@@ -138,57 +138,136 @@ plt.grid("on")
 plt.show()
 
 
+# ## Creating an Edge with a Cubic Spline
+# 
+# The `curve_type="spline"` can be used to construct an `Edge` by passing in the keyword argument `pts`, which is a list of two `numpy.ndarray`s, one with the $x$-coordinates, the other with the $y$-coordinates. 
+
+# In[23]:
+
+
+x = np.array([0.7, 0.3, 0.5, 0.2])
+y = np.array([1.0, 0.6, 0.4, 0.4])
+
+anchor = pf.Vert(x[0], y[0])
+endpnt = pf.Vert(x[-1], y[-1])
+
+cubic_spline_edge = pf.Edge(
+    anchor=anchor, endpnt=endpnt, curve_type="spline", pts=[x, y]
+)
+pf.plot.MeshPlot([cubic_spline_edge]).draw(
+    show_grid=True, show_orientation=True
+)
+
+
 # ## Splitting an Edge
 # 
 # We can use the `split_edge()` function to split an `Edge` into two separate `Edge`s.
 
-# In[ ]:
+# In[10]:
 
 
 anchor = pf.Vert(x=1, y=1)
 endpnt = pf.Vert(x=3, y=2)
-e3 = pf.Edge(
+sinusoid_edge = pf.Edge(
     anchor=anchor, endpnt=endpnt, curve_type="sine_wave", amp=0.2, freq=7
 )
-pf.plot.MeshPlot(
-    [
-        e3,
-    ]
-).draw(show_orientation=True, show_grid=True)
+pf.plot.MeshPlot([sinusoid_edge]).draw(show_orientation=True, show_grid=True)
 
 
 # We provide the `Edge` object we wish to split, and `t_split`, the value of $t$ where we wish to split the edge parameterized by $x(t)$.
 # Curves defined in `puncturedfem`'s edge library are by default defined from $0$ to $2\pi$.
 # The default value of `t_split` is $\pi$.
 
-# In[ ]:
+# In[11]:
 
 
-e4, e5 = pf.split_edge(e3, t_split=np.pi / 2)
+e1, e2 = pf.split_edge(sinusoid_edge, t_split=np.pi / 2)
 
 
-# The new `Edge`s are not yet parameterized, so let's do that and plot them.
+# Let's take a look at our new edges:
 
-# In[ ]:
+# In[20]:
 
 
-pf.plot.MeshPlot(
-    [
-        e4,
-    ]
-).draw(show_orientation=True, show_grid=True)
-pf.plot.MeshPlot(
-    [
-        e5,
-    ]
-).draw(show_orientation=True, show_grid=True)
+pf.plot.MeshPlot([e1, e2]).draw(show_orientation=True, show_grid=True)
+pf.plot.MeshPlot([e1]).draw(show_orientation=True, show_grid=True)
+pf.plot.MeshPlot([e2]).draw(show_orientation=True, show_grid=True)
 
+
+# ## Defining a custom `curvetype`
+# An edge $e$ is taken to be a $C^2$ smooth curve in $\mathbb{R}^2$
+# parameterized by $x(t)$ for $0\leq t\leq 2\pi$.
+# We refer to $x(0)$ as the *anchor point* and $x(2\pi)$ as the 
+# *terminal point*, and $x(0),x(2\pi)$ are referred to collectively as the 
+# *endpoints*. We make the following assumptions:
+# * The edge $e$ is nontrivial: $e$ is not a single point.
+# * The edge $e$ is nonselfintersecting: $x(t_1)\neq x(t_2)$ 
+#   for all $0<t_1<t_2<2\pi$.
+# * $x(\cdot)$ is regularizable: there is some fixed $\sigma>0$ such that
+#   $|x'(t)|\geq\sigma$ for all $0 < t < 2\pi$.
+# 
+# In the event that we need an edge that is not provided in the 
+# `puncturedfem/mesh/edgelib` folder,
+# we can add to the edge library as follows. 
+# 1. Create a file `puncturedfem/mesh/edgelib/mycurve.py`, where `mycurve` will
+#    be the name of the curve that will be called during the initialization 
+#    of the edge object. 
+# 2. Import the `numpy` package.
+# 3. In `mycurve.py`, define three functions called `X()`, `DX()`, and `DDX()`.
+#    These will define $x(t)$, $x'(t)$, and $x''(t)$ respectively.
+# 4. Each of these three functions will return a $2\times (2n+1)$ array,
+#    where $2n+1$ is the number of sampled points specified by the chosen
+#    `Quad` object.
+# 5. Row 0 of each array contains the $x_1$ component, and row 1 contains the 
+#    $x_2$ component.
+# 6. Unpack any additional arguments from `**kwargs`.
+# 
+# The contents of `mycurve.py` will look generically like the following:
+# ```python
+# """
+# A short description of the curve.
+# 
+# A description of any parameters that are used.
+# """
+# 
+# import numpy as np
+# 
+# def X(t, **kwargs):
+# 
+#    my_parameter = kwargs["my_parameter"]
+# 
+#    x = np.zeros((2,len(t)))
+#    x[0,:] = 	# the x_1 component
+#    x[1,:] = 	# the x_2 component
+# 
+#    return x
+# 
+# def DX(t, **kwargs):
+# 
+#    my_parameter = kwargs["my_parameter"]
+# 
+#    dx = np.zeros((2,len(t)))
+#    dx[0,:] = 	# the derivative of the x_1 component wrt t
+#    dx[1,:] = 	# the derivative of the x_2 component wrt t
+# 
+#    return dx
+# 
+# def DDX(t, **kwargs):
+# 
+#    my_parameter = kwargs["my_parameter"]
+# 
+#    ddx = np.zeros((2,len(t)))
+#    ddx[0,:] = 	# the second derivative of the x_1 component wrt t
+#    ddx[1,:] = 	# the second derivative of the x_2 component wrt t
+# 
+#    return ddx
+# ```
 
 # ## Creating a mesh
 # 
 # First we begin by defining the vertices of the mesh.
 
-# In[ ]:
+# In[13]:
 
 
 verts: list[pf.Vert] = []
@@ -265,7 +344,7 @@ verts.append(
 
 # We need to label our vertices:
 
-# In[ ]:
+# In[14]:
 
 
 # TODO: future versions should do this automatically.
@@ -275,7 +354,7 @@ for k in range(len(verts)):
 
 # Let's visualized these points:
 
-# In[ ]:
+# In[15]:
 
 
 plt.figure()
@@ -293,7 +372,7 @@ plt.show()
 # no such cell, `pos_cell_idx = -1` is taken as the default argument.
 # The `neg_cell_idx` is the index of the cell where the opposite is true. 
 
-# In[ ]:
+# In[16]:
 
 
 edges: list[pf.Edge] = []
@@ -417,7 +496,7 @@ edges.append(
 # With all of the edges of the mesh defined, we are prepared to define a
 # `planar_mesh` object.
 
-# In[ ]:
+# In[17]:
 
 
 T = pf.PlanarMesh(edges)
@@ -426,7 +505,7 @@ T = pf.PlanarMesh(edges)
 # Let's visualize the mesh skeleton, but first we should remember to parameterize
 # the edges.
 
-# In[ ]:
+# In[18]:
 
 
 pf.plot.MeshPlot(T.edges).draw(show_axis=False)
@@ -434,79 +513,10 @@ pf.plot.MeshPlot(T.edges).draw(show_axis=False)
 
 # Moreover, we can visualize an individual cell of the mesh:
 
-# In[ ]:
+# In[19]:
 
 
 cell_idx = 8
 K = T.get_cells(cell_idx)
 pf.plot.MeshPlot(K.get_edges()).draw()
 
-
-# ## Appendix: Defining a custom `curvetype`
-# An edge $e$ is taken to be a $C^2$ smooth curve in $\mathbb{R}^2$
-# parameterized by $x(t)$ for $0\leq t\leq 2\pi$.
-# We refer to $x(0)$ as the *anchor point* and $x(2\pi)$ as the 
-# *terminal point*, and $x(0),x(2\pi)$ are referred to collectively as the 
-# *endpoints*. We make the following assumptions:
-# * The edge $e$ is nontrivial: $e$ is not a single point.
-# * The edge $e$ is nonselfintersecting: $x(t_1)\neq x(t_2)$ 
-#   for all $0<t_1<t_2<2\pi$.
-# * $x(\cdot)$ is regularizable: there is some fixed $\sigma>0$ such that
-#   $|x'(t)|\geq\sigma$ for all $0 < t < 2\pi$.
-# 
-# In the event that we need an edge that is not provided in the 
-# `puncturedfem/mesh/edgelib` folder,
-# we can add to the edge library as follows. 
-# 1. Create a file `puncturedfem/mesh/edgelib/mycurve.py`, where `mycurve` will
-#    be the name of the curve that will be called during the initialization 
-#    of the edge object. 
-# 2. Import the `numpy` package.
-# 3. In `mycurve.py`, define three functions called `X()`, `DX()`, and `DDX()`.
-#    These will define $x(t)$, $x'(t)$, and $x''(t)$ respectively.
-# 4. Each of these three functions will return a $2\times (2n+1)$ array,
-#    where $2n+1$ is the number of sampled points specified by the chosen
-#    `Quad` object.
-# 5. Row 0 of each array contains the $x_1$ component, and row 1 contains the 
-#    $x_2$ component.
-# 6. Unpack any additional arguments from `**kwargs`.
-# 
-# The contents of `mycurve.py` will look generically like the following:
-# ```python
-# """
-# A short description of the curve.
-# 
-# A description of any parameters that are used.
-# """
-# 
-# import numpy as np
-# 
-# def X(t, **kwargs):
-# 
-#    my_parameter = kwargs["my_parameter"]
-# 
-#    x = np.zeros((2,len(t)))
-#    x[0,:] = 	# the x_1 component
-#    x[1,:] = 	# the x_2 component
-# 
-#    return x
-# 
-# def DX(t, **kwargs):
-# 
-#    my_parameter = kwargs["my_parameter"]
-# 
-#    dx = np.zeros((2,len(t)))
-#    dx[0,:] = 	# the derivative of the x_1 component wrt t
-#    dx[1,:] = 	# the derivative of the x_2 component wrt t
-# 
-#    return dx
-# 
-# def DDX(t, **kwargs):
-# 
-#    my_parameter = kwargs["my_parameter"]
-# 
-#    ddx = np.zeros((2,len(t)))
-#    ddx[0,:] = 	# the second derivative of the x_1 component wrt t
-#    ddx[1,:] = 	# the second derivative of the x_2 component wrt t
-# 
-#    return ddx
-# ```
