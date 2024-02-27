@@ -127,3 +127,52 @@ def build_punctured_square(
     K = pf.MeshCell(idx=0, edges=edges)
 
     return K, cell_data
+
+def build_ghost():
+    """Make the ghosty boi"""
+
+    # define vertices
+    verts = []
+    verts.append(pf.Vert(x=0.0, y=0.0))  # 0
+    verts.append(pf.Vert(x=1.0, y=0.0))  # 1
+    verts.append(pf.Vert(x=1.0, y=0.8))  # 2
+    verts.append(pf.Vert(x=0.0, y=0.8))  # 3
+    verts.append(pf.Vert(x=0.25, y=0.7))  # 4
+    verts.append(pf.Vert(x=0.75, y=0.7))  # 5
+
+    # define edges
+    edges = []
+    edges.append(
+        pf.Edge(
+            verts[0],
+            verts[1],
+            pos_cell_idx=0,
+            curve_type="sine_wave",
+            amp=0.1,
+            freq=6,
+        )
+    )
+    edges.append(pf.Edge(verts[1], verts[2], pos_cell_idx=0))
+    edges.append(
+        pf.Edge(
+            verts[2],
+            verts[3],
+            pos_cell_idx=0,
+            curve_type="circular_arc_deg",
+            theta0=180,
+        )
+    )
+    edges.append(pf.Edge(verts[3], verts[0], pos_cell_idx=0))
+    edges.append(
+        pf.Edge(
+            verts[4], verts[4], neg_cell_idx=0, curve_type="ellipse", a=0.15, b=0.2
+        )
+    )
+    edges.append(
+        pf.Edge(
+            verts[5], verts[5], neg_cell_idx=0, curve_type="ellipse", a=0.15, b=0.2
+        )
+    )
+
+    # define mesh cell
+    return pf.MeshCell(idx=0, edges=edges)
