@@ -128,6 +128,7 @@ def build_punctured_square(
 
     return K, cell_data
 
+
 def build_ghost():
     """Make the ghosty boi"""
 
@@ -165,12 +166,22 @@ def build_ghost():
     edges.append(pf.Edge(verts[3], verts[0], pos_cell_idx=0))
     edges.append(
         pf.Edge(
-            verts[4], verts[4], neg_cell_idx=0, curve_type="ellipse", a=0.15, b=0.2
+            verts[4],
+            verts[4],
+            neg_cell_idx=0,
+            curve_type="ellipse",
+            a=0.15,
+            b=0.2,
         )
     )
     edges.append(
         pf.Edge(
-            verts[5], verts[5], neg_cell_idx=0, curve_type="ellipse", a=0.15, b=0.2
+            verts[5],
+            verts[5],
+            neg_cell_idx=0,
+            curve_type="ellipse",
+            a=0.15,
+            b=0.2,
         )
     )
 
