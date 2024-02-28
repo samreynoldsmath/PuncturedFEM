@@ -4,11 +4,14 @@
 ## [2024 mmm dd] v0.4.2
 ### Features
 - [x] make minimum distance to boundary for interior points of a `MeshCell` adjustable with `set_interior_point_tolerance()` method
+- [ ] make computation of interior gradients optional
 ### Maintenance
-- [ ]
+- [ ] vectorize interior value computation
 ### Tests
 - [x] add ghost cell to mesh cell testing library
 - [x] add test for interior points
+### Bug Fixes
+- [x] Plots of global solution corrupted: fix by not recording edge flips to transformation diary
 
 
 ## [2024 Feb 25] v0.4.1

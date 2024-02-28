@@ -566,18 +566,26 @@ class LocalFunction:
         self.int_grad1 and self.int_grad2.
         """
 
+        # size of grid of evaluation points
+        rows, cols = self.nyst.K.int_mesh_size
+
         # points for evaluation
-        int_x1 = self.nyst.K.int_x1
-        int_x2 = self.nyst.K.int_x2
+        int_x1 = self.nyst.K.int_x1[self.nyst.K.is_inside]
+        int_x2 = self.nyst.K.int_x2[self.nyst.K.is_inside]
+
+        N = len(int_x1)
+        vals = np.zeros((N,))
+        grad1 = np.zeros((N,))
+        grad2 = np.zeros((N,))
 
         # polynomial part
-        self.int_vals = self.poly_part.eval(int_x1, int_x2)
+        vals = self.poly_part.eval(int_x1, int_x2)
 
         # gradient Polynomial part
         if compute_grad:
             Px, Py = self.poly_part.grad()
-            self.int_grad1 = Px.eval(int_x1, int_x2)
-            self.int_grad2 = Py.eval(int_x1, int_x2)
+            grad1 = Px.eval(int_x1, int_x2)
+            grad2 = Py.eval(int_x1, int_x2)
 
         # logarithmic part
         for k in range(self.nyst.K.num_holes):
@@ -585,16 +593,10 @@ class LocalFunction:
             y_xi_1 = int_x1 - xi.x
             y_xi_2 = int_x2 - xi.y
             y_xi_norm_sq = y_xi_1**2 + y_xi_2**2
-            self.int_vals += 0.5 * self.log_coef[k] * np.log(y_xi_norm_sq)
+            vals += 0.5 * self.log_coef[k] * np.log(y_xi_norm_sq)
             if compute_grad:
-                self.int_grad1 += self.log_coef[k] * y_xi_1 / y_xi_norm_sq
-                self.int_grad2 += self.log_coef[k] * y_xi_2 / y_xi_norm_sq
-
-        # ignore points outside of interior
-        outside = np.logical_not(self.nyst.K.is_inside)
-        self.int_vals[outside] = np.nan
-        self.int_grad1[outside] = np.nan
-        self.int_grad2[outside] = np.nan
+                grad1 += self.log_coef[k] * y_xi_1 / y_xi_norm_sq
+                grad2 += self.log_coef[k] * y_xi_2 / y_xi_norm_sq
 
         # conjugable part
         psi = self.get_conjugable_part()
@@ -603,20 +605,29 @@ class LocalFunction:
         # boundary points
         bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points()
 
-        # compute interior values
-        rows, cols = self.nyst.K.int_mesh_size
-        for i in range(rows):
-            for j in range(cols):
-                if self.nyst.K.is_inside[i, j]:
-                    xy1 = bdy_x1 - int_x1[i, j]
-                    xy2 = bdy_x2 - int_x2[i, j]
-                    val, grad1, grad2 = self._compute_interior_value(
-                        xy1, xy2, psi, psi_hat, compute_grad
-                    )
-                    self.int_vals[i, j] += val
-                    if compute_grad:
-                        self.int_grad1[i, j] += grad1
-                        self.int_grad2[i, j] += grad2
+        # conjugable part
+        for k in range(N):
+            xy1 = bdy_x1 - int_x1[k]
+            xy2 = bdy_x2 - int_x2[k]
+            v, g1, g2 = self._compute_interior_value(
+                xy1, xy2, psi, psi_hat, compute_grad
+            )
+            vals[k] += v
+            if compute_grad:
+                grad1[k] += g1
+                grad2[k] += g2
+
+        self.int_vals = np.empty((rows, cols))
+        self.int_grad1 = np.empty((rows, cols))
+        self.int_grad2 = np.empty((rows, cols))
+
+        self.int_vals[:] = np.nan
+        self.int_grad1[:] = np.nan
+        self.int_grad2[:] = np.nan
+
+        self.int_vals[self.nyst.K.is_inside] = vals
+        self.int_grad1[self.nyst.K.is_inside] = grad1
+        self.int_grad2[self.nyst.K.is_inside] = grad2
 
     def _compute_interior_value(
         self,
@@ -639,7 +650,7 @@ class LocalFunction:
         val = self.nyst.K.integrate_over_boundary(integrand) * 0.5 / np.pi
 
         if not compute_grad:
-            return val, 0, 0
+            return val, 0.0, 0.0
 
         omega = (xy1 * eta + xy2 * eta_hat) / xy_norm_sq
         omega_hat = (xy1 * eta_hat - xy2 * eta) / xy_norm_sq
