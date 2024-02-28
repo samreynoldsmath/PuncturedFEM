@@ -559,119 +559,95 @@ class LocalFunction:
 
     # INTERIOR VALUES ########################################################
 
-    # TODO: move interior value calculation to separate module
-
-    def compute_interior_values(self) -> None:
+    def compute_interior_values(self, compute_grad: bool = True) -> None:
         """
         Computes the interior values and stores them in self.int_vals. Also
         computes the components of the gradient and stores them in
         self.int_grad1 and self.int_grad2.
         """
 
-        # size of interior mesh
-        rows, cols = self.nyst.K.int_mesh_size
-
-        # initialize arrays
-        self.int_vals = np.empty((rows, cols))
-        self.int_grad1 = np.empty((rows, cols))
-        self.int_grad2 = np.empty((rows, cols))
-
-        self.int_vals[:] = np.nan
-        self.int_grad1[:] = np.nan
-        self.int_grad2[:] = np.nan
-
         # points for evaluation
         int_x1 = self.nyst.K.int_x1
         int_x2 = self.nyst.K.int_x2
 
-        # boundary points
-        bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points()
+        # polynomial part
+        self.int_vals = self.poly_part.eval(int_x1, int_x2)
+
+        # gradient Polynomial part
+        if compute_grad:
+            Px, Py = self.poly_part.grad()
+            self.int_grad1 = Px.eval(int_x1, int_x2)
+            self.int_grad2 = Py.eval(int_x1, int_x2)
+
+        # logarithmic part
+        for k in range(self.nyst.K.num_holes):
+            xi = self.nyst.K.components[k + 1].interior_point
+            y_xi_1 = int_x1 - xi.x
+            y_xi_2 = int_x2 - xi.y
+            y_xi_norm_sq = y_xi_1**2 + y_xi_2**2
+            self.int_vals += 0.5 * self.log_coef[k] * np.log(y_xi_norm_sq)
+            if compute_grad:
+                self.int_grad1 += self.log_coef[k] * y_xi_1 / y_xi_norm_sq
+                self.int_grad2 += self.log_coef[k] * y_xi_2 / y_xi_norm_sq
+
+        # ignore points outside of interior
+        outside = np.logical_not(self.nyst.K.is_inside)
+        self.int_vals[outside] = np.nan
+        self.int_grad1[outside] = np.nan
+        self.int_grad2[outside] = np.nan
 
         # conjugable part
         psi = self.get_conjugable_part()
         psi_hat = self.get_harmonic_conjugate()
 
-        # Polynomial gradient
-        Px, Py = self.poly_part.grad()
+        # boundary points
+        bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points()
 
         # compute interior values
+        rows, cols = self.nyst.K.int_mesh_size
         for i in range(rows):
             for j in range(cols):
                 if self.nyst.K.is_inside[i, j]:
-                    self._compute_interior_value(
-                        i,
-                        j,
-                        bdy_x1,
-                        bdy_x2,
-                        int_x1,
-                        int_x2,
-                        psi,
-                        psi_hat,
-                        Px,
-                        Py,
+                    xy1 = bdy_x1 - int_x1[i, j]
+                    xy2 = bdy_x2 - int_x2[i, j]
+                    val, grad1, grad2 = self._compute_interior_value(
+                        xy1, xy2, psi, psi_hat, compute_grad
                     )
+                    self.int_vals[i, j] += val
+                    if compute_grad:
+                        self.int_grad1[i, j] += grad1
+                        self.int_grad2[i, j] += grad2
 
     def _compute_interior_value(
         self,
-        i: int,
-        j: int,
-        bdy_x1: np.ndarray,
-        bdy_x2: np.ndarray,
-        int_x1: np.ndarray,
-        int_x2: np.ndarray,
+        xy1: np.ndarray,
+        xy2: np.ndarray,
         psi: np.ndarray,
         psi_hat: np.ndarray,
-        Px: Polynomial,
-        Py: Polynomial,
-    ) -> None:
+        compute_grad: bool,
+    ) -> tuple[float, float, float]:
         """
         Applies Cauchy's integral formula to compute the interior values and
-        gradient components at the point (int_x1[i,j], int_x2[i,j]).
+        gradient components.
         """
-
-        # Cauchy's integral formula
-        xy1 = bdy_x1 - int_x1[i, j]
-        xy2 = bdy_x2 - int_x2[i, j]
         xy_norm_sq = xy1 * xy1 + xy2 * xy2
+
         eta = (xy1 * psi + xy2 * psi_hat) / xy_norm_sq
         eta_hat = (xy1 * psi_hat - xy2 * psi) / xy_norm_sq
+
         integrand = self.nyst.K.dot_with_tangent(eta_hat, eta)
-        self.int_vals[i, j] = (
-            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / np.pi
-        )
+        val = self.nyst.K.integrate_over_boundary(integrand) * 0.5 / np.pi
 
-        # polynomial part
-        self.int_vals[i, j] += self.poly_part.eval(int_x1[i, j], int_x2[i, j])
+        if not compute_grad:
+            return val, 0, 0
 
-        # logarithmic part
-        for k in range(self.nyst.K.num_holes):
-            xi = self.nyst.K.components[k + 1].interior_point
-            y_xi_norm_sq = (int_x1[i, j] - xi.x) ** 2 + (
-                int_x2[i, j] - xi.y
-            ) ** 2
-            self.int_vals[i, j] += 0.5 * self.log_coef[k] * np.log(y_xi_norm_sq)
-
-        # Cauchy's integral formula for gradient
         omega = (xy1 * eta + xy2 * eta_hat) / xy_norm_sq
         omega_hat = (xy1 * eta_hat - xy2 * eta) / xy_norm_sq
+
         integrand = self.nyst.K.dot_with_tangent(omega_hat, omega)
-        self.int_grad1[i, j] = (
-            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / np.pi
-        )
+        grad1 = self.nyst.K.integrate_over_boundary(integrand) * 0.5 / np.pi
+
         integrand = self.nyst.K.dot_with_tangent(omega, -omega_hat)
-        self.int_grad2[i, j] = (
-            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / np.pi
-        )
+        grad2 = self.nyst.K.integrate_over_boundary(integrand) * 0.5 / np.pi
 
-        # gradient Polynomial part
-        self.int_grad1[i, j] += Px.eval(int_x1[i, j], int_x2[i, j])
-        self.int_grad2[i, j] += Py.eval(int_x1[i, j], int_x2[i, j])
-
-        # gradient logarithmic part
-        for k in range(self.nyst.K.num_holes):
-            xi = self.nyst.K.components[k + 1].interior_point
-            y_xi_1 = int_x1[i, j] - xi.x
-            y_xi_2 = int_x2[i, j] - xi.y
-            y_xi_norm_sq = y_xi_1**2 + y_xi_2**2
-            self.int_grad1[i, j] += self.log_coef[k] * y_xi_1 / y_xi_norm_sq
-            self.int_grad2[i, j] += self.log_coef[k] * y_xi_2 / y_xi_norm_sq
+        return val, grad1, grad2
