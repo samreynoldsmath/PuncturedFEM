@@ -411,16 +411,14 @@ class Edge:
 
     # TRANSFORMATION BASE METHODS #############################################
 
-    def reverse_orientation(self, write_diary: bool = True) -> None:
+    def reverse_orientation(self) -> None:
         """
         Reverse the orientation of this Edge using the reparameterization
         x(2 pi - t). The chain rule flips the sign of some derivative-based
         quantities.
         """
 
-        # record in transformation diary
-        if write_diary:
-            self.diary.append(("reverse_orientation", ()))
+        # NOTE: DO NOT record in transformation diary
 
         # apply to sampled points
         if self.is_parameterized:
