@@ -566,9 +566,6 @@ class LocalFunction:
         self.int_grad1 and self.int_grad2.
         """
 
-        # size of grid of evaluation points
-        rows, cols = self.nyst.K.int_mesh_size
-
         # points for evaluation
         y1 = self.nyst.K.int_x1[self.nyst.K.is_inside]
         y2 = self.nyst.K.int_x2[self.nyst.K.is_inside]
@@ -612,73 +609,47 @@ class LocalFunction:
         xy2 = np.reshape(bdy_x2, (1, M)) - np.reshape(y2, (N, 1))
         xy_norm_sq = xy1**2 + xy2**2
 
+        # components of unit tangent vector
+        t1, t2 = self.nyst.K.get_unit_tangent()
+
         # integrand for interior values
         eta = (xy1 * psi + xy2 * psi_hat) / xy_norm_sq
         eta_hat = (xy1 * psi_hat - xy2 * psi) / xy_norm_sq
+        f = t1 * eta_hat + t2 * eta
 
-        # integrand for gradient
+        # integrands for gradient
         if compute_grad:
             omega = (xy1 * eta + xy2 * eta_hat) / xy_norm_sq
             omega_hat = (xy1 * eta_hat - xy2 * eta) / xy_norm_sq
+            g1 = t1 * omega_hat + t2 * omega
+            g2 = t1 * omega - t2 * omega_hat
 
-        t1, t2 = self.nyst.K.get_unit_tangent()
-
-        f = t1 * eta_hat + t2 * eta
-        g1 = t1 * omega_hat + t2 * omega
-        g2 = t1 * omega - t2 * omega_hat
-
+        # Jacobian and trapezoid weights
         dx_norm = self.nyst.K.get_dx_norm()
         h = 2 * np.pi * self.nyst.K.num_edges / self.nyst.K.num_pts
         dx_norm *= h
 
-        # interior values and gradient of conjugable part
+        # interior values and gradient of conjugable part via Cauchy's
+        # integral formula
         vals += np.sum(dx_norm * f, axis=1) * 0.5 / np.pi
         if compute_grad:
             grad1 += np.sum(dx_norm * g1, axis=1) * 0.5 / np.pi
             grad2 += np.sum(dx_norm * g2, axis=1) * 0.5 / np.pi
 
+        # size of grid of evaluation points
+        rows, cols = self.nyst.K.int_mesh_size
+
+        # initialize arrays with proper size
         self.int_vals = np.empty((rows, cols))
         self.int_grad1 = np.empty((rows, cols))
         self.int_grad2 = np.empty((rows, cols))
 
+        # default to not-a-number
         self.int_vals[:] = np.nan
         self.int_grad1[:] = np.nan
         self.int_grad2[:] = np.nan
 
+        # set values within cell interior
         self.int_vals[self.nyst.K.is_inside] = vals
         self.int_grad1[self.nyst.K.is_inside] = grad1
         self.int_grad2[self.nyst.K.is_inside] = grad2
-
-    def _compute_interior_value(
-        self,
-        xy1: np.ndarray,
-        xy2: np.ndarray,
-        psi: np.ndarray,
-        psi_hat: np.ndarray,
-        compute_grad: bool,
-    ) -> tuple[float, float, float]:
-        """
-        Applies Cauchy's integral formula to compute the interior values and
-        gradient components.
-        """
-        xy_norm_sq = xy1 * xy1 + xy2 * xy2
-
-        eta = (xy1 * psi + xy2 * psi_hat) / xy_norm_sq
-        eta_hat = (xy1 * psi_hat - xy2 * psi) / xy_norm_sq
-
-        integrand = self.nyst.K.dot_with_tangent(eta_hat, eta)
-        val = self.nyst.K.integrate_over_boundary(integrand) * 0.5 / np.pi
-
-        if not compute_grad:
-            return val, 0.0, 0.0
-
-        omega = (xy1 * eta + xy2 * eta_hat) / xy_norm_sq
-        omega_hat = (xy1 * eta_hat - xy2 * eta) / xy_norm_sq
-
-        integrand = self.nyst.K.dot_with_tangent(omega_hat, omega)
-        grad1 = self.nyst.K.integrate_over_boundary(integrand) * 0.5 / np.pi
-
-        integrand = self.nyst.K.dot_with_tangent(omega, -omega_hat)
-        grad2 = self.nyst.K.integrate_over_boundary(integrand) * 0.5 / np.pi
-
-        return val, grad1, grad2

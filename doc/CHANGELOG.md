@@ -6,7 +6,7 @@
 - [ ] add a contributing guide
 ### Features
 - [x] make minimum distance to boundary for interior points of a `MeshCell` adjustable with `set_interior_point_tolerance()` method
-- [ ] make computation of interior gradients optional
+- [x] make computation of interior gradients optional
 - [x] add methods to `MeshCell` to get unit tangent and unit normal vectors, and the derivative norm
 ### Maintenance
 - [x] vectorize interior value computation
