@@ -429,6 +429,27 @@ class MeshCell:
             x1[j:jp1], x2[j:jp1] = self.components[i].get_sampled_points()
         return x1, x2
 
+    def get_unit_tangent(self) -> tuple[np.ndarray, np.ndarray]:
+        """Returns the components of the unit tangent vector"""
+        zeros = np.zeros((self.num_pts,))
+        ones = np.ones((self.num_pts,))
+        t1 = self.dot_with_tangent(ones, zeros)
+        t2 = self.dot_with_tangent(zeros, ones)
+        return t1, t2
+
+    def get_unit_normal(self) -> tuple[np.ndarray, np.ndarray]:
+        """Returns the components of the unit normal vector"""
+        zeros = np.zeros((self.num_pts,))
+        ones = np.ones((self.num_pts,))
+        n1 = self.dot_with_normal(ones, zeros)
+        n2 = self.dot_with_normal(zeros, ones)
+        return n1, n2
+
+    def get_dx_norm(self) -> np.ndarray:
+        """Returns the norm of the first derivative"""
+        ones = np.ones((self.num_pts,))
+        return self.multiply_by_dx_norm(ones)
+
     def dot_with_tangent(
         self, comp1: np.ndarray, comp2: np.ndarray
     ) -> np.ndarray:

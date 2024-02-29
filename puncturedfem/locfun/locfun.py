@@ -570,28 +570,29 @@ class LocalFunction:
         rows, cols = self.nyst.K.int_mesh_size
 
         # points for evaluation
-        int_x1 = self.nyst.K.int_x1[self.nyst.K.is_inside]
-        int_x2 = self.nyst.K.int_x2[self.nyst.K.is_inside]
+        y1 = self.nyst.K.int_x1[self.nyst.K.is_inside]
+        y2 = self.nyst.K.int_x2[self.nyst.K.is_inside]
 
-        N = len(int_x1)
+        # initialize temporary arrays
+        N = len(y1)
         vals = np.zeros((N,))
         grad1 = np.zeros((N,))
         grad2 = np.zeros((N,))
 
         # polynomial part
-        vals = self.poly_part.eval(int_x1, int_x2)
+        vals = self.poly_part.eval(y1, y2)
 
         # gradient Polynomial part
         if compute_grad:
             Px, Py = self.poly_part.grad()
-            grad1 = Px.eval(int_x1, int_x2)
-            grad2 = Py.eval(int_x1, int_x2)
+            grad1 = Px.eval(y1, y2)
+            grad2 = Py.eval(y1, y2)
 
         # logarithmic part
         for k in range(self.nyst.K.num_holes):
             xi = self.nyst.K.components[k + 1].interior_point
-            y_xi_1 = int_x1 - xi.x
-            y_xi_2 = int_x2 - xi.y
+            y_xi_1 = y1 - xi.x
+            y_xi_2 = y2 - xi.y
             y_xi_norm_sq = y_xi_1**2 + y_xi_2**2
             vals += 0.5 * self.log_coef[k] * np.log(y_xi_norm_sq)
             if compute_grad:
@@ -605,17 +606,36 @@ class LocalFunction:
         # boundary points
         bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points()
 
-        # conjugable part
-        for k in range(N):
-            xy1 = bdy_x1 - int_x1[k]
-            xy2 = bdy_x2 - int_x2[k]
-            v, g1, g2 = self._compute_interior_value(
-                xy1, xy2, psi, psi_hat, compute_grad
-            )
-            vals[k] += v
-            if compute_grad:
-                grad1[k] += g1
-                grad2[k] += g2
+        # shifted coordinates
+        M = self.nyst.K.num_pts
+        xy1 = np.reshape(bdy_x1, (1, M)) - np.reshape(y1, (N, 1))
+        xy2 = np.reshape(bdy_x2, (1, M)) - np.reshape(y2, (N, 1))
+        xy_norm_sq = xy1**2 + xy2**2
+
+        # integrand for interior values
+        eta = (xy1 * psi + xy2 * psi_hat) / xy_norm_sq
+        eta_hat = (xy1 * psi_hat - xy2 * psi) / xy_norm_sq
+
+        # integrand for gradient
+        if compute_grad:
+            omega = (xy1 * eta + xy2 * eta_hat) / xy_norm_sq
+            omega_hat = (xy1 * eta_hat - xy2 * eta) / xy_norm_sq
+
+        t1, t2 = self.nyst.K.get_unit_tangent()
+
+        f = t1 * eta_hat + t2 * eta
+        g1 = t1 * omega_hat + t2 * omega
+        g2 = t1 * omega - t2 * omega_hat
+
+        dx_norm = self.nyst.K.get_dx_norm()
+        h = 2 * np.pi * self.nyst.K.num_edges / self.nyst.K.num_pts
+        dx_norm *= h
+
+        # interior values and gradient of conjugable part
+        vals += np.sum(dx_norm * f, axis=1) * 0.5 / np.pi
+        if compute_grad:
+            grad1 += np.sum(dx_norm * g1, axis=1) * 0.5 / np.pi
+            grad2 += np.sum(dx_norm * g2, axis=1) * 0.5 / np.pi
 
         self.int_vals = np.empty((rows, cols))
         self.int_grad1 = np.empty((rows, cols))
