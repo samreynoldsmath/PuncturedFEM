@@ -1,9 +1,9 @@
 # Punctured FEM: Change Log
 
 
-## [2024 mmm dd] v0.4.2
+## [2024 Feb 29] v0.4.2
 ### Documentation
-- [ ] add a contributing guide
+- [x] add a contributing guide
 ### Features
 - [x] make minimum distance to boundary for interior points of a `MeshCell` adjustable with `set_interior_point_tolerance()` method
 - [x] make computation of interior gradients optional
