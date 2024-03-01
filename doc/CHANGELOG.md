@@ -1,6 +1,22 @@
 # Punctured FEM: Change Log
 
 
+## [2024 Feb 29] v0.4.2
+### Documentation
+- [x] add a contributing guide
+### Features
+- [x] make minimum distance to boundary for interior points of a `MeshCell` adjustable with `set_interior_point_tolerance()` method
+- [x] make computation of interior gradients optional
+- [x] add methods to `MeshCell` to get unit tangent and unit normal vectors, and the derivative norm
+### Maintenance
+- [x] vectorize interior value computation
+### Tests
+- [x] add ghost cell to mesh cell testing library
+- [x] add test for interior points
+### Bug Fixes
+- [x] Plots of global solution corrupted: fix by not recording edge flips to transformation diary
+
+
 ## [2024 Feb 25] v0.4.1
 ### Examples
 - [x] add cubic spline interpolation example to `ex0`

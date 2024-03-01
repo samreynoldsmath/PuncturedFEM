@@ -8,7 +8,7 @@ Poisson space V_p(K).
 
 from typing import Optional
 
-from numpy import empty, log, nan, ndarray, pi, zeros
+import numpy as np
 
 from ..mesh.mesh_exceptions import SizeMismatchError
 from ..solver.globkey import GlobalKey
@@ -95,7 +95,7 @@ class LocalFunction:
     ----------
     key : GlobalKey
         A unique tag that identifies the local function in the global space.
-    trace : ndarray
+    trace : numpy.ndarray
         Dirichlet trace values on the boundary of K.
     poly_trace : PiecewisePolynomial
         Piecewise Polynomial trace on the boundary of K. Defaults to the zero
@@ -106,47 +106,47 @@ class LocalFunction:
         Laplacian Polynomial.
     poly_part : Polynomial
         Polynomial part of the local function.
-    poly_part_trace : ndarray
+    poly_part_trace : numpy.ndarray
         Dirichlet trace values of the Polynomial part.
-    poly_part_wnd : ndarray
+    poly_part_wnd : numpy.ndarray
         Weighted normal derivative of the Polynomial part.
-    conj_trace : ndarray
+    conj_trace : numpy.ndarray
         Dirichlet trace values of the harmonic conjugate of the harmonic part.
-    log_coef : ndarray
+    log_coef : numpy.ndarray
         Logarithmic coefficients of the harmonic part.
-    harm_part_wnd : ndarray
+    harm_part_wnd : numpy.ndarray
         Weighted normal derivative of the harmonic part.
-    antilap_trace : ndarray
+    antilap_trace : numpy.ndarray
         Dirichlet trace values of an anti-Laplacian of the harmonic part.
-    antilap_wnd : ndarray
+    antilap_wnd : numpy.ndarray
         Weighted normal derivative of an anti-Laplacian of the harmonic part.
     nyst : NystromSolver
         Nystrom nyst object, which contains the MeshCell K.
-    int_vals : ndarray
+    int_vals : numpy.ndarray
         Interior values of the local function.
-    int_grad1 : ndarray
+    int_grad1 : numpy.ndarray
         First component of the gradient of the local function.
-    int_grad2 : ndarray
+    int_grad2 : numpy.ndarray
         Second component of the gradient of the local function.
     """
 
     key: GlobalKey
-    trace: ndarray
+    trace: np.ndarray
     poly_trace: PiecewisePolynomial
     has_poly_trace: bool
     lap: Polynomial
     poly_part: Polynomial
-    poly_part_trace: ndarray
-    poly_part_wnd: ndarray
-    conj_trace: ndarray
-    log_coef: ndarray
-    harm_part_wnd: ndarray
-    antilap_trace: ndarray
-    antilap_wnd: ndarray
+    poly_part_trace: np.ndarray
+    poly_part_wnd: np.ndarray
+    conj_trace: np.ndarray
+    log_coef: np.ndarray
+    harm_part_wnd: np.ndarray
+    antilap_trace: np.ndarray
+    antilap_wnd: np.ndarray
     nyst: NystromSolver
-    int_vals: ndarray
-    int_grad1: ndarray
-    int_grad2: ndarray
+    int_vals: np.ndarray
+    int_grad1: np.ndarray
+    int_grad2: np.ndarray
 
     def __init__(
         self,
@@ -213,16 +213,16 @@ class LocalFunction:
 
     def clear(self) -> None:
         """
-        Deletes all large ndarrays (to save memory)
+        Deletes all large np.ndarrays (to save memory)
         """
-        self.trace = zeros((0,))
-        self.poly_part_trace = zeros((0,))
-        self.poly_part_wnd = zeros((0,))
-        self.conj_trace = zeros((0,))
-        self.log_coef = zeros((0,))
-        self.harm_part_wnd = zeros((0,))
-        self.antilap_trace = zeros((0,))
-        self.antilap_wnd = zeros((0,))
+        self.trace = np.zeros((0,))
+        self.poly_part_trace = np.zeros((0,))
+        self.poly_part_wnd = np.zeros((0,))
+        self.conj_trace = np.zeros((0,))
+        self.log_coef = np.zeros((0,))
+        self.harm_part_wnd = np.zeros((0,))
+        self.antilap_trace = np.zeros((0,))
+        self.antilap_wnd = np.zeros((0,))
 
     # Piecewise Polynomial Dirichlet trace ###################################
     def set_poly_trace(self, poly_trace: Optional[PiecewisePolynomial]) -> None:
@@ -249,13 +249,13 @@ class LocalFunction:
         return self.poly_trace
 
     # Dirichlet trace values #################################################
-    def set_trace_values(self, vals: ndarray) -> None:
+    def set_trace_values(self, vals: np.ndarray) -> None:
         """
         Sets the Dirichlet trace values to self.trace.
         """
         self.trace = vals
 
-    def get_trace_values(self) -> ndarray:
+    def get_trace_values(self) -> np.ndarray:
         """
         Returns the Dirichlet trace values.
         """
@@ -276,7 +276,7 @@ class LocalFunction:
                 "There must be exactly one trace Polynomial "
                 + "for every Edge of K"
             )
-        self.trace = zeros((self.nyst.K.num_pts,))
+        self.trace = np.zeros((self.nyst.K.num_pts,))
         edge_idx = 0
         for i in range(self.nyst.K.num_holes + 1):
             c = self.nyst.K.components[i]
@@ -326,14 +326,14 @@ class LocalFunction:
         self.poly_part = self.lap.anti_laplacian()
 
     # Polynomial part trace ##################################################
-    def set_polynomial_part_trace(self, P_trace: ndarray) -> None:
+    def set_polynomial_part_trace(self, P_trace: np.ndarray) -> None:
         """
         Sets the Dirichlet trace values of the Polynomial part to
         self.poly_part_trace.
         """
         self.poly_part_trace = P_trace
 
-    def get_polynomial_part_trace(self) -> ndarray:
+    def get_polynomial_part_trace(self) -> np.ndarray:
         """
         Returns the Dirichlet trace values of the Polynomial part.
         """
@@ -349,7 +349,7 @@ class LocalFunction:
 
     # Polynomial part weighted normal derivative #############################
     def set_polynomial_part_weighted_normal_derivative(
-        self, P_wnd: ndarray
+        self, P_wnd: np.ndarray
     ) -> None:
         """
         Sets the weighted normal derivative of the Polynomial part to
@@ -357,7 +357,7 @@ class LocalFunction:
         """
         self.poly_part_wnd = P_wnd
 
-    def get_polynomial_part_weighted_normal_derivative(self) -> ndarray:
+    def get_polynomial_part_weighted_normal_derivative(self) -> np.ndarray:
         """
         Returns the weighted normal derivative of the Polynomial part.
         """
@@ -374,21 +374,21 @@ class LocalFunction:
         self.poly_part_wnd = self.nyst.K.multiply_by_dx_norm(P_nd)
 
     # harmonic part ##########################################################
-    def get_harmonic_part_trace(self) -> ndarray:
+    def get_harmonic_part_trace(self) -> np.ndarray:
         """
         Returns the Dirichlet trace of the harmonic part.
         """
         return self.trace - self.poly_part_trace
 
     # harmonic conjugate #####################################################
-    def set_harmonic_conjugate(self, hc_vals: ndarray) -> None:
+    def set_harmonic_conjugate(self, hc_vals: np.ndarray) -> None:
         """
         Sets the Dirichlet trace values of the harmonic conjugate of the
         harmonic part to self.conj_trace.
         """
         self.conj_trace = hc_vals
 
-    def get_harmonic_conjugate(self) -> ndarray:
+    def get_harmonic_conjugate(self) -> np.ndarray:
         """
         Returns the Dirichlet trace values of the harmonic conjugate of the
         harmonic part.
@@ -406,13 +406,13 @@ class LocalFunction:
         )
 
     # logarithmic coefficients ###############################################
-    def set_logarithmic_coefficients(self, log_coef: ndarray) -> None:
+    def set_logarithmic_coefficients(self, log_coef: np.ndarray) -> None:
         """
         Sets the logarithmic coefficients of the harmonic part to self.log_coef.
         """
         self.log_coef = log_coef
 
-    def get_logarithmic_coefficients(self) -> ndarray:
+    def get_logarithmic_coefficients(self) -> np.ndarray:
         """
         Returns the logarithmic coefficients of the harmonic part.
         """
@@ -421,14 +421,16 @@ class LocalFunction:
     # no compute method, this is handled by compute_harmonic_conjugate()
 
     # weighted normal derivative of harmonic part ############################
-    def set_harmonic_weighted_normal_derivative(self, hc_wnd: ndarray) -> None:
+    def set_harmonic_weighted_normal_derivative(
+        self, hc_wnd: np.ndarray
+    ) -> None:
         """
         Sets the weighted normal derivative of the harmonic part to
         self.harm_part_wnd.
         """
         self.harm_part_wnd = hc_wnd
 
-    def get_harmonic_weighted_normal_derivative(self) -> ndarray:
+    def get_harmonic_weighted_normal_derivative(self) -> np.ndarray:
         """
         Returns the weighted normal derivative of the harmonic part.
         """
@@ -449,7 +451,7 @@ class LocalFunction:
         self.harm_part_wnd += lam_wnd @ self.log_coef
 
     # harmonic conjugable part psi ###########################################
-    def get_conjugable_part(self) -> ndarray:
+    def get_conjugable_part(self) -> np.ndarray:
         """
         Returns the harmonic conjugable part psi.
         """
@@ -459,7 +461,7 @@ class LocalFunction:
 
     # anti-Laplacian #########################################################
     def set_anti_laplacian_harmonic_part(
-        self, anti_laplacian_vals: ndarray
+        self, anti_laplacian_vals: np.ndarray
     ) -> None:
         """
         Sets the Dirichlet trace values of an anti-Laplacian of the harmonic
@@ -467,7 +469,7 @@ class LocalFunction:
         """
         self.antilap_trace = anti_laplacian_vals
 
-    def get_anti_laplacian_harmonic_part(self) -> ndarray:
+    def get_anti_laplacian_harmonic_part(self) -> np.ndarray:
         """
         Returns the Dirichlet trace values of an anti-Laplacian of the harmonic
         part.
@@ -557,119 +559,97 @@ class LocalFunction:
 
     # INTERIOR VALUES ########################################################
 
-    # TODO: move interior value calculation to separate module
-
-    def compute_interior_values(self) -> None:
+    def compute_interior_values(self, compute_grad: bool = True) -> None:
         """
         Computes the interior values and stores them in self.int_vals. Also
         computes the components of the gradient and stores them in
         self.int_grad1 and self.int_grad2.
         """
 
-        # size of interior mesh
-        rows, cols = self.nyst.K.int_mesh_size
-
-        # initialize arrays
-        self.int_vals = empty((rows, cols))
-        self.int_grad1 = empty((rows, cols))
-        self.int_grad2 = empty((rows, cols))
-
-        self.int_vals[:] = nan
-        self.int_grad1[:] = nan
-        self.int_grad2[:] = nan
-
         # points for evaluation
-        int_x1 = self.nyst.K.int_x1
-        int_x2 = self.nyst.K.int_x2
+        y1 = self.nyst.K.int_x1[self.nyst.K.is_inside]
+        y2 = self.nyst.K.int_x2[self.nyst.K.is_inside]
 
-        # boundary points
-        bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points()
+        # initialize temporary arrays
+        N = len(y1)
+        vals = np.zeros((N,))
+        grad1 = np.zeros((N,))
+        grad2 = np.zeros((N,))
+
+        # polynomial part
+        vals = self.poly_part.eval(y1, y2)
+
+        # gradient Polynomial part
+        if compute_grad:
+            Px, Py = self.poly_part.grad()
+            grad1 = Px.eval(y1, y2)
+            grad2 = Py.eval(y1, y2)
+
+        # logarithmic part
+        for k in range(self.nyst.K.num_holes):
+            xi = self.nyst.K.components[k + 1].interior_point
+            y_xi_1 = y1 - xi.x
+            y_xi_2 = y2 - xi.y
+            y_xi_norm_sq = y_xi_1**2 + y_xi_2**2
+            vals += 0.5 * self.log_coef[k] * np.log(y_xi_norm_sq)
+            if compute_grad:
+                grad1 += self.log_coef[k] * y_xi_1 / y_xi_norm_sq
+                grad2 += self.log_coef[k] * y_xi_2 / y_xi_norm_sq
 
         # conjugable part
         psi = self.get_conjugable_part()
         psi_hat = self.get_harmonic_conjugate()
 
-        # Polynomial gradient
-        Px, Py = self.poly_part.grad()
+        # boundary points
+        bdy_x1, bdy_x2 = self.nyst.K.get_boundary_points()
 
-        # compute interior values
-        for i in range(rows):
-            for j in range(cols):
-                if self.nyst.K.is_inside[i, j]:
-                    self.cauchy_integral_formula(
-                        i,
-                        j,
-                        bdy_x1,
-                        bdy_x2,
-                        int_x1,
-                        int_x2,
-                        psi,
-                        psi_hat,
-                        Px,
-                        Py,
-                    )
+        # shifted coordinates
+        M = self.nyst.K.num_pts
+        xy1 = np.reshape(bdy_x1, (1, M)) - np.reshape(y1, (N, 1))
+        xy2 = np.reshape(bdy_x2, (1, M)) - np.reshape(y2, (N, 1))
+        xy_norm_sq = xy1**2 + xy2**2
 
-    def cauchy_integral_formula(
-        self,
-        i: int,
-        j: int,
-        bdy_x1: ndarray,
-        bdy_x2: ndarray,
-        int_x1: ndarray,
-        int_x2: ndarray,
-        psi: ndarray,
-        psi_hat: ndarray,
-        Px: Polynomial,
-        Py: Polynomial,
-    ) -> None:
-        """
-        Applies Cauchy's integral formula to compute the interior values and
-        gradient components at the point (int_x1[i,j], int_x2[i,j]).
-        """
+        # components of unit tangent vector
+        t1, t2 = self.nyst.K.get_unit_tangent()
 
-        # Cauchy's integral formula
-        xy1 = bdy_x1 - int_x1[i, j]
-        xy2 = bdy_x2 - int_x2[i, j]
-        xy_norm_sq = xy1 * xy1 + xy2 * xy2
+        # integrand for interior values
         eta = (xy1 * psi + xy2 * psi_hat) / xy_norm_sq
         eta_hat = (xy1 * psi_hat - xy2 * psi) / xy_norm_sq
-        integrand = self.nyst.K.dot_with_tangent(eta_hat, eta)
-        self.int_vals[i, j] = (
-            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / pi
-        )
+        f = t1 * eta_hat + t2 * eta
 
-        # Polynomial part
-        self.int_vals[i, j] += self.poly_part.eval(int_x1[i, j], int_x2[i, j])
+        # integrands for gradient
+        if compute_grad:
+            omega = (xy1 * eta + xy2 * eta_hat) / xy_norm_sq
+            omega_hat = (xy1 * eta_hat - xy2 * eta) / xy_norm_sq
+            g1 = t1 * omega_hat + t2 * omega
+            g2 = t1 * omega - t2 * omega_hat
 
-        # logarithmic part
-        for k in range(self.nyst.K.num_holes):
-            xi = self.nyst.K.components[k + 1].interior_point
-            y_xi_norm_sq = (int_x1[i, j] - xi.x) ** 2 + (
-                int_x2[i, j] - xi.y
-            ) ** 2
-            self.int_vals[i, j] += 0.5 * self.log_coef[k] * log(y_xi_norm_sq)
+        # Jacobian and trapezoid weights
+        dx_norm = self.nyst.K.get_dx_norm()
+        h = 2 * np.pi * self.nyst.K.num_edges / self.nyst.K.num_pts
+        dx_norm *= h
 
-        # Cauchy's integral formula for gradient
-        omega = (xy1 * eta + xy2 * eta_hat) / xy_norm_sq
-        omega_hat = (xy1 * eta_hat - xy2 * eta) / xy_norm_sq
-        integrand = self.nyst.K.dot_with_tangent(omega_hat, omega)
-        self.int_grad1[i, j] = (
-            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / pi
-        )
-        integrand = self.nyst.K.dot_with_tangent(omega, -omega_hat)
-        self.int_grad2[i, j] = (
-            self.nyst.K.integrate_over_boundary(integrand) * 0.5 / pi
-        )
+        # interior values and gradient of conjugable part via Cauchy's
+        # integral formula
+        vals += np.sum(dx_norm * f, axis=1) * 0.5 / np.pi
+        if compute_grad:
+            grad1 += np.sum(dx_norm * g1, axis=1) * 0.5 / np.pi
+            grad2 += np.sum(dx_norm * g2, axis=1) * 0.5 / np.pi
 
-        # gradient Polynomial part
-        self.int_grad1[i, j] += Px.eval(int_x1[i, j], int_x2[i, j])
-        self.int_grad2[i, j] += Py.eval(int_x1[i, j], int_x2[i, j])
+        # size of grid of evaluation points
+        rows, cols = self.nyst.K.int_mesh_size
 
-        # gradient logarithmic part
-        for k in range(self.nyst.K.num_holes):
-            xi = self.nyst.K.components[k + 1].interior_point
-            y_xi_1 = int_x1[i, j] - xi.x
-            y_xi_2 = int_x2[i, j] - xi.y
-            y_xi_norm_sq = y_xi_1**2 + y_xi_2**2
-            self.int_grad1[i, j] += self.log_coef[k] * y_xi_1 / y_xi_norm_sq
-            self.int_grad2[i, j] += self.log_coef[k] * y_xi_2 / y_xi_norm_sq
+        # initialize arrays with proper size
+        self.int_vals = np.empty((rows, cols))
+        self.int_grad1 = np.empty((rows, cols))
+        self.int_grad2 = np.empty((rows, cols))
+
+        # default to not-a-number
+        self.int_vals[:] = np.nan
+        self.int_grad1[:] = np.nan
+        self.int_grad2[:] = np.nan
+
+        # set values within cell interior
+        self.int_vals[self.nyst.K.is_inside] = vals
+        self.int_grad1[self.nyst.K.is_inside] = grad1
+        self.int_grad2[self.nyst.K.is_inside] = grad2

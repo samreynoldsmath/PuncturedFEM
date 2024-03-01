@@ -64,7 +64,14 @@ class MeshCell:
     int_x2: np.ndarray
     is_inside: np.ndarray
 
-    def __init__(self, idx: int, edges: list[Edge]) -> None:
+    def __init__(
+        self,
+        idx: int,
+        edges: list[Edge],
+        int_mesh_size: tuple[int, int] = (101, 101),
+        rtol: float = 0.02,
+        atol: float = 0.02,
+    ) -> None:
         """
         Constructor for the cell class.
 
@@ -80,6 +87,8 @@ class MeshCell:
         self.components = []
         self.find_boundary_components(edges)
         self.find_num_edges()
+        self.set_interior_mesh_size(*int_mesh_size)
+        self.set_interior_point_tolerance(rtol, atol)
 
     # MESH TOPOLOGY ##########################################################
 
@@ -339,16 +348,37 @@ class MeshCell:
             dist = min(dist, self.components[i].get_distance_to_boundary(x, y))
         return dist
 
-    def generate_interior_points(
-        self, rows: int = 101, cols: int = 101, tol: float = 0.02
+    def set_interior_mesh_size(self, rows: int, cols: int) -> None:
+        """Set the size of the mesh of interior points"""
+        self.int_mesh_size = (rows, cols)
+
+    def set_interior_point_tolerance(
+        self, rtol: float = 0.02, atol: float = 0.02
     ) -> None:
+        """
+        Set the minimum distance to the boundary for sampled interior points.
+
+        """
+        msg = " must be a positive number"
+        if not isinstance(atol, (float, int)):
+            raise TypeError("atol" + msg)
+        if atol <= 0:
+            raise TypeError("atol" + msg)
+        self.atol = atol
+        if not isinstance(rtol, (float, int)):
+            raise TypeError("rtol" + msg)
+        if rtol <= 0:
+            raise TypeError("rtol" + msg)
+        self.rtol = rtol
+
+    def generate_interior_points(self) -> None:
         """
         Returns (x, y, is_inside) where x,y are a meshgrid covering the
         cell K, and is_inside is a boolean array that is True for
         interior points
         """
 
-        self.int_mesh_size = (rows, cols)
+        rows, cols = self.int_mesh_size
 
         # find region of interest
         xmin, xmax, ymin, ymax = self.get_bounding_box()
@@ -362,7 +392,8 @@ class MeshCell:
         self.is_inside = self.is_in_interior(self.int_x1, self.int_x2)
 
         # set minimum desired distance to the boundary
-        TOL = tol * min([xmax - xmin, ymax - ymin])
+        h = min([xmax - xmin, ymax - ymin])
+        min_dist_to_bdy = max([self.atol, self.rtol * h])
 
         # ignore points too close to the boundary
         for i in range(rows):
@@ -371,7 +402,7 @@ class MeshCell:
                     d = self.get_distance_to_boundary(
                         self.int_x1[i, j], self.int_x2[i, j]
                     )
-                    if d < TOL:
+                    if d < min_dist_to_bdy:
                         self.is_inside[i, j] = False
 
     # FUNCTION EVALUATION ####################################################
@@ -397,6 +428,27 @@ class MeshCell:
             jp1 = self.component_start_idx[i + 1]
             x1[j:jp1], x2[j:jp1] = self.components[i].get_sampled_points()
         return x1, x2
+
+    def get_unit_tangent(self) -> tuple[np.ndarray, np.ndarray]:
+        """Returns the components of the unit tangent vector"""
+        zeros = np.zeros((self.num_pts,))
+        ones = np.ones((self.num_pts,))
+        t1 = self.dot_with_tangent(ones, zeros)
+        t2 = self.dot_with_tangent(zeros, ones)
+        return t1, t2
+
+    def get_unit_normal(self) -> tuple[np.ndarray, np.ndarray]:
+        """Returns the components of the unit normal vector"""
+        zeros = np.zeros((self.num_pts,))
+        ones = np.ones((self.num_pts,))
+        n1 = self.dot_with_normal(ones, zeros)
+        n2 = self.dot_with_normal(zeros, ones)
+        return n1, n2
+
+    def get_dx_norm(self) -> np.ndarray:
+        """Returns the norm of the first derivative"""
+        ones = np.ones((self.num_pts,))
+        return self.multiply_by_dx_norm(ones)
 
     def dot_with_tangent(
         self, comp1: np.ndarray, comp2: np.ndarray

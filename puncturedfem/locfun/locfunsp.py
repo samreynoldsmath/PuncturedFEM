@@ -46,6 +46,7 @@ class LocalFunctionSpace:
         edge_spaces: Optional[list[EdgeSpace]] = None,
         deg: int = 1,
         compute_interior_values: bool = True,
+        compute_interior_gradient: bool = False,
         verbose: bool = True,
         processes: int = 1,
     ) -> None:
@@ -99,8 +100,10 @@ class LocalFunctionSpace:
         self.compute_all(verbose=verbose, processes=processes)
 
         # find interior values
-        if compute_interior_values:
-            self.find_interior_values(verbose=verbose)
+        if compute_interior_values or compute_interior_gradient:
+            self.find_interior_values(
+                verbose=verbose, compute_grad=compute_interior_gradient
+            )
 
     def set_deg(self, deg: int) -> None:
         """
@@ -112,7 +115,9 @@ class LocalFunctionSpace:
             raise ValueError("deg must be a positive integer")
         self.deg = deg
 
-    def find_interior_values(self, verbose: bool = True) -> None:
+    def find_interior_values(
+        self, verbose: bool = True, compute_grad=False
+    ) -> None:
         """
         Equivalent to running v.compute_interior_values() for each
         LocalFunction v
@@ -120,10 +125,10 @@ class LocalFunctionSpace:
         if verbose:
             print("Finding interior values...")
             for v in tqdm(self.get_basis()):
-                v.compute_interior_values()
+                v.compute_interior_values(compute_grad)
         else:
             for v in self.get_basis():
-                v.compute_interior_values()
+                v.compute_interior_values(compute_grad)
 
     # BUILD FUNCTIONS ########################################################
 
