@@ -47,16 +47,16 @@ edges.append(pf.Edge(verts[2], verts[3], pos_cell_idx=0))
 edges.append(pf.Edge(verts[3], verts[0], pos_cell_idx=0))
 
 # define mesh cell
-K = pf.MeshCell(idx=0, edges=edges)
+K_simple = pf.MeshCell(idx=0, edges=edges)
 
 # parameterize edges
-K.parameterize(quad_dict=pf.get_quad_dict(n=64))
+K_simple.parameterize(quad_dict=pf.get_quad_dict(n=64))
 
 # set up Nystrom solver
-nyst = pf.NystromSolver(K)
+nyst = pf.NystromSolver(K_simple)
 
 # plot boundary
-pf.plot.MeshPlot(K.get_edges()).draw()
+pf.plot.MeshPlot(K_simple.get_edges()).draw()
 
 
 # Notice that the area of the mesh cell $K$ is $|K|=1$.
@@ -156,6 +156,35 @@ K.parameterize(quad_dict=pf.get_quad_dict(n=512))
 nyst = pf.NystromSolver(K, verbose=True)
 
 
+# ## Changing the Kress parameter
+# As we saw in [Example 0](ex0-mesh-building.ipynb), we can change the Kress parameter $p$ to adjust how much the sampled points are "clustered" near the endpoints. 
+# The default value is $p=7$, but changing this to its lowest value $p=2$ results in sampled points that are more spread out, perhaps enough so that we can avoid division by machine zero. Let's try it (this may take a while):
+
+# In[ ]:
+
+
+# get 1024 sampled points on each edge with lower Kress parameter
+K.parameterize(quad_dict=pf.get_quad_dict(n=512, p=2))
+nyst = pf.NystromSolver(K, verbose=True)
+
+
+# The `NystromSolver` initialized without errors, so let's try to compute our quantity of interest:
+
+# In[ ]:
+
+
+# the constant function v = 1
+v = pf.LocalFunction(nyst=nyst, lap_poly=pf.Polynomial(), poly_trace=v_trace)
+v.compute_all()
+
+# compute area and error
+area_exact = 1.0
+area_computed = v.get_l2_inner_prod(v)
+print(f"Error in computed area = {np.abs(area_exact - area_computed)}")
+
+
+# This worked well enough, but $10^{-6}$ is kind of a big error for the amount of work we had to do. Let's see if we can do better with a different strategy.
+
 # ## Splitting Edges
 # 
 # As we saw in [Example 0](ex0-mesh-building.ipynb), we can split edges in two using the `split_edge()` function. Let's try splitting the 'bad' edge into smaller edges.
@@ -165,7 +194,6 @@ nyst = pf.NystromSolver(K, verbose=True)
 
 # split edge 0 in half
 e1, e2 = pf.split_edge(e=edges[0], t_split=np.pi)
-
 # split into quarters
 e1_a, e1_b = pf.split_edge(e1, t_split=np.pi / 2)
 e2_a, e2_b = pf.split_edge(e2, t_split=3 * np.pi / 2)
@@ -204,3 +232,5 @@ area_exact = 1.0
 area_computed = v.get_l2_inner_prod(v)
 print(f"Error in computed area = {np.abs(area_exact-area_computed)}")
 
+
+# This gave us a much better error than changing the Kress parameter, and the computation was much faster.
