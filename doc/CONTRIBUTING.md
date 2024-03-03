@@ -7,6 +7,7 @@ This is a brief guide describing how to contribute to the `PuncturedFEM` project
 - Use `pylint` and `mypy` for linting
 - Run tests with `pytest`
 - Use `isort` and `black` (in that order) for formatting
+- Clear all Jupyter notebook outputs
 - Commit, push to your fork, and make a pull request
 
 ## Getting started
@@ -97,8 +98,11 @@ If you have edited the source code or tests, use `pylint` to find errors and use
 
 ### Run formatters
 This step helps make the code you've written more readable and standardized.
-- If contributing Jupyter notebooks, clear all outputs and save
 - Be sure that your virtual environment is active
+- If contributing Jupyter notebooks, clear all outputs:
+  ```bash
+  jupyter nbconvert --clear-output --inplace examples/*.ipynb
+  ```
 - If you have edited the source code, format import statements with [isort](https://pypi.org/project/isort/):
   ```bash
   isort puncturedfem
