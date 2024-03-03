@@ -1,6 +1,20 @@
 # Punctured FEM: Change Log
 
 
+## [2024 mmm dd] v0.4.3
+### Examples
+- [ ] modify: `ex1e` to demo how to construct a `LocalFunctionSpace` with a subdivided edge
+### Features
+- [ ] add: `DirichletTrace` class for handling the traces of `LocalFunction`s
+- [ ] add: splitting an edge into multiple edges
+- [ ] add: an optional argument to `MeshCell` initializer that specifies a partition of the edges, each part of which is flagged to be treated as a single edge
+### Maintenance
+- [ ] add: method to get the sample point indices of a specific edge of a mesh cell
+- [ ] modify: `LocalFunctionSpace` builds a basis consistent with edges that have been tagged as part of the 'same edge'
+### Bug fixes
+- [ ] fix: too many tick marks on `TracePlot`
+
+
 ## [2024 Feb 29] v0.4.2
 ### Documentation
 - [x] add a contributing guide
