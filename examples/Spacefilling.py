@@ -3,11 +3,12 @@
 
 # The curve below is part of a family of $C^2$, nonself-intersecting curves whose limit is surjective on the equilateral triangle. 
 
-# In[28]:
+# In[1]:
 
 
 import os
 import sys
+import functools as ft
 
 current_dir = os.getcwd()
 parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
@@ -34,7 +35,7 @@ def SFC(A,B,C,n,p):
         case 3:
             return SFC((A+C)/2,(B+C)/2,C,n,p-1)
         
-family_param=2
+family_param=3
 idxs=np.arange(3*4**family_param)
 A=np.array([0,0])
 B=np.array([1.0/2,np.sqrt(3)/2])
@@ -56,103 +57,122 @@ ys = np.append([0,0],np.append(np.array([myfun_y(n) for n in idxs]),[0,0]))
 # ## Construct the mesh cell
 # 
 
-# In[29]:
+# In[2]:
 
 
 vA=pf.Vert(0,0,0)
 vB=pf.Vert(1/2,np.sqrt(3)/2,1)
 vC=pf.Vert(1,0,2)
-edges = [
-    pf.Edge(vA,vC,curve_type="spline", pos_cell_idx=0, idx=0, pts=[xs,ys]),
-    pf.Edge(vC,vB,pos_cell_idx=0, idx=1),
-    pf.Edge(vB,vA,pos_cell_idx=0, idx=2)
+badedge=pf.Edge(vA,vC,curve_type="spline", pos_cell_idx=0, pts=[xs,ys])
+def Bd(edge,n,l,r):
+    if n<=0:
+        return [edge]
+    e0,e1 = pf.split_edge(e=edge, t_split=(l+r)/2)
+    return Bd(e0,n-1,l,(l+r)/2)+Bd(e1,n-1,(l+r)/2,r)
+edges = Bd(badedge,2*(family_param-1),0,2*np.pi) + [
+    pf.Edge(vC,vB,pos_cell_idx=0,idx=1),
+    pf.Edge(vB,vA,pos_cell_idx=0,idx=2)
 ]
+#Todo: this is a hack, since edges are responsible for defining their indices, splitting edges has no
+#way to know which indices are available.
+for i,e in enumerate(edges):
+    e.idx=i
 
 
 # With the edges defined, let's make the mesh cell $K$.
 
-# In[30]:
+# In[3]:
 
 
 K = pf.MeshCell(idx=0, edges=edges)
-print(K.get_edges()[0].curve_type)
 
 
 # Let's parameterize the edges, and plot the edges to check that we have what we 
-# want.
+# want. These curves are a little too close to the boundary, and we can fix that easily, but we'll ignore it for the moment
 
-# In[31]:
+# In[4]:
 
 
-quad_dict = pf.get_quad_dict(n=256,p=7)
+quad_dict = pf.get_quad_dict(n=64,p=7)
 K.parameterize(quad_dict)
 pf.plot.MeshPlot(K.get_edges()).draw()
 
 
-# ## Build local Poisson space
-# With the mesh cell $K$ defined, we are prepared to construct the local Poisson
-# space $V_p(K)$.
-# The polynomial degree $p$ is specified by the user by passing the `deg`
-# keyword argument to the `LocalPoissonSpace` constructor.
-# 
-# Depending on the degree and the edge discretization parameter `n` we chose 
-# above, this may take a couple of minutes.
+# Since we have subdivided the bad edge, we must build our *bad* basis functions for $V_p^{\partial K}$ by hand. 
 
-# In[32]:
+# In[5]:
 
 
-V = pf.LocalFunctionSpace(K, deg=1)
+x1, x2 = K.get_boundary_points()
+# The trace functions here will be much easier to define in barycentric coordinates
+ones = np.ones(shape=x1.shape)
+rhv = np.stack([ones,x1,x2])
+M = np.transpose(np.stack([np.append([1],A),np.append([1],B),np.append([1],C)]))
+M_=np.linalg.inv(M)
+barycentric = np.matmul(M_,rhv)
+phi1_trace = barycentric[0]
+phi2_trace = barycentric[2]
+def phi3_trace_gen(a,b,c):
+    if min(abs(a),abs(c))>1e-15:
+        return 0
+    return b
+#This is a *terrible* way to define this function. 
+def phi4_trace_gen(a,b,c):
+    if min(abs(a),abs(c))<1e-15:
+        #this threshold depends upon the quadrature scheme, but is just hardcoded here, and will not work for cusps
+        #I didn't see a way to define the trace per edge, but I didn't look very hard either.
+        if abs(b)>1e-10:
+            if abs(a)<abs(c):
+                return a
+            else:
+                return c
+    return b
+phi3_trace = [phi3_trace_gen(a,b,c) for a,b,c in np.transpose(barycentric)]
+phi4_trace = [phi4_trace_gen(a,b,c) for a,b,c in np.transpose(barycentric)]
+bad_basis = [phi1_trace,phi2_trace,phi3_trace,phi4_trace]
 
 
-# It holds that the dimension of the local Poisson space is given by 
-# $$
-#     \dim V_p(K) = {p \choose 2}
-#     -|E(\partial K)|
-#     + \sum_{e \in E(\partial K)} \dim \mathbb{P}_p(e)
-# $$
-# where $E(\partial K)$ is the set of edges of the boundary of $K$,
-# and $\dim \mathbb{P}_p(e)$ is the dimension of the *edge space* on $e$,
-# consisting of traces of polynomials of degree at most $p$ on $e$.
-# The dimension of this edge space depends on the nature of the edge $e$.
-# In our case, each edge of the boundary is a line segment, so
-# $$
-#     \dim \mathbb{P}_p(e) = p + 1
-# $$
-# so we have
-# $$
-#     \dim V_p(K) = {p \choose 2} + p \, \underbrace{|E(\partial K)|}_{=13}.
-# $$
-# Here is a table of the dimensions of the local Poisson spaces for the first
-# few values of $p$.
-# 
-# | $p$ | $\dim V_p(K)$ |
-# | --- | --- |
-# | 1 | 13 |
-# | 2 | 27 |
-# | 3 | 42 |
-# 
-# Let's verify that the dimension of the local Poisson space is what we expect.
-
-# In[ ]:
+# In[6]:
 
 
-print(f"polynomial degree: p = {V.deg}")
-print(f"number of edges: {K.num_edges}")
-print(f"dim(V_{V.deg}(K)) = {V.num_funs}")
-a=np.zeros((4,4))
-for idxi,i in enumerate(V.get_basis()):
-    for idxj,j in enumerate(V.get_basis()):
-        a[idxi,idxj]=i.get_h1_semi_inner_prod(j)
-        # print(i.get_h1_semi_inner_prod(j))
-print(np.linalg.eig(1/2*(a+a.transpose())))
+nyst = pf.NystromSolver(K,verbose=True)
+
+def make_show_basis_fuction_from_trace(trace):
+    phi = pf.LocalFunction(nyst=nyst,has_poly_trace=False)
+    phi.set_trace_values(trace)
+    phi.compute_polynomial_part()
+    phi.compute_polynomial_part_trace()
+    phi.compute_harmonic_conjugate()
+    pf.plot.TracePlot(
+        traces=[phi.get_harmonic_conjugate()],
+        K=K,
+        title="",
+        quad_dict=quad_dict,
+    ).draw()
+    phi.compute_harmonic_weighted_normal_derivative()
+    print(phi.get_h1_semi_inner_prod(phi))
+    phi.compute_interior_values()
+
+    phi_computed = phi.int_vals
+
+    plt.figure()
+    plt.contourf(K.int_x1, K.int_x2, phi_computed, levels=50)
+    plt.colorbar()
+    plt.title("Interior values of $\phi$")
+    plt.show()
+
+    return phi
+
+basis=list(map(make_show_basis_fuction_from_trace,bad_basis))
 
 
-# ## Plot the basis functions
-# Let's plot the basis functions to see what they look like.
-
-# In[ ]:
+# In[7]:
 
 
-for v in V.edge_funs:
-    pf.plot.LocalFunctionPlot(v).draw_vals(title=f"{v.key.fun_type}")
+mat = np.zeros((4,4))
+for i,vi in enumerate(basis):
+    for j,vj in enumerate(basis):
+        mat[i][j]=vi.get_h1_semi_inner_prod(vj)
+print(mat)
+print(np.linalg.eig(1/2*(mat+np.transpose(mat))))
 
