@@ -195,7 +195,7 @@ class DirichletTrace:
         """
         if not self.edges_are_parametrized():
             raise ValueError("All edges must be parametrized")
-        self.num_pts = sum(edge.num_pts for edge in self.edges)
+        self.num_pts = sum(edge.num_pts - 1 for edge in self.edges)
 
     def find_edge_sampled_indices(self) -> None:
         """
@@ -211,7 +211,7 @@ class DirichletTrace:
         self.edge_sampled_indices = []
         start = 0
         for edge in self.edges:
-            end = start + edge.num_pts
+            end = start + edge.num_pts - 1
             self.edge_sampled_indices.append((start, end))
             start = end
 
@@ -236,4 +236,6 @@ class DirichletTrace:
         self.values = np.zeros(self.num_pts)
         for k, edge in enumerate(self.edges):
             start, end = self.edge_sampled_indices[k]
-            self.values[start:end] = edge.evaluate_function(self.funcs[k])
+            self.values[start:end] = edge.evaluate_function(
+                self.funcs[k], ignore_endpoint=True
+            )
