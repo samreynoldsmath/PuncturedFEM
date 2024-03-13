@@ -21,7 +21,9 @@ from .poly_exceptions import DegenerateTriangleError
 ROOT3OVER2 = sqrt(3) / 2
 
 
-def barycentric_coordinates_edge(e: Edge) -> tuple[Polynomial, Polynomial, Polynomial]:
+def barycentric_coordinates_edge(
+    e: Edge,
+) -> tuple[Polynomial, Polynomial, Polynomial]:
     """
     Returns the barcentric coordinates ell = [ell0, ell1, ell2]
     where ellj is a Polynomial object and the point z2 is constructed
