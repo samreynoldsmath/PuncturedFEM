@@ -75,6 +75,19 @@ class DirichletTrace:
         else:
             raise ValueError("'edges' must be of type MeshCell or list[Edge]")
 
+    def set_trace_values_on_edge(
+        self, edge_index: int, values: np.ndarray
+    ) -> None:
+        if edge_index < 0 or edge_index >= self.num_edges:
+            raise ValueError("The edge index is out of range")
+        edge = self.edges[edge_index]
+        if values.shape[0] != edge.num_pts:
+            raise ValueError(
+                "The number of values must match the number of points"
+            )
+        start, end = self.edge_sampled_indices[edge_index]
+        self.values[start:end] = values
+
     def set_trace_values(self, values: Union[int, float, np.ndarray]) -> None:
         if isinstance(values, (int, float)):
             self.values = np.array([values for _ in range(self.num_pts)])
@@ -97,9 +110,7 @@ class DirichletTrace:
                         "All elements must be of callable maps from R^2 to R"
                     )
             self.funcs = funcs
-        raise ValueError(
-            "'funcs' must be of type Func_R2_R or list[Func_R2_R]"
-        )
+        raise ValueError("'funcs' must be of type Func_R2_R or list[Func_R2_R]")
 
     @staticmethod
     def check_func(func: Func_R2_R) -> bool:
@@ -117,12 +128,12 @@ class DirichletTrace:
         self, polys: Union[Polynomial, list[Polynomial]]
     ) -> None:
         if isinstance(polys, Polynomial):
-            self.set_funcs(polys.eval) # type: ignore
+            self.set_funcs(polys.eval)  # type: ignore
         if not isinstance(polys, list):
             raise ValueError("'polys' must be of type list[Polynomial]")
         if not all(isinstance(poly, Polynomial) for poly in polys):
             raise ValueError("All elements must be of type Polynomial")
-        self.set_funcs([poly.eval for poly in polys]) # type: ignore
+        self.set_funcs([poly.eval for poly in polys])  # type: ignore
 
     def edges_are_parametrized(self) -> bool:
         return all(edge.is_parameterized for edge in self.edges)
