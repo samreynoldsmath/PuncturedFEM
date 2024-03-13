@@ -7,10 +7,11 @@ plane.
 """
 
 from os import path
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 
+from ..util.types import Func_R2_R
 from .bounding_box import get_bounding_box
 from .mesh_exceptions import (
     EdgeTransformationError,
@@ -503,9 +504,9 @@ class Edge:
     # FUNCTION EVALUATION ####################################################
 
     def evaluate_function(
-        self, fun: Callable, ignore_endpoint: bool = False
+        self, fun: Func_R2_R, ignore_endpoint: bool = False
     ) -> np.ndarray:
-        """Return fun(x) for each sampled point on Edge"""
+        """Return fun(x1, x2) for each sampled point on Edge"""
         if not self.is_parameterized:
             raise NotParameterizedError("evaluating function")
         if ignore_endpoint:
@@ -514,7 +515,7 @@ class Edge:
             k = 0
         y = np.zeros((self.num_pts - k,))
         for i in range(self.num_pts - k):
-            y[i] = fun(self.x[:, i])
+            y[i] = fun(self.x[0, i], self.x[1, i])
         return y
 
     def multiply_by_dx_norm(
