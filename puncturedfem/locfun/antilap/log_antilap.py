@@ -22,29 +22,31 @@ from ...mesh.cell import MeshCell
 from ...mesh.vert import Vert
 from .. import d2n
 
+# TODO: there is a lot of redundant effort in the following functions
 
-def _log_antilap(x: np.ndarray, xi: Vert) -> np.ndarray:
+
+def _log_antilap(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     """
     Returns an anti-Laplacian of the logarithmic term
     """
-    _, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x, xi)
+    _, _, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x1, x2, xi)
     return 0.125 * x_xi_norm_sq * (np.log(x_xi_norm_sq) - 2)
 
 
-def _log_antilap_x1(x: np.ndarray, xi: Vert) -> np.ndarray:
+def _log_antilap_x1(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     """
     Returns the x1 derivative of an anti-Laplacian of the logarithmic term
     """
-    x_xi, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x, xi)
-    return 0.25 * (np.log(x_xi_norm_sq) - 1) * x_xi[0]
+    x1_xi, _, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x1, x2, xi)
+    return 0.25 * (np.log(x_xi_norm_sq) - 1) * x1_xi
 
 
-def _log_antilap_x2(x: np.ndarray, xi: Vert) -> np.ndarray:
+def _log_antilap_x2(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     """
     Returns the x2 derivative of an anti-Laplacian of the logarithmic term
     """
-    x_xi, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x, xi)
-    return 0.25 * (np.log(x_xi_norm_sq) - 1) * x_xi[1]
+    _, x2_xi, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x1, x2, xi)
+    return 0.25 * (np.log(x_xi_norm_sq) - 1) * x2_xi
 
 
 def get_log_antilap(K: MeshCell) -> np.ndarray:
