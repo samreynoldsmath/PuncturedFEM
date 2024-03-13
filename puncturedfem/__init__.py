@@ -59,6 +59,7 @@ from .locfun.poly.barycentric import (
 )
 from .locfun.poly.piecewise_poly import PiecewisePolynomial
 from .locfun.poly.poly import Polynomial
+from .locfun.trace import DirichletTrace
 from .mesh import meshlib
 from .mesh.cell import MeshCell
 from .mesh.edge import Edge
@@ -94,4 +95,5 @@ __all__ = [
     "Solver",
     "barycentric_coordinates",
     "barycentric_coordinates_edge",
+    "DirichletTrace",
 ]
