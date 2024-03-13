@@ -91,9 +91,9 @@ class DirichletTrace:
             if not all(isinstance(edge, Edge) for edge in edges):
                 raise ValueError("All elements must be of type Edge")
             self.edges = edges
-            self.num_edges = len(edges)
         else:
             raise ValueError("'edges' must be of type MeshCell or list[Edge]")
+        self.num_edges = len(self.edges)
 
     def set_trace_values_on_edge(
         self, edge_index: int, values: np.ndarray
