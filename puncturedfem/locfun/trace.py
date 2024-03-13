@@ -8,18 +8,14 @@ trace of a LocalFunction on the boundary of a MeshCell.
 TODO: Deprecate the PiecewisePolynomial class
 """
 
-import inspect
-from typing import Union, Callable
+from typing import Union
 
 import numpy as np
 
-from ..mesh.edge import Edge
 from ..mesh.cell import MeshCell
+from ..mesh.edge import Edge
+from ..util.types import Func_R2_R, is_Func_R2_R
 from .poly.poly import Polynomial
-
-# TODO: Move to a separate module
-FloatLike = Union[int, float, np.ndarray]
-Func_R2_R = Callable[[FloatLike, FloatLike], FloatLike]
 
 
 class DirichletTrace:
@@ -146,42 +142,17 @@ class DirichletTrace:
             The functions used to define the trace.
         """
         if not isinstance(funcs, list):
-            if DirichletTrace.check_func(funcs):
+            if is_Func_R2_R(funcs):
                 self.funcs = [funcs for _ in range(self.num_edges)]
                 return
         if isinstance(funcs, list):
             for func in funcs:
-                if not DirichletTrace.check_func(func):
+                if not is_Func_R2_R(func):
                     raise ValueError(
                         "All elements must be of callable maps from R^2 to R"
                     )
             self.funcs = funcs
         raise ValueError("'funcs' must be of type Func_R2_R or list[Func_R2_R]")
-
-    @staticmethod  # TODO: Move to a separate module
-    def check_func(func: Func_R2_R) -> bool:
-        """
-        Check if a function is a map from R^2 to R.
-
-        Parameters
-        ----------
-        func : Func_R2_R
-            The function to be checked.
-
-        Returns
-        -------
-        bool
-            True if the function is a map from R^2 to R, False otherwise.
-        """
-        if not callable(func):
-            return False
-        sig = inspect.signature(func)
-        params = sig.parameters.values()
-        return len(params) == 2 and all(
-            isinstance(param.annotation, type)
-            and issubclass(param.annotation, (int, float, np.ndarray))
-            for param in params
-        )
 
     def set_funcs_from_polys(
         self, polys: Union[Polynomial, list[Polynomial]]
