@@ -126,16 +126,20 @@ a_exact = 1.0
 # set point in hole interior
 xi = [0.5, 0.5]
 
-# get the coordinates of sampled boundary points
-x1, x2 = K.get_boundary_points()
 
 # define trace of v
-v_trace = (
-    np.exp(x1) * np.cos(x2)
-    + 0.5 * a_exact * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2)
-    + x1**3 * x2
-    + x1 * x2**3
-)
+def v_trace_fun(x1: float, x2: float) -> float:
+    return (
+        np.exp(x1) * np.cos(x2)
+        + 0.5 * a_exact * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2)
+        + x1**3 * x2
+        + x1 * x2**3
+    )
+
+
+v_trace = pf.DirichletTrace(K, custom=True)
+v_trace.set_funcs(v_trace_fun)
+v_trace.find_values()
 
 
 # ### Define a Polynomial Laplacian
@@ -168,7 +172,7 @@ nyst = pf.NystromSolver(K)
 
 
 v = pf.LocalFunction(nyst=nyst, lap_poly=v_laplacian, has_poly_trace=False)
-v.set_trace_values(v_trace)
+v.set_trace_values(v_trace.values)
 
 
 # To proceed with our calculations, we must determine a polynomial anti-Laplacian
@@ -274,12 +278,19 @@ print("Error = ", abs(v.log_coef[0] - a_exact))
 # get computed value of psi_hat
 psi_hat_computed = v.get_harmonic_conjugate()
 
+
 # get exact trace of psi_hat
-psi_hat_exact = np.exp(x1) * np.sin(x2)
+def psi_hat_exact_fun(x1: float, x2: float) -> float:
+    return np.exp(x1) * np.sin(x2)
+
+
+psi_hat_exact = pf.DirichletTrace(K, custom=True)
+psi_hat_exact.set_funcs(psi_hat_exact_fun)
+psi_hat_exact.find_values()
 
 # plot harmonic conjugate
 pf.plot.TracePlot(
-    traces=[psi_hat_exact, psi_hat_computed],
+    traces=[psi_hat_exact.values, psi_hat_computed],
     K=K,
     fmt=["g--", "k."],
     legend=("exact", "computed"),
@@ -305,13 +316,13 @@ pf.plot.TracePlot(
 # average square distance between values
 boundary_length = K.integrate_over_boundary(np.ones((K.num_pts,)))
 integrated_difference = K.integrate_over_boundary(
-    psi_hat_exact - psi_hat_computed
+    psi_hat_exact.values - psi_hat_computed
 )
 c = -integrated_difference / boundary_length
 
 # plot harmonic conjugate
 pf.plot.TracePlot(
-    traces=[psi_hat_exact, psi_hat_computed - c],
+    traces=[psi_hat_exact.values, psi_hat_computed - c],
     fmt=["g--", "k."],
     legend=("exact", "computed"),
     title="Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$",
@@ -326,7 +337,7 @@ pf.plot.TracePlot(
 
 
 # compute errors in harmonic conjugate
-psi_hat_error = np.abs(psi_hat_exact - psi_hat_computed + c)
+psi_hat_error = np.abs(psi_hat_exact.values - psi_hat_computed + c)
 
 # plot harmonic conjugate error
 pf.plot.TracePlot(
@@ -422,15 +433,25 @@ v.compute_harmonic_weighted_normal_derivative()
 
 
 # define the components of the gradient of phi
-phi_x1 = np.exp(x1) * np.cos(x2) + a_exact * (x1 - xi[0]) / (
-    (x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2
-)
-phi_x2 = -np.exp(x1) * np.sin(x2) + a_exact * (x2 - xi[1]) / (
-    (x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2
-)
+def phi_x1_fun(x1: float, x2: float) -> float:
+    return np.exp(x1) * np.cos(x2) + a_exact * (x1 - xi[0]) / (
+        (x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2
+    )
+phi_x1 = pf.DirichletTrace(K, custom=True)
+phi_x1.set_funcs(phi_x1_fun)
+phi_x1.find_values()
+
+def phi_x2_fun(x1: float, x2: float) -> float:
+    return -np.exp(x1) * np.sin(x2) + a_exact * (x2 - xi[1]) / (
+        (x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2
+    )
+phi_x2 = pf.DirichletTrace(K, custom=True)
+phi_x2.set_funcs(phi_x2_fun)
+phi_x2.find_values()
+
 
 # compute exact weighted normal derivative
-phi_nd = K.dot_with_normal(phi_x1, phi_x2)
+phi_nd = K.dot_with_normal(phi_x1.values, phi_x2.values)
 phi_wnd_exact = K.multiply_by_dx_norm(phi_nd)
 
 # get computed values
@@ -512,18 +533,22 @@ v.compute_anti_laplacian_harmonic_part()
 
 
 # an exact anti-Laplacian
-PHI_exact = 0.25 * np.exp(x1) * (
+def PHI_exact_fun(x1: float, x2: float) -> float:
+    return (0.25 * np.exp(x1) * (
     x1 * np.cos(x2) + x2 * np.sin(x2)
 ) + a_exact * 0.25 * ((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) * (
     0.5 * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) - 1
-)
+))
+PHI_exact = pf.DirichletTrace(K, custom=True)
+PHI_exact.set_funcs(PHI_exact_fun)
+PHI_exact.find_values()
 
 # computed anti-Laplacian
 PHI_computed = v.get_anti_laplacian_harmonic_part()
 
 # plot exact and computed anti-Laplacian
 pf.plot.TracePlot(
-    traces=[PHI_exact, PHI_computed],
+    traces=[PHI_exact.values, PHI_computed],
     fmt=["g--", "k."],
     legend=("exact", "computed"),
     title="Anti-Laplacian",
@@ -552,11 +577,12 @@ pf.plot.TracePlot(
 # In[ ]:
 
 
-PHI_diff = PHI_exact - PHI_computed
+PHI_diff = PHI_exact.values - PHI_computed
 
 X = np.zeros((K.num_pts, 2))
-X[:, 0] = x1
-X[:, 1] = x2
+X1, X2 = K.get_boundary_points()
+X[:, 0] = X1
+X[:, 1] = X2
 XX = np.transpose(X) @ X
 Xy = np.transpose(X) @ PHI_diff
 aa = np.linalg.solve(XX, Xy)
@@ -630,16 +656,20 @@ v.compute_polynomial_part_weighted_normal_derivative()
 
 
 # trace of w
-w_trace = (
+def w_trace_fun(x1: float, x2: float) -> float:
+    return  (
     (x1 - 0.5) / ((x1 - 0.5) ** 2 + (x2 - 0.5) ** 2) + x1**3 + x1 * x2**2
 )
+w_trace = pf.DirichletTrace(K, custom=True)
+w_trace.set_funcs(w_trace_fun)
+w_trace.find_values()
 
 # define a monomial term by specifying its multi-index and coefficient
 w_laplacian = pf.Polynomial([[8.0, 1, 0]])
 
 # declare w as local function object
 w = pf.LocalFunction(nyst, lap_poly=w_laplacian, has_poly_trace=False)
-w.set_trace_values(w_trace)
+w.set_trace_values(w_trace.values)
 
 
 # For convenience, we don't need to call all of the `compute` methods we did for
