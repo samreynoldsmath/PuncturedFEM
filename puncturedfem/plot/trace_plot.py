@@ -43,6 +43,7 @@ class TracePlot:
         title: str = "",
         log_scale: bool = False,
         show_grid: bool = True,
+        max_num_ticks: int = 9,
     ) -> None:
         """
         Constructor for TracePlot class.
@@ -72,13 +73,16 @@ class TracePlot:
         log_scale : bool, optional
             Whether or not to use a log scale on the vertical axis. The default
             is False, which uses a linear scale.
-        grid : bool, optional
+        show_grid : bool, optional
             Whether or not to display a grid on the plot. The default is True,
             which displays a grid.
+        max_num_ticks : int, optional
+            The maximum number of ticks to display on the x-axis. The default is
+            9.
         """
         self._set_num_pts(K)
         self._find_t_parameter(K, quad_dict)
-        self._find_ticks_and_labels(K.num_edges)
+        self._find_ticks_and_labels(K.num_edges, max_num_ticks)
         self.set_traces(traces)
         self.set_format(fmt)
         self.set_legend(legend)
@@ -216,13 +220,49 @@ class TracePlot:
                 idx_start += e.num_pts - 1
                 t0 += 2 * np.pi
 
-    def _find_ticks_and_labels(self, num_edges: int) -> None:
-        self.x_ticks = np.linspace(0, 2 * np.pi * num_edges, num_edges + 1)
-        self.x_labels = [
-            "0",
+    def _find_ticks_and_labels(
+        self, num_edges: int, max_num_ticks: int
+    ) -> None:
+        interval_length = 2 * np.pi * num_edges
+        num_ticks = min(num_edges + 1, max_num_ticks)
+        rotations_per_tick = num_edges // (num_ticks - 1)
+        self.x_labels = ["0"]
+        if num_edges % (num_ticks - 1) == 0:
+            self._find_ticks_and_labels_no_remainder(
+                interval_length, rotations_per_tick, num_ticks
+            )
+        else:
+            self._find_ticks_and_labels_with_remainder(
+                interval_length, rotations_per_tick, num_ticks, num_edges
+            )
+
+    def _find_ticks_and_labels_no_remainder(
+        self, interval_length: float, rotations_per_tick: int, num_ticks: int
+    ) -> None:
+        self.x_ticks = np.linspace(0, interval_length, num_ticks)
+        self.x_labels += [
+            f"{2 * k * rotations_per_tick}{PI_CHAR}"
+            for k in range(1, num_ticks)
         ]
-        for k in range(1, num_edges + 1):
-            self.x_labels.append(f"{2 * k}{PI_CHAR}")
+
+    def _find_ticks_and_labels_with_remainder(
+        self,
+        interval_length: float,
+        rotations_per_tick: int,
+        num_ticks: int,
+        num_edges: int,
+    ) -> None:
+        self.x_ticks = np.zeros(num_ticks)
+        self.x_ticks[:-1] = np.linspace(
+            0,
+            2 * np.pi * rotations_per_tick * (num_ticks - 1),
+            num_ticks - 1,
+        )
+        self.x_ticks[-1] = interval_length
+        self.x_labels += [
+            f"{2 * k * rotations_per_tick}{PI_CHAR}"
+            for k in range(1, num_ticks - 1)
+        ] + [f"{2 * num_edges}{PI_CHAR}"]
 
     def _plot_traces(self) -> None:
         if isinstance(self.traces, np.ndarray):

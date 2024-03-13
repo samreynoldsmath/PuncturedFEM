@@ -6,13 +6,15 @@
 - [ ] modify: `ex1e` to demo how to construct a `LocalFunctionSpace` with a subdivided edge
 ### Features
 - [ ] add: `DirichletTrace` class for handling the traces of `LocalFunction`s
-- [ ] add: splitting an edge into multiple edges
-- [ ] add: an optional argument to `MeshCell` initializer that specifies a partition of the edges, each part of which is flagged to be treated as a single edge
+  - construct an arbitrary trace, or a polynomial trace in the style of `LocalFunctionSpace`
+  - optional argument to initializer that specifies a partition of the edges, each part of which is flagged to be treated as a single edge
+  - will someday replace the default handling of traces in `LocalFunction` class
+- [ ] add: splitting an edge into multiple edges without recursive subdivision
+- [x] add: optional argument to `TracePlot` initializer to specify the maximum number of ticks on the horizontal axis
 ### Maintenance
 - [ ] add: method to get the sample point indices of a specific edge of a mesh cell
-- [ ] modify: `LocalFunctionSpace` builds a basis consistent with edges that have been tagged as part of the 'same edge'
 ### Bug fixes
-- [ ] fix: too many tick marks on `TracePlot`
+- [x] fix: too many tick marks on `TracePlot`
 
 
 ## [2024 Feb 29] v0.4.2
