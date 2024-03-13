@@ -3,7 +3,7 @@
 
 # The curve below is part of a family of $C^2$, nonself-intersecting curves whose limit is surjective on the equilateral triangle. 
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -57,7 +57,7 @@ ys = np.append([0,0],np.append(np.array([myfun_y(n) for n in idxs]),[0,0]))
 # ## Construct the mesh cell
 # 
 
-# In[2]:
+# In[ ]:
 
 
 vA=pf.Vert(0,0,0)
@@ -81,7 +81,7 @@ for i,e in enumerate(edges):
 
 # With the edges defined, let's make the mesh cell $K$.
 
-# In[3]:
+# In[ ]:
 
 
 K = pf.MeshCell(idx=0, edges=edges)
@@ -90,7 +90,7 @@ K = pf.MeshCell(idx=0, edges=edges)
 # Let's parameterize the edges, and plot the edges to check that we have what we 
 # want. These curves are a little too close to the boundary, and we can fix that easily, but we'll ignore it for the moment
 
-# In[4]:
+# In[ ]:
 
 
 quad_dict = pf.get_quad_dict(n=64,p=7)
@@ -100,7 +100,7 @@ pf.plot.MeshPlot(K.get_edges()).draw()
 
 # Since we have subdivided the bad edge, we must build our *bad* basis functions for $V_p^{\partial K}$ by hand. 
 
-# In[5]:
+# In[ ]:
 
 
 x1, x2 = K.get_boundary_points()
@@ -132,7 +132,7 @@ phi4_trace = [phi4_trace_gen(a,b,c) for a,b,c in np.transpose(barycentric)]
 bad_basis = [phi1_trace,phi2_trace,phi3_trace,phi4_trace]
 
 
-# In[6]:
+# In[ ]:
 
 
 nyst = pf.NystromSolver(K,verbose=True)
@@ -166,7 +166,7 @@ def make_show_basis_fuction_from_trace(trace):
 basis=list(map(make_show_basis_fuction_from_trace,bad_basis))
 
 
-# In[7]:
+# In[ ]:
 
 
 mat = np.zeros((4,4))
