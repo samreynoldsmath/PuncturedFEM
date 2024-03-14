@@ -40,8 +40,11 @@ class NystromSolver:
     dlam_dn_wgt: np.ndarray
     T1_dlam_dt: np.ndarray
     Sn_lam: np.ndarray
+    debug: bool
 
-    def __init__(self, K: MeshCell, verbose: bool = False) -> None:
+    def __init__(
+        self, K: MeshCell, verbose: bool = False, debug: bool = False
+    ) -> None:
         """
         Constructor for Nyström Solver. This constructor computes the single
         and double layer operators, as well as the logarithmic terms (if K has
@@ -54,8 +57,11 @@ class NystromSolver:
         verbose : bool, optional
             Whether to print information about the Nyström Solver, by default
             False
+        debug : bool, optional
+            Whether to print debug information, by default False
         """
-        if verbose:
+        self.debug = debug
+        if verbose or debug:
             msg = (
                 "Setting up Nyström Solver... "
                 + f"{K.num_pts} sampled points on {K.num_edges} Edge"
@@ -114,12 +120,24 @@ class NystromSolver:
             matvec=A_fun,
         )
 
+        # print condition number of A
+        if self.debug:
+            c = self._get_operator_condition_number(A)
+            print(f"debug-NystromSolver: Condition number = {c:.2e}")
+
         # solve Nystrom system using GMRES
         u, flag = gmres(A, b, atol=1e-12, tol=1e-12)
 
         # check for convergence
+        if self.debug and flag == 0:
+            print(
+                f"debug-NystromSolver: GMRES converged after {flag} iterations"
+            )
         if flag > 0:
-            print(f"Something went wrong: GMRES returned flag = {flag}")
+            print(
+                "warn-NystromSolver: "
+                + f"GMRES failed to converge after {flag} iterations"
+            )
 
         return u
 
@@ -170,14 +188,26 @@ class NystromSolver:
             dtype=float, shape=(N + m, N + m), matvec=linop4harmconj
         )
 
+        # print condition number of A
+        if self.debug:
+            c = self._get_operator_condition_number(A)
+            print(f"debug-NystromSolver: Condition number = {c:.2e}")
+
         # solve Nystrom system
         x, flag = gmres(A, b, atol=1e-12, tol=1e-12)
         psi_hat = x[:N]
         a = x[N:]
 
         # check for convergence
+        if self.debug and flag == 0:
+            print(
+                f"debug-NystromSolver: GMRES converged after {flag} iterations"
+            )
         if flag > 0:
-            print(f"Something went wrong: GMRES returned flag = {flag}")
+            print(
+                "warn-NystromSolver: "
+                + f"GMRES failed to converge after {flag} iterations"
+            )
 
         return psi_hat, a
 
@@ -421,3 +451,15 @@ class NystromSolver:
             raise ZeroDivisionError("Nystrom system could not be constructed")
 
         return B_edge
+
+    # DEBUGGING ###############################################################
+
+    def _get_operator_condition_number(self, A: LinearOperator) -> float:
+        """
+        Compute the condition number of a linear operator.
+        """
+        I = np.eye(self.K.num_pts)
+        A_mat = np.zeros((self.K.num_pts, self.K.num_pts))
+        for i in range(self.K.num_pts):
+            A_mat[:, i] = A @ I[:, i]
+        return np.linalg.cond(A_mat)
