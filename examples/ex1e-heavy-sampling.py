@@ -68,6 +68,18 @@ pf.plot.MeshPlot(K_simple.get_edges()).draw()
 # In[ ]:
 
 
+A_op = nyst.double_layer_op
+I = np.eye(A_op.shape[0])
+A = np.zeros((A_op.shape[0], A_op.shape[1]))
+for i in range(A_op.shape[0]):
+    A[:, i] = A_op @ I[:, i]
+A += np.ones(A.shape) * 2 * np.pi * K_simple.num_edges / K_simple.num_pts
+print(f"Condition number of A = {np.linalg.cond(A):.2e}")
+
+
+# In[ ]:
+
+
 # define v to have a Dirichlet trace of 1 on each edge
 one = pf.Polynomial([(1.0, 0, 0)])
 v_trace = pf.PiecewisePolynomial(num_polys=4, polys=[one, one, one, one])
@@ -96,7 +108,7 @@ edges[0] = pf.Edge(
     pos_cell_idx=0,
     curve_type="sine_wave",
     amp=0.1,
-    freq=128,  # this is scary
+    freq=8,  # this is scary
 )
 
 # define and parameterize a new mesh cell
@@ -156,7 +168,7 @@ K.parameterize(quad_dict=pf.get_quad_dict(n=512))
 nyst = pf.NystromSolver(K, verbose=True)
 
 
-# ## Changing the Kress parameter
+# ## Changing the Kress parameter (optional)
 # As we saw in [Example 0](ex0-mesh-building.ipynb), we can change the Kress parameter $p$ to adjust how much the sampled points are "clustered" near the endpoints. 
 # The default value is $p=7$, but changing this to its lowest value $p=2$ results in sampled points that are more spread out, perhaps enough so that we can avoid division by machine zero. Let's try it (this may take a while):
 
@@ -194,22 +206,41 @@ print(f"Error in computed area = {np.abs(area_exact - area_computed)}")
 
 # split edge 0 in half
 e1, e2 = pf.split_edge(e=edges[0], t_split=np.pi)
-# split into quarters
-e1_a, e1_b = pf.split_edge(e1, t_split=np.pi / 2)
-e2_a, e2_b = pf.split_edge(e2, t_split=3 * np.pi / 2)
 
-# replace edge 0 with quarter edges
-edges += [e1_a, e1_b, e2_a, e2_b]
+# split into quarters
+e1_1, e1_2 = pf.split_edge(e1, t_split=np.pi / 2)
+e2_1, e2_2 = pf.split_edge(e2, t_split=3 * np.pi / 2)
+
+# split into eighths
+e1_1_1, e1_1_2 = pf.split_edge(e1_1, t_split=np.pi / 4)
+e1_2_1, e1_2_2 = pf.split_edge(e1_2, t_split=3 * np.pi / 4)
+e2_1_1, e2_1_2 = pf.split_edge(e2_1, t_split=5 * np.pi / 4)
+e2_2_1, e2_2_2 = pf.split_edge(e2_2, t_split=7 * np.pi / 4)
+
+# replace edge 0 with eight new edges
+edges += [e1_1_1, e1_1_2, e1_2_1, e1_2_2, e2_1_1, e2_1_2, e2_2_1, e2_2_2]
 del edges[0]
 
 # define mesh cell
 K = pf.MeshCell(idx=0, edges=edges)
 
 # bottom edge sampled at 1024 points
-K.parameterize(quad_dict=pf.get_quad_dict(n=128))
+K.parameterize(quad_dict=pf.get_quad_dict(n=64))
 
 # set up Nystrom solver
 nyst = pf.NystromSolver(K, verbose=True)
+
+
+# In[ ]:
+
+
+A_op = nyst.double_layer_op
+I = np.eye(A_op.shape[0])
+A = np.zeros((A_op.shape[0], A_op.shape[1]))
+for i in range(A_op.shape[0]):
+    A[:, i] = A_op @ I[:, i]
+A += np.ones(A.shape) * 2 * np.pi * K.num_edges / K.num_pts
+print(f"Condition number of A = {np.linalg.cond(A):.2e}")
 
 
 # The `NystromSolver` didn't crash this time. 
@@ -234,3 +265,71 @@ print(f"Error in computed area = {np.abs(area_exact-area_computed)}")
 
 
 # This gave us a much better error than changing the Kress parameter, and the computation was much faster.
+
+# ## Using the DirchletTrace class on MeshCells with Split Edges
+# *Note:* The technique used in this section is likely to be automated in future releases.
+# 
+# Consider the harmonic function $v \in V_1(K)$ with a linear trace 
+# \begin{align*}
+#     v|_{\partial K}(x,y) = y
+# \end{align*}
+# on the bottom edge of the square, and zero on the other three edges.
+# We will use the `DirichletTrace` class to define the corresponding `LocalFunction` object.
+# 
+# The `DirichletTrace` class is initialized with a list of `Edge` objects, or, alternatively, a `MeshCell` object, on which the trace is to be defined.
+# We have several ways to set the trace values. 
+# - We can define a function $f : \mathbb{R}^2 \to \mathbb{R}$ and pass this function to the `set_funcs()` method. **Note:** The function $f$ must be typed, e.g. `def f(x: float, y: float) -> float: return x*y`. Untyped functions will throw an exception. The types can be `float`, `int`, or `numpy.ndarray`.
+# - We can set the trace function on a specific edge with the `set_funcs_on_edge()` method, which accepts the index of the edge (i.e. its position in the list of edges) and a function $f$ as above.
+# - We can set the trace values directly with the `set_values()` method, which accepts a `numpy.ndarray` of shape `(N,1)`, where `N` is the number of points on the edge.  We can set the trace to a constant by passing a `float` or `int` instead of an array.
+# - We can set the trace values on a single edge with the `set_values_on_edge()` method, which accepts a `numpy.ndarray` of shape `(2n,1)`, where `2n` is the number of points on the edge, excluding the terminal point. Again, we can set the trace to a constant by passing a `float` or `int` instead of an array.
+# 
+# Below, we use the `set_funcs()` method to define the same trace function on all the edges.
+
+# In[ ]:
+
+
+v_trace = pf.DirichletTrace(K, custom=True)
+def f(x: float, y: float) -> float:
+    return y
+v_trace.set_funcs(f)
+v_trace.find_values()
+
+
+# We can set the trace values on the three straight edges (which have indices 0, 1,  and 2) to zero by using the `set_values_on_edge()` method.
+
+# In[ ]:
+
+
+for k in [0, 1, 2]:
+    v_trace.set_trace_values_on_edge(k, 0)
+
+
+# Let's take a look at a plot of the trace values:
+
+# In[ ]:
+
+
+pf.plot.TracePlot(v_trace.values, K, quad_dict=pf.get_quad_dict(n=64)).draw()
+
+
+# Let's define the `LocalFunction` object and compute the harmonic conjugate, normal derivative, etc.
+
+# In[ ]:
+
+
+v = pf.LocalFunction(nyst=nyst, lap_poly=pf.Polynomial(), has_poly_trace=False)
+v.set_trace_values(v_trace.values)
+v.compute_all()
+
+
+# The `compute_all()` method does not compute interior values, so let's do that now and take a look at the plot:
+
+# In[ ]:
+
+
+v.compute_interior_values()
+pf.plot.LocalFunctionPlot(v).draw()
+
+
+# ## TODO: Creating a LocalFunctionSpace on a MeshCell with a Split Edge
+# This is a [planned feature](../doc/TODO.md).
