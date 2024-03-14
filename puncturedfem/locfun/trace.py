@@ -14,7 +14,7 @@ import numpy as np
 
 from ..mesh.cell import MeshCell
 from ..mesh.edge import Edge
-from ..util.types import Func_R2_R, is_Func_R2_R
+from ..util.types import FloatLike, Func_R2_R, is_Func_R2_R
 from .poly.poly import Polynomial
 
 
@@ -92,7 +92,7 @@ class DirichletTrace:
         self.num_edges = len(self.edges)
 
     def set_trace_values_on_edge(
-        self, edge_index: int, values: np.ndarray
+        self, edge_index: int, values: FloatLike
     ) -> None:
         """
         Set the values of the trace on a specific edge.
@@ -101,12 +101,20 @@ class DirichletTrace:
         ----------
         edge_index : int
             The index of the edge on which the values are set.
-        values : np.ndarray
+        values : FloatLike
             The values of the trace on the edge.
         """
         if edge_index < 0 or edge_index >= self.num_edges:
             raise ValueError("The edge index is out of range")
         edge = self.edges[edge_index]
+        if isinstance(values, (int, float)):
+            start, end = self.edge_sampled_indices[edge_index]
+            self.values[start:end] = values
+            return
+        if not isinstance(values, np.ndarray):
+            raise ValueError(
+                "'values' must be of type int, float, or np.ndarray"
+            )
         if values.shape[0] != edge.num_pts:
             raise ValueError(
                 "The number of values must match the number of points"
@@ -132,6 +140,25 @@ class DirichletTrace:
                 )
             self.values = values
 
+    def set_func_on_edge(self, edge_index: int, func: Func_R2_R) -> None:
+        """
+        Set the function used to define the trace on a specific edge.
+
+        Parameters
+        ----------
+        edge_index : int
+            The index of the edge on which the function is set.
+        func : Func_R2_R
+            The function used to define the trace on the edge.
+        """
+        if not isinstance(edge_index, int):
+            raise ValueError("'edge_index' must be of type int")
+        if edge_index < 0 or edge_index >= self.num_edges:
+            raise ValueError("The edge index is out of range")
+        if not is_Func_R2_R(func):
+            raise ValueError("The function must be a map from R^2 to R")
+        self.funcs[edge_index] = func
+
     def set_funcs(self, funcs: Union[Func_R2_R, list[Func_R2_R]]) -> None:
         """
         Set the functions used to define the trace.
@@ -153,6 +180,28 @@ class DirichletTrace:
                     )
             self.funcs = funcs
         raise ValueError("'funcs' must be of type Func_R2_R or list[Func_R2_R]")
+
+    def set_func_from_poly_on_edge(
+        self, edge_index: int, poly: Polynomial
+    ) -> None:
+        """
+        Set the function used to define the trace on a specific edge from a
+        polynomial.
+
+        Parameters
+        ----------
+        edge_index : int
+            The index of the edge on which the function is set.
+        poly : Polynomial
+            The polynomial used to define the trace on the edge.
+        """
+        if not isinstance(edge_index, int):
+            raise ValueError("'edge_index' must be of type int")
+        if edge_index < 0 or edge_index >= self.num_edges:
+            raise ValueError("The edge index is out of range")
+        if not isinstance(poly, Polynomial):
+            raise ValueError("'poly' must be of type Polynomial")
+        self.funcs[edge_index] = poly.eval # type: ignore
 
     def set_funcs_from_polys(
         self, polys: Union[Polynomial, list[Polynomial]]
