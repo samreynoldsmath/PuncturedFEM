@@ -6,6 +6,8 @@ Module containing the NystromSolver class, which is used to represent a
 Nyström Solver for a given mesh cell K.
 """
 
+from typing import Optional
+
 import numpy as np
 from scipy.sparse.linalg import LinearOperator, gmres
 
@@ -40,10 +42,17 @@ class NystromSolver:
     dlam_dn_wgt: np.ndarray
     T1_dlam_dt: np.ndarray
     Sn_lam: np.ndarray
-    debug: bool
+    A_simp_con: LinearOperator
+    A_mult_con: LinearOperator
+    M_simp_con: LinearOperator
+    M_mult_con: LinearOperator
 
     def __init__(
-        self, K: MeshCell, verbose: bool = False, debug: bool = False
+        self,
+        K: MeshCell,
+        precond_type: Optional[str] = "jacobi",
+        verbose: bool = False,
+        debug: bool = False,
     ) -> None:
         """
         Constructor for Nyström Solver. This constructor computes the single
@@ -60,7 +69,6 @@ class NystromSolver:
         debug : bool, optional
             Whether to print debug information, by default False
         """
-        self.debug = debug
         if verbose or debug:
             msg = (
                 "Setting up Nyström Solver... "
@@ -69,12 +77,37 @@ class NystromSolver:
             if K.num_edges > 1:
                 msg += "s"
             print(msg)
+
+        # set mesh cell
         self.set_K(K)
+
+        # build single and double layer operators
         self.build_single_layer_mat()
         self.build_double_layer_mat()
         self.build_single_and_double_layer_ops()
+
+        # set up operator for Neumann problem
+        self.A_simp_con = self._solve_neumann_zero_average_operator()
+
+        # set up operator for multiply connected case
         if self.K.num_holes > 0:
             self.compute_log_terms()
+            self.A_mult_con = self._multiply_connected_operator()
+
+        # build preconditioners
+        self.build_preconditioners(precond_type)
+
+        # print condition number
+        if debug:
+            kappa = self._get_operator_condition_number(
+                self.M_simp_con @ self.A_simp_con
+            )
+            print(f"debug-NystromSolver: Condition number = {kappa:.2e}")
+            if self.K.num_holes > 0:
+                kappa = self._get_operator_condition_number(
+                    self.M_mult_con @ self.A_mult_con
+                )
+                print(f"debug-NystromSolver: Condition number = {kappa:.2e}")
 
     def set_K(self, K: MeshCell) -> None:
         """Set the MeshCell"""
@@ -101,38 +134,54 @@ class NystromSolver:
 
     # SOLVERS ################################################################
 
+    def build_preconditioners(self, precond_type: Optional[str]) -> None:
+        """
+        Build a preconditioner for the Neumann problem.
+        """
+        if precond_type == "jacobi":
+            self.M_simp_con = NystromSolver.jacobi_preconditioner(
+                self.A_simp_con
+            )
+            if self.K.num_holes > 0:
+                self.M_mult_con = NystromSolver.jacobi_preconditioner(
+                    self.A_mult_con
+                )
+        else:
+            raise ValueError("Invalid preconditioner type")
+
+    @staticmethod
+    def jacobi_preconditioner(A: LinearOperator) -> LinearOperator:
+        """
+        Jacobi preconditioner for a linear operator A.
+        """
+
+        # Jacobi preconditioner
+        diagonals = np.zeros((A.shape[0],))
+        ei = np.zeros((A.shape[0],))
+        for i in range(A.shape[0]):
+            ei[i] = 1
+            diagonals[i] = np.dot(ei, A @ ei)
+            ei[i] = 0
+
+        # build preconditioner object
+        return LinearOperator(
+            dtype=float,
+            shape=A.shape,
+            matvec=lambda x: x / diagonals,
+        )
+
     def solve_neumann_zero_average(self, u_wnd: np.ndarray) -> np.ndarray:
         """Solve the Neumann problem with zero average on the boundary"""
 
-        # RHS
+        # right-hand side
         b = self.single_layer_op(u_wnd)
 
-        # define linear operator for Neumann problem
-        def A_fun(u: np.ndarray) -> np.ndarray:
-            y = self.double_layer_op(u)
-            y += self.K.integrate_over_boundary(u)
-            return y
-
-        # build linear operator object
-        A = LinearOperator(
-            dtype=float,
-            shape=(self.K.num_pts, self.K.num_pts),
-            matvec=A_fun,
+        # solve Nystrom system using GMRES
+        u, flag = gmres(
+            A=self.A_simp_con, b=b, M=self.M_simp_con, atol=1e-12, tol=1e-12
         )
 
-        # print condition number of A
-        if self.debug:
-            c = self._get_operator_condition_number(A)
-            print(f"debug-NystromSolver: Condition number = {c:.2e}")
-
-        # solve Nystrom system using GMRES
-        u, flag = gmres(A, b, atol=1e-12, tol=1e-12)
-
         # check for convergence
-        if self.debug and flag == 0:
-            print(
-                f"debug-NystromSolver: GMRES converged after {flag} iterations"
-            )
         if flag > 0:
             print(
                 "warn-NystromSolver: "
@@ -140,6 +189,41 @@ class NystromSolver:
             )
 
         return u
+
+    def _solve_neumann_zero_average_operator(self) -> LinearOperator:
+        # define linear operator for Neumann problem
+        def A_fun(u: np.ndarray) -> np.ndarray:
+            y = self.double_layer_op(u)
+            y += self.K.integrate_over_boundary(u)
+            return y
+
+        # build linear operator object
+        return LinearOperator(
+            dtype=float,
+            shape=(self.K.num_pts, self.K.num_pts),
+            matvec=A_fun,
+        )
+
+    def _multiply_connected_operator(self) -> LinearOperator:
+        # array sizes
+        N = self.K.num_pts
+        m = self.K.num_holes
+
+        # define linear operator for harmonic conjugate
+        def linop4harmconj(x: np.ndarray) -> np.ndarray:
+            psi_hat = x[:N]
+            a = x[N:]
+            y = np.zeros((N + m,))
+            y[:N] = self.double_layer_op(psi_hat)
+            y[:N] += self.K.integrate_over_boundary(psi_hat)
+            y[:N] -= self.T1_dlam_dt @ a
+            y[N:] = -self.St(psi_hat) + self.Sn_lam @ a
+            return y
+
+        # build linear operator object
+        return LinearOperator(
+            dtype=float, shape=(N + m, N + m), matvec=linop4harmconj
+        )
 
     def get_harmonic_conjugate(
         self, phi: np.ndarray
@@ -172,37 +256,14 @@ class NystromSolver:
         b[:N] = self.single_layer_op(-dphi_dt_wgt)
         b[N:] = self.Sn(phi)
 
-        # define linear operator for harmonic conjugate
-        def linop4harmconj(x: np.ndarray) -> np.ndarray:
-            psi_hat = x[:N]
-            a = x[N:]
-            y = np.zeros((N + m,))
-            y[:N] = self.double_layer_op(psi_hat)
-            y[:N] += self.K.integrate_over_boundary(psi_hat)
-            y[:N] -= self.T1_dlam_dt @ a
-            y[N:] = -self.St(psi_hat) + self.Sn_lam @ a
-            return y
-
-        # build linear operator object
-        A = LinearOperator(
-            dtype=float, shape=(N + m, N + m), matvec=linop4harmconj
-        )
-
-        # print condition number of A
-        if self.debug:
-            c = self._get_operator_condition_number(A)
-            print(f"debug-NystromSolver: Condition number = {c:.2e}")
-
         # solve Nystrom system
-        x, flag = gmres(A, b, atol=1e-12, tol=1e-12)
+        x, flag = gmres(
+            A=self.A_mult_con, b=b, M=self.M_mult_con, atol=1e-12, tol=1e-12
+        )
         psi_hat = x[:N]
         a = x[N:]
 
         # check for convergence
-        if self.debug and flag == 0:
-            print(
-                f"debug-NystromSolver: GMRES converged after {flag} iterations"
-            )
         if flag > 0:
             print(
                 "warn-NystromSolver: "
@@ -458,8 +519,8 @@ class NystromSolver:
         """
         Compute the condition number of a linear operator.
         """
-        I = np.eye(self.K.num_pts)
-        A_mat = np.zeros((self.K.num_pts, self.K.num_pts))
-        for i in range(self.K.num_pts):
+        I = np.eye(A.shape[0])
+        A_mat = np.zeros(A.shape)
+        for i in range(A.shape[0]):
             A_mat[:, i] = A @ I[:, i]
         return np.linalg.cond(A_mat)

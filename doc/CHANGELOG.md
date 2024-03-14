@@ -13,7 +13,8 @@
 - [ ] add: splitting an edge into multiple edges without recursive subdivision
 - [x] add: optional argument to `TracePlot` initializer to specify the maximum number of ticks on the horizontal axis
 ### Maintenance
-- [ ] add: method to get the sample point indices of a specific edge of a mesh cell
+- [x] add: debug option to `NystromSolver` to show condition number
+- [x] preconditioning for `NystromSolver`
 ### Bug fixes
 - [x] fix: too many tick marks on `TracePlot`
 
