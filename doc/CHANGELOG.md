@@ -9,7 +9,7 @@
   - construct an arbitrary trace, or a polynomial trace in the style of `LocalFunctionSpace`
   - optional argument to initializer that specifies a partition of the edges, each part of which is flagged to be treated as a single edge
   - will someday replace the default handling of traces in `LocalFunction` class
-- [ ] modify: `Polynomial` objects are now callable
+- [x] modify: `Polynomial` objects are now callable
 - [ ] add: splitting an edge into multiple edges without recursive subdivision
 - [x] add: optional argument to `TracePlot` initializer to specify the maximum number of ticks on the horizontal axis
 ### Maintenance

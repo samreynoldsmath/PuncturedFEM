@@ -13,6 +13,7 @@ from typing import Optional
 import numpy as np
 
 from ...mesh.cell import MeshCell
+from ...util.types import FloatLike
 from .monomial import Monomial
 from .multi_index import MultiIndex
 from .poly_exceptions import MultiIndexError, PolynomialError
@@ -160,7 +161,7 @@ class Polynomial:
         """
         self.monos = []
 
-    def eval(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    def _eval(self, x: FloatLike, y: FloatLike) -> np.ndarray:
         """
         Evaluates the Polynomial at the point (x, y)
         """
@@ -265,8 +266,8 @@ class Polynomial:
         """
         x1, x2 = K.get_boundary_points()
         gx, gy = self.grad()
-        gx_trace = gx.eval(x1, x2)
-        gy_trace = gy.eval(x1, x2)
+        gx_trace = gx(x1, x2)
+        gy_trace = gy(x1, x2)
         nd = K.dot_with_normal(gx_trace, gy_trace)
         return K.multiply_by_dx_norm(nd)
 
@@ -281,6 +282,18 @@ class Polynomial:
         for m in self.monos:
             msg += m.__repr__()
         return msg
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the Polynomial.
+        """
+        return self.__repr__()
+
+    def __call__(self, x: FloatLike, y: FloatLike) -> np.ndarray:
+        """
+        Evaluates the Polynomial at the point (x, y)
+        """
+        return self(x, y)
 
     def __eq__(self, other: object) -> bool:
         """
@@ -408,3 +421,11 @@ class Polynomial:
         if isinstance(other, (int, float, Polynomial)):
             return self + (-1 * other)
         raise TypeError("Subtraction of a Polynomial must be from a Polynomial")
+
+    def __rsub__(self, other: object) -> Polynomial:
+        if isinstance(other, (int, float, Polynomial)):
+            return other + (-1 * self)
+        raise TypeError("Subtraction of a Polynomial must be from a Polynomial")
+
+    def __pow__(self, exponent: int) -> Polynomial:
+        return self.pow(exponent)
