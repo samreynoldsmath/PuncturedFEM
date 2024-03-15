@@ -90,7 +90,7 @@ def barycentric_products(e: Edge, deg: int) -> list[ndarray]:
     ell = barycentric_coordinates_edge(e)
     ell_trace = zeros((3, e.num_pts))
     for j in range(3):
-        ell_trace[j, :] = ell[j].eval(x=e.x[0, :], y=e.x[1, :])
+        ell_trace[j, :] = ell[j](x=e.x[0, :], y=e.x[1, :])
 
     spanning_trace = []
     for j in range(3):

@@ -88,7 +88,7 @@ class PiecewisePolynomial:
         for i in range(m):
             e = edges[i]
             num_pts += e.num_pts
-            vals_arr.append(self.polys[i].eval(x=e.x[0, :], y=e.x[1, :]))
+            vals_arr.append(self.polys[i](x=e.x[0, :], y=e.x[1, :]))
         vals = zeros((num_pts,))
         idx = 0
         for i in range(m):

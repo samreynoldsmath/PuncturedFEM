@@ -293,7 +293,7 @@ class Polynomial:
         """
         Evaluates the Polynomial at the point (x, y)
         """
-        return self(x, y)
+        return self._eval(x, y)
 
     def __eq__(self, other: object) -> bool:
         """
