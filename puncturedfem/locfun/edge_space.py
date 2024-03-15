@@ -6,14 +6,13 @@ Module containing the EdgeSpace class for managing spaces of trace functions.
 """
 
 import numpy as np
+from deprecated import deprecated
 
 from ..mesh.edge import Edge
 from ..solver.globkey import GlobalKey
 from .poly.barycentric import barycentric_coordinates_edge
 from .poly.legendre import integrated_legendre_tensor_products
 from .poly.poly import Polynomial
-
-from deprecated import deprecated
 
 
 class EdgeSpace:
@@ -182,21 +181,15 @@ class EdgeSpace:
             # correct Edge functions to vanish at endpoints
             for j in range(2, len(self.edge_fun_traces)):
                 # get values of Legendre tensor products at the endpoints
-                a0 = self.edge_fun_traces[j](
-                    self.e.x[0, 0], self.e.x[1, 0]
-                )
-                a1 = self.edge_fun_traces[j](
-                    self.e.x[0, -1], self.e.x[1, -1]
-                )
+                a0 = self.edge_fun_traces[j](self.e.x[0, 0], self.e.x[1, 0])
+                a1 = self.edge_fun_traces[j](self.e.x[0, -1], self.e.x[1, -1])
 
                 # force values at endpoints to be zero
                 self.edge_fun_traces[j] -= a0 * ell[0] + a1 * ell[1]
 
                 # flip sign if necessary
                 avg_val = self.e.integrate_over_edge(
-                    self.edge_fun_traces[j](
-                        x=self.e.x[0, :], y=self.e.x[1, :]
-                    )
+                    self.edge_fun_traces[j](x=self.e.x[0, :], y=self.e.x[1, :])
                 )
                 if avg_val < 0:
                     self.edge_fun_traces[j] *= -1

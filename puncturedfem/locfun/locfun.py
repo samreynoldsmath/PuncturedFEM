@@ -283,9 +283,9 @@ class LocalFunction:
             for j in range(c.num_edges):
                 k_start = self.nyst.K.component_start_idx[i] + c.vert_idx[j]
                 k_end = self.nyst.K.component_start_idx[i] + c.vert_idx[j + 1]
-                self.trace[k_start:k_end] = self.poly_trace.polys[
-                    edge_idx
-                ](c.edges[j].x[0, :-1], c.edges[j].x[1, :-1])
+                self.trace[k_start:k_end] = self.poly_trace.polys[edge_idx](
+                    c.edges[j].x[0, :-1], c.edges[j].x[1, :-1]
+                )
                 edge_idx += 1
 
     # Laplacian (Polynomial) #################################################
