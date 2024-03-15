@@ -199,7 +199,11 @@ class DirichletTrace:
             raise ValueError("The function must be a map from R^2 to R")
         self.funcs[edge_index] = func
 
-    def set_funcs(self, funcs: Union[Func_R2_R, list[Func_R2_R]], compute_vals:bool=True) -> None:
+    def set_funcs(
+        self,
+        funcs: Union[Func_R2_R, list[Func_R2_R]],
+        compute_vals: bool = True,
+    ) -> None:
         """
         Set the functions used to define the trace.
 
@@ -209,10 +213,21 @@ class DirichletTrace:
             The functions used to define the trace.
         """
         if not isinstance(funcs, list):
-            if is_Func_R2_R(funcs):
+            # TODO: a Polynomial should be recognized as a callable map
+            if isinstance(funcs, Polynomial):
+                funcs = [funcs for _ in range(self.num_edges)]
+            elif is_Func_R2_R(funcs):
                 funcs = [funcs for _ in range(self.num_edges)]
         if isinstance(funcs, list):
-            if not all(is_Func_R2_R(func) for func in funcs):
+            # TODO: a Polynomial should be recognized as a callable map
+            is_accepted = True
+            for func in funcs:
+                if isinstance(func, Polynomial):
+                    continue
+                if not is_Func_R2_R(func):
+                    is_accepted = False
+                    break
+            if not is_accepted:
                 raise ValueError(
                     "All elements must be callable maps from R^2 to R"
                 )
@@ -227,7 +242,7 @@ class DirichletTrace:
         raise ValueError("'funcs' must be callable maps from R^2 to R")
 
     def set_func_from_poly_on_edge(
-        self, edge_index: int, poly: Polynomial, compute_vals:bool=True
+        self, edge_index: int, poly: Polynomial, compute_vals: bool = True
     ) -> None:
         """
         Set the function used to define the trace on a specific edge from a
