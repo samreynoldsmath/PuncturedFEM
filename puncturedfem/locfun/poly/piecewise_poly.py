@@ -8,7 +8,7 @@ for a list of Polynomials.
 
 from typing import Optional
 
-from deprecated import deprecated
+# from deprecated import deprecated
 from numpy import ndarray, zeros
 
 from ...mesh.cell import MeshCell
@@ -24,7 +24,8 @@ class PiecewisePolynomial:
     num_polys: int
     id: int  # used to associate function with an Edge or vertex
 
-    @deprecated(version="0.4.3", reason="Use DirichletTrace instead")
+    # TODO: deprecated in favor of DirichletTrace
+    # @deprecated(version="0.5.0", reason="Use DirichletTrace instead")
     def __init__(
         self,
         num_polys: int = 1,
