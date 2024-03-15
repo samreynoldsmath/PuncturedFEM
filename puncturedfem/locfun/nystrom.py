@@ -94,6 +94,7 @@ class NystromSolver:
 
         # print condition number
         if debug:
+            print("debug-NystromSolver: Computing condition number...")
             kappa = self._get_operator_condition_number(
                 self.precond_simple @ self.A_simple
             )
