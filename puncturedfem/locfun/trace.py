@@ -199,7 +199,7 @@ class DirichletTrace:
             raise ValueError("The function must be a map from R^2 to R")
         self.funcs[edge_index] = func
 
-    def set_funcs(self, funcs: Union[Func_R2_R, list[Func_R2_R]]) -> None:
+    def set_funcs(self, funcs: Union[Func_R2_R, list[Func_R2_R]], compute_vals:bool=True) -> None:
         """
         Set the functions used to define the trace.
 
@@ -210,20 +210,24 @@ class DirichletTrace:
         """
         if not isinstance(funcs, list):
             if is_Func_R2_R(funcs):
-                self.funcs = [funcs for _ in range(self.num_edges)]
+                funcs = [funcs for _ in range(self.num_edges)]
         if isinstance(funcs, list):
             if not all(is_Func_R2_R(func) for func in funcs):
                 raise ValueError(
                     "All elements must be callable maps from R^2 to R"
                 )
+            if len(funcs) != self.num_edges:
+                raise ValueError(
+                    "The number of functions must match the number of edges"
+                )
             self.funcs = funcs
-        else:
-            raise ValueError("'funcs' must be callable maps from R^2 to R")
-        if hasattr(self, "funcs") and self.edges_are_parametrized():
-            self.find_values()
+            if compute_vals and self.edges_are_parametrized():
+                self.find_values()
+            return
+        raise ValueError("'funcs' must be callable maps from R^2 to R")
 
     def set_func_from_poly_on_edge(
-        self, edge_index: int, poly: Polynomial
+        self, edge_index: int, poly: Polynomial, compute_vals:bool=True
     ) -> None:
         """
         Set the function used to define the trace on a specific edge from a
@@ -243,6 +247,8 @@ class DirichletTrace:
         if not isinstance(poly, Polynomial):
             raise ValueError("'poly' must be of type Polynomial")
         self.funcs[edge_index] = poly.eval  # type: ignore
+        if compute_vals and self.edges_are_parametrized():
+            self.find_values()
 
     def set_funcs_from_polys(
         self, polys: Union[Polynomial, list[Polynomial]]
