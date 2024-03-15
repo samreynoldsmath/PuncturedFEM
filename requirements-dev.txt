@@ -22,6 +22,7 @@ cycler==0.11.0
 debugpy==1.8.0
 decorator==5.1.1
 defusedxml==0.7.1
+Deprecated==1.2.14
 dill==0.3.7
 entrypoints==0.4
 executing==1.2.0
