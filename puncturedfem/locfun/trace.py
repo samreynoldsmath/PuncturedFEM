@@ -8,7 +8,7 @@ trace of a LocalFunction on the boundary of a MeshCell.
 TODO: Deprecate the PiecewisePolynomial class
 """
 
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -52,7 +52,11 @@ class DirichletTrace:
     edge_sampled_indices: list[tuple[int, int]]
 
     def __init__(
-        self, edges: Union[MeshCell, list[Edge]], custom: bool = False
+        self,
+        edges: Union[MeshCell, list[Edge]],
+        custom: bool = False,
+        funcs: Optional[Union[Func_R2_R, list[Func_R2_R]]] = None,
+        values: Optional[Union[FloatLike, list[FloatLike]]] = None,
     ) -> None:
         """
         Constructor for the DirichletTrace class.
@@ -65,10 +69,28 @@ class DirichletTrace:
             A flag indicating whether the trace is defined
             using custom functions. If True, the user must
             set the values and functions manually.
+        funcs : Optional[Union[Func_R2_R, list[Func_R2_R]]], optional
+            The functions used to define the trace. Default is None.
+        values : Optional[Union[FloatLike, list[FloatLike]]], optional
+            The values of the trace on the edges. Default is None. Takes
+            precedence over funcs.
+
+        Raises
+        ------
+        ValueError
+            If the edges are not of type MeshCell or list[Edge].
+        ValueError
+            If the values are not of type int, float, or np.ndarray.
+        ValueError
         """
         self.set_edges(edges)
         if custom:
             return
+        if values is not None:
+            self.set_trace_values(values)
+            return
+        if funcs is not None:
+            self.set_funcs(funcs)
         # TODO: Add functionality to set funcs automatically in the same way as
         # in the LocalFunctionSpace class
 
@@ -122,23 +144,41 @@ class DirichletTrace:
         start, end = self.edge_sampled_indices[edge_index]
         self.values[start:end] = values
 
-    def set_trace_values(self, values: Union[int, float, np.ndarray]) -> None:
+    def set_trace_values(
+        self, values: Union[FloatLike, list[FloatLike]]
+    ) -> None:
         """
         Set the values of the trace on all edges.
 
         Parameters
         ----------
-        values : Union[int, float, np.ndarray]
-            The values of the trace on the edges.
+        values : FloatLike
+            The values of the trace on the edges. If a scalar, the same value
+            is set on all edges. If a list, the length must be equal to the
+            number of edges. If an np.ndarray, the shape must be equal to the
+            number of points on the edges.
         """
         if isinstance(values, (int, float)):
-            self.values = np.array([values for _ in range(self.num_pts)])
-        elif isinstance(values, np.ndarray):
+            values = [values for _ in range(self.num_edges)]
+        if isinstance(values, np.ndarray):
             if values.shape[0] != self.num_pts:
                 raise ValueError(
                     "The number of values must match the number of points"
                 )
             self.values = values
+            return
+        if not isinstance(values, list):
+            raise ValueError(
+                "'values' must be of type int, float, or np.ndarray or a list "
+                "of values"
+            )
+        if len(values) != self.num_edges:
+            raise ValueError(
+                "'values' must be a scalar or a list of values of length "
+                "equal to the number of edges"
+            )
+        for k in range(self.num_edges):
+            self.set_trace_values_on_edge(k, values[k])
 
     def set_func_on_edge(self, edge_index: int, func: Func_R2_R) -> None:
         """
@@ -171,15 +211,16 @@ class DirichletTrace:
         if not isinstance(funcs, list):
             if is_Func_R2_R(funcs):
                 self.funcs = [funcs for _ in range(self.num_edges)]
-                return
         if isinstance(funcs, list):
-            for func in funcs:
-                if not is_Func_R2_R(func):
-                    raise ValueError(
-                        "All elements must be of callable maps from R^2 to R"
-                    )
+            if not all(is_Func_R2_R(func) for func in funcs):
+                raise ValueError(
+                    "All elements must be callable maps from R^2 to R"
+                )
             self.funcs = funcs
-        raise ValueError("'funcs' must be of type Func_R2_R or list[Func_R2_R]")
+        else:
+            raise ValueError("'funcs' must be callable maps from R^2 to R")
+        if hasattr(self, "funcs") and self.edges_are_parametrized():
+            self.find_values()
 
     def set_func_from_poly_on_edge(
         self, edge_index: int, poly: Polynomial
@@ -231,6 +272,8 @@ class DirichletTrace:
         bool
             True if all edges are parametrized, False otherwise.
         """
+        if not hasattr(self, "edges"):
+            return False
         return all(edge.is_parameterized for edge in self.edges)
 
     def find_num_pts(self) -> None:
