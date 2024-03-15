@@ -310,6 +310,6 @@ def test_evaluation() -> None:
     t = np.linspace(0, 2 * np.pi)
     x = np.cos(t)
     y = np.sin(t)
-    val1 = pc.p.eval(x, y)
+    val1 = pc.p(x, y)
     val2 = 1 - 5 * x + 2 * y + x * x - y * y
     assert np.linalg.norm(val1 - val2) < 1e-12
