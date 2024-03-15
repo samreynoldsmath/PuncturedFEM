@@ -19,10 +19,45 @@ def split_edge(
     t_split: Optional[Union[int, float, list[int | float], np.ndarray]] = None,
     num_edges: Optional[int] = None,
 ) -> list[Edge] | tuple[Edge, Edge]:
-    """Splits the edge e and returns the two resulting edges"""
+    """
+    Splits the edge e at the parameter t_split and returns the resulting edges.
+    If t_split is a list of parameters, the edge is split at each parameter in
+    the list. If num_edges is provided, the edge is split into num_edges equal
+    parts.
+
+    Parameters
+    ----------
+    e : Edge
+        The edge to split.
+    t_split : float, list of floats, or np.ndarray, optional
+        The parameter(s) at which to split the edge. If a list of floats is
+        provided, the edge is split at each parameter in the list. If a float is
+        provided, the edge is split at that parameter. If None, num_edges must
+        be provided. The default is None.
+    num_edges : int, optional
+        The number of equal parts to split the edge into. If None, t_split must
+        be provided. The default is None.
+
+    Returns
+    -------
+    list[Edge] or tuple[Edge, Edge]
+        If t_split is a list of floats, the resulting edges are returned in a
+        list. If t_split is a float, the resulting edges are returned as a
+        tuple. If num_edges is provided, the resulting edges are returned in a
+        list.
+
+    Raises
+    ------
+    ValueError
+        If t_split and num_edges are both None.
+        If num_edges is less than 2.
+        If t_split is not a float, list of floats, or np.ndarray.
+    """
     if t_split is None and num_edges is None:
         raise ValueError("Either t_split or num_edges must be provided")
     if isinstance(num_edges, int):
+        if num_edges < 2:
+            raise ValueError("num_edges must be at least 2")
         t_split = np.linspace(e.t_bounds[0], e.t_bounds[1], num_edges + 1)[1:-1]
     if isinstance(t_split, (int, float)):
         return _split_edge_single(e, t_split)
