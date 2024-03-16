@@ -116,6 +116,12 @@ class DirichletTrace:
             raise ValueError("'edges' must be of type MeshCell or list[Edge]")
         self.num_edges = len(self.edges)
 
+    def get_edge_sampled_point_indices(
+        self, edge_index: int
+    ) -> tuple[int, int]:
+        """Return the indices of the sampled points on given edge"""
+        return self.edge_sampled_indices[edge_index]
+
     def set_trace_values_on_edge(
         self, edge_index: int, values: FloatLike
     ) -> None:
@@ -353,6 +359,4 @@ class DirichletTrace:
         self.values = np.zeros(self.num_pts)
         for k, edge in enumerate(self.edges):
             start, end = self.edge_sampled_indices[k]
-            self.values[start:end] = edge.evaluate_function(
-                self.funcs[k], ignore_endpoint=True
-            )
+            self.values[start:end] = edge.evaluate_function(self.funcs[k])
