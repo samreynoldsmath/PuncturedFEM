@@ -316,10 +316,12 @@ class Edge:
         self.curvature = np.zeros((0,))
         self.is_parameterized = False
 
-    def get_sampled_points(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_sampled_points(self, ignore_endpoint: bool=True) -> tuple[np.ndarray, np.ndarray]:
         """Return the sampled points on the Edge"""
         if not self.is_parameterized:
             raise NotParameterizedError("getting sampled points")
+        if ignore_endpoint:
+            return self.x[0, :-1], self.x[1, :-1]
         return self.x[0, :], self.x[1, :]
 
     def get_bounding_box(self) -> tuple[float, float, float, float]:
@@ -504,7 +506,7 @@ class Edge:
     # FUNCTION EVALUATION ####################################################
 
     def evaluate_function(
-        self, fun: Func_R2_R, ignore_endpoint: bool = False
+        self, fun: Func_R2_R, ignore_endpoint: bool = True
     ) -> np.ndarray:
         """Return fun(x1, x2) for each sampled point on Edge"""
         if not self.is_parameterized:
