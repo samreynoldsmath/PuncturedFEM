@@ -316,7 +316,9 @@ class Edge:
         self.curvature = np.zeros((0,))
         self.is_parameterized = False
 
-    def get_sampled_points(self, ignore_endpoint: bool=True) -> tuple[np.ndarray, np.ndarray]:
+    def get_sampled_points(
+        self, ignore_endpoint: bool = True
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Return the sampled points on the Edge"""
         if not self.is_parameterized:
             raise NotParameterizedError("getting sampled points")

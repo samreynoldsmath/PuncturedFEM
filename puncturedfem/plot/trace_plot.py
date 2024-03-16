@@ -12,6 +12,7 @@ import numpy as np
 from ..mesh.cell import MeshCell
 from ..mesh.quad import Quad
 from .plot_util import save_figure
+from ..locfun.trace import DirichletTrace
 
 PI_CHAR = r"$\pi$"
 
