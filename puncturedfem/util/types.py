@@ -32,8 +32,9 @@ def is_Func_R2_R(func: Func_R2_R) -> bool:
         return False
     sig = inspect.signature(func)
     params = sig.parameters.values()
-    return len(params) == 2 and all(
-        isinstance(param.annotation, type)
-        and issubclass(param.annotation, (int, float, np.ndarray))
-        for param in params
-    )
+    # TODO: have a more flexible check
+    return len(params) == 2  # and all(
+    # isinstance(param.annotation, type)
+    # and issubclass(param.annotation, (int, float, np.ndarray))
+    # for param in params
+    # )
