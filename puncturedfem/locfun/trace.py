@@ -84,6 +84,9 @@ class DirichletTrace:
         ValueError
         """
         self.set_edges(edges)
+        if self.edges_are_parametrized():
+            self.find_num_pts()
+            self.find_edge_sampled_indices()
         if custom:
             return
         if values is not None:
@@ -137,7 +140,7 @@ class DirichletTrace:
             raise ValueError(
                 "'values' must be of type int, float, or np.ndarray"
             )
-        if values.shape[0] != edge.num_pts:
+        if values.shape[0] != edge.num_pts - 1:
             raise ValueError(
                 "The number of values must match the number of points"
             )
@@ -159,7 +162,7 @@ class DirichletTrace:
             number of points on the edges.
         """
         if isinstance(values, (int, float)):
-            values = [values for _ in range(self.num_edges)]
+            values = np.zeros(self.num_pts) + values
         if isinstance(values, np.ndarray):
             if values.shape[0] != self.num_pts:
                 raise ValueError(
@@ -177,6 +180,7 @@ class DirichletTrace:
                 "'values' must be a scalar or a list of values of length "
                 "equal to the number of edges"
             )
+        self.values = np.zeros(self.num_pts)
         for k in range(self.num_edges):
             self.set_trace_values_on_edge(k, values[k])
 
