@@ -6,6 +6,8 @@ Module containing the TracePlot class for plotting traces of functions on the
 boundary of a MeshCell.
 """
 
+from typing import Union
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -16,6 +18,8 @@ from .plot_util import save_figure
 
 PI_CHAR = r"$\pi$"
 
+TraceLike = Union[np.ndarray, DirichletTrace]
+
 
 class TracePlot:
     """
@@ -24,7 +28,7 @@ class TracePlot:
 
     fig_handle: plt.Figure
     t: np.ndarray
-    traces: np.ndarray | list[np.ndarray]
+    traces: list[np.ndarray]
     x_ticks: np.ndarray
     x_labels: list[str]
     num_pts: int
@@ -36,7 +40,7 @@ class TracePlot:
 
     def __init__(
         self,
-        traces: np.ndarray | list[np.ndarray],
+        traces: Union[TraceLike, list[TraceLike]],
         K: MeshCell,
         quad_dict: dict[str, Quad],
         fmt: str | list[str] = "k-",
@@ -51,9 +55,10 @@ class TracePlot:
 
         Parameters
         ----------
-        traces : numpy.ndarray or list of numpy.ndarrays
-            The traces to be plotted. Each trace must be a numpy array of the
-            same length as the number of sampled boundary points of the MeshCell
+        traces : Union[TraceLike, list[TraceLike]]
+            The traces to be plotted. Each trace must be a DirichletTrace or a
+            numpy.ndarray of the same length as the number of sampled boundary
+            points of the MeshCell.
         K : MeshCell
             The MeshCell whose boundary the traces are sampled on
         quad_dict : dict[str, Quad]
@@ -111,17 +116,31 @@ class TracePlot:
         plt.grid(self.show_grid)
         if filename:
             save_figure(filename)
-            # plt.savefig(filename)
         if show_plot:
             plt.show()
         plt.close()
 
-    def set_traces(self, traces: np.ndarray | list[np.ndarray]) -> None:
+    def set_traces(self, traces: Union[TraceLike, list[TraceLike]]) -> None:
         """
         Sets the traces to be plotted.
         """
-        self._validate_traces(traces)
-        self.traces = traces
+        if not isinstance(traces, list):
+            traces = [traces]
+        self.traces = []
+        for f in traces:
+            if isinstance(f, DirichletTrace):
+                self.traces.append(f.values)
+                f = f.values
+            if not isinstance(f, np.ndarray):
+                raise TypeError(
+                    "Each trace must be a DirichletTrace or a numpy.ndarray"
+                )
+            if len(f) != self.num_pts:
+                raise ValueError(
+                    "Each trace must be a numpy array of the same length as "
+                    "the number of sampled boundary points of the MeshCell"
+                )
+            self.traces.append(f)
 
     def set_format(self, fmt: str | list[str]) -> None:
         """
