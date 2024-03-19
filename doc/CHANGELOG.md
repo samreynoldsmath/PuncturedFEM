@@ -1,20 +1,24 @@
 # Punctured FEM: Change Log
 
 
-## [2024 mmm dd] v0.4.3
+## [2024 Mar 19] v0.4.3
 ### Examples
-- [ ] modify: `ex1e` to demo how to construct a `LocalFunctionSpace` with a subdivided edge
+- [x] modify: `ex1a` to use `DirichletTrace`
+- [x] modify: `ex1e` to use `DirichletTrace`
+- [x] rename: `ex0` to `ex0a`
+- [x] add: `ex0b` to demonstrate how to construct a `LocalFunction` with a `DirichletTrace`
 ### Features
 - [x] add: `DirichletTrace` class for handling the traces of `LocalFunction`s
   - construct an arbitrary trace, or a polynomial trace in the style of `LocalFunctionSpace`
-  - optional argument to initializer that specifies a partition of the edges, each part of which is flagged to be treated as a single edge
   - will someday replace the default handling of traces in `LocalFunction` class
 - [x] modify: `Polynomial` objects are now callable
-- [ ] add: splitting an edge into multiple edges without recursive subdivision
+- [x] add: splitting an edge into multiple edges without recursive subdivision
 - [x] add: optional argument to `TracePlot` initializer to specify the maximum number of ticks on the horizontal axis
 ### Maintenance
 - [x] add: debug option to `NystromSolver` to show condition number
 - [x] preconditioning for `NystromSolver`
+- [x] use `numba` to speed up `NystromSolver` matrix assembly with just-in-time compilation
+- [x] pass `DirichletTrace` object to the `TracePlot` constructor
 ### Bug fixes
 - [x] fix: too many tick marks on `TracePlot`
 
