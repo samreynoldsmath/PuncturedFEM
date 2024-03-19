@@ -224,8 +224,7 @@ v = pf.LocalFunction(nyst=nyst, lap_poly=pf.Polynomial(), has_poly_trace=False)
 v.set_trace_values(v_trace.values) # TODO: pass DirichletTrace object directly to LocalFunction
 
 # plot the trace of v
-# TODO: TracePlot should be able to initialize its own quad_dict
-pf.plot.TracePlot(v_trace.values, K, quad_dict=pf.get_quad_dict(n=64)).draw()
+pf.plot.TracePlot(v_trace, K, quad_dict=pf.get_quad_dict(n=64)).draw()
 
 
 # Finally, let's see if we can accurately compute our quantity of interest:
@@ -233,7 +232,6 @@ pf.plot.TracePlot(v_trace.values, K, quad_dict=pf.get_quad_dict(n=64)).draw()
 # In[ ]:
 
 
-# this can take a few minutes
 v.compute_all()
 L2_exact = 1 / 3
 L2_computed = v.get_l2_inner_prod(v)
