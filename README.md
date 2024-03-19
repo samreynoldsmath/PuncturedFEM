@@ -46,18 +46,12 @@ The multiply connected case is discussed in [5].
 
 ## Dependencies
 This project is written in Python 3.11 and uses the following packages:
-- [jupyter](https://jupyter.org/)
-(interactive examples)
-- [matplotlib](https://matplotlib.org/)
-(plotting)
-- [numpy](https://numpy.org/)
-(arrays, FFT)
-- [scipy](https://www.scipy.org/)
-(sparse matrices, GMRES)
-- [tqdm](https://tqdm.github.io/)
-(progress bars)
-
-See [requirements.txt](requirements.txt) for a complete list of dependencies.
+- [jupyter](https://jupyter.org/) (interactive examples)
+- [matplotlib](https://matplotlib.org/) (plotting)
+- [numba](https://numba.pydata.org/) (just-in-time compilation)
+- [numpy](https://numpy.org/) (arrays, FFT)
+- [scipy](https://www.scipy.org/) (sparse matrices, GMRES)
+- [tqdm](https://tqdm.github.io/) (progress bars)
 
 ## Contributors
 - [Jeffrey S. Ovall](https://sites.google.com/pdx.edu/jeffovall) (1):
