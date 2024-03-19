@@ -4,6 +4,8 @@ piecewise_poly.py
 
 Module containing the PiecewisePolynomial class. It is essentially a wrapper
 for a list of Polynomials.
+
+TODO: Deprecate the PiecewisePolynomial class
 """
 
 from typing import Optional

@@ -4,8 +4,6 @@ trace.py
 
 This module contains the class `DirichletTrace` which is used to represent the
 trace of a LocalFunction on the boundary of a MeshCell.
-
-TODO: Deprecate the PiecewisePolynomial class
 """
 
 from typing import Optional, Union
@@ -41,7 +39,7 @@ class DirichletTrace:
 
     Usage
     -----
-    TODO: Add usage examples
+    See examples/ex0b-trace.ipynb for a tutorial on how to use this class.
     """
 
     edges: list[Edge]
