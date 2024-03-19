@@ -8,6 +8,7 @@ Nyström Solver for a given mesh cell K.
 
 from typing import Optional
 
+import numba
 import numpy as np
 from scipy.sparse.linalg import LinearOperator, gmres
 
@@ -394,7 +395,7 @@ class NystromSolver:
         """
 
         # allocate block
-        B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
+        # B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
 
         # trapezoid weight: pi in integrand cancels
         h = -0.5 / (f.num_pts - 1)
@@ -406,27 +407,39 @@ class NystromSolver:
             j_start = 0
 
         if e == f:  # Kress and Martensen
-            for i in range(e.num_pts - 1):
-                for j in range(j_start, f.num_pts - 1):
-                    ij = abs(i - j)
-                    if qm.t[ij] < 1e-14:
-                        if e.dx_norm[i] < 1e-14:
-                            B_edge[i, i] = 0.0
-                        else:
-                            B_edge[i, i] = 2 * np.log(e.dx_norm[j])
-                    else:
-                        xy = e.x[:, i] - f.x[:, j]
-                        xy2 = np.dot(xy, xy)
-                        B_edge[i, j] = np.log(xy2 / qm.t[ij])
-                    B_edge[i, j] *= h
-                    B_edge[i, j] += qm.wgt[ij]
+            B_edge = _single_layer_same_edge_block(
+                e.num_pts,
+                j_start,
+                h,
+                e.x,
+                e.dx_norm,
+                qm.wgt,
+                qm.t,
+            )
+            # for i in range(e.num_pts - 1):
+            #     for j in range(j_start, f.num_pts - 1):
+            #         ij = abs(i - j)
+            #         if qm.t[ij] < 1e-14:
+            #             if e.dx_norm[i] < 1e-14:
+            #                 B_edge[i, i] = 0.0
+            #             else:
+            #                 B_edge[i, i] = 2 * np.log(e.dx_norm[j])
+            #         else:
+            #             xy = e.x[:, i] - f.x[:, j]
+            #             xy2 = np.dot(xy, xy)
+            #             B_edge[i, j] = np.log(xy2 / qm.t[ij])
+            #         B_edge[i, j] *= h
+            #         B_edge[i, j] += qm.wgt[ij]
 
         else:  # different edges: Kress only
-            for i in range(e.num_pts - 1):
-                for j in range(j_start, f.num_pts - 1):
-                    xy = e.x[:, i] - f.x[:, j]
-                    xy2 = np.dot(xy, xy)
-                    B_edge[i, j] = np.log(xy2) * h
+            B_edge = _single_layer_distinct_edge_block(
+                e.num_pts, f.num_pts, h, e.x, f.x, j_start
+            )
+            # for i in range(e.num_pts - 1):
+            #     for j in range(j_start, f.num_pts - 1):
+            #         xy = e.x[:, i] - f.x[:, j]
+            #         xy2 = np.dot(xy, xy)
+            #         B_edge[i, j] = np.log(xy2) * h
 
         # raise exception when non-numeric value encountered
         if np.isnan(B_edge).any() or np.isinf(B_edge).any():
@@ -489,13 +502,10 @@ class NystromSolver:
         """
 
         # allocate block
-        B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
+        # B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
 
         # trapezoid step size
         h = 1 / (f.num_pts - 1)
-
-        # check if edges are the same Edge
-        same_edge = e == f
 
         # adapt Quadrature to accommodate both trapezoid and Kress
         if f.quad_type[0:5] == "kress":
@@ -504,16 +514,27 @@ class NystromSolver:
             j_start = 0
 
         # compute entries
-        for i in range(e.num_pts - 1):
-            for j in range(j_start, f.num_pts - 1):
-                xy = e.x[:, i] - f.x[:, j]
-                xy2 = np.dot(xy, xy)
-                if same_edge and xy2 < 1e-12:
-                    B_edge[i, j] = 0.5 * e.curvature[j]
-                # TODO: fix for case with xy2 < TOL near corners
-                else:
-                    B_edge[i, j] = np.dot(xy, f.unit_normal[:, j]) / xy2
-                B_edge[i, j] *= f.dx_norm[j] * h
+        if e == f:
+            B_edge = _double_layer_same_edge_block(
+                e.num_pts,
+                h,
+                e.x,
+                j_start,
+                e.curvature,
+                e.unit_normal,
+                e.dx_norm,
+            )
+        else:
+            B_edge = _double_layer_distinct_edge_block(
+                e.num_pts,
+                f.num_pts,
+                h,
+                e.x,
+                f.x,
+                j_start,
+                f.unit_normal,
+                f.dx_norm,
+            )
 
         # raise exception when non-numeric value encountered
         if np.isnan(B_edge).any() or np.isinf(B_edge).any():
@@ -535,3 +556,97 @@ class NystromSolver:
         """Compute the condition number of a linear operator"""
         A_mat = self._get_operator_matrix(A)
         return np.linalg.cond(A_mat)
+
+
+@numba.jit
+def _single_layer_same_edge_block(
+    num_pts: int,
+    j_start: int,
+    h: float,
+    x: np.ndarray,
+    dx_norm: np.ndarray,
+    mart_wgt: np.ndarray,
+    mart_sin: np.ndarray,
+) -> np.ndarray:
+    B_edge = np.zeros((num_pts - 1, num_pts - 1))
+    for i in range(num_pts - 1):
+        for j in range(j_start, num_pts - 1):
+            ij = abs(i - j)
+            if mart_sin[ij] < 1e-14:
+                if dx_norm[i] < 1e-14:
+                    B_edge[i, i] = 0.0
+                else:
+                    B_edge[i, i] = 2 * np.log(dx_norm[j])
+            else:
+                xy = np.ascontiguousarray(x[:, i] - x[:, j])
+                xy2 = np.dot(xy, xy)
+                B_edge[i, j] = np.log(xy2 / mart_sin[ij])
+            B_edge[i, j] *= h
+            B_edge[i, j] += mart_wgt[ij]
+    return B_edge
+
+
+@numba.jit
+def _single_layer_distinct_edge_block(
+    e_num_pts: int,
+    f_num_pts: int,
+    h: float,
+    e_x: np.ndarray,
+    f_x: np.ndarray,
+    j_start: int,
+) -> np.ndarray:
+    B_edge = np.zeros((e_num_pts - 1, f_num_pts - 1))
+    for i in range(e_num_pts - 1):
+        for j in range(j_start, f_num_pts - 1):
+            xy = np.ascontiguousarray(e_x[:, i] - f_x[:, j])
+            xy2 = np.dot(xy, xy)
+            B_edge[i, j] = np.log(xy2) * h
+    return B_edge
+
+
+@numba.jit
+def _double_layer_same_edge_block(
+    num_pts: int,
+    h: float,
+    x: np.ndarray,
+    j_start: int,
+    curvature: np.ndarray,
+    unit_normal: np.ndarray,
+    dx_norm: np.ndarray,
+) -> np.ndarray:
+    B_edge = np.zeros((num_pts - 1, num_pts - 1))
+    for i in range(num_pts - 1):
+        for j in range(j_start, num_pts - 1):
+            xy = np.ascontiguousarray(x[:, i] - x[:, j])
+            xy2 = np.dot(xy, xy)
+            if xy2 < 1e-12:
+                B_edge[i, j] = 0.5 * curvature[j]
+            else:
+                t = np.ascontiguousarray(unit_normal[:, j])
+                B_edge[i, j] = np.dot(xy, t) / xy2
+            B_edge[i, j] *= dx_norm[j] * h
+    return B_edge
+
+
+@numba.jit
+def _double_layer_distinct_edge_block(
+    e_num_pts: int,
+    f_num_pts: int,
+    h: float,
+    e_x: np.ndarray,
+    f_x: np.ndarray,
+    j_start: int,
+    f_unit_normal: np.ndarray,
+    f_dx_norm: np.ndarray,
+) -> np.ndarray:
+    B_edge = np.zeros((e_num_pts - 1, f_num_pts - 1))
+    for i in range(e_num_pts - 1):
+        for j in range(j_start, f_num_pts - 1):
+            xy = np.ascontiguousarray(e_x[:, i] - f_x[:, j])
+            xy2 = np.dot(xy, xy)
+            t = np.ascontiguousarray(f_unit_normal[:, j])
+            # TODO: fix for case with xy2 < TOL near corners on distinct edges
+            B_edge[i, j] = (
+                f_dx_norm[j] * h * np.dot(xy, t) / xy2
+            )
+    return B_edge
