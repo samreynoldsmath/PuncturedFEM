@@ -74,14 +74,6 @@ class DirichletTrace:
         values : Optional[Union[FloatLike, list[FloatLike]]], optional
             The values of the trace on the edges. Default is None. Takes
             precedence over funcs.
-
-        Raises
-        ------
-        ValueError
-            If the edges are not of type MeshCell or list[Edge].
-        ValueError
-            If the values are not of type int, float, or np.ndarray.
-        ValueError
         """
         self.set_edges(edges)
         if self.edges_are_parametrized():
@@ -310,11 +302,6 @@ class DirichletTrace:
     def find_num_pts(self) -> None:
         """
         Find the number of points on the edges.
-
-        Raises
-        ------
-        ValueError
-            If the edges are not parametrized.
         """
         if not self.edges_are_parametrized():
             raise ValueError("All edges must be parametrized")
@@ -323,11 +310,6 @@ class DirichletTrace:
     def find_edge_sampled_indices(self) -> None:
         """
         Find the start and end indices of the edges in the values array.
-
-        Raises
-        ------
-        ValueError
-            If the edges are not parametrized.
         """
         if not self.edges_are_parametrized():
             raise ValueError("All edges must be parametrized")
@@ -342,13 +324,6 @@ class DirichletTrace:
         """
         Find the values of the trace on the edges by evaluating the trace
         functions at the sampled points on each edge.
-
-        Raises
-        ------
-        ValueError
-            If the functions are not set.
-        ValueError
-            If the edges are not parametrized.
         """
         if not hasattr(self, "funcs"):
             raise ValueError("The functions must be set before evaluating")
