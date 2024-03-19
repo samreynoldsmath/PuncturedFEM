@@ -1,8 +1,9 @@
-# SPECIFIC FOLDERS
-bin/
-etc/
-lib/
-share/
+# Virtual Environments
+bin
+etc
+lib
+lib64
+share
 
 # SPECIFIC FILES
 test/test_template.py

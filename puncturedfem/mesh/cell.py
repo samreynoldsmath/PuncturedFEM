@@ -5,10 +5,9 @@ cell.py
 Module containing the cell class, used to represent a mesh cell.
 """
 
-from typing import Callable
-
 import numpy as np
 
+from ..util.types import Func_R2_R
 from .closed_contour import ClosedContour
 from .edge import Edge
 from .mesh_exceptions import (
@@ -406,7 +405,7 @@ class MeshCell:
                         self.is_inside[i, j] = False
 
     # FUNCTION EVALUATION ####################################################
-    def evaluate_function_on_boundary(self, fun: Callable) -> np.ndarray:
+    def evaluate_function_on_boundary(self, fun: Func_R2_R) -> np.ndarray:
         """Return fun(x) for each sampled point on contour"""
         if not self.is_parameterized():
             raise NotParameterizedError("evaluating function on boundary")

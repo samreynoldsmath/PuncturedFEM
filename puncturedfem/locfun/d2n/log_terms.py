@@ -27,37 +27,40 @@ from ...mesh.cell import MeshCell
 from ...mesh.vert import Vert
 
 
-def shifted_coordinates(x: np.ndarray, xi: Vert) -> tuple[np.ndarray, float]:
+def shifted_coordinates(
+    x1: np.ndarray, x2: np.ndarray, xi: Vert
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Returns x - xi and its norm squared
     """
-    x_xi = np.array([x[0] - xi.x, x[1] - xi.y])
-    x_xi_norm_sq = x_xi[0] ** 2 + x_xi[1] ** 2
-    return x_xi, x_xi_norm_sq
+    x1_xi = x1 - xi.x
+    x2_xi = x2 - xi.y
+    x_xi_norm_sq = x1_xi**2 + x2_xi**2
+    return x1_xi, x2_xi, x_xi_norm_sq
 
 
-def _log_trace(x: np.ndarray, xi: Vert) -> float:
+def _log_trace(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     """
     Returns the trace of the logarithmic term
     """
-    _, x_xi_norm_sq = shifted_coordinates(x, xi)
+    _, _, x_xi_norm_sq = shifted_coordinates(x1, x2, xi)
     return 0.5 * np.log(x_xi_norm_sq)
 
 
-def _log_grad_x1(x: np.ndarray, xi: Vert) -> float:
+def _log_grad_x1(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     """
     Returns the x1 derivative of the logarithmic term
     """
-    x_xi, x_xi_norm_sq = shifted_coordinates(x, xi)
-    return x_xi[0] / x_xi_norm_sq
+    x1_xi, _, x_xi_norm_sq = shifted_coordinates(x1, x2, xi)
+    return x1_xi / x_xi_norm_sq
 
 
-def _log_grad_x2(x: np.ndarray, xi: Vert) -> float:
+def _log_grad_x2(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     """
     Returns the x2 derivative of the logarithmic term
     """
-    x_xi, x_xi_norm_sq = shifted_coordinates(x, xi)
-    return x_xi[1] / x_xi_norm_sq
+    _, x2_xi, x_xi_norm_sq = shifted_coordinates(x1, x2, xi)
+    return x2_xi / x_xi_norm_sq
 
 
 def get_log_trace(K: MeshCell) -> np.ndarray:

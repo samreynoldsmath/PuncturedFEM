@@ -6,6 +6,7 @@ Module containing the EdgeSpace class for managing spaces of trace functions.
 """
 
 import numpy as np
+from deprecated import deprecated
 
 from ..mesh.edge import Edge
 from ..solver.globkey import GlobalKey
@@ -180,21 +181,15 @@ class EdgeSpace:
             # correct Edge functions to vanish at endpoints
             for j in range(2, len(self.edge_fun_traces)):
                 # get values of Legendre tensor products at the endpoints
-                a0 = self.edge_fun_traces[j].eval(
-                    self.e.x[0, 0], self.e.x[1, 0]
-                )
-                a1 = self.edge_fun_traces[j].eval(
-                    self.e.x[0, -1], self.e.x[1, -1]
-                )
+                a0 = self.edge_fun_traces[j](self.e.x[0, 0], self.e.x[1, 0])
+                a1 = self.edge_fun_traces[j](self.e.x[0, -1], self.e.x[1, -1])
 
                 # force values at endpoints to be zero
                 self.edge_fun_traces[j] -= a0 * ell[0] + a1 * ell[1]
 
                 # flip sign if necessary
                 avg_val = self.e.integrate_over_edge(
-                    self.edge_fun_traces[j].eval(
-                        x=self.e.x[0, :], y=self.e.x[1, :]
-                    )
+                    self.edge_fun_traces[j](x=self.e.x[0, :], y=self.e.x[1, :])
                 )
                 if avg_val < 0:
                     self.edge_fun_traces[j] *= -1
@@ -284,11 +279,12 @@ class EdgeSpace:
             for j in range(i, m):
                 integrand = self.edge_fun_traces[i] * self.edge_fun_traces[j]
                 M[i, j] = self.e.integrate_over_edge(
-                    integrand.eval(x=self.e.x[0, :], y=self.e.x[1, :])
+                    integrand(x=self.e.x[0, :], y=self.e.x[1, :])
                 )
                 M[j, i] = M[i, j]
         return M
 
+    @deprecated(version="0.4.3", reason="Causes numerical instability")
     def diagonal_rescale(self, M: np.ndarray) -> np.ndarray:
         """
         Return the normalized mass matrix M_ij / sqrt(M_ii * M_jj).
@@ -304,6 +300,7 @@ class EdgeSpace:
             M[i, i] = 1
         return M
 
+    @deprecated(version="0.4.3", reason="Causes numerical instability")
     def eliminate_zeros(self, M: np.ndarray, tol: float = 1e-12) -> np.ndarray:
         """
         Return the matrix M with rows and columns with zero diagonals removed.

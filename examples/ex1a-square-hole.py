@@ -126,16 +126,19 @@ a_exact = 1.0
 # set point in hole interior
 xi = [0.5, 0.5]
 
-# get the coordinates of sampled boundary points
-x1, x2 = K.get_boundary_points()
 
 # define trace of v
-v_trace = (
-    np.exp(x1) * np.cos(x2)
-    + 0.5 * a_exact * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2)
-    + x1**3 * x2
-    + x1 * x2**3
-)
+def v_exact_fun(x1: float, x2: float) -> float:
+    return (
+        np.exp(x1) * np.cos(x2)
+        + 0.5 * a_exact * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2)
+        + x1**3 * x2
+        + x1 * x2**3
+    )
+
+
+# create trace object
+v_trace = pf.DirichletTrace(K, funcs=v_exact_fun)
 
 
 # ### Define a Polynomial Laplacian
@@ -161,14 +164,14 @@ v_laplacian = pf.Polynomial([[12.0, 1, 1]])
 # In[ ]:
 
 
-nyst = pf.NystromSolver(K)
+nyst = pf.NystromSolver(K, verbose=True)
 
 
 # In[ ]:
 
 
 v = pf.LocalFunction(nyst=nyst, lap_poly=v_laplacian, has_poly_trace=False)
-v.set_trace_values(v_trace)
+v.set_trace_values(v_trace.values)
 
 
 # To proceed with our calculations, we must determine a polynomial anti-Laplacian
@@ -274,12 +277,18 @@ print("Error = ", abs(v.log_coef[0] - a_exact))
 # get computed value of psi_hat
 psi_hat_computed = v.get_harmonic_conjugate()
 
-# get exact trace of psi_hat
-psi_hat_exact = np.exp(x1) * np.sin(x2)
+
+# define exact trace of psi_hat
+def psi_hat_exact_fun(x1: float, x2: float) -> float:
+    return np.exp(x1) * np.sin(x2)
+
+
+# create trace object
+psi_hat_exact = pf.DirichletTrace(K, funcs=psi_hat_exact_fun)
 
 # plot harmonic conjugate
 pf.plot.TracePlot(
-    traces=[psi_hat_exact, psi_hat_computed],
+    traces=[psi_hat_exact.values, psi_hat_computed],
     K=K,
     fmt=["g--", "k."],
     legend=("exact", "computed"),
@@ -305,13 +314,13 @@ pf.plot.TracePlot(
 # average square distance between values
 boundary_length = K.integrate_over_boundary(np.ones((K.num_pts,)))
 integrated_difference = K.integrate_over_boundary(
-    psi_hat_exact - psi_hat_computed
+    psi_hat_exact.values - psi_hat_computed
 )
 c = -integrated_difference / boundary_length
 
 # plot harmonic conjugate
 pf.plot.TracePlot(
-    traces=[psi_hat_exact, psi_hat_computed - c],
+    traces=[psi_hat_exact.values, psi_hat_computed - c],
     fmt=["g--", "k."],
     legend=("exact", "computed"),
     title="Harmonic conjugate $\hat\psi$ of conjugable part of $\phi$",
@@ -326,7 +335,7 @@ pf.plot.TracePlot(
 
 
 # compute errors in harmonic conjugate
-psi_hat_error = np.abs(psi_hat_exact - psi_hat_computed + c)
+psi_hat_error = np.abs(psi_hat_exact.values - psi_hat_computed + c)
 
 # plot harmonic conjugate error
 pf.plot.TracePlot(
@@ -422,15 +431,27 @@ v.compute_harmonic_weighted_normal_derivative()
 
 
 # define the components of the gradient of phi
-phi_x1 = np.exp(x1) * np.cos(x2) + a_exact * (x1 - xi[0]) / (
-    (x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2
-)
-phi_x2 = -np.exp(x1) * np.sin(x2) + a_exact * (x2 - xi[1]) / (
-    (x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2
-)
+def phi_x1_fun(x1: float, x2: float) -> float:
+    return np.exp(x1) * np.cos(x2) + a_exact * (x1 - xi[0]) / (
+        (x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2
+    )
+
+
+# create trace object
+phi_x1 = pf.DirichletTrace(K, funcs=phi_x1_fun)
+
+
+def phi_x2_fun(x1: float, x2: float) -> float:
+    return -np.exp(x1) * np.sin(x2) + a_exact * (x2 - xi[1]) / (
+        (x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2
+    )
+
+
+# create trace object
+phi_x2 = pf.DirichletTrace(K, funcs=phi_x2_fun)
 
 # compute exact weighted normal derivative
-phi_nd = K.dot_with_normal(phi_x1, phi_x2)
+phi_nd = K.dot_with_normal(phi_x1.values, phi_x2.values)
 phi_wnd_exact = K.multiply_by_dx_norm(phi_nd)
 
 # get computed values
@@ -512,18 +533,23 @@ v.compute_anti_laplacian_harmonic_part()
 
 
 # an exact anti-Laplacian
-PHI_exact = 0.25 * np.exp(x1) * (
-    x1 * np.cos(x2) + x2 * np.sin(x2)
-) + a_exact * 0.25 * ((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) * (
-    0.5 * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) - 1
-)
+def PHI_exact_fun(x1: float, x2: float) -> float:
+    return 0.25 * np.exp(x1) * (
+        x1 * np.cos(x2) + x2 * np.sin(x2)
+    ) + a_exact * 0.25 * ((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) * (
+        0.5 * np.log((x1 - xi[0]) ** 2 + (x2 - xi[1]) ** 2) - 1
+    )
+
+
+# create trace object
+PHI_exact = pf.DirichletTrace(K, funcs=PHI_exact_fun)
 
 # computed anti-Laplacian
 PHI_computed = v.get_anti_laplacian_harmonic_part()
 
 # plot exact and computed anti-Laplacian
 pf.plot.TracePlot(
-    traces=[PHI_exact, PHI_computed],
+    traces=[PHI_exact.values, PHI_computed],
     fmt=["g--", "k."],
     legend=("exact", "computed"),
     title="Anti-Laplacian",
@@ -552,11 +578,12 @@ pf.plot.TracePlot(
 # In[ ]:
 
 
-PHI_diff = PHI_exact - PHI_computed
+PHI_diff = PHI_exact.values - PHI_computed
 
 X = np.zeros((K.num_pts, 2))
-X[:, 0] = x1
-X[:, 1] = x2
+X1, X2 = K.get_boundary_points()
+X[:, 0] = X1
+X[:, 1] = X2
 XX = np.transpose(X) @ X
 Xy = np.transpose(X) @ PHI_diff
 aa = np.linalg.solve(XX, Xy)
@@ -630,16 +657,23 @@ v.compute_polynomial_part_weighted_normal_derivative()
 
 
 # trace of w
-w_trace = (
-    (x1 - 0.5) / ((x1 - 0.5) ** 2 + (x2 - 0.5) ** 2) + x1**3 + x1 * x2**2
-)
+def w_exact_fun(x1: float, x2: float) -> float:
+    return (
+        (x1 - 0.5) / ((x1 - 0.5) ** 2 + (x2 - 0.5) ** 2)
+        + x1**3
+        + x1 * x2**2
+    )
+
+
+# create trace object
+w_trace = pf.DirichletTrace(K, funcs=w_exact_fun)
 
 # define a monomial term by specifying its multi-index and coefficient
 w_laplacian = pf.Polynomial([[8.0, 1, 0]])
 
 # declare w as local function object
 w = pf.LocalFunction(nyst, lap_poly=w_laplacian, has_poly_trace=False)
-w.set_trace_values(w_trace)
+w.set_trace_values(w_trace.values)
 
 
 # For convenience, we don't need to call all of the `compute` methods we did for
@@ -770,15 +804,19 @@ print("L^2 error (vw) = %.4e" % abs(l2_vw_computed - l2_vw_exact))
 # In[ ]:
 
 
-y1 = K.int_x1
-y2 = K.int_x2
-
+# compute interior values
 v.compute_interior_values()
 
+# extract computed values
 v_computed = v.int_vals
 v_x1_computed = v.int_grad1
 v_x2_computed = v.int_grad2
 
+# get interior points
+y1 = K.int_x1
+y2 = K.int_x2
+
+# plot interior values
 plt.figure()
 plt.contourf(y1, y2, v_computed, levels=50)
 plt.colorbar()
@@ -793,15 +831,11 @@ plt.show()
 # In[ ]:
 
 
-v_exact = (
-    np.exp(y1) * np.cos(y2)
-    + 0.5 * a_exact * np.log((y1 - xi[0]) ** 2 + (y2 - xi[1]) ** 2)
-    + y1**3 * y2
-    + y1 * y2**3
-)
-
+# get errors in interior values
+v_exact = v_exact_fun(y1, y2)
 v_error = np.log10(np.abs(v_computed - v_exact))
 
+# plot interior errors
 plt.figure()
 plt.contourf(y1, y2, v_error, levels=50)
 plt.colorbar()
@@ -814,15 +848,11 @@ plt.show()
 # In[ ]:
 
 
-v_x1_exact = (
-    np.exp(y1) * np.cos(y2)
-    + a_exact * (y1 - xi[0]) / ((y1 - xi[0]) ** 2 + (y2 - xi[1]) ** 2)
-    + 3 * y1**2 * y2
-    + y2**3
-)
-
+# get errors in interior gradient
+v_x1_exact = phi_x1_fun(y1, y2) + 3 * y1**2 * y2 + y2**3
 v_x1_error = np.log10(np.abs(v_x1_computed - v_x1_exact))
 
+# plot interior gradient errors
 plt.figure()
 plt.contourf(y1, y2, v_x1_error, levels=50)
 plt.colorbar()
@@ -833,15 +863,11 @@ plt.show()
 # In[ ]:
 
 
-v_x2_exact = (
-    -np.exp(y1) * np.sin(y2)
-    + a_exact * (y2 - xi[1]) / ((y1 - xi[0]) ** 2 + (y2 - xi[1]) ** 2)
-    + y1**3
-    + 3 * y1 * y2**2
-)
-
+# get errors in interior gradient
+v_x2_exact = phi_x2_fun(y1, y2) + y1**3 + 3 * y1 * y2**2
 v_x2_error = np.log10(np.abs(v_x2_computed - v_x2_exact))
 
+# plot interior gradient errors
 plt.figure()
 plt.contourf(y1, y2, v_x2_error, levels=50)
 plt.colorbar()

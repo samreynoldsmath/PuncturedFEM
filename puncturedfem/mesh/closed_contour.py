@@ -6,11 +6,12 @@ Module containing the ClosedContour class, which represents a closed contour
 in the plane.
 """
 
-from typing import Callable, Optional
+from typing import Optional
 
 import numpy as np
 from matplotlib import path
 
+from ..util.types import Func_R2_R
 from .bounding_box import get_bounding_box
 from .edge import Edge
 from .mesh_exceptions import (
@@ -153,9 +154,9 @@ class ClosedContour:
         # is the starting point of the next Edge
         self.closest_vert_idx = np.zeros((self.num_pts,), dtype=int)
         for i in range(self.num_edges):
-            self.closest_vert_idx[
-                self.vert_idx[i] : mid_idx[i]
-            ] = self.vert_idx[i]
+            self.closest_vert_idx[self.vert_idx[i] : mid_idx[i]] = (
+                self.vert_idx[i]
+            )
             self.closest_vert_idx[mid_idx[i] : self.vert_idx[i + 1]] = (
                 self.vert_idx[i + 1] % self.num_pts
             )
@@ -256,7 +257,7 @@ class ClosedContour:
             self.interior_point = Vert(x=x[ii, jj], y=y[ii, jj])
 
     # FUNCTION EVALUATION ####################################################
-    def evaluate_function_on_contour(self, fun: Callable) -> np.ndarray:
+    def evaluate_function_on_contour(self, fun: Func_R2_R) -> np.ndarray:
         """Return fun(x) for each sampled point on contour"""
         if not self.is_parameterized():
             raise NotParameterizedError("evaluating function on contour")
@@ -271,8 +272,8 @@ class ClosedContour:
         """Returns the x1 and x2 coordinates of the boundary points"""
         if not self.is_parameterized():
             raise NotParameterizedError("getting boundary points")
-        x1 = self.evaluate_function_on_contour(lambda x: x[0])
-        x2 = self.evaluate_function_on_contour(lambda x: x[1])
+        x1 = self.evaluate_function_on_contour(lambda x1, x2: x1)
+        x2 = self.evaluate_function_on_contour(lambda x1, x2: x2)
         return x1, x2
 
     def dot_with_tangent(

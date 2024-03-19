@@ -53,8 +53,13 @@ from .locfun.edge_space import EdgeSpace
 from .locfun.locfun import LocalFunction
 from .locfun.locfunsp import LocalFunctionSpace
 from .locfun.nystrom import NystromSolver
+from .locfun.poly.barycentric import (
+    barycentric_coordinates,
+    barycentric_coordinates_edge,
+)
 from .locfun.poly.piecewise_poly import PiecewisePolynomial
 from .locfun.poly.poly import Polynomial
+from .locfun.trace import DirichletTrace
 from .mesh import meshlib
 from .mesh.cell import MeshCell
 from .mesh.edge import Edge
@@ -88,4 +93,7 @@ __all__ = [
     "GlobalFunctionSpace",
     "BilinearForm",
     "Solver",
+    "barycentric_coordinates",
+    "barycentric_coordinates_edge",
+    "DirichletTrace",
 ]

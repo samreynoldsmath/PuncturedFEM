@@ -21,7 +21,9 @@ from .poly_exceptions import DegenerateTriangleError
 ROOT3OVER2 = sqrt(3) / 2
 
 
-def barycentric_coordinates_edge(e: Edge) -> list[Polynomial]:
+def barycentric_coordinates_edge(
+    e: Edge,
+) -> tuple[Polynomial, Polynomial, Polynomial]:
     """
     Returns the barcentric coordinates ell = [ell0, ell1, ell2]
     where ellj is a Polynomial object and the point z2 is constructed
@@ -37,7 +39,7 @@ def barycentric_coordinates_edge(e: Edge) -> list[Polynomial]:
 
 def barycentric_coordinates(
     z0: ndarray, z1: ndarray, z2: ndarray
-) -> list[Polynomial]:
+) -> tuple[Polynomial, Polynomial, Polynomial]:
     """
     Returns the barycentric coordinates ell = [ell0, ell1, ell2]
     where ellj is a Polynomial object
@@ -72,7 +74,7 @@ def barycentric_coordinates(
         ell[j] *= -1 / h
         ell[j] += 1
 
-    return ell
+    return ell[0], ell[1], ell[2]
 
 
 def barycentric_products(e: Edge, deg: int) -> list[ndarray]:
@@ -88,7 +90,7 @@ def barycentric_products(e: Edge, deg: int) -> list[ndarray]:
     ell = barycentric_coordinates_edge(e)
     ell_trace = zeros((3, e.num_pts))
     for j in range(3):
-        ell_trace[j, :] = ell[j].eval(x=e.x[0, :], y=e.x[1, :])
+        ell_trace[j, :] = ell[j](x=e.x[0, :], y=e.x[1, :])
 
     spanning_trace = []
     for j in range(3):

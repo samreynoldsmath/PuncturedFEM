@@ -6,14 +6,19 @@ Module containing the TracePlot class for plotting traces of functions on the
 boundary of a MeshCell.
 """
 
+from typing import Union
+
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ..locfun.trace import DirichletTrace
 from ..mesh.cell import MeshCell
 from ..mesh.quad import Quad
 from .plot_util import save_figure
 
 PI_CHAR = r"$\pi$"
+
+TraceLike = Union[np.ndarray, DirichletTrace]
 
 
 class TracePlot:
@@ -23,7 +28,7 @@ class TracePlot:
 
     fig_handle: plt.Figure
     t: np.ndarray
-    traces: np.ndarray | list[np.ndarray]
+    traces: list[np.ndarray]
     x_ticks: np.ndarray
     x_labels: list[str]
     num_pts: int
@@ -35,7 +40,7 @@ class TracePlot:
 
     def __init__(
         self,
-        traces: np.ndarray | list[np.ndarray],
+        traces: Union[TraceLike, list[TraceLike]],
         K: MeshCell,
         quad_dict: dict[str, Quad],
         fmt: str | list[str] = "k-",
@@ -43,15 +48,17 @@ class TracePlot:
         title: str = "",
         log_scale: bool = False,
         show_grid: bool = True,
+        max_num_ticks: int = 9,
     ) -> None:
         """
         Constructor for TracePlot class.
 
         Parameters
         ----------
-        traces : numpy.ndarray or list of numpy.ndarrays
-            The traces to be plotted. Each trace must be a numpy array of the
-            same length as the number of sampled boundary points of the MeshCell
+        traces : Union[TraceLike, list[TraceLike]]
+            The traces to be plotted. Each trace must be a DirichletTrace or a
+            numpy.ndarray of the same length as the number of sampled boundary
+            points of the MeshCell.
         K : MeshCell
             The MeshCell whose boundary the traces are sampled on
         quad_dict : dict[str, Quad]
@@ -72,13 +79,16 @@ class TracePlot:
         log_scale : bool, optional
             Whether or not to use a log scale on the vertical axis. The default
             is False, which uses a linear scale.
-        grid : bool, optional
+        show_grid : bool, optional
             Whether or not to display a grid on the plot. The default is True,
             which displays a grid.
+        max_num_ticks : int, optional
+            The maximum number of ticks to display on the x-axis. The default is
+            9.
         """
         self._set_num_pts(K)
         self._find_t_parameter(K, quad_dict)
-        self._find_ticks_and_labels(K.num_edges)
+        self._find_ticks_and_labels(K.num_edges, max_num_ticks)
         self.set_traces(traces)
         self.set_format(fmt)
         self.set_legend(legend)
@@ -106,17 +116,31 @@ class TracePlot:
         plt.grid(self.show_grid)
         if filename:
             save_figure(filename)
-            # plt.savefig(filename)
         if show_plot:
             plt.show()
         plt.close()
 
-    def set_traces(self, traces: np.ndarray | list[np.ndarray]) -> None:
+    def set_traces(self, traces: Union[TraceLike, list[TraceLike]]) -> None:
         """
         Sets the traces to be plotted.
         """
-        self._validate_traces(traces)
-        self.traces = traces
+        if not isinstance(traces, list):
+            traces = [traces]
+        self.traces = []
+        for f in traces:
+            if isinstance(f, DirichletTrace):
+                self.traces.append(f.values)
+                f = f.values
+            if not isinstance(f, np.ndarray):
+                raise TypeError(
+                    "Each trace must be a DirichletTrace or a numpy.ndarray"
+                )
+            if len(f) != self.num_pts:
+                raise ValueError(
+                    "Each trace must be a numpy array of the same length as "
+                    "the number of sampled boundary points of the MeshCell"
+                )
+            self.traces.append(f)
 
     def set_format(self, fmt: str | list[str]) -> None:
         """
@@ -216,13 +240,49 @@ class TracePlot:
                 idx_start += e.num_pts - 1
                 t0 += 2 * np.pi
 
-    def _find_ticks_and_labels(self, num_edges: int) -> None:
-        self.x_ticks = np.linspace(0, 2 * np.pi * num_edges, num_edges + 1)
-        self.x_labels = [
-            "0",
+    def _find_ticks_and_labels(
+        self, num_edges: int, max_num_ticks: int
+    ) -> None:
+        interval_length = 2 * np.pi * num_edges
+        num_ticks = min(num_edges + 1, max_num_ticks)
+        rotations_per_tick = num_edges // (num_ticks - 1)
+        self.x_labels = ["0"]
+        if num_edges % (num_ticks - 1) == 0:
+            self._find_ticks_and_labels_no_remainder(
+                interval_length, rotations_per_tick, num_ticks
+            )
+        else:
+            self._find_ticks_and_labels_with_remainder(
+                interval_length, rotations_per_tick, num_ticks, num_edges
+            )
+
+    def _find_ticks_and_labels_no_remainder(
+        self, interval_length: float, rotations_per_tick: int, num_ticks: int
+    ) -> None:
+        self.x_ticks = np.linspace(0, interval_length, num_ticks)
+        self.x_labels += [
+            f"{2 * k * rotations_per_tick}{PI_CHAR}"
+            for k in range(1, num_ticks)
         ]
-        for k in range(1, num_edges + 1):
-            self.x_labels.append(f"{2 * k}{PI_CHAR}")
+
+    def _find_ticks_and_labels_with_remainder(
+        self,
+        interval_length: float,
+        rotations_per_tick: int,
+        num_ticks: int,
+        num_edges: int,
+    ) -> None:
+        self.x_ticks = np.zeros(num_ticks)
+        self.x_ticks[:-1] = np.linspace(
+            0,
+            2 * np.pi * rotations_per_tick * (num_ticks - 1),
+            num_ticks - 1,
+        )
+        self.x_ticks[-1] = interval_length
+        self.x_labels += [
+            f"{2 * k * rotations_per_tick}{PI_CHAR}"
+            for k in range(1, num_ticks - 1)
+        ] + [f"{2 * num_edges}{PI_CHAR}"]
 
     def _plot_traces(self) -> None:
         if isinstance(self.traces, np.ndarray):

@@ -25,4 +25,6 @@ locfunsp
     Contains the LocalFunctionSpace class for managing V_p(K).
 nystrom
     Contains the NystromSolver class for solving integral equations.
+trace
+    Contains the DirichletTrace class for managing trace functions.
 """

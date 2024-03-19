@@ -6,6 +6,9 @@ Module containing the NystromSolver class, which is used to represent a
 Nyström Solver for a given mesh cell K.
 """
 
+from typing import Optional
+
+import numba
 import numpy as np
 from scipy.sparse.linalg import LinearOperator, gmres
 
@@ -40,8 +43,18 @@ class NystromSolver:
     dlam_dn_wgt: np.ndarray
     T1_dlam_dt: np.ndarray
     Sn_lam: np.ndarray
+    A_simple: LinearOperator
+    A_augment: LinearOperator
+    precond_simple: LinearOperator
+    precond_augment: LinearOperator
 
-    def __init__(self, K: MeshCell, verbose: bool = False) -> None:
+    def __init__(
+        self,
+        K: MeshCell,
+        precond_type: Optional[str] = "jacobi",
+        verbose: bool = False,
+        debug: bool = False,
+    ) -> None:
         """
         Constructor for Nyström Solver. This constructor computes the single
         and double layer operators, as well as the logarithmic terms (if K has
@@ -54,21 +67,57 @@ class NystromSolver:
         verbose : bool, optional
             Whether to print information about the Nyström Solver, by default
             False
+        debug : bool, optional
+            Whether to print debug information, by default False
         """
-        if verbose:
-            msg = (
-                "Setting up Nyström Solver... "
-                + f"{K.num_pts} sampled points on {K.num_edges} Edge"
-            )
-            if K.num_edges > 1:
-                msg += "s"
-            print(msg)
+        # set mesh cell
         self.set_K(K)
+
+        # print setup message
+        if verbose or debug:
+            print(self._setup_message())
+
+        # build single and double layer operators
         self.build_single_layer_mat()
         self.build_double_layer_mat()
         self.build_single_and_double_layer_ops()
+
+        # set up operator for Neumann problem
+        self.A_simple = self._solve_neumann_zero_average_operator()
+
+        # set up operator for multiply connected case
         if self.K.num_holes > 0:
             self.compute_log_terms()
+            self.A_augment = self._multiply_connected_operator()
+
+        # build preconditioners
+        self.build_preconditioners(precond_type)
+
+        # print condition number
+        if debug:
+            print("debug-NystromSolver: Computing condition number...")
+            kappa = self._get_operator_condition_number(
+                self.precond_simple @ self.A_simple
+            )
+            print(f"debug-NystromSolver: Condition number = {kappa:.2e}")
+            if self.K.num_holes > 0:
+                kappa = self._get_operator_condition_number(
+                    self.precond_augment @ self.A_augment
+                )
+                print(
+                    "debug-NystromSolver: "
+                    + f"Augmented condition number = {kappa:.2e}"
+                )
+
+    def _setup_message(self) -> str:
+        """Return a message describing the setup of the Nyström Solver."""
+        msg = (
+            "Setting up Nyström Solver... "
+            + f"{self.K.num_pts} sampled points on {self.K.num_edges} Edge"
+        )
+        if self.K.num_edges > 1:
+            msg += "s"
+        return msg
 
     def set_K(self, K: MeshCell) -> None:
         """Set the MeshCell"""
@@ -76,52 +125,16 @@ class NystromSolver:
             raise TypeError("K must be a MeshCell")
         self.K = K
 
-    def build_single_and_double_layer_ops(self) -> None:
-        """
-        Build linear operator objects for the single and double layer
-        operators.
-        """
-        self.double_layer_sum = np.sum(self.double_layer_mat, 1)
-        self.single_layer_op = LinearOperator(
-            dtype=float,
-            shape=(self.K.num_pts, self.K.num_pts),
-            matvec=self.linop4singlelayer,
-        )
-        self.double_layer_op = LinearOperator(
-            dtype=float,
-            shape=(self.K.num_pts, self.K.num_pts),
-            matvec=self.linop4doublelayer,
-        )
-
     # SOLVERS ################################################################
 
     def solve_neumann_zero_average(self, u_wnd: np.ndarray) -> np.ndarray:
         """Solve the Neumann problem with zero average on the boundary"""
 
-        # RHS
+        # right-hand side
         b = self.single_layer_op(u_wnd)
 
-        # define linear operator for Neumann problem
-        def A_fun(u: np.ndarray) -> np.ndarray:
-            y = self.double_layer_op(u)
-            y += self.K.integrate_over_boundary(u)
-            return y
-
-        # build linear operator object
-        A = LinearOperator(
-            dtype=float,
-            shape=(self.K.num_pts, self.K.num_pts),
-            matvec=A_fun,
-        )
-
         # solve Nystrom system using GMRES
-        u, flag = gmres(A, b, atol=1e-12, tol=1e-12)
-
-        # check for convergence
-        if flag > 0:
-            print(f"Something went wrong: GMRES returned flag = {flag}")
-
-        return u
+        return self._gmres_solve(A=self.A_simple, b=b, M=self.precond_simple)
 
     def get_harmonic_conjugate(
         self, phi: np.ndarray
@@ -154,6 +167,64 @@ class NystromSolver:
         b[:N] = self.single_layer_op(-dphi_dt_wgt)
         b[N:] = self.Sn(phi)
 
+        # solve Nystrom system with GMRES
+        x = self._gmres_solve(A=self.A_augment, b=b, M=self.precond_augment)
+        psi_hat = x[:N]
+        a = x[N:]
+
+        return psi_hat, a
+
+    def _gmres_solve(
+        self, A: LinearOperator, b: np.ndarray, M: LinearOperator
+    ) -> np.ndarray:
+        x, flag = gmres(A=A, b=b, M=M, atol=1e-12, tol=1e-12)
+        if flag > 0:
+            r = b - A @ x
+            print(
+                "warn-NystromSolver: "
+                + f"GMRES failed to converge after {flag} iterations"
+                + f", residual norm = {np.linalg.norm(r):.2e}"
+            )
+        return x
+
+    # OPERATORS ###############################################################
+
+    def build_single_and_double_layer_ops(self) -> None:
+        """
+        Build linear operator objects for the single and double layer
+        operators.
+        """
+        self.double_layer_sum = np.sum(self.double_layer_mat, 1)
+        self.single_layer_op = LinearOperator(
+            dtype=float,
+            shape=(self.K.num_pts, self.K.num_pts),
+            matvec=self.linop4singlelayer,
+        )
+        self.double_layer_op = LinearOperator(
+            dtype=float,
+            shape=(self.K.num_pts, self.K.num_pts),
+            matvec=self.linop4doublelayer,
+        )
+
+    def _solve_neumann_zero_average_operator(self) -> LinearOperator:
+        # define linear operator for Neumann problem
+        def A_fun(u: np.ndarray) -> np.ndarray:
+            y = self.double_layer_op(u)
+            y += self.K.integrate_over_boundary(u)
+            return y
+
+        # build linear operator object
+        return LinearOperator(
+            dtype=float,
+            shape=(self.K.num_pts, self.K.num_pts),
+            matvec=A_fun,
+        )
+
+    def _multiply_connected_operator(self) -> LinearOperator:
+        # array sizes
+        N = self.K.num_pts
+        m = self.K.num_holes
+
         # define linear operator for harmonic conjugate
         def linop4harmconj(x: np.ndarray) -> np.ndarray:
             psi_hat = x[:N]
@@ -166,20 +237,49 @@ class NystromSolver:
             return y
 
         # build linear operator object
-        A = LinearOperator(
+        return LinearOperator(
             dtype=float, shape=(N + m, N + m), matvec=linop4harmconj
         )
 
-        # solve Nystrom system
-        x, flag = gmres(A, b, atol=1e-12, tol=1e-12)
-        psi_hat = x[:N]
-        a = x[N:]
+    # PRECONDITIONERS ########################################################
 
-        # check for convergence
-        if flag > 0:
-            print(f"Something went wrong: GMRES returned flag = {flag}")
+    def build_preconditioners(self, precond_type: Optional[str]) -> None:
+        """
+        Build a preconditioner for the Neumann problem.
+        """
+        if precond_type == "jacobi":
+            self.precond_simple = NystromSolver.jacobi_preconditioner(
+                self.A_simple
+            )
+            if self.K.num_holes > 0:
+                self.precond_augment = NystromSolver.jacobi_preconditioner(
+                    self.A_augment
+                )
+        else:
+            raise ValueError("Invalid preconditioner type")
 
-        return psi_hat, a
+    # TODO: this belongs in a separate module
+    # TODO: implement other preconditioners
+    @staticmethod
+    def jacobi_preconditioner(A: LinearOperator) -> LinearOperator:
+        """
+        Jacobi preconditioner for a linear operator A.
+        """
+
+        # Jacobi preconditioner
+        diagonals = np.zeros((A.shape[0],))
+        ei = np.zeros((A.shape[0],))
+        for i in range(A.shape[0]):
+            ei[i] = 1
+            diagonals[i] = np.dot(ei, A @ ei)
+            ei[i] = 0
+
+        # build preconditioner object
+        return LinearOperator(
+            dtype=float,
+            shape=A.shape,
+            matvec=lambda x: x / diagonals,
+        )
 
     # LOGARITHMIC TERMS #####################################################
     def compute_log_terms(self) -> None:
@@ -257,9 +357,9 @@ class NystromSolver:
             for j in range(self.K.num_holes + 1):
                 jj1 = self.K.component_start_idx[j]
                 jj2 = self.K.component_start_idx[j + 1]
-                self.single_layer_mat[
-                    ii1:ii2, jj1:jj2
-                ] = self.single_layer_component_block(i, j)
+                self.single_layer_mat[ii1:ii2, jj1:jj2] = (
+                    self.single_layer_component_block(i, j)
+                )
 
     def single_layer_component_block(self, i: int, j: int) -> np.ndarray:
         """
@@ -295,7 +395,7 @@ class NystromSolver:
         """
 
         # allocate block
-        B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
+        # B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
 
         # trapezoid weight: pi in integrand cancels
         h = -0.5 / (f.num_pts - 1)
@@ -307,27 +407,39 @@ class NystromSolver:
             j_start = 0
 
         if e == f:  # Kress and Martensen
-            for i in range(e.num_pts - 1):
-                for j in range(j_start, f.num_pts - 1):
-                    ij = abs(i - j)
-                    if qm.t[ij] < 1e-14:
-                        if e.dx_norm[i] < 1e-14:
-                            B_edge[i, i] = 0.0
-                        else:
-                            B_edge[i, i] = 2 * np.log(e.dx_norm[j])
-                    else:
-                        xy = e.x[:, i] - f.x[:, j]
-                        xy2 = np.dot(xy, xy)
-                        B_edge[i, j] = np.log(xy2 / qm.t[ij])
-                    B_edge[i, j] *= h
-                    B_edge[i, j] += qm.wgt[ij]
+            B_edge = _single_layer_same_edge_block(
+                e.num_pts,
+                j_start,
+                h,
+                e.x,
+                e.dx_norm,
+                qm.wgt,
+                qm.t,
+            )
+            # for i in range(e.num_pts - 1):
+            #     for j in range(j_start, f.num_pts - 1):
+            #         ij = abs(i - j)
+            #         if qm.t[ij] < 1e-14:
+            #             if e.dx_norm[i] < 1e-14:
+            #                 B_edge[i, i] = 0.0
+            #             else:
+            #                 B_edge[i, i] = 2 * np.log(e.dx_norm[j])
+            #         else:
+            #             xy = e.x[:, i] - f.x[:, j]
+            #             xy2 = np.dot(xy, xy)
+            #             B_edge[i, j] = np.log(xy2 / qm.t[ij])
+            #         B_edge[i, j] *= h
+            #         B_edge[i, j] += qm.wgt[ij]
 
         else:  # different edges: Kress only
-            for i in range(e.num_pts - 1):
-                for j in range(j_start, f.num_pts - 1):
-                    xy = e.x[:, i] - f.x[:, j]
-                    xy2 = np.dot(xy, xy)
-                    B_edge[i, j] = np.log(xy2) * h
+            B_edge = _single_layer_distinct_edge_block(
+                e.num_pts, f.num_pts, h, e.x, f.x, j_start
+            )
+            # for i in range(e.num_pts - 1):
+            #     for j in range(j_start, f.num_pts - 1):
+            #         xy = e.x[:, i] - f.x[:, j]
+            #         xy2 = np.dot(xy, xy)
+            #         B_edge[i, j] = np.log(xy2) * h
 
         # raise exception when non-numeric value encountered
         if np.isnan(B_edge).any() or np.isinf(B_edge).any():
@@ -358,10 +470,10 @@ class NystromSolver:
             for j in range(self.K.num_holes + 1):
                 jj1 = self.K.component_start_idx[j]
                 jj2 = self.K.component_start_idx[j + 1]
-                self.double_layer_mat[
-                    ii1:ii2, jj1:jj2
-                ] = self.double_layer_component_block(
-                    self.K.components[i], self.K.components[j]
+                self.double_layer_mat[ii1:ii2, jj1:jj2] = (
+                    self.double_layer_component_block(
+                        self.K.components[i], self.K.components[j]
+                    )
                 )
 
     def double_layer_component_block(
@@ -390,13 +502,10 @@ class NystromSolver:
         """
 
         # allocate block
-        B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
+        # B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
 
         # trapezoid step size
         h = 1 / (f.num_pts - 1)
-
-        # check if edges are the same Edge
-        same_edge = e == f
 
         # adapt Quadrature to accommodate both trapezoid and Kress
         if f.quad_type[0:5] == "kress":
@@ -405,19 +514,137 @@ class NystromSolver:
             j_start = 0
 
         # compute entries
-        for i in range(e.num_pts - 1):
-            for j in range(j_start, f.num_pts - 1):
-                xy = e.x[:, i] - f.x[:, j]
-                xy2 = np.dot(xy, xy)
-                if same_edge and xy2 < 1e-12:
-                    B_edge[i, j] = 0.5 * e.curvature[j]
-                # TODO: fix for case with xy2 < TOL near corners
-                else:
-                    B_edge[i, j] = np.dot(xy, f.unit_normal[:, j]) / xy2
-                B_edge[i, j] *= f.dx_norm[j] * h
+        if e == f:
+            B_edge = _double_layer_same_edge_block(
+                e.num_pts,
+                h,
+                e.x,
+                j_start,
+                e.curvature,
+                e.unit_normal,
+                e.dx_norm,
+            )
+        else:
+            B_edge = _double_layer_distinct_edge_block(
+                e.num_pts,
+                f.num_pts,
+                h,
+                e.x,
+                f.x,
+                j_start,
+                f.unit_normal,
+                f.dx_norm,
+            )
 
         # raise exception when non-numeric value encountered
         if np.isnan(B_edge).any() or np.isinf(B_edge).any():
             raise ZeroDivisionError("Nystrom system could not be constructed")
 
         return B_edge
+
+    # DEBUGGING ###############################################################
+
+    def _get_operator_matrix(self, A: LinearOperator) -> np.ndarray:
+        """Return the matrix representation of a linear operator"""
+        I = np.eye(A.shape[0])
+        A_mat = np.zeros(A.shape)
+        for i in range(A.shape[0]):
+            A_mat[:, i] = A @ I[:, i]
+        return A_mat
+
+    def _get_operator_condition_number(self, A: LinearOperator) -> float:
+        """Compute the condition number of a linear operator"""
+        A_mat = self._get_operator_matrix(A)
+        return np.linalg.cond(A_mat)
+
+
+@numba.jit
+def _single_layer_same_edge_block(
+    num_pts: int,
+    j_start: int,
+    h: float,
+    x: np.ndarray,
+    dx_norm: np.ndarray,
+    mart_wgt: np.ndarray,
+    mart_sin: np.ndarray,
+) -> np.ndarray:
+    B_edge = np.zeros((num_pts - 1, num_pts - 1))
+    for i in range(num_pts - 1):
+        for j in range(j_start, num_pts - 1):
+            ij = abs(i - j)
+            if mart_sin[ij] < 1e-14:
+                if dx_norm[i] < 1e-14:
+                    B_edge[i, i] = 0.0
+                else:
+                    B_edge[i, i] = 2 * np.log(dx_norm[j])
+            else:
+                xy = np.ascontiguousarray(x[:, i] - x[:, j])
+                xy2 = np.dot(xy, xy)
+                B_edge[i, j] = np.log(xy2 / mart_sin[ij])
+            B_edge[i, j] *= h
+            B_edge[i, j] += mart_wgt[ij]
+    return B_edge
+
+
+@numba.jit
+def _single_layer_distinct_edge_block(
+    e_num_pts: int,
+    f_num_pts: int,
+    h: float,
+    e_x: np.ndarray,
+    f_x: np.ndarray,
+    j_start: int,
+) -> np.ndarray:
+    B_edge = np.zeros((e_num_pts - 1, f_num_pts - 1))
+    for i in range(e_num_pts - 1):
+        for j in range(j_start, f_num_pts - 1):
+            xy = np.ascontiguousarray(e_x[:, i] - f_x[:, j])
+            xy2 = np.dot(xy, xy)
+            B_edge[i, j] = np.log(xy2) * h
+    return B_edge
+
+
+@numba.jit
+def _double_layer_same_edge_block(
+    num_pts: int,
+    h: float,
+    x: np.ndarray,
+    j_start: int,
+    curvature: np.ndarray,
+    unit_normal: np.ndarray,
+    dx_norm: np.ndarray,
+) -> np.ndarray:
+    B_edge = np.zeros((num_pts - 1, num_pts - 1))
+    for i in range(num_pts - 1):
+        for j in range(j_start, num_pts - 1):
+            xy = np.ascontiguousarray(x[:, i] - x[:, j])
+            xy2 = np.dot(xy, xy)
+            if xy2 < 1e-12:
+                B_edge[i, j] = 0.5 * curvature[j]
+            else:
+                t = np.ascontiguousarray(unit_normal[:, j])
+                B_edge[i, j] = np.dot(xy, t) / xy2
+            B_edge[i, j] *= dx_norm[j] * h
+    return B_edge
+
+
+@numba.jit
+def _double_layer_distinct_edge_block(
+    e_num_pts: int,
+    f_num_pts: int,
+    h: float,
+    e_x: np.ndarray,
+    f_x: np.ndarray,
+    j_start: int,
+    f_unit_normal: np.ndarray,
+    f_dx_norm: np.ndarray,
+) -> np.ndarray:
+    B_edge = np.zeros((e_num_pts - 1, f_num_pts - 1))
+    for i in range(e_num_pts - 1):
+        for j in range(j_start, f_num_pts - 1):
+            xy = np.ascontiguousarray(e_x[:, i] - f_x[:, j])
+            xy2 = np.dot(xy, xy)
+            t = np.ascontiguousarray(f_unit_normal[:, j])
+            # TODO: fix for case with xy2 < TOL near corners on distinct edges
+            B_edge[i, j] = f_dx_norm[j] * h * np.dot(xy, t) / xy2
+    return B_edge

@@ -116,7 +116,7 @@ class LocalFunctionSpace:
         self.deg = deg
 
     def find_interior_values(
-        self, verbose: bool = True, compute_grad=False
+        self, verbose: bool = True, compute_grad: bool = False
     ) -> None:
         """
         Equivalent to running v.compute_interior_values() for each

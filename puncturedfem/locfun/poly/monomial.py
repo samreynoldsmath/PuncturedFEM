@@ -16,6 +16,7 @@ from typing import Optional
 
 import numpy as np
 
+from ...util.types import FloatLike
 from .multi_index import MultiIndex
 from .poly_exceptions import InvalidVariableError
 
@@ -79,7 +80,7 @@ class Monomial:
         alpha.set_from_idx(idx)
         self.set_multidx(alpha)
 
-    def eval(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    def eval(self, x: FloatLike, y: FloatLike) -> np.ndarray:
         """
         Evaluate the Monomial at the point (x, y).
         """

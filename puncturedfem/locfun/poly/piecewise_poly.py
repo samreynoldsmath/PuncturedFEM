@@ -4,10 +4,13 @@ piecewise_poly.py
 
 Module containing the PiecewisePolynomial class. It is essentially a wrapper
 for a list of Polynomials.
+
+TODO: Deprecate the PiecewisePolynomial class
 """
 
 from typing import Optional
 
+# from deprecated import deprecated
 from numpy import ndarray, zeros
 
 from ...mesh.cell import MeshCell
@@ -23,6 +26,8 @@ class PiecewisePolynomial:
     num_polys: int
     id: int  # used to associate function with an Edge or vertex
 
+    # TODO: deprecated in favor of DirichletTrace
+    # @deprecated(version="0.5.0", reason="Use DirichletTrace instead")
     def __init__(
         self,
         num_polys: int = 1,
@@ -88,7 +93,7 @@ class PiecewisePolynomial:
         for i in range(m):
             e = edges[i]
             num_pts += e.num_pts
-            vals_arr.append(self.polys[i].eval(x=e.x[0, :], y=e.x[1, :]))
+            vals_arr.append(self.polys[i](x=e.x[0, :], y=e.x[1, :]))
         vals = zeros((num_pts,))
         idx = 0
         for i in range(m):

@@ -2,6 +2,7 @@
 # coding: utf-8
 
 # # Example 1.E: Heavy Sampling of an Intricate Edge
+# ### Sam Reynolds, 2024
 # 
 # We may sometimes have an edge that has fine details that need to be resolved by increasing the sampling parameter $n$, with the edge being sampled at $2n+1$ points, including the end points.
 # 
@@ -20,8 +21,6 @@ parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
 sys.path.append(parent_dir)
 
 import puncturedfem as pf
-import numpy as np
-import matplotlib.pyplot as plt
 
 # define vertices
 verts: list[pf.Vert] = []
@@ -39,7 +38,7 @@ edges.append(
         pos_cell_idx=0,
         curve_type="sine_wave",
         amp=0.1,
-        freq=8,
+        freq=4,
     )
 )
 edges.append(pf.Edge(verts[1], verts[2], pos_cell_idx=0))
@@ -47,39 +46,39 @@ edges.append(pf.Edge(verts[2], verts[3], pos_cell_idx=0))
 edges.append(pf.Edge(verts[3], verts[0], pos_cell_idx=0))
 
 # define mesh cell
-K = pf.MeshCell(idx=0, edges=edges)
+K_simple = pf.MeshCell(idx=0, edges=edges)
 
 # parameterize edges
-K.parameterize(quad_dict=pf.get_quad_dict(n=64))
+K_simple.parameterize(quad_dict=pf.get_quad_dict(n=64))
 
 # set up Nystrom solver
-nyst = pf.NystromSolver(K)
+nyst = pf.NystromSolver(K_simple, debug=True)
 
 # plot boundary
-pf.plot.MeshPlot(K.get_edges()).draw()
+pf.plot.MeshPlot(K_simple.get_edges()).draw()
 
 
-# Notice that the area of the mesh cell $K$ is $|K|=1$.
-# We could compute this by integrating the constant function $v=1$:
+# It is simple to verify that $v\in V_1(K)$ given by $v(x_1,x_2) = x_2$ has a square $L^2$ norm of
 # \begin{align*}
-#     1 = \int_K v^2~dx~.
+#     \int_K v^2 ~dx = \frac13~.
 # \end{align*}
+# Let's verify this:
 
 # In[ ]:
 
 
-# define v to have a Dirichlet trace of 1 on each edge
-one = pf.Polynomial([(1.0, 0, 0)])
-v_trace = pf.PiecewisePolynomial(num_polys=4, polys=[one, one, one, one])
+# define v to have a Dirichlet trace of x_2 on each edge
+x2 = pf.Polynomial([(1.0, 0, 1)])
+v_trace = pf.PiecewisePolynomial(num_polys=4, polys=[x2, x2, x2, x2])
 
-# the constant function v = 1 is harmonic
+# the local function v = x_2 is harmonic
 v = pf.LocalFunction(nyst=nyst, lap_poly=pf.Polynomial(), poly_trace=v_trace)
 v.compute_all()
 
 # compute area and error
-area_exact = 1.0
-area_computed = v.get_l2_inner_prod(v)
-print(f"Error in computed area = {np.abs(area_exact - area_computed)}")
+L2_exact = 1 / 3
+L2_computed = v.get_l2_inner_prod(v)
+print(f"Error = {abs(L2_exact - L2_computed):.4e}")
 
 
 # ## When Things Go Wrong
@@ -96,7 +95,7 @@ edges[0] = pf.Edge(
     pos_cell_idx=0,
     curve_type="sine_wave",
     amp=0.1,
-    freq=128,  # this is scary
+    freq=32,  # increase frequency
 )
 
 # define and parameterize a new mesh cell
@@ -131,16 +130,16 @@ print(f"n = {K.num_pts // K.num_edges // 2}")
 
 
 # set up Nystrom solver
-nyst = pf.NystromSolver(K, verbose=True)
+nyst = pf.NystromSolver(K, debug=True)
 
-# the constant function v = 1
+# the harmonic function v = x_2
 v = pf.LocalFunction(nyst=nyst, lap_poly=pf.Polynomial(), poly_trace=v_trace)
 v.compute_all()
 
-# compute area and error
-area_exact = 1.0
-area_computed = v.get_l2_inner_prod(v)
-print(f"Error in computed area = {np.abs(area_exact - area_computed)}")
+# compute square L^2 norm and error
+L2_exact = 1 / 3
+L2_computed = v.get_l2_inner_prod(v)
+print(f"Error = {abs(L2_exact - L2_computed):.4e}")
 
 
 # One might expect that if we increase the sampling parameter, this error will get smaller. 
@@ -152,8 +151,36 @@ print(f"Error in computed area = {np.abs(area_exact - area_computed)}")
 # get 1024 sampled points on each edge
 K.parameterize(quad_dict=pf.get_quad_dict(n=512))
 
-# (WARNING!) this line will result in an exception being thrown
-nyst = pf.NystromSolver(K, verbose=True)
+try:
+    # (WARNING!) this line will result in an exception being thrown
+    nyst = pf.NystromSolver(K, debug=True)
+except ZeroDivisionError as e:
+    print("Indeed, an exception was thrown!\n", e)
+
+
+# ## Changing the Kress parameter (optional)
+# As we saw in [Example 0](ex0-mesh-building.ipynb), we can change the Kress parameter $p$ to adjust how much the sampled points are "clustered" near the endpoints. 
+# The default value is $p=7$, but changing this to its lowest value $p=2$ results in sampled points that are more spread out, perhaps enough so that we can avoid division by machine zero.
+# 
+# **NOTE:** The condition number of the Nyström matrix is very high and GMRES will not converge quickly, if at all. Uncomment the following cell to see this.
+
+# In[ ]:
+
+
+# # get 1024 sampled points on each edge with lower Kress parameter
+# K.parameterize(quad_dict=pf.get_quad_dict(n=512, p=2))
+# nyst = pf.NystromSolver(K, debug=True)
+
+# # the harmonic function v = x_2
+# v = pf.LocalFunction(nyst=nyst, lap_poly=pf.Polynomial(), poly_trace=v_trace)
+
+# # (WARNING!) this line will take a long time to run
+# v.compute_all()
+
+# # compute square L^2 norm and error
+# L2_exact = 1 / 3
+# L2_computed = v.get_l2_inner_prod(v)
+# print(f"Error = {abs(L2_exact - L2_computed):.4e}")
 
 
 # ## Splitting Edges
@@ -163,44 +190,50 @@ nyst = pf.NystromSolver(K, verbose=True)
 # In[ ]:
 
 
-# split edge 0 in half
-e1, e2 = pf.split_edge(e=edges[0], t_split=np.pi)
-
-# split into quarters
-e1_a, e1_b = pf.split_edge(e1, t_split=np.pi / 2)
-e2_a, e2_b = pf.split_edge(e2, t_split=3 * np.pi / 2)
-
-# replace edge 0 with quarter edges
-edges += [e1_a, e1_b, e2_a, e2_b]
+# replace edge 0 with eight new edges
+edges += pf.split_edge(edges[0], num_edges=8)
 del edges[0]
 
 # define mesh cell
 K = pf.MeshCell(idx=0, edges=edges)
 
-# bottom edge sampled at 1024 points
-K.parameterize(quad_dict=pf.get_quad_dict(n=128))
 
-# set up Nystrom solver
-nyst = pf.NystromSolver(K, verbose=True)
-
-
-# The `NystromSolver` didn't crash this time. 
-# Let's see if we can accurately compute the area:
+# In the previous section, we tried sampling each edge with $2n = 1024$ points. Notice, though, that only the bottom edge is problematic, and we might get away with sampling the straight edges at a lower rate. To keep the number of sampled points on the bottom edge the same, which has now been split into 8 edges, we need to set the sampling parameter to $n=64=512/8$.
 
 # In[ ]:
 
 
-# Dirichlet trace of constant function v = 1
-v_trace = pf.PiecewisePolynomial(
-    num_polys=K.num_edges, polys=K.num_edges * [one]
-)
+# bottom edge sampled at 1024 points
+K.parameterize(quad_dict=pf.get_quad_dict(n=64))
 
-# constant function v = 1
-v = pf.LocalFunction(nyst=nyst, lap_poly=pf.Polynomial(), poly_trace=v_trace)
+# set up Nystrom solver
+nyst = pf.NystromSolver(K, debug=True)
+
+
+# The `NystromSolver` didn't crash this time. Let's define the local function $v = x_2$ and take a peek at its trace:
+
+# In[ ]:
+
+
+# Dirichlet trace of the harmonic function v = x_2
+x2 = pf.Polynomial([(1.0, 0, 1)])
+v_trace = pf.DirichletTrace(K, funcs=x2)
+
+# the harmonic function v = x_2
+v = pf.LocalFunction(nyst=nyst, lap_poly=pf.Polynomial(), has_poly_trace=False)
+v.set_trace_values(v_trace.values) # TODO: pass DirichletTrace object directly to LocalFunction
+
+# plot the trace of v
+pf.plot.TracePlot(v_trace, K, quad_dict=pf.get_quad_dict(n=64)).draw()
+
+
+# Finally, let's see if we can accurately compute our quantity of interest:
+
+# In[ ]:
+
+
 v.compute_all()
-
-# compute area and error
-area_exact = 1.0
-area_computed = v.get_l2_inner_prod(v)
-print(f"Error in computed area = {np.abs(area_exact-area_computed)}")
+L2_exact = 1 / 3
+L2_computed = v.get_l2_inner_prod(v)
+print(f"Error = {abs(L2_exact - L2_computed):.4e}")
 

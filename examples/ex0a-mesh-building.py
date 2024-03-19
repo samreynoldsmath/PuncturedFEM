@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Example 0: Mesh Construction
+# # Example 0.A: Mesh Construction
 # ### Sam Reynolds, 2023
 # 
 # This tutorial introduces the construction and manipulation of curvilinear 
@@ -20,7 +20,7 @@
 # We begin by importing the `puncturedfem` package, 
 # as well as `numpy` and `matplotlib` for the sake of this example.
 
-# In[1]:
+# In[ ]:
 
 
 import sys
@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 # The simplest type of edge is a straight line segment, which is the default
 # when initializing an `Edge` object.
 
-# In[2]:
+# In[ ]:
 
 
 # define vertices
@@ -59,7 +59,7 @@ e1 = pf.Edge(v1, v2)
 # For instance, we can create a circular arc corresponding to a $120^\circ$ angle
 # as follows:
 
-# In[3]:
+# In[ ]:
 
 
 # create a circular arc
@@ -81,7 +81,7 @@ e2 = pf.Edge(v1, v2, curve_type="circular_arc_deg", theta0=120)
 # ## Visualizing Edges
 # We can plot the edges using the `MeshPlot` class:
 
-# In[4]:
+# In[ ]:
 
 
 pf.plot.MeshPlot([e1, e2]).draw()
@@ -92,7 +92,7 @@ pf.plot.MeshPlot([e1, e2]).draw()
 # We can also introduce grid lines by setting the `show_grid` keyword argument
 # to `True`.
 
-# In[5]:
+# In[ ]:
 
 
 pf.plot.MeshPlot([e1, e2]).draw(show_orientation=True, show_grid=True)
@@ -103,7 +103,7 @@ pf.plot.MeshPlot([e1, e2]).draw(show_orientation=True, show_grid=True)
 # will be sampled, we will create a `QuadDict` object using the `get_quad_dict()` function.
 # The `QuadDict` object is a dictionary containing `Quad` objects, which are used to sample the curve parameterization.
 
-# In[6]:
+# In[ ]:
 
 
 quad_dict = pf.get_quad_dict(n=32)
@@ -114,7 +114,7 @@ print(quad_dict)
 # of course, sampled at equidistant nodes 
 # $t_k = hk$, where $h=\pi / n$ for a chosen natural number $n$.
 
-# In[7]:
+# In[ ]:
 
 
 plt.figure()
@@ -128,7 +128,7 @@ plt.show()
 # Since this is the most common case in practice, it is the default method to parameterize an edge.
 # We can see that the Kress scheme samples points more heavily near the endpoints: 
 
-# In[8]:
+# In[ ]:
 
 
 plt.figure()
@@ -142,7 +142,7 @@ plt.show()
 # 
 # The `curve_type="spline"` can be used to construct an `Edge` by passing in the keyword argument `pts`, which is a list of two `numpy.ndarray`s, one with the $x$-coordinates, the other with the $y$-coordinates. 
 
-# In[23]:
+# In[ ]:
 
 
 x = np.array([0.7, 0.3, 0.5, 0.2])
@@ -163,7 +163,7 @@ pf.plot.MeshPlot([cubic_spline_edge]).draw(
 # 
 # We can use the `split_edge()` function to split an `Edge` into two separate `Edge`s.
 
-# In[10]:
+# In[ ]:
 
 
 anchor = pf.Vert(x=1, y=1)
@@ -178,7 +178,7 @@ pf.plot.MeshPlot([sinusoid_edge]).draw(show_orientation=True, show_grid=True)
 # Curves defined in `puncturedfem`'s edge library are by default defined from $0$ to $2\pi$.
 # The default value of `t_split` is $\pi$.
 
-# In[11]:
+# In[ ]:
 
 
 e1, e2 = pf.split_edge(sinusoid_edge, t_split=np.pi / 2)
@@ -186,7 +186,7 @@ e1, e2 = pf.split_edge(sinusoid_edge, t_split=np.pi / 2)
 
 # Let's take a look at our new edges:
 
-# In[20]:
+# In[ ]:
 
 
 pf.plot.MeshPlot([e1, e2]).draw(show_orientation=True, show_grid=True)
@@ -267,7 +267,7 @@ pf.plot.MeshPlot([e2]).draw(show_orientation=True, show_grid=True)
 # 
 # First we begin by defining the vertices of the mesh.
 
-# In[13]:
+# In[ ]:
 
 
 verts: list[pf.Vert] = []
@@ -344,7 +344,7 @@ verts.append(
 
 # We need to label our vertices:
 
-# In[14]:
+# In[ ]:
 
 
 # TODO: future versions should do this automatically.
@@ -354,7 +354,7 @@ for k in range(len(verts)):
 
 # Let's visualized these points:
 
-# In[15]:
+# In[ ]:
 
 
 plt.figure()
@@ -372,7 +372,7 @@ plt.show()
 # no such cell, `pos_cell_idx = -1` is taken as the default argument.
 # The `neg_cell_idx` is the index of the cell where the opposite is true. 
 
-# In[16]:
+# In[ ]:
 
 
 edges: list[pf.Edge] = []
@@ -496,7 +496,7 @@ edges.append(
 # With all of the edges of the mesh defined, we are prepared to define a
 # `planar_mesh` object.
 
-# In[17]:
+# In[ ]:
 
 
 T = pf.PlanarMesh(edges)
@@ -505,7 +505,7 @@ T = pf.PlanarMesh(edges)
 # Let's visualize the mesh skeleton, but first we should remember to parameterize
 # the edges.
 
-# In[18]:
+# In[ ]:
 
 
 pf.plot.MeshPlot(T.edges).draw(show_axis=False)
@@ -513,7 +513,7 @@ pf.plot.MeshPlot(T.edges).draw(show_axis=False)
 
 # Moreover, we can visualize an individual cell of the mesh:
 
-# In[19]:
+# In[ ]:
 
 
 cell_idx = 8

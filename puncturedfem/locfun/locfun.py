@@ -283,9 +283,9 @@ class LocalFunction:
             for j in range(c.num_edges):
                 k_start = self.nyst.K.component_start_idx[i] + c.vert_idx[j]
                 k_end = self.nyst.K.component_start_idx[i] + c.vert_idx[j + 1]
-                self.trace[k_start:k_end] = self.poly_trace.polys[
-                    edge_idx
-                ].eval(c.edges[j].x[0, :-1], c.edges[j].x[1, :-1])
+                self.trace[k_start:k_end] = self.poly_trace.polys[edge_idx](
+                    c.edges[j].x[0, :-1], c.edges[j].x[1, :-1]
+                )
                 edge_idx += 1
 
     # Laplacian (Polynomial) #################################################
@@ -345,7 +345,7 @@ class LocalFunction:
         them in self.poly_part_trace.
         """
         x1, x2 = self.nyst.K.get_boundary_points()
-        self.poly_part_trace = self.poly_part.eval(x1, x2)
+        self.poly_part_trace = self.poly_part(x1, x2)
 
     # Polynomial part weighted normal derivative #############################
     def set_polynomial_part_weighted_normal_derivative(
@@ -370,7 +370,7 @@ class LocalFunction:
         """
         x1, x2 = self.nyst.K.get_boundary_points()
         g1, g2 = self.poly_part.grad()
-        P_nd = self.nyst.K.dot_with_normal(g1.eval(x1, x2), g2.eval(x1, x2))
+        P_nd = self.nyst.K.dot_with_normal(g1(x1, x2), g2(x1, x2))
         self.poly_part_wnd = self.nyst.K.multiply_by_dx_norm(P_nd)
 
     # harmonic part ##########################################################
@@ -538,7 +538,7 @@ class LocalFunction:
 
         # phi * Q
         R = other.poly_part.anti_laplacian()
-        R_trace = R.eval(x1, x2)
+        R_trace = R(x1, x2)
         R_wnd = R.get_weighted_normal_derivative(self.nyst.K)
         integrand += (
             self.trace - self.poly_part_trace
@@ -546,7 +546,7 @@ class LocalFunction:
 
         # psi * P
         R = self.poly_part.anti_laplacian()
-        R_trace = R.eval(x1, x2)
+        R_trace = R(x1, x2)
         R_wnd = R.get_weighted_normal_derivative(self.nyst.K)
         integrand += (
             other.trace - other.poly_part_trace
@@ -577,13 +577,13 @@ class LocalFunction:
         grad2 = np.zeros((N,))
 
         # polynomial part
-        vals = self.poly_part.eval(y1, y2)
+        vals = self.poly_part(y1, y2)
 
         # gradient Polynomial part
         if compute_grad:
             Px, Py = self.poly_part.grad()
-            grad1 = Px.eval(y1, y2)
-            grad2 = Py.eval(y1, y2)
+            grad1 = Px(y1, y2)
+            grad2 = Py(y1, y2)
 
         # logarithmic part
         for k in range(self.nyst.K.num_holes):
