@@ -357,9 +357,9 @@ class NystromSolver:
             for j in range(self.K.num_holes + 1):
                 jj1 = self.K.component_start_idx[j]
                 jj2 = self.K.component_start_idx[j + 1]
-                self.single_layer_mat[
-                    ii1:ii2, jj1:jj2
-                ] = self.single_layer_component_block(i, j)
+                self.single_layer_mat[ii1:ii2, jj1:jj2] = (
+                    self.single_layer_component_block(i, j)
+                )
 
     def single_layer_component_block(self, i: int, j: int) -> np.ndarray:
         """
@@ -470,10 +470,10 @@ class NystromSolver:
             for j in range(self.K.num_holes + 1):
                 jj1 = self.K.component_start_idx[j]
                 jj2 = self.K.component_start_idx[j + 1]
-                self.double_layer_mat[
-                    ii1:ii2, jj1:jj2
-                ] = self.double_layer_component_block(
-                    self.K.components[i], self.K.components[j]
+                self.double_layer_mat[ii1:ii2, jj1:jj2] = (
+                    self.double_layer_component_block(
+                        self.K.components[i], self.K.components[j]
+                    )
                 )
 
     def double_layer_component_block(
@@ -646,7 +646,5 @@ def _double_layer_distinct_edge_block(
             xy2 = np.dot(xy, xy)
             t = np.ascontiguousarray(f_unit_normal[:, j])
             # TODO: fix for case with xy2 < TOL near corners on distinct edges
-            B_edge[i, j] = (
-                f_dx_norm[j] * h * np.dot(xy, t) / xy2
-            )
+            B_edge[i, j] = f_dx_norm[j] * h * np.dot(xy, t) / xy2
     return B_edge

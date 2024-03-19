@@ -9,10 +9,10 @@ boundary of a MeshCell.
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ..locfun.trace import DirichletTrace
 from ..mesh.cell import MeshCell
 from ..mesh.quad import Quad
 from .plot_util import save_figure
-from ..locfun.trace import DirichletTrace
 
 PI_CHAR = r"$\pi$"
 
