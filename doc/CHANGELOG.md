@@ -6,12 +6,12 @@
 - [ ] change: `README.md`
   - [ ] add: installation instructions with `pip`
   - [ ] add: usage instructions via `readthedocs` link
-- [ ] add: Sphinx documentation
-  - [ ] add: `doc/source/` directory for Sphinx documentation
-  - [ ] add: `doc/requirements.txt` for Sphinx dependencies
-  - [ ] add: `doc/source/conf.py` for Sphinx configuration
-  - [ ] add: `doc/source/index.rst` for Sphinx index
-  - [ ] add: `.readthedocs.yml` for ReadTheDocs configuration
+- [ ] add: documentation with MkDocs
+  - [x] add: `.readthedocs.yml` for ReadTheDocs configuration
+  - [x] add: `mkdocs.yml` for MkDocs configuration
+  - [x] add: `doc/requirements.txt` for MkDocs dependencies
+  - [ ] add: `doc/index.md` for home page
+  - [ ] add: page for each module
 - [x] change: consolidate `TODO.md` and `WISHLIST.md` into `ROADMAP.md`
 ## Package Management
 - [ ] add: `poetry` configuration for package management
