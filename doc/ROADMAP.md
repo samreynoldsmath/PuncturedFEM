@@ -32,6 +32,9 @@ These are features that are not yet planned, but are under consideration.
 - [ ] eigenvalue problems
 - [ ] time-dependent problems
 - [ ] nonlinear problems
+- [ ] Stokes flow
+- [ ] Maxwell's equations
+- [ ] shape optimization
 ### Features
 - [ ] automatic identification of repeated cells in a mesh (up to scaling and rigid motion)
 - [ ] automatic mesh generation and refinement
@@ -39,7 +42,10 @@ These are features that are not yet planned, but are under consideration.
 - [ ] diffusion terms
 - [ ] $H$(div)-conforming spaces
 - [ ] $H$(curl)-conforming spaces
+- [ ] surface elements
+- [ ] 3D elements
 ### Maintenance
 - [ ] type validation with `pydantic`
 - [ ] add logging with `logging` module
 - [ ] save and load `PlanarMesh` objects to/from file
+- [ ] interior value interpolation for points close to the boundary
