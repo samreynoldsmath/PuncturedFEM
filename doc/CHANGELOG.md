@@ -1,6 +1,29 @@
 # Punctured FEM: Change Log
 
 
+## [Unreleased] v0.4.4
+### Documentation
+- [ ] change: `README.md`
+  - [ ] add: installation instructions with `pip`
+  - [ ] add: usage instructions via `readthedocs` link
+- [ ] add: Sphinx documentation
+  - [ ] add: `doc/source/` directory for Sphinx documentation
+  - [ ] add: `doc/requirements.txt` for Sphinx dependencies
+  - [ ] add: `doc/source/conf.py` for Sphinx configuration
+  - [ ] add: `doc/source/index.rst` for Sphinx index
+  - [ ] add: `.readthedocs.yml` for ReadTheDocs configuration
+- [x] change: consolidate `TODO.md` and `WISHLIST.md` into `ROADMAP.md`
+## Package Management
+- [ ] add: `poetry` configuration
+  - [ ] change: `pyproject.toml` to use `poetry` for package management
+  - [ ] add: `poetry.lock`
+- [ ] add: `.github/workflows/` directory for CI/CD
+  - [ ] add: `format.yml` for formatting with `black` and `isort`
+  - [ ] add: `lint.yml` for linting with `pylint` and `mypy`
+  - [ ] add: `test.yml` for running tests with `pytest`
+  - [ ] add: `doc.yml` for building documentation with `sphinx`
+
+
 ## [2024 Mar 19] v0.4.3
 ### Examples
 - [x] modify: `ex1a` to use `DirichletTrace`
