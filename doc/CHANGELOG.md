@@ -1,4 +1,4 @@
-# Punctured FEM: Change Log
+# Changelog
 
 
 ## [Unreleased] v0.4.4
@@ -10,10 +10,10 @@
   - [x] add: `.readthedocs.yml` for ReadTheDocs configuration
   - [x] add: `mkdocs.yml` for MkDocs configuration
   - [x] add: `doc/requirements.txt` for MkDocs dependencies
-  - [ ] add: `doc/index.md` for home page
+  - [x] add: `doc/index.md` for home page
   - [ ] add: page for each module
 - [x] change: consolidate `TODO.md` and `WISHLIST.md` into `ROADMAP.md`
-## Package Management
+### Package Management
 - [ ] add: `poetry` configuration for package management
   - [ ] change: `pyproject.toml` to use `poetry`
   - [ ] add: `poetry.lock`
