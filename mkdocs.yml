@@ -1,4 +1,4 @@
-site_name: Python Package Template
+site_name: Punctured FEM
 docs_dir: doc
 theme:
   name: readthedocs
@@ -15,3 +15,28 @@ markdown_extensions:
   - markdown_include.include:
       base_path: .
   - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: false
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - 'Home': src/index.md
+  - 'Development':
+    - 'Roadmap': ROADMAP.md
+    - 'Contributing': CONTRIBUTING.md
+    - 'Changelog': CHANGELOG.md
