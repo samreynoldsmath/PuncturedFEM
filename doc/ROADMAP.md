@@ -16,6 +16,7 @@ These are features that are planned for the future, but are not yet implemented.
 ### Examples
 - [ ] add example of "subdivision refinement"
 ### Documentation
+- [ ] add: table of contents
 - [ ] add: tutorials
     - [ ] mesh construction
     - [ ] local function spaces

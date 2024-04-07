@@ -3,19 +3,17 @@
 
 ## [Unreleased] v0.4.4
 ### Documentation
-- [ ] change: `README.md`
-    - [ ] add: installation instructions with `pip`
-    - [ ] add: usage instructions via `readthedocs` link
+- [x] change: `README.md`
+    - [x] add: installation instructions with `pip`
+    - [x] add: usage instructions via `readthedocs` link
 - [x] change: consolidate `TODO.md` and `WISHLIST.md` into `ROADMAP.md`
-- [ ] add: documentation with MkDocs
+- [x] add: documentation with MkDocs
     - [x] add: `.readthedocs.yml` for ReadTheDocs configuration
     - [x] add: `mkdocs.yml` for MkDocs configuration
     - [x] add: `doc/requirements.txt` for MkDocs dependencies
     - [x] add: `doc/index.md` for home page
-        - [ ] add: table of contents
     - [x] add: quickstart guide
         - [x] add: installation instructions
-        - [x] add: mathematical background
     - [x] add: user guide
         - [x] mesh:
             - [x] `Edge` class
