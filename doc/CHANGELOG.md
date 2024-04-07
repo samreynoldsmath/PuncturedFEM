@@ -6,13 +6,42 @@
 - [ ] change: `README.md`
     - [ ] add: installation instructions with `pip`
     - [ ] add: usage instructions via `readthedocs` link
+- [x] change: consolidate `TODO.md` and `WISHLIST.md` into `ROADMAP.md`
 - [ ] add: documentation with MkDocs
     - [x] add: `.readthedocs.yml` for ReadTheDocs configuration
     - [x] add: `mkdocs.yml` for MkDocs configuration
     - [x] add: `doc/requirements.txt` for MkDocs dependencies
     - [x] add: `doc/index.md` for home page
-    - [ ] add: page for each module
-- [x] change: consolidate `TODO.md` and `WISHLIST.md` into `ROADMAP.md`
+        - [ ] add: table of contents
+    - [ ] add: quickstart guide
+        - [x] add: installation instructions
+        - [ ] add: mathematical background
+    - [ ] add: tutorials
+        - [ ] mesh construction
+        - [ ] local function spaces
+        - [ ] FEM solver
+    - [ ] add: user guide
+        - [x] mesh:
+            - [x] `Edge` class
+            - [x] `ClosedContour` class
+            - [x] `MeshCell` class
+            - [x] `PlanarMesh` class
+            - [x] `Quad` class
+            - [x] `Vert` class
+        - [ ] local function spaces:
+            - [ ] `Polynomial` class
+            - [ ] `DirichletTrace` class
+            - [ ] `NystromSolver` class
+            - [ ] `LocalFunction` class
+            - [ ] `LocalFunctionSpace` class
+        - [ ] FEM solver:
+            - [ ] `GlobalFunctionSpace` class
+            - [ ] `Solver` class
+            - [ ] `BilinearForm` class
+    -  [x] add: developer guide
+        - [x] roadmap
+        - [x] contributing guide
+        - [x] changelog
 ### Package Management
 - [ ] add: `poetry` configuration for package management
     - [ ] change: `pyproject.toml` to use `poetry`
