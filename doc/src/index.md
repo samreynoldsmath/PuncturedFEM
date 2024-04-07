@@ -1,4 +1,7 @@
 # Punctured FEM
+
+>**Note**: This documentation is a work in progress. Check back soon for updates!
+
 <img src="../logo/pacman.svg">
 
 ## Welcome!
