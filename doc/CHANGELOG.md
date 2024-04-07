@@ -1,7 +1,7 @@
 # Changelog
 
 
-## [Unreleased]
+## [v0.4.4]
 ### Documentation
 - [x] change: `README.md`
     - [x] add: installation instructions with `pip`
@@ -47,9 +47,9 @@
         - [x] contributing guide
         - [x] changelog
 ### Package Management
-- [ ] add: `poetry` configuration for package management
-    - [ ] change: `pyproject.toml` to use `poetry`
-    - [ ] add: `poetry.lock`
+- [x] add: `poetry` configuration for package management
+    - [x] change: `pyproject.toml` to use `poetry`
+    - [x] add: `poetry.lock`
 - [ ] add: `.github/workflows/` directory for CI/CD
     - [ ] add: `format.yml` for formatting with `black` and `isort`
     - [ ] add: `lint.yml` for linting with `pylint` and `mypy`
