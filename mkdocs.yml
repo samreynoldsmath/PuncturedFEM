@@ -1,8 +1,13 @@
 site_name: Punctured FEM
 docs_dir: doc
+repo_url: https://github.com/samreynoldsmath/puncturedfem
+edit_uri: edit/main/doc
 theme:
   name: readthedocs
   highlightjs: true
+  features:
+    - content.action.view
+
 plugins:
   - search
   - mkdocstrings:
@@ -36,6 +41,28 @@ extra_javascript:
 
 nav:
   - 'Home': src/index.md
+  - 'Getting started':
+    - 'Installation': src/quickstart/installation.md
+    - 'Mathematical background': src/quickstart/background.md
+  # - 'Tutorials':
+    # - 'Mesh construction': src/tutorials/mesh_construction.md
+    # - 'Local Poisson spaces': src/tutorials/local_poisson_spaces.md
+    # - 'FEM': src/tutorials/fem.md
+  - 'User guide':
+    - 'Mesh':
+      - 'Edge': src/mesh/edge.md
+      - 'ClosedContour': src/mesh/closed_contour.md
+      - 'MeshCell': src/mesh/cell.md
+      - 'PlanarMesh': src/mesh/planar_mesh.md
+      - 'Quad': src/mesh/quad.md
+      - 'Vert': src/mesh/vert.md
+    - 'Local Poisson spaces':
+      - 'LocalFunction': src/locfun/locfun.md
+      - 'LocalFunctionSpace': src/locfun/locfunsp.md
+    - 'Global Poisson spaces':
+      - 'GlobalFunctionSpace': src/globfun/globfunsp.md
+    - 'Plotting':
+      - 'MeshPlot': src/plot/mesh_plot.md
   - 'Development':
     - 'Roadmap': ROADMAP.md
     - 'Contributing': CONTRIBUTING.md
