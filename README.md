@@ -44,14 +44,25 @@ The multiply connected case is discussed in [5].
 - **[4]** [Jeffrey S. Ovall, and Samuel E. Reynolds. Quadrature for Implicitly-defined Finite Element Functions on Curvilinear Polygons. *Computers & Mathematics with Applications*, Vol. 107 (1), pp. 1–16, 2022.](https://doi.org/10.1016/j.camwa.2021.12.003)
 - **[5]** [Jeffrey S. Ovall, and Samuel E. Reynolds. Evaluation of inner products of implicitly-defined finite element functions on multiply connected planar mesh cells. *SIAM Journal on Scientific Computing*, Vol. 46 (1), pp. A338–A359, 2024](https://doi.org/10.1137/23M1569332)
 
-## Dependencies
+## Installation
+This package is available on [PyPI](https://pypi.org/project/puncturedfem/), and can be installed with pip:
+```bash
+pip install puncturedfem
+```
+
+### Dependencies
 This project is written in Python 3.11 and uses the following packages:
-- [jupyter](https://jupyter.org/) (interactive examples)
 - [matplotlib](https://matplotlib.org/) (plotting)
 - [numba](https://numba.pydata.org/) (just-in-time compilation)
 - [numpy](https://numpy.org/) (arrays, FFT)
 - [scipy](https://www.scipy.org/) (sparse matrices, GMRES)
 - [tqdm](https://tqdm.github.io/) (progress bars)
+
+Furthermore, this repo contains examples presented with [Jupyter notebooks](https://jupyter.org/).
+
+## Usage
+- [Official documentation](https://punctrdfem.readthedocs.io/)
+- [Examples](examples/)
 
 ## Contributors
 - [Jeffrey S. Ovall](https://sites.google.com/pdx.edu/jeffovall) (1):
