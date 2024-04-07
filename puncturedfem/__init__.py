@@ -73,27 +73,34 @@ from .solver.globfunsp import GlobalFunctionSpace
 from .solver.solver import Solver
 
 __all__ = [
-    "EdgeSpace",
-    "LocalFunction",
-    "LocalFunctionSpace",
-    "PiecewisePolynomial",
-    "Polynomial",
-    "NystromSolver",
-    "MeshCell",
+    # mesh
     "Edge",
-    "split_edge",
-    "meshlib",
+    "MeshCell",
     "PlanarMesh",
     "Quad",
     "QuadDict",
-    "get_quad_dict",
     "Vert",
+    "get_quad_dict",
+    "meshlib",
     "mesh_builder",
-    "plot",
+    "split_edge",
+
+    # locfun
+    "DirichletTrace",
+    "EdgeSpace",
+    "LocalFunction",
+    "LocalFunctionSpace",
+    "NystromSolver",
+    "Polynomial",
+    "PiecewisePolynomial",
+    "barycentric_coordinates",
+    "barycentric_coordinates_edge",
+
+    # solver
     "GlobalFunctionSpace",
     "BilinearForm",
     "Solver",
-    "barycentric_coordinates",
-    "barycentric_coordinates_edge",
-    "DirichletTrace",
+
+    # plot
+    "plot",
 ]
