@@ -1,7 +1,7 @@
 # Changelog
 
 
-## [v0.4.4]
+## [v0.4.4] - 2024 Mar 07
 ### Documentation
 - [x] change: `README.md`
     - [x] add: installation instructions with `pip`
@@ -50,11 +50,6 @@
 - [x] add: `poetry` configuration for package management
     - [x] change: `pyproject.toml` to use `poetry`
     - [x] add: `poetry.lock`
-- [ ] add: `.github/workflows/` directory for CI/CD
-    - [ ] add: `format.yml` for formatting with `black` and `isort`
-    - [ ] add: `lint.yml` for linting with `pylint` and `mypy`
-    - [ ] add: `test.yml` for running tests with `pytest`
-    - [ ] add: `doc.yml` for building documentation with `sphinx`
 
 
 ## [v0.4.3] - 2024 Mar 19

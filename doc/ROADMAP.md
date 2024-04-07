@@ -22,6 +22,12 @@ These are features that are planned for the future, but are not yet implemented.
     - [ ] local function spaces
     - [ ] FEM solver
 - [ ] add: mathematical background
+### Project Management
+- [ ] add: `.github/workflows/` directory for CI/CD
+    - [ ] add: `format.yml` for formatting with `black` and `isort`
+    - [ ] add: `lint.yml` for linting with `pylint` and `mypy`
+    - [ ] add: `test.yml` for running tests with `pytest`
+    - [ ] add: `doc.yml` for building documentation with `sphinx`
 ### Maintenance
 - [ ] replace the default handling of traces in `LocalFunction` class with `DirichletTrace`
 - [ ] deprecate `PiecewisePolynomial` class
