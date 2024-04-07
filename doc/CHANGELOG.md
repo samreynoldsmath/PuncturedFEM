@@ -13,31 +13,37 @@
     - [x] add: `doc/requirements.txt` for MkDocs dependencies
     - [x] add: `doc/index.md` for home page
         - [ ] add: table of contents
-    - [ ] add: quickstart guide
+    - [x] add: quickstart guide
         - [x] add: installation instructions
-        - [ ] add: mathematical background
-    - [ ] add: tutorials
-        - [ ] mesh construction
-        - [ ] local function spaces
-        - [ ] FEM solver
-    - [ ] add: user guide
+        - [x] add: mathematical background
+    - [x] add: user guide
         - [x] mesh:
             - [x] `Edge` class
             - [x] `ClosedContour` class
             - [x] `MeshCell` class
             - [x] `PlanarMesh` class
             - [x] `Quad` class
+            - [x] `QuadDict` class
             - [x] `Vert` class
-        - [ ] local function spaces:
-            - [ ] `Polynomial` class
-            - [ ] `DirichletTrace` class
-            - [ ] `NystromSolver` class
-            - [ ] `LocalFunction` class
-            - [ ] `LocalFunctionSpace` class
-        - [ ] FEM solver:
-            - [ ] `GlobalFunctionSpace` class
-            - [ ] `Solver` class
-            - [ ] `BilinearForm` class
+            - [x] `get_quad_dict()` function
+            - [x] `meshlib` module
+            - [x] `mesh_builder` function
+            - [x] `split_edge` function
+        - [x] local function spaces:
+            - [x] `Polynomial` class
+            - [x] `DirichletTrace` class
+            - [x] `NystromSolver` class
+            - [x] `LocalFunction` class
+            - [x] `LocalFunctionSpace` class
+        - [x] FEM solver:
+            - [x] `BilinearForm` class
+            - [x] `GlobalFunctionSpace` class
+            - [x] `Solver` class
+        - [x] plotting:
+            - [x] `GlobalFunctionPlot` class
+            - [x] `LocalFunctionPlot` class
+            - [x] `MeshPlot` class
+            - [x] `TracePlot` class
     -  [x] add: developer guide
         - [x] roadmap
         - [x] contributing guide

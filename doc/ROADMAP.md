@@ -15,6 +15,12 @@ These are features that are planned for the future, but are not yet implemented.
 - [ ] piecewise constant coefficients and load functions in `BilinearForm`
 ### Examples
 - [ ] add example of "subdivision refinement"
+### Documentation
+- [ ] add: tutorials
+    - [ ] mesh construction
+    - [ ] local function spaces
+    - [ ] FEM solver
+- [ ] add: mathematical background
 ### Maintenance
 - [ ] replace the default handling of traces in `LocalFunction` class with `DirichletTrace`
 - [ ] deprecate `PiecewisePolynomial` class
