@@ -1,0 +1,82 @@
+site_name: Punctured FEM
+docs_dir: doc
+repo_url: https://github.com/samreynoldsmath/puncturedfem
+edit_uri: edit/main/doc
+theme:
+  name: readthedocs
+  highlightjs: true
+  features:
+    - content.action.view
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        # See: https://mkdocstrings.github.io/python/usage/
+        python:
+          options:
+            docstring_style: numpy
+markdown_extensions:
+  - markdown_include.include:
+      base_path: .
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: false
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - 'Home': src/index.md
+  - 'Getting started':
+    - 'Installation': src/quickstart/installation.md
+    # - 'Mathematical background': src/quickstart/background.md
+  # - 'Tutorials':
+    # - 'Mesh construction': src/tutorials/mesh_construction.md
+    # - 'Local Poisson spaces': src/tutorials/local_poisson_spaces.md
+    # - 'FEM': src/tutorials/fem.md
+  - 'User guide':
+    - 'Mesh':
+      - 'Edge': src/mesh/edge.md
+      - 'ClosedContour': src/mesh/closed_contour.md
+      - 'MeshCell': src/mesh/cell.md
+      - 'PlanarMesh': src/mesh/planar_mesh.md
+      - 'Quad': src/mesh/quad.md
+      - 'QuadDict': src/mesh/quad_dict.md
+      - 'Vert': src/mesh/vert.md
+      - 'get_quad_dict': src/mesh/get_quad_dict.md
+      - 'meshlib': src/mesh/meshlib.md
+      - 'mesh_builder': src/mesh/mesh_builder.md
+      - 'split_edge': src/mesh/split_edge.md
+    - 'Local Poisson spaces':
+      - 'Polynomial': src/locfun/polynomial.md
+      - 'DirichletTrace': src/locfun/dirichlet_trace.md
+      - 'NystromSolver': src/locfun/nystrom_solver.md
+      - 'LocalFunction': src/locfun/locfun.md
+      - 'LocalFunctionSpace': src/locfun/locfunsp.md
+    - 'Global Poisson spaces':
+      - 'BilinearForm': src/solver/bilinear_form.md
+      - 'GlobalFunctionSpace': src/solver/globfunsp.md
+      - 'Solver': src/solver/solver.md
+    - 'Plotting':
+      - 'GlobalFunctionPlot': src/plot/global_function_plot.md
+      - 'LocalFunctionPlot': src/plot/local_function_plot.md
+      - 'MeshPlot': src/plot/mesh_plot.md
+      - 'TracePlot': src/plot/trace_plot.md
+  - 'Development':
+    - 'Roadmap': ROADMAP.md
+    - 'Contributing': CONTRIBUTING.md
+    - 'Changelog': CHANGELOG.md
