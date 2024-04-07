@@ -2,7 +2,7 @@
 name = "puncturedfem"
 version = "0.4.4"
 authors = ["Sam Reynolds <sreyn@proton.me>"]
-description = "A simple demo of how to structure, use, and publish a Python package."
+description = "A finite element method on meshes with curvilinear and multiply connected cells."
 readme = "README.md"
 license = "GNU General Public License v3.0"
 packages = [{include = "puncturedfem"}]
