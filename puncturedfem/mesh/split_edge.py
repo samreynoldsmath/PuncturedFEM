@@ -40,7 +40,7 @@ def split_edge(
 
     Returns
     -------
-    list[Edge] or tuple[Edge, Edge]
+    list[Edge], tuple[Edge, Edge]
         If t_split is a list of floats, the resulting edges are returned in a
         list. If t_split is a float, the resulting edges are returned as a
         tuple. If num_edges is provided, the resulting edges are returned in a
