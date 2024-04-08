@@ -2,11 +2,11 @@
 
 https://github.com/samreynoldsmath/PuncturedFEM
 
-<img src="./doc/logo/pacman.svg">
+<img src="https://github.com/samreynoldsmath/PuncturedFEM/tree/main/doc/logo/pacman.svg">
 
 An approximate solution to $-\Delta u + u = 1$ on a rectangle with a zero Dirichlet boundary condition.
 The mesh consists of 11 cells, 5 of which are multiply connected, and all have curvilinear boundaries.
-See [examples/ex2-pacman-fem.ipynb](examples/ex2-pacman-fem.ipynb).
+See [https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/ex2-pacman-fem.ipynb](examples/ex2-pacman-fem.ipynb).
 
 ## Description
 A finite element method on meshes with curvilinear and multiply connected cells.
@@ -33,9 +33,9 @@ The multiply connected case is discussed in [5].
 
 ### Examples used in publications
 - Jeffrey S. Ovall, and Samuel E. Reynolds, "Evaluation of inner products of implicitly-defined finite element functions on multiply connected planar mesh cells" [5]
-  - [Example 4.1 (Punctured Square)](examples/ex1a-square-hole.ipynb)
-  - [Example 4.2 (Pac-Man)](examples/ex1b-pacman.ipynb)
-  - [Example 4.3 (Ghost)](examples/ex1c-ghost.ipynb)
+  - [Example 4.1 (Punctured Square)](https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/ex1a-square-hole.ipynb)
+  - [Example 4.2 (Pac-Man)](https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/ex1b-pacman.ipynb)
+  - [Example 4.3 (Ghost)](https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/ex1c-ghost.ipynb)
 
 ### References
 - **[1]** [L. Beiriao da Veiga, F. Brezzi, A. Cangiani, G. Manzini, L. D. Marini, and A. Russo. Basic principles of virtual element methods. *Mathematical Models and Methods in Applied Sciences*, 23(1):199–214, 2013.](http://dx.doi.org/10.1142/S0218202512500492)
@@ -61,8 +61,8 @@ This project is written in Python 3.11 and uses the following packages:
 Furthermore, this repo contains examples presented with [Jupyter notebooks](https://jupyter.org/).
 
 ## Usage
-- [Official documentation](https://punctrdfem.readthedocs.io/)
-- [Examples](examples/)
+- [Official documentation](https://puncturedfem.readthedocs.io/)
+- [Examples](https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/)
 
 ## Contributors
 - [Jeffrey S. Ovall](https://sites.google.com/pdx.edu/jeffovall) (1):
@@ -76,7 +76,7 @@ junior developer
 (1) [Fariborz Maseeh Department of Mathematics and Statistics, Portland State University](https://www.pdx.edu/math/)
 
 ## Acknowledgements
-<img src="./doc/logo/NSF_Official_logo.svg" width="100">
+<img src="https://github.com/samreynoldsmath/PuncturedFEM/tree/main/doc/logo/NSF_Official_logo.svg" width="100">
 
 Funding for this project was provided by the National Science Foundation through:
 - **NSF grant DMS-2012285**

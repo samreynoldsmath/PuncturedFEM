@@ -1,6 +1,6 @@
 site_name: Punctured FEM
 docs_dir: doc
-repo_url: https://github.com/samreynoldsmath/puncturedfem
+repo_url: https://github.com/samreynoldsmath/PuncturedFEM
 edit_uri: edit/main/doc
 theme:
   name: readthedocs
@@ -40,7 +40,7 @@ extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
-  - 'Home': src/index.md
+  - 'Home': index.md
   - 'Getting started':
     - 'Installation': src/quickstart/installation.md
   - 'User guide':
