@@ -2,7 +2,7 @@
 
 https://github.com/samreynoldsmath/PuncturedFEM
 
-<img src="https://github.com/samreynoldsmath/PuncturedFEM/tree/main/doc/logo/pacman.svg">
+<img src="https://github.com/samreynoldsmath/PuncturedFEM/blob/main/doc/logo/pacman.svg?raw=true">
 
 An approximate solution to $-\Delta u + u = 1$ on a rectangle with a zero Dirichlet boundary condition.
 The mesh consists of 11 cells, 5 of which are multiply connected, and all have curvilinear boundaries.
@@ -76,7 +76,7 @@ junior developer
 (1) [Fariborz Maseeh Department of Mathematics and Statistics, Portland State University](https://www.pdx.edu/math/)
 
 ## Acknowledgements
-<img src="https://github.com/samreynoldsmath/PuncturedFEM/tree/main/doc/logo/NSF_Official_logo.svg" width="100">
+<img src="https://github.com/samreynoldsmath/PuncturedFEM/blob/main/doc/logo/NSF_Official_logo.svg?raw=true" width="100">
 
 Funding for this project was provided by the National Science Foundation through:
 - **NSF grant DMS-2012285**
