@@ -4,8 +4,6 @@ piecewise_poly.py
 
 Module containing the PiecewisePolynomial class. It is essentially a wrapper
 for a list of Polynomials.
-
-TODO: Deprecate the PiecewisePolynomial class
 """
 
 from typing import Optional
@@ -18,16 +16,17 @@ from ...mesh.edge import Edge
 from .poly import Polynomial
 from .poly_exceptions import PolynomialError
 
-
+# @deprecated(version="0.5.0", reason="Use DirichletTrace instead")
 class PiecewisePolynomial:
-    """List of Polynomials used to represent traces of vertex and Edge funs"""
+    """
+    List of Polynomials used to represent traces of vertex and Edge funs
+
+    NOTE: This class is deprecated. Use DirichletTrace instead.
+    """
 
     polys: list[Polynomial]
     num_polys: int
     id: int  # used to associate function with an Edge or vertex
-
-    # TODO: deprecated in favor of DirichletTrace
-    # @deprecated(version="0.5.0", reason="Use DirichletTrace instead")
     def __init__(
         self,
         num_polys: int = 1,
@@ -47,7 +46,7 @@ class PiecewisePolynomial:
             Identifier for the PiecewisePolynomial. Default is 0.
         """
         self.set_idx(idx)
-        self.set_num_polys(num_polys)  # TODO: determine num_polys automatically
+        self.set_num_polys(num_polys)
         self.set_polys(polys)
 
     def set_idx(self, idx: int) -> None:

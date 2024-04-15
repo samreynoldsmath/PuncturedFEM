@@ -177,7 +177,6 @@ class Polynomial:
         if not isinstance(exponent, int) or exponent < 0:
             raise ValueError("Exponent must be nonnegative integer")
         new = Polynomial([(1.0, 0, 0)])
-        # TODO: use a binary exponentiation algorithm
         for _ in range(exponent):
             new *= self
         return new
@@ -198,7 +197,6 @@ class Polynomial:
         Returns the partial derivative of the Polynomial with respect to
         the variable var
         """
-        # TODO: use an enum for x and y
         new = Polynomial()
         for m in self.monos:
             dm = m.partial_deriv(var)

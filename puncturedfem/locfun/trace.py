@@ -84,8 +84,6 @@ class DirichletTrace:
             return
         if funcs is not None:
             self.set_funcs(funcs)
-        # TODO: Add functionality to set funcs automatically in the same way as
-        # in the LocalFunctionSpace class
 
     def set_edges(self, edges: Union[MeshCell, list[Edge]]) -> None:
         """
@@ -213,13 +211,11 @@ class DirichletTrace:
             The functions used to define the trace.
         """
         if not isinstance(funcs, list):
-            # TODO: a Polynomial should be recognized as a callable map
             if isinstance(funcs, Polynomial):
                 funcs = [funcs for _ in range(self.num_edges)]
             elif is_Func_R2_R(funcs):
                 funcs = [funcs for _ in range(self.num_edges)]
         if isinstance(funcs, list):
-            # TODO: a Polynomial should be recognized as a callable map
             is_accepted = True
             for func in funcs:
                 if isinstance(func, Polynomial):

@@ -105,7 +105,6 @@ class ClosedContour:
 
     def parameterize(self, quad_dict: QuadDict) -> None:
         """Parameterize each Edge"""
-        # TODO: eliminate redundant calls to parameterize
         for i in range(self.num_edges):
             self.edges[i].parameterize(quad_dict)
             if self.edge_orients[i] == -1:

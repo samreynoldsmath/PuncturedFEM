@@ -73,8 +73,8 @@ class PlanarMesh:
     num_cells: int
     num_verts: int
     edges: list[Edge]
-    vert_idx_list: list[int]  # TODO: use set instead of list
-    cell_idx_list: list[int]  # TODO: use set instead of list
+    vert_idx_list: list[int]
+    cell_idx_list: list[int]
 
     def __init__(self, edges: list[Edge], verbose: bool = True) -> None:
         """

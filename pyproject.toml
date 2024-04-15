@@ -39,7 +39,6 @@ filterwarnings = ["error"]
 [tool.pylint."messages control"]
 max-line-length = 80
 disable = [
-    "fixme", # reenable to find TODO comments
     "duplicate-code", # mesh/edge libraries have similar code
     "invalid-name", # use good-names
     "too-many-branches", # split up functions

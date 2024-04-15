@@ -40,10 +40,10 @@ def mesh_builder(
         Planar mesh object with specified Vertices and edges.
     """
 
-    # define Vertices
+    # define vertices
     verts = get_verts(**kwargs)
 
-    # TODO: set vertex ids here or in PlanarMesh constructor?
+    # set vertex indices
     for k, v in enumerate(verts):
         v.set_idx(k)
 

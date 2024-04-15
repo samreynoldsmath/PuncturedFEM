@@ -151,7 +151,7 @@ class LocalFunction:
     def __init__(
         self,
         nyst: NystromSolver,
-        lap_poly: Polynomial = Polynomial(),  # TODO maybe should be None?
+        lap_poly: Polynomial = Polynomial(),
         poly_trace: Optional[PiecewisePolynomial] = None,
         has_poly_trace: bool = True,
         key: Optional[GlobalKey] = None,

@@ -27,9 +27,6 @@ class NystromSolver:
     of functions on K, for example.
     """
 
-    # TODO add batch processing for multipleLocalFunctions
-    # TODO use multiprocessing to speed up computation
-
     K: MeshCell
     single_layer_mat: np.ndarray
     double_layer_mat: np.ndarray
@@ -258,8 +255,6 @@ class NystromSolver:
         else:
             raise ValueError("Invalid preconditioner type")
 
-    # TODO: this belongs in a separate module
-    # TODO: implement other preconditioners
     @staticmethod
     def jacobi_preconditioner(A: LinearOperator) -> LinearOperator:
         """
@@ -645,6 +640,5 @@ def _double_layer_distinct_edge_block(
             xy = np.ascontiguousarray(e_x[:, i] - f_x[:, j])
             xy2 = np.dot(xy, xy)
             t = np.ascontiguousarray(f_unit_normal[:, j])
-            # TODO: fix for case with xy2 < TOL near corners on distinct edges
             B_edge[i, j] = f_dx_norm[j] * h * np.dot(xy, t) / xy2
     return B_edge

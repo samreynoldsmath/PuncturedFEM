@@ -258,7 +258,7 @@ class Solver:
                         self.stiff_vals.append(h1_ij)
                         self.mass_vals.append(l2_ij)
 
-        # TODO this is a hacky way to impose a zero Dirichlet BC
+        # impose boundary conditions
         for abs_cell_idx in range(self.V.T.num_cells):
             cell_idx = self.V.T.cell_idx_list[abs_cell_idx]
 

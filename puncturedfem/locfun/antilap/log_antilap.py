@@ -22,8 +22,6 @@ from ...mesh.cell import MeshCell
 from ...mesh.vert import Vert
 from .. import d2n
 
-# TODO: there is a lot of redundant effort in the following functions
-
 
 def _log_antilap(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     """
