@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "puncturedfem"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["Sam Reynolds <sreyn@proton.me>"]
 description = "A finite element method on meshes with curvilinear and multiply connected cells."
 readme = "README.md"
