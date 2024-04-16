@@ -35,26 +35,12 @@
 # 	+ \int_\Omega c \, u_i \, \phi_i \, \phi_j \, dx
 # 	= \int_\Omega f \, \phi_j \, dx
 # \end{align*}
-
-# In[ ]:
-
-
-import sys
-import os
-
-current_dir = os.getcwd()
-parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
-sys.path.append(parent_dir)
-
-import puncturedfem as pf
-
-
 # Let's set a few parameters before we go any further. 
 # `deg` is the polynomial degree of global Poisson space,
 # `n` is edge sampling parameter (as used in previous examples).
 # 
 # **(!) WARNING:** 
-# Higher order spaces (`deg > 1`) are still under development.
+# Higher order spaces (`deg > 3`) are still under development.
 
 # In[ ]:
 
@@ -71,6 +57,8 @@ n = 64
 
 # In[ ]:
 
+
+import puncturedfem as pf
 
 T = pf.meshlib.pacman_subdiv()
 

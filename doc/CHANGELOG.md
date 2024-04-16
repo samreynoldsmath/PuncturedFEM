@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [Unreleased]
+### Examples
+- [x] remove import management boilerplate from examples
+
+
 ## [v0.4.4] - 2024 Apr 07
 ### Documentation
 - [x] change: `README.md`
