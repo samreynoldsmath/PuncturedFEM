@@ -44,7 +44,7 @@ mkdocstrings[python]==0.19.0
     #   mkdocstrings-python
 mkdocstrings-python==0.7.1
     # via mkdocstrings
-packaging==21.3
+packaging>=21.3
     # via mkdocs
 pymdown-extensions==10.0
     # via mkdocstrings
