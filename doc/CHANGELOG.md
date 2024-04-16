@@ -4,7 +4,20 @@
 ## [Unreleased]
 ### Examples
 - [x] remove import management boilerplate from examples
+### Documentation
 - [x] change: installation instructions for developers to build the package locally with `pip install -e .`
+- [ ] change: update docstrings to use NumPy documentation format
+- [ ] add: table of contents
+- [ ] add: tutorials
+    - [ ] mesh construction
+    - [ ] local function spaces
+    - [ ] FEM solver
+- [ ] add: mathematical background
+### Maintenance
+- [ ] update dependencies
+    - [ ] add `Deprecated` package to `poetry` requirements
+    - [ ] consolidate `requirements.txt`
+    - [ ] reduce Python and package versions to minimum possible
 
 
 ## [v0.4.4] - 2024 Apr 07

@@ -16,19 +16,7 @@ These are features that are planned for the future, but are not yet implemented.
 ### Examples
 - [ ] add example of "subdivision refinement"
 - [ ] eigenvalue problem
-### Documentation
-- [ ] change: update docstrings to use NumPy documentation format
-- [ ] add: table of contents
-- [ ] add: tutorials
-    - [ ] mesh construction
-    - [ ] local function spaces
-    - [ ] FEM solver
-- [ ] add: mathematical background
 ### Maintenance
-- [ ] update dependencies
-    - [ ] add `Deprecated` package to `poetry` requirements
-    - [ ] consolidate `requirements.txt`
-    - [ ] reduce Python and package versions to minimum possible
 - [ ] add: `.github/workflows/` directory for CI/CD
     - [ ] add: `format.yml` for formatting with `black` and `isort`
     - [ ] add: `lint.yml` for linting with `pylint` and `mypy`
@@ -47,13 +35,13 @@ These are features that are planned for the future, but are not yet implemented.
 - [ ] use `set` instead of `list` for vertex and cell indices in `PlanarMesh`
   class
 - [ ] eliminate redundant calls to parameterize in `ClosedContour.parameterize()`
+- [ ] fix disabled pylint messages
 ### Known bugs
 - [ ] `Polynomial` not recognized as a callable map when passed to
   `is_Func_R2_R()`
 - [ ] case with xy2 < TOL near corners on distinct edges in double layer
   operator can result in `nan` entries for large values of the discretization
   parameter `n`
-- [ ] fix disabled pylint messages
 
 
 ## Tentative Features
