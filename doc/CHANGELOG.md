@@ -16,9 +16,9 @@
 ### Maintenance
 - [ ] update dependencies
     - [ ] add `Deprecated` package to `poetry` requirements
-    - [ ] consolidate `requirements.txt`
+    - [x] delete `requirements.txt`
+    - [x] include only development dependencies in `requirements-dev.txt`
     - [ ] reduce Python and package versions to minimum possible
-
 
 ## [v0.4.4] - 2024 Apr 07
 ### Documentation
