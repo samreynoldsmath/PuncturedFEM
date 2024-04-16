@@ -4,6 +4,7 @@
 ## [Unreleased]
 ### Examples
 - [x] remove import management boilerplate from examples
+- [x] change: installation instructions for developers to build the package locally with `pip install -e .`
 
 
 ## [v0.4.4] - 2024 Apr 07

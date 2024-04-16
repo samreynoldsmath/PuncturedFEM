@@ -4,6 +4,9 @@ This is a brief guide describing how to contribute to the `PuncturedFEM` project
 ### TL;DR
 - Fork this repo
 - Checkout a new branch
+- Create and activate a virtual environment
+- Install dev tools
+- Install this package in edit mode
 - Use `pylint` and `mypy` for linting
 - Run tests with `pytest`
 - Use `isort` and `black` (in that order) for formatting
@@ -52,6 +55,10 @@ This is a brief guide describing how to contribute to the `PuncturedFEM` project
 - Use `pip` to install developer tools
   ```bash
   pip install -r requirements-dev.txt
+  ```
+- Install this package in edit mode
+  ```bash
+  pip install -e .
   ```
 
 ## Make your changes
