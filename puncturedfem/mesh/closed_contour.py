@@ -27,6 +27,27 @@ class ClosedContour:
     """
     List of edges forming a closed contour, assumed to be simple
     with edges listed successively.
+
+    Attributes
+    ----------
+    edges: list[Edge]
+        List of edges forming the contour.
+    num_edges: int
+        Number of edges in the contour.
+    edge_orient: list[int]
+        List of orientations of the edges, where +1 indicates the edge is
+        oriented in the same direction as the contour and -1 indicates the
+        edge is oriented in the opposite direction.
+    interior_point: Vert
+        A point in the interior of the contour.
+    num_pts: int
+        Number of sampled points on the contour.
+    vert_idx: list[int]
+        Index of the starting point of each edge.
+    local_vert_idx: list[int]
+        Index of the starting point of each edge, relative to the edge.
+    closest_vert_idx: np.ndarray
+        Index of the closest vertex for each sampled point on the contour.
     """
 
     edges: list[Edge]
@@ -52,6 +73,12 @@ class ClosedContour:
         cell_id: int
             The MeshCell id of the contour. (This is the MeshCell id of the
             MeshCell that the contour is part of the boundary of.)
+        edges: list[Edge], optional
+            List of edges forming the contour.
+        edge_orients: list[int], optional
+            List of orientations of the edges, where +1 indicates the edge is
+            oriented in the same direction as the contour and -1 indicates the
+            edge is oriented in the opposite direction.
         """
         self.set_mesh_id(cell_id)
         self.num_edges = 0
@@ -65,7 +92,20 @@ class ClosedContour:
         self.add_edges(edges, edge_orients)
 
     def set_mesh_id(self, cell_id: int) -> None:
-        """Set the MeshCell id of the contour"""
+        """
+        Set the cell_id of the contour, which is the global index of the
+        MeshCell that the contour is part of the boundary of.
+
+        Parameters
+        ----------
+        cell_id: int
+            The MeshCell id of the contour.
+
+        Raises
+        ------
+        TypeError
+            If cell_id is not a positive integer.
+        """
         if not isinstance(cell_id, int):
             raise TypeError(
                 f"cell_id = {cell_id} invalid, must be a positive integer"
@@ -78,7 +118,18 @@ class ClosedContour:
 
     # EDGE MANAGEMENT ########################################################
     def add_edge(self, e: Edge, edge_orient: int) -> None:
-        """Add Edge to contour"""
+        """
+        Add an edge to the contour.
+
+        Parameters
+        ----------
+        e: Edge
+            The edge to add to the contour.
+        edge_orient: int
+            Orientation of the edge, where +1 indicates the edge is
+            oriented in the same direction as the contour and -1 indicates the
+            edge is oriented in the opposite direction.
+        """
         if edge_orient not in (+1, -1):
             raise ValueError("Orientation must be +1 or -1")
         if e in self.edges:
@@ -88,23 +139,49 @@ class ClosedContour:
         self.num_edges += 1
 
     def add_edges(self, edges: list[Edge], edge_orients: list[int]) -> None:
-        """Add edges to contour"""
+        """
+        Add edges to contour.
+
+        Parameters
+        ----------
+        edges: list[Edge]
+            List of edges to add to the contour.
+        edge_orients: list[int]
+            List of orientations of the edges, where +1 indicates the edge is
+            oriented in the same direction as the contour and -1 indicates the
+            edge is oriented in the opposite direction.
+
+        Raises
+        ------
+        ValueError
+            If the number of edges and orientations do not match.
+        """
         if len(edges) != len(edge_orients):
-            raise ValueError("Must provide orientation for each Edge")
+            raise ValueError("Must provide orientation for each edge")
         for e, o in zip(edges, edge_orients):
             self.add_edge(e, o)
 
-    def is_closed(self) -> bool:
-        """Returns true if the contour is closed"""
-        raise NotImplementedError()
-
     # PARAMETERIZATION #######################################################
     def is_parameterized(self) -> bool:
-        """Returns true if all edges are parameterized"""
+        """
+        Check if the edges of the contour have been sampled.
+
+        Returns
+        -------
+        bool
+            True if all edges are parameterized, False otherwise.
+        """
         return all(e.is_parameterized for e in self.edges)
 
     def parameterize(self, quad_dict: QuadDict) -> None:
-        """Parameterize each Edge"""
+        """
+        Sample each edge of the contour.
+
+        Parameters
+        ----------
+        quad_dict: QuadDict
+            Dictionary of quadrature rules.
+        """
         for i in range(self.num_edges):
             self.edges[i].parameterize(quad_dict)
             if self.edge_orients[i] == -1:
@@ -115,14 +192,26 @@ class ClosedContour:
         self.find_interior_point()
 
     def deparameterize(self) -> None:
-        """Deparameterize each Edge"""
+        """
+        Deletes the sampled points of the edges comprising the contour.
+        """
         for e in self.edges:
             e.deparameterize()
         self.num_pts = 0
         self.closest_vert_idx = np.zeros((0,))
 
     def find_num_pts(self) -> None:
-        """Record the total number of sampled points on the boundary"""
+        """
+        Determine the total number of sampled points on the contour, which is
+        the sum of the number of sampled points on each edge, neglecting the
+        last point on each edge (since it is repeated on the next edge). Stores
+        the result in the attribute `num_pts`.
+
+        Raises
+        ------
+        NotParameterizedError
+            If the edges have not been sampled.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("finding num_pts")
         self.num_pts = 0
@@ -130,7 +219,15 @@ class ClosedContour:
             self.num_pts += e.num_pts - 1
 
     def find_local_vert_idx(self) -> None:
-        """Get the index of the starting point of each Edge"""
+        """
+        Determine the sampled point index of the starting point of each edge.
+        Stores the result in the attribute `vert_idx`.
+
+        Raises
+        ------
+        NotParameterizedError
+            If the edges have not been sampled.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("finding vert_idx")
         self.vert_idx = [0]
@@ -138,7 +235,16 @@ class ClosedContour:
             self.vert_idx.append(self.vert_idx[-1] + e.num_pts - 1)
 
     def find_closest_local_vertex_index(self) -> None:
-        """Find the index of the closest vertex for each sampled point"""
+        """
+        Determine the sampled point index of the starting point of the closest
+        vertex to each sampled point on the contour. Stores the result in the
+        attribute `closest_vert_idx`.
+
+        Raises
+        ------
+        NotParameterizedError
+            If the edges have not been sampled.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("finding closest_vert_idx")
 
@@ -162,7 +268,26 @@ class ClosedContour:
 
     # INTERIOR POINTS ########################################################
     def get_distance_to_boundary(self, x: float, y: float) -> float:
-        """Minimum distance from (x,y) to a point on the boundary"""
+        """
+        Get the minimum distance to sampled points on the contour.
+
+        Parameters
+        ----------
+        x: float
+            x-coordinate of the point.
+        y: float
+            y-coordinate of the point.
+
+        Returns
+        -------
+        float
+            The minimum distance to the contour.
+
+        Raises
+        ------
+        NotParameterizedError
+            If the edges have not been sampled.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("finding distance to boundary")
         dist = np.inf
@@ -177,6 +302,24 @@ class ClosedContour:
         """
         Returns a boolean array indicating whether each point (x[i], y[i]) is
         inside the contour.
+
+        Parameters
+        ----------
+        x: numpy.ndarray
+            x-coordinates of the points.
+        y: numpy.ndarray
+            y-coordinates of the points.
+
+        Returns
+        -------
+        numpy.ndarray
+            Boolean array indicating whether each point is inside the contour,
+            having the same shape as x and y.
+
+        Raises
+        ------
+        SizeMismatchError
+            If x and y do not have the same shape.
         """
         if x.shape != y.shape:
             raise SizeMismatchError("x and y must have same size")
@@ -200,9 +343,17 @@ class ClosedContour:
         return is_inside
 
     def find_interior_point(self) -> None:
-        """Finds an interior point."""
+        """
+        Find a single point in the interior of the contour. Stores the result in
+        the attribute `interior_point`.
 
-        # NOTE: Uses a brute force search. There is likely a more efficient way.
+        Raises
+        ------
+        NotParameterizedError
+            If the edges have not been sampled.
+        InteriorPointError
+            If an interior point cannot be found.
+        """
 
         if not self.is_parameterized():
             raise NotParameterizedError("finding interior point")
@@ -257,7 +408,21 @@ class ClosedContour:
 
     # FUNCTION EVALUATION ####################################################
     def evaluate_function_on_contour(self, fun: Func_R2_R) -> np.ndarray:
-        """Return fun(x) for each sampled point on contour"""
+        """
+        Return fun(x) for each sampled point on contour.
+
+        Parameters
+        ----------
+        fun: Func_R2_R
+            Function of two real variables returning a real value.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of function values at each sampled point on the contour,
+            having the same length as the number of sampled points on the
+            contour.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("evaluating function on contour")
         y = np.zeros((self.num_pts,))
@@ -268,7 +433,19 @@ class ClosedContour:
         return y
 
     def get_sampled_points(self) -> tuple[np.ndarray, np.ndarray]:
-        """Returns the x1 and x2 coordinates of the boundary points"""
+        """
+        Returns the x1 and x2 coordinates of the boundary points.
+
+        Returns
+        -------
+        tuple[numpy.ndarray, numpy.ndarray]
+            Tuple containing the x1 and x2 coordinates of the boundary points.
+
+        Raises
+        ------
+        NotParameterizedError
+            If the edges have not been sampled.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("getting boundary points")
         x1 = self.evaluate_function_on_contour(lambda x1, x2: x1)
@@ -278,7 +455,29 @@ class ClosedContour:
     def dot_with_tangent(
         self, comp1: np.ndarray, comp2: np.ndarray
     ) -> np.ndarray:
-        """Returns the dot product (comp1, comp2) * unit_tangent"""
+        """
+        Returns the dot product (comp1, comp2) * unit_tangent for each sampled
+        point on the contour.
+
+        Parameters
+        ----------
+        comp1: numpy.ndarray
+            First component of the vector to dot with the tangent.
+        comp2: numpy.ndarray
+            Second component of the vector to dot with the tangent.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of dot products (comp1, comp2) * unit_tangent for each
+            sampled point on the contour, having the same length as the number
+            of sampled points on the contour.
+
+        Raises
+        ------
+        NotParameterizedError
+            If the edges have not been sampled.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with tangent")
         res = np.zeros((self.num_pts,))
@@ -293,7 +492,29 @@ class ClosedContour:
     def dot_with_normal(
         self, comp1: np.ndarray, comp2: np.ndarray
     ) -> np.ndarray:
-        """Returns the dot product (comp1, comp2) * unit_normal"""
+        """
+        Returns the dot product (comp1, comp2) * unit_normal for each sampled
+        point on the contour.
+
+        Parameters
+        ----------
+        comp1: numpy.ndarray
+            First component of the vector to dot with the normal.
+        comp2: numpy.ndarray
+            Second component of the vector to dot with the normal.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of dot products (comp1, comp2) * unit_normal for each
+            sampled point on the contour, having the same length as the number
+            of sampled points on the contour.
+
+        Raises
+        ------
+        NotParameterizedError
+            If the edges have not been sampled.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with normal")
         res = np.zeros((self.num_pts,))
@@ -308,7 +529,25 @@ class ClosedContour:
     def multiply_by_dx_norm(self, vals: np.ndarray) -> np.ndarray:
         """
         Returns f multiplied against the norm of the derivative of
-        the curve parameterization
+        the curve parameterization.
+
+        Parameters
+        ----------
+        vals: numpy.ndarray
+            Array of values to multiply by the norm of the derivative of the
+            curve parameterization.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of values multiplied by the norm of the derivative of the
+            curve parameterization, having the same length as the number of
+            sampled points on the contour.
+
+        Raises
+        ------
+        NotParameterizedError
+            If the edges have not been sampled.
         """
         if not self.is_parameterized():
             raise NotParameterizedError("multiplying by dx_norm")
@@ -323,7 +562,20 @@ class ClosedContour:
 
     # INTEGRATION ############################################################
     def integrate_over_closed_contour(self, vals: np.ndarray) -> float:
-        """Contour integral of vals"""
+        """
+        Quadrature to approximate the integral of vals over the contour.
+
+        Parameters
+        ----------
+        vals: numpy.ndarray
+            Array of values to integrate over the contour, having the same
+            length as the number of sampled points on the contour.
+
+        Returns
+        -------
+        float
+            Approximation of the integral of vals over the contour.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("integrating over boundary")
         vals_dx_norm = self.multiply_by_dx_norm(vals)
@@ -332,7 +584,30 @@ class ClosedContour:
     def integrate_over_closed_contour_preweighted(
         self, vals_dx_norm: np.ndarray
     ) -> float:
-        """Contour integral of vals_dx_norm"""
+        """
+        Quadrature to approximate the integral of vals over the contour, where
+        vals_dx_norm is already multiplied by the norm of the derivative of the
+        curve parameterization.
+
+        Parameters
+        ----------
+        vals_dx_norm: numpy.ndarray
+            Array of values to integrate over the contour, already multiplied by
+            the norm of the derivative of the curve parameterization.
+
+        Returns
+        -------
+        float
+            Approximation of the integral of val over the contour.
+
+        Raises
+        ------
+        NotParameterizedError
+            If the edges have not been sampled.
+        SizeMismatchError
+            If vals_dx_norm is not a vector or is not the same length as the
+            number of sampled points on the contour.
+        """
 
         # check inputs
         if not self.is_parameterized():
