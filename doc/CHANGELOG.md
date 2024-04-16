@@ -1,7 +1,7 @@
 # Changelog
 
 
-## [v0.4.4] - 2024 Mar 07
+## [v0.4.4] - 2024 Apr 07
 ### Documentation
 - [x] change: `README.md`
     - [x] add: installation instructions with `pip`
