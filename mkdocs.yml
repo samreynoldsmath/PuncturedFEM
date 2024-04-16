@@ -45,8 +45,8 @@ nav:
     - 'Installation': src/quickstart/installation.md
   - 'User guide':
     - 'Mesh':
-      - 'Edge': src/mesh/edge.md
       - 'ClosedContour': src/mesh/closed_contour.md
+      - 'Edge': src/mesh/edge.md
       - 'MeshCell': src/mesh/cell.md
       - 'PlanarMesh': src/mesh/planar_mesh.md
       - 'Quad': src/mesh/quad.md
