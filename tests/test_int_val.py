@@ -14,7 +14,7 @@ from .build_cell import build_ghost
 TOL = 1e-10
 
 
-def test_int_val_ghost():
+def test_int_val_ghost() -> None:
     """Verify correct interior values from Example 1.C"""
     # build mesh cell
     K = build_ghost()
@@ -42,7 +42,7 @@ def test_int_val_ghost():
     )
 
     # Laplacian of v
-    v_laplacian = pf.Polynomial([[6.0, 1, 1], [2.0, 0, 0]])
+    v_laplacian = pf.Polynomial([(6.0, 1, 1), (2.0, 0, 0)])
 
     # store v as a local function object
     v = pf.LocalFunction(nyst=nyst, lap_poly=v_laplacian, has_poly_trace=False)

@@ -148,7 +148,9 @@ class Quad:
         denom = cp + (1 - c) ** p
 
         self.t = (2 * np.pi) * cp / denom
-        self.wgt = (3 * (p - 2) * s2 + 2) * (c * (1 - c)) ** (p - 1) / denom**2
+        self.wgt = (
+            (3 * (p - 2) * s2 + 2) * (c * (1 - c)) ** (p - 1) / denom**2
+        )
 
     def martensen(self) -> None:
         """

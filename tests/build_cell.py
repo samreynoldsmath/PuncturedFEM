@@ -129,7 +129,7 @@ def build_punctured_square(
     return K, cell_data
 
 
-def build_ghost():
+def build_ghost() -> pf.MeshCell:
     """Make the ghosty boi"""
 
     # define vertices

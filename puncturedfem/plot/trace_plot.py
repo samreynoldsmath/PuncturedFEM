@@ -32,7 +32,7 @@ class TracePlot:
     x_ticks: np.ndarray
     x_labels: list[str]
     num_pts: int
-    fmt: str | list[str]
+    fmt: Union[str, list[str]]
     legend: tuple
     title: str
     log_scale: bool
@@ -43,7 +43,7 @@ class TracePlot:
         traces: Union[TraceLike, list[TraceLike]],
         K: MeshCell,
         quad_dict: dict[str, Quad],
-        fmt: str | list[str] = "k-",
+        fmt: Union[str, list[str]] = "k-",
         legend: tuple = (),
         title: str = "",
         log_scale: bool = False,
@@ -142,7 +142,7 @@ class TracePlot:
                 )
             self.traces.append(f)
 
-    def set_format(self, fmt: str | list[str]) -> None:
+    def set_format(self, fmt: Union[str, list[str]]) -> None:
         """
         Sets the format string(s) used to plot the traces.
         """
@@ -193,7 +193,7 @@ class TracePlot:
                     "traces"
                 )
 
-    def _validate_format(self, fmt: str | list[str]) -> None:
+    def _validate_format(self, fmt: Union[str, list[str]]) -> None:
         if isinstance(fmt, str):
             pass
         elif isinstance(fmt, list):
@@ -205,7 +205,9 @@ class TracePlot:
         else:
             raise TypeError("fmt must be a string or a list of strings")
 
-    def _validate_traces(self, traces: np.ndarray | list[np.ndarray]) -> None:
+    def _validate_traces(
+        self, traces: Union[np.ndarray, list[np.ndarray]]
+    ) -> None:
         if isinstance(traces, np.ndarray):
             if len(traces) != self.num_pts:
                 raise ValueError(
