@@ -177,7 +177,7 @@ class NystromSolver:
     def _gmres_solve(
         self, A: LinearOperator, b: np.ndarray, M: LinearOperator
     ) -> np.ndarray:
-        x, flag = gmres(A=A, b=b, M=M, atol=1e-12, tol=1e-12)
+        x, flag = gmres(A=A, b=b, M=M, atol=1e-12, rtol=1e-12)
         if flag > 0:
             r = b - A @ x
             print(
