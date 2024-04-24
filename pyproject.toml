@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "puncturedfem"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["Sam Reynolds <sreyn@proton.me>"]
 description = "A finite element method on meshes with curvilinear and multiply connected cells."
 readme = "README.md"
@@ -8,6 +8,7 @@ license = "GNU General Public License v3.0"
 packages = [{include = "puncturedfem"}]
 
 [tool.poetry.dependencies]
+deprecated = "^1.2.14"
 python = "^3.11"
 matplotlib = "^3.8.0"
 numba = "^0.59.1"
