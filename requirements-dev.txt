@@ -1,6 +1,7 @@
 black==23.3.0
 flake8==7.0.0
 isort==5.13.2
+jupyter==1.0.0
 mypy==1.9.0
 pip-tools==7.4.1
 pylint==3.1.0
