@@ -52,6 +52,7 @@ pip install puncturedfem
 
 ### Dependencies
 This project is written in Python 3.11 and uses the following packages:
+- [Deprecated](https://github.com/tantale/deprecated) (deprecation warnings)
 - [matplotlib](https://matplotlib.org/) (plotting)
 - [numba](https://numba.pydata.org/) (just-in-time compilation)
 - [numpy](https://numpy.org/) (arrays, FFT)
