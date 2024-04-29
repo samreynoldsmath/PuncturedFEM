@@ -16,9 +16,11 @@ from .vert import Vert
 
 def split_edge(
     e: Edge,
-    t_split: Optional[Union[int, float, list[int | float], np.ndarray]] = None,
+    t_split: Optional[
+        Union[int, float, list[Union[int, float]], np.ndarray]
+    ] = None,
     num_edges: Optional[int] = None,
-) -> list[Edge] | tuple[Edge, Edge]:
+) -> Union[list[Edge], tuple[Edge, Edge]]:
     """
     Splits the edge e at the parameter t_split and returns the resulting edges.
     If t_split is a list of parameters, the edge is split at each parameter in

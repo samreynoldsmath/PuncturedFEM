@@ -13,12 +13,16 @@
     - [ ] local function spaces
     - [ ] FEM solver
 - [ ] add: mathematical background
+
+
+## [v0.4.5] - 2024 Apr 24
 ### Maintenance
-- [ ] update dependencies
-    - [ ] add `Deprecated` package to `poetry` requirements
-    - [x] delete `requirements.txt`
-    - [x] include only development dependencies in `requirements-dev.txt`
-    - [ ] reduce Python and package versions to minimum possible
+- [x] change dependency: Python 3.9 (was 3.11)
+- [x] change dependency: `scipy` 1.12 (was 1.11)
+- [x] change: use `rtol` keyword argument in `scipy.sparse.linalg.gmres` to `tol`
+- [x] fix: missing type annotations for tests
+- [x] fix: use `Union` for type hints rather than ` | ` operator (to support Python 3.9)
+
 
 ## [v0.4.4] - 2024 Apr 07
 ### Documentation

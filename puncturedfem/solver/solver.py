@@ -6,6 +6,8 @@ Module containing the Solver class, which is a convenience class for solving
 the global linear system.
 """
 
+from typing import Union
+
 from numpy import ndarray, shape, zeros
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
@@ -215,7 +217,7 @@ class Solver:
             # loop over local functions
             loc_basis = V_K.get_basis()
 
-            range_num_funs: range | tqdm[int]
+            range_num_funs: Union[range, tqdm[int]]
             if verbose:
                 range_num_funs = tqdm(range(V_K.num_funs))
             else:

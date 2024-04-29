@@ -84,7 +84,6 @@ __all__ = [
     "meshlib",
     "mesh_builder",
     "split_edge",
-
     # locfun
     "DirichletTrace",
     "EdgeSpace",
@@ -95,12 +94,10 @@ __all__ = [
     "PiecewisePolynomial",
     "barycentric_coordinates",
     "barycentric_coordinates_edge",
-
     # solver
     "GlobalFunctionSpace",
     "BilinearForm",
     "Solver",
-
     # plot
     "plot",
 ]
