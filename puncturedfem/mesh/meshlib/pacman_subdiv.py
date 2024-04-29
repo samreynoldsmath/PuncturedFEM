@@ -1,10 +1,11 @@
 """
-pacman_subdiv.py
-================
+Pac-Man and ghost mesh with internal vertical edges subdivided.
 
-Module containing the pacman_subdiv function, which returns a planar mesh
-representing a subdivision of the pacman mesh. The vertical edges have been
-split into two edges each.
+Routines in this module
+-----------------------
+pacman_subdiv
+_get_verts
+_get_edges
 """
 
 from numpy import sqrt
@@ -25,18 +26,26 @@ GHOST_Y_SHIFT = 0.5
 
 def pacman_subdiv(verbose: bool = True) -> PlanarMesh:
     """
-    Returns a planar mesh representing a subdivision of the pacman mesh. The
-    vertical edges have been split into two edges each.
+    Pac-Man chasing a ghost, with internal vertical edges subdivided.
+
+    Parameters
+    ----------
+    verbose : bool, optional
+        If True, print mesh information. Default is True.
+
+    Returns
+    -------
+    PlanarMesh
+        A planar mesh with the internal vertical edges subdivided.
+
+    Notes
+    -----
+    - The mesh consists of 11 cells.
     """
-    return mesh_builder(get_verts, get_edges, verbose=verbose)
+    return mesh_builder(_get_verts, _get_edges, verbose=verbose)
 
 
-# VERTICES ###################################################################
-
-
-def get_verts() -> list[Vert]:
-    """Returns a list of Vertices for the mesh."""
-
+def _get_verts() -> list[Vert]:
     # define Vertices
     verts: list[Vert] = []
 
@@ -124,9 +133,7 @@ def get_verts() -> list[Vert]:
 # EDGES ######################################################################
 
 
-def get_edges(verts: list[Vert]) -> list[Edge]:
-    """Returns a list of edges for the mesh."""
-
+def _get_edges(verts: list[Vert]) -> list[Edge]:
     # define edges
     edges = []
 

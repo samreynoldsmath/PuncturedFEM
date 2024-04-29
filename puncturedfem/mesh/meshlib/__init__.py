@@ -1,9 +1,5 @@
 """
-meshlib
-=======
-
-Subpackage containing the mesh builder functions for the different types of
-meshes.
+Mesh builder functions.
 
 PLANNED: Future versions may replace this subpackage with a file i/o system.
 

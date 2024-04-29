@@ -1,9 +1,13 @@
 """
-__builder__.py
-==============
+Template for the mesh builder functions in the meshlib submodules.
 
-Module containing the mesh builder function, which serves as template for the
-mesh builder functions in the meshlib submodules.
+Routines in this module
+-----------------------
+mesh_builder
+
+Notes
+-----
+- This module is likely to be replaced by a file i/o system in future versions.
 """
 
 from typing import Any, Callable
@@ -20,8 +24,12 @@ def mesh_builder(
     **kwargs: Any
 ) -> PlanarMesh:
     """
-    Returns a planar mesh object given functions that define the Vertices and
-    edges of the mesh.
+    Build a planar mesh from a list of vertices and edges.
+
+    This function is a template for the mesh builder functions in the meshlib
+    submodules. It is used to build a planar mesh from a list of vertices and
+    edges. The vertices and edges are obtained from the get_verts and get_edges
+    functions, respectively.
 
     Parameters
     ----------
@@ -38,8 +46,12 @@ def mesh_builder(
     -------
     PlanarMesh
         Planar mesh object with specified Vertices and edges.
-    """
 
+    Notes
+    -----
+    - This function is likely to be replaced by a file i/o system in future
+      versions.
+    """
     # define vertices
     verts = get_verts(**kwargs)
 
