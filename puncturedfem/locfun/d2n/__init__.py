@@ -1,9 +1,5 @@
 """
-d2n
-===
-
-Tools for computing the Dirichlet-to-Neumann map of a harmonic function on a
-simply or multiply connected domain.
+Dirichlet-to-Neumann map for harmonic functions.
 
 Modules
 -------
