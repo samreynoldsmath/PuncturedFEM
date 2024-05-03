@@ -1,11 +1,9 @@
 """
-multi_index.py
-==============
+Multi-indices for constructing polynomials.
 
-Module containing the MultiIndex class, which is used to represent
-multi-indices of the form
-    alpha = (alpha_1, alpha_2)
-where alpha_1 and alpha_2 are nonnegative integers.
+Classes
+-------
+MultiIndex
 """
 
 from __future__ import annotations
@@ -18,7 +16,27 @@ from .poly_exceptions import MultiIndexError
 
 class MultiIndex:
     """
-    Integer multi-index with two components
+    Integer multi-index with two components.
+
+    Attributes
+    ----------
+    x : int
+        First component of the multi-index.
+    y : int
+        Second component of the multi-index.
+    order : int
+        Order of the multi-index.
+    idx : int
+        Unique identifier of the multi-index.
+
+    Notes
+    -----
+    - A lexicographical ordering of the multi-indices can be obtained by
+      associating a unique index k to each multi-index alpha. The index k is
+      given by k = alpha_2 + ( m + 1 choose 2 ) where m = alpha_1 + alpha_2.
+    - The multi-index alpha can be recovered from the index k by setting
+      alpha_1 = m - k + ( m + 1 choose 2 ) and alpha_2 = k - ( m + 1 choose 2 ),
+      where m = floor( ( -1 + sqrt(1 + 8k) ) / 2 ).
     """
 
     x: int
@@ -28,7 +46,7 @@ class MultiIndex:
 
     def __init__(self, alpha: Optional[list[int]] = None) -> None:
         """
-        Constructor for MultiIndex class.
+        Integer multi-index with two components.
 
         Parameters
         ----------
@@ -40,9 +58,7 @@ class MultiIndex:
         self.set(alpha)
 
     def validate(self, alpha: list[int]) -> None:
-        """
-        Validates the multi-index alpha.
-        """
+        """Validate the multi-index alpha."""
         if not isinstance(alpha, list):
             raise TypeError("Multi-index must be list of two integers")
         if len(alpha) != 2:
@@ -54,7 +70,12 @@ class MultiIndex:
 
     def set(self, alpha: list[int]) -> None:
         """
-        Sets the multi-index to alpha.
+        Set the multi-index to alpha.
+
+        Parameters
+        ----------
+        alpha : list[int]
+            List of two integers representing the multi-index.
         """
         self.validate(alpha)
         self.x = alpha[0]
@@ -64,7 +85,10 @@ class MultiIndex:
 
     def set_from_idx(self, idx: int) -> None:
         """
-        Sets the multi-index from its id.
+        Set the multi-index from its index.
+
+        idx : int
+            Index identified with multi-index via lexicographical ordering.
         """
         t = floor((sqrt(8 * idx + 1) - 1) / 2)
         N = t * (t + 1) // 2
@@ -75,13 +99,28 @@ class MultiIndex:
 
     def copy(self) -> MultiIndex:
         """
-        Returns a copy of self.
+        Return a copy of self.
+
+        Returns
+        -------
+        MultiIndex
+            A copy of self.
         """
         return MultiIndex([self.x, self.y])
 
     def __eq__(self, other: object) -> bool:
         """
-        Returns True iff self and other have the same multi-index.
+        Return True iff self and other have the same multi-index.
+
+        Parameters
+        ----------
+        other : object
+            Object to compare with self. Must be a MultiIndex.
+
+        Returns
+        -------
+        bool
+            True iff self and other are the same multi-index.
         """
         if not isinstance(other, MultiIndex):
             raise TypeError(
@@ -91,8 +130,12 @@ class MultiIndex:
 
     def __add__(self, other: object) -> MultiIndex:
         """
-        Defines the operation self + other
-        where other is a multi-index
+        Define the operation self + other.
+
+        Parameters
+        ----------
+        other : object
+            Object to add to self. Must be a MultiIndex.
         """
         if isinstance(other, MultiIndex):
             beta = [self.x + other.x, self.y + other.y]

@@ -35,6 +35,16 @@ These are features that are planned for the future, but are not yet implemented.
 - [ ] use `set` instead of `list` for vertex and cell indices in `PlanarMesh`
   class
 - [ ] eliminate redundant calls to parameterize in `ClosedContour.parameterize()`
+- [ ] `Monomial`:
+  - [ ] replace `eval()` method with `__call__()` method
+  - [ ] allow for `Floatlike` output from `eval()` method
+  - [ ] deprecate `is_zero()` method
+- [ ] `MultiIndex`:
+  - [ ] use `Tuple` instead of `List` to set multi-index
+- [ ] use sets instead of lists of `Monomial` objects in `Polynomial` class
+- [ ] deprecate `barycentric_products()` function
+- [ ] allow `barycentric_coordinates()` to accept a list of `Vert` objects
+- [ ] weighted normal derivative of `Polynomial` objects in separate module
 - [ ] fix disabled pylint messages
 ### Known bugs
 - [ ] `Polynomial` not recognized as a callable map when passed to

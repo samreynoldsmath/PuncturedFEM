@@ -1,8 +1,5 @@
 """
-poly
-====
-
-This subpackage contains tools for working with Polynomials in two variables.
+Polynomials in two variables.
 
 Modules
 -------

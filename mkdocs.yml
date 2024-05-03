@@ -59,11 +59,13 @@ nav:
     - 'mesh_builder': src/mesh/mesh_builder.md
     - 'split_edge': src/mesh/split_edge.md
   - 'Local Poisson spaces':
-    - 'Polynomial': src/locfun/polynomial.md
     - 'DirichletTrace': src/locfun/dirichlet_trace.md
-    - 'NystromSolver': src/locfun/nystrom_solver.md
     - 'LocalFunction': src/locfun/locfun.md
     - 'LocalFunctionSpace': src/locfun/locfunsp.md
+    - 'Monomial': src/locfun/monomial.md
+    - 'MultiIndex': src/locfun/multi_index.md
+    - 'NystromSolver': src/locfun/nystrom_solver.md
+    - 'Polynomial': src/locfun/polynomial.md
   - 'Global Poisson spaces':
     - 'BilinearForm': src/solver/bilinear_form.md
     - 'GlobalFunctionSpace': src/solver/globfunsp.md
