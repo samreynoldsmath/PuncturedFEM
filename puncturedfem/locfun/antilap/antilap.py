@@ -1,8 +1,5 @@
 """
-antilap.py
-==========
-
-Anti-Laplacian of a harmonic function on a simply or multiply connected domain.
+Anti-Laplacian of a harmonic function.
 
 Routines in this module
 -----------------------
@@ -23,14 +20,26 @@ def get_anti_laplacian_harmonic(
     nyst: NystromSolver, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Returns the trace and weighted normal derivative of an anti-Laplacian of a
-    harmonic function
-            phi = psi + sum_{j=1}^m a_j ln |x - xi_j|
-    given the trace of psi, the trace of its harmonic conjugate psi_hat,
-    and the logarithmic coefficients a_1,...,a_m
-    (When K is simply connected, phi = psi and a is an empty list)
-    """
+    Get the trace and weighted normal derivative of an anti-Laplacian.
 
+    Parameters
+    ----------
+    nyst : NystromSolver
+        Nystrom solver object.
+    psi : np.ndarray
+        Trace of a harmonic function.
+    psi_hat : np.ndarray
+        Trace of its harmonic conjugate.
+    a : np.ndarray
+        Logarithmic weights.
+
+    Returns
+    -------
+    PHI : np.ndarray
+        Trace of the anti-Laplacian.
+    PHI_wnd : np.ndarray
+        Weighted normal derivative of the anti-Laplacian.
+    """
     if nyst.K.num_holes == 0:
         PHI, PHI_wnd = _antilap_simply_connected(nyst, psi, psi_hat)
     else:
@@ -42,10 +51,6 @@ def get_anti_laplacian_harmonic(
 def _antilap_simply_connected(
     nyst: NystromSolver, phi: np.ndarray, phi_hat: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Returns anti-Laplacian and its weighted normal derivative of a harmonic
-    function on a simply connected domain.
-    """
 
     K = nyst.K
 
@@ -82,10 +87,6 @@ def _antilap_simply_connected(
 def _antilap_multiply_connected(
     nyst: NystromSolver, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Returns anti-Laplacian and its weighted normal derivative of a harmonic
-    function on a multiply connected domain.
-    """
 
     K = nyst.K
 
