@@ -1,9 +1,9 @@
 """
-locfunsp.py
-===========
+Representation of a basis of the local Poisson space V_p(K).
 
-Module containing the LocalFunctionSpace class, which is used to represent a
-basis of the local Poisson space V_p(K) on a mesh cell K.
+Classes
+-------
+LocalFunctionSpace
 """
 
 from typing import Optional
@@ -19,9 +19,11 @@ from .nystrom import NystromSolver
 
 class LocalFunctionSpace:
     """
-    A collection of local functions LocalFunction objects) that form a basis of
-    the local Poisson space V_p(K). TheLocalFunctions are partitioned into three
-    types:
+    A basis of the local Poisson space V_p(K).
+
+    A collection of local functions LocalFunction objects that form a basis of
+    the local Poisson space V_p(K). The LocalFunctions are partitioned into
+    three types:
             vert_funs: vertex functions (harmonic, trace supported on two edges)
             edge_funs: Edge functions (harmonic, trace supported on one Edge)
             bubb_funs: bubble functions (Polynomial Laplacian, zero trace)
@@ -51,12 +53,7 @@ class LocalFunctionSpace:
         processes: int = 1,
     ) -> None:
         """
-        Initialize the LocalFunctionSpace object for a given MeshCell K and the
-        Edge spaces, which is a list of EdgeSpace objects for each Edge in K, in
-        the order that the edges appear in K.edges. The Edge spaces must be
-        computed before theLocalFunctionSpace object is initialized. This
-        initialization computes all function metadata (e.g. traces, interior
-        values) and and interior values.
+        Initialize the LocalFunctionSpace object.
 
         Parameters
         ----------
@@ -71,7 +68,6 @@ class LocalFunctionSpace:
         processes : int, optional
             Number of processes to use for parallel computation, by default 1
         """
-
         # set degree of Polynomial space
         self.set_deg(deg)
 
@@ -107,7 +103,12 @@ class LocalFunctionSpace:
 
     def set_deg(self, deg: int) -> None:
         """
-        Set degree of Polynomial space
+        Set degree of Polynomial space.
+
+        Parameters
+        ----------
+        deg : int
+            Degree of Polynomial space.
         """
         if not isinstance(deg, int):
             raise TypeError("deg must be an integer")
@@ -119,8 +120,14 @@ class LocalFunctionSpace:
         self, verbose: bool = True, compute_grad: bool = False
     ) -> None:
         """
-        Equivalent to running v.compute_interior_values() for each
-        LocalFunction v
+        Compute interior values for all basis functions.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Print progress, by default True
+        compute_grad : bool, optional
+            Compute gradient of basis functions, by default False
         """
         if verbose:
             print("Finding interior values...")
@@ -134,7 +141,13 @@ class LocalFunctionSpace:
 
     def compute_num_funs(self) -> None:
         """
-        Sum the number of vertex, Edge, and bubble functions
+        Sum the number of vertex, edge, and bubble functions.
+
+        Sets the following attributes:
+            num_vert_funs: number of vertex functions
+            num_edge_funs: number of edge functions
+            num_bubb_funs: number of bubble functions
+            num_funs: total number of functions
         """
         self.num_vert_funs = len(self.vert_funs)
         self.num_edge_funs = len(self.edge_funs)
@@ -146,18 +159,22 @@ class LocalFunctionSpace:
     def compute_all(self, verbose: bool = True, processes: int = 1) -> None:
         """
         Equivalent to running v.compute_all(K) for eachLocalFunction v.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Print progress, by default True.
+        processes : int, optional
+            Number of processes to use for parallel computation, by default 1.
         """
         if processes == 1:
-            self.compute_all_sequential(verbose=verbose)
+            self._compute_all_sequential(verbose=verbose)
         elif processes > 1:
-            self.compute_all_parallel(verbose=verbose, processes=processes)
+            self._compute_all_parallel(verbose=verbose, processes=processes)
         else:
             raise ValueError("processes must be a positive integer")
 
-    def compute_all_sequential(self, verbose: bool = True) -> None:
-        """
-        Equivalent to running v.compute_all(K) for eachLocalFunction v.
-        """
+    def _compute_all_sequential(self, verbose: bool = True) -> None:
         if verbose:
             print("Computing function metadata...")
             for v in tqdm(self.get_basis()):
@@ -166,17 +183,21 @@ class LocalFunctionSpace:
             for v in self.get_basis():
                 v.compute_all()
 
-    def compute_all_parallel(
+    def _compute_all_parallel(
         self, verbose: bool = True, processes: int = 1
     ) -> None:
-        """
-        Equivalent to running v.compute_all(K) for eachLocalFunction v, using
-        multiprocessing to parallelize computation.
-        """
         raise NotImplementedError("Parallel computation not yet implemented")
 
     def build_bubble_funs(self) -> None:
-        """Construct bubble functions"""
+        """
+        Construct bubble functions.
+
+        Bubble functions are zero on the boundary and have a Polynomial
+        Laplacian.
+
+        Sets the following attribute:
+            bubb_funs: list of bubble functions
+        """
         # bubble functions
         num_bubb = (self.deg * (self.deg - 1)) // 2
         self.bubb_funs = []
@@ -189,8 +210,21 @@ class LocalFunctionSpace:
             self.bubb_funs.append(v)
 
     def build_vert_funs(self, edge_spaces: list[EdgeSpace]) -> None:
-        """Construct vertex functions from Edge spaces"""
+        """
+        Construct vertex functions from edge spaces.
 
+        Vertex functions are harmonic and have trace supported on two edges,
+        with the common vertex having a value of 1 and all other vertices having
+        a value of 0.
+
+        Parameters
+        ----------
+        edge_spaces : list[EdgeSpace]
+            List of EdgeSpace objects for each Edge in K.
+
+        Sets the following attribute:
+            vert_funs: list of vertex functions.
+        """
         # find all Vertices on MeshCell
         vert_idx_set = set()
         for c in self.nyst.K.components:
@@ -213,8 +247,16 @@ class LocalFunctionSpace:
             self.vert_funs.append(v)
 
     def build_edge_funs(self, edge_spaces: list[EdgeSpace]) -> None:
-        """Construct Edge functions from Edge spaces"""
+        """
+        Construct edge functions from edge spaces.
 
+        Edge functions are harmonic and have trace supported on one edge.
+
+        Parameters
+        ----------
+        edge_spaces : list[EdgeSpace]
+            List of EdgeSpace objects for each Edge in K.
+        """
         # initialize list of Edge functions
         self.edge_funs = []
 
@@ -239,5 +281,12 @@ class LocalFunctionSpace:
                 self.edge_funs.append(v)
 
     def get_basis(self) -> list[LocalFunction]:
-        """Return list of all functions"""
+        """
+        Get the list of all basis functions.
+
+        Returns
+        -------
+        list[LocalFunction]
+            List of all basis functions.
+        """
         return self.vert_funs + self.edge_funs + self.bubb_funs

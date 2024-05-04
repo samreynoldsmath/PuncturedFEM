@@ -1,9 +1,9 @@
 """
-nystrom.py
-==========
+Nyström Solver for solving integral equations.
 
-Module containing the NystromSolver class, which is used to represent a
-Nyström Solver for a given mesh cell K.
+Classes
+-------
+NystromSolver
 """
 
 from typing import Optional
@@ -22,9 +22,48 @@ from .d2n.trace2tangential import get_weighted_tangential_derivative_from_trace
 
 class NystromSolver:
     """
-    Nyström Solver for a given mesh cell K. The Nyström Solver is used to solve
-    the Neumann problem on K, which can be used to compute harmonic conjugates
-    of functions on K, for example.
+    Nyström Solver for a given mesh cell K.
+
+    The Nyström Solver is used to solve the Neumann problem on K, which can be
+    used to compute harmonic conjugates of functions on K, for example.
+
+    Attributes
+    ----------
+    K : MeshCell
+        The mesh cell
+    single_layer_mat : np.ndarray
+        Single layer operator matrix
+    double_layer_mat : np.ndarray
+        Double layer operator matrix
+    single_layer_op : LinearOperator
+        Single layer operator
+    double_layer_op : LinearOperator
+        Double layer operator
+    double_layer_sum : np.ndarray
+        Sum of the double layer operator matrix
+    lam_trace : np.ndarray
+        Trace of the logarithmic terms
+    lam_x1_trace : np.ndarray
+        Gradient of the logarithmic terms in the x1 direction
+    lam_x2_trace : np.ndarray
+        Gradient of the logarithmic terms in the x2 direction
+    dlam_dt_wgt : np.ndarray
+        Weighted tangential derivatives of the logarithmic terms
+    dlam_dn_wgt : np.ndarray
+        Weighted normal derivatives of the logarithmic terms
+    T1_dlam_dt : np.ndarray
+        Single layer operator applied to the tangential derivatives of the
+        logarithmic terms
+    Sn_lam : np.ndarray
+        H1 seminorms of the logarithmic terms
+    A_simple : LinearOperator
+        Linear operator for the Neumann problem
+    A_augment : LinearOperator
+        Linear operator for the multiply connected case
+    precond_simple : LinearOperator
+        Preconditioner for the Neumann problem
+    precond_augment : LinearOperator
+        Preconditioner for the multiply connected case
     """
 
     K: MeshCell
@@ -53,9 +92,10 @@ class NystromSolver:
         debug: bool = False,
     ) -> None:
         """
-        Constructor for Nyström Solver. This constructor computes the single
-        and double layer operators, as well as the logarithmic terms (if K has
-        holes).
+        Build the Nyström Solver.
+
+        This constructor computes the single and double layer operators, as well
+        as the logarithmic terms (if K has holes).
 
         Parameters
         ----------
@@ -107,7 +147,6 @@ class NystromSolver:
                 )
 
     def _setup_message(self) -> str:
-        """Return a message describing the setup of the Nyström Solver."""
         msg = (
             "Setting up Nyström Solver... "
             + f"{self.K.num_pts} sampled points on {self.K.num_edges} Edge"
@@ -117,7 +156,14 @@ class NystromSolver:
         return msg
 
     def set_K(self, K: MeshCell) -> None:
-        """Set the MeshCell"""
+        """
+        Set the MeshCell.
+
+        Parameters
+        ----------
+        K : MeshCell
+            Mesh MeshCell
+        """
         if not isinstance(K, MeshCell):
             raise TypeError("K must be a MeshCell")
         self.K = K
@@ -125,8 +171,19 @@ class NystromSolver:
     # SOLVERS ################################################################
 
     def solve_neumann_zero_average(self, u_wnd: np.ndarray) -> np.ndarray:
-        """Solve the Neumann problem with zero average on the boundary"""
+        """
+        Solve the Neumann problem with zero average on the boundary.
 
+        Parameters
+        ----------
+        u_wnd : np.ndarray
+            Right-hand side of the Neumann problem.
+
+        Returns
+        -------
+        np.ndarray
+            Solution to the Neumann problem.
+        """
         # right-hand side
         b = self.single_layer_op(u_wnd)
 
@@ -136,8 +193,30 @@ class NystromSolver:
     def get_harmonic_conjugate(
         self, phi: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Obtain a harmonic conjugate of phi on K"""
+        """
+        Obtain a harmonic conjugate of phi.
 
+        In the case where K is multiply connected, phi is decomposed into a
+        real part of a complex analytic function psi (which has a harmonic
+        conjugate psi_hat) and a vector a of coefficients for the logarithmic
+        terms.
+
+        In the simply connected case, psi_hat is the harmonic conjugate of phi,
+        and a is an empty array.
+
+        Parameters
+        ----------
+        phi : np.ndarray
+            Trace of a harmonic function on the boundary of a mesh cell.
+
+        Returns
+        -------
+        psi_hat : np.ndarray
+            Trace of the harmonic conjugate of the conjugable part of phi.
+        a : np.ndarray
+            Coefficients for the logarithmic terms. Empty array if K is simply
+            connected.
+        """
         # weighted tangential derivative of phi
         phi_wtd = get_weighted_tangential_derivative_from_trace(self.K, phi)
 
@@ -145,16 +224,12 @@ class NystromSolver:
         if self.K.num_holes == 0:  # simply connected
             return self.solve_neumann_zero_average(-1 * phi_wtd), np.zeros((0,))
         if self.K.num_holes > 0:  # multiply connected
-            return self.get_harmonic_conjugate_multiply_connected(phi, phi_wtd)
+            return self._get_harmonic_conjugate_multiply_connected(phi, phi_wtd)
         raise ValueError("K.num_holes < 0")
 
-    def get_harmonic_conjugate_multiply_connected(
+    def _get_harmonic_conjugate_multiply_connected(
         self, phi: np.ndarray, dphi_dt_wgt: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Solve the Neumann problem for a harmonic conjugate of phi if K is
-        multiply connected.
-        """
         # array sizes
         N = self.K.num_pts
         m = self.K.num_holes
@@ -187,10 +262,7 @@ class NystromSolver:
     # OPERATORS ###############################################################
 
     def build_single_and_double_layer_ops(self) -> None:
-        """
-        Build linear operator objects for the single and double layer
-        operators.
-        """
+        """Build single and double layer operators."""
         self.double_layer_sum = np.sum(self.double_layer_mat, 1)
         self.single_layer_op = LinearOperator(
             dtype=float,
@@ -243,6 +315,14 @@ class NystromSolver:
     def build_preconditioners(self, precond_type: Optional[str]) -> None:
         """
         Build a preconditioner for the Neumann problem.
+
+        Parameters
+        ----------
+        precond_type : Optional[str]
+            Preconditioner type, by default "jacobi"
+
+        Available preconditioners:
+        - "jacobi": Jacobi preconditioner
         """
         if precond_type == "jacobi":
             self.precond_simple = NystromSolver.jacobi_preconditioner(
@@ -258,9 +338,18 @@ class NystromSolver:
     @staticmethod
     def jacobi_preconditioner(A: LinearOperator) -> LinearOperator:
         """
-        Jacobi preconditioner for a linear operator A.
-        """
+        Get the Jacobi preconditioner for a linear operator A.
 
+        Parameters
+        ----------
+        A : LinearOperator
+            Linear operator A
+
+        Returns
+        -------
+        LinearOperator
+            Jacobi preconditioner for A
+        """
         # Jacobi preconditioner
         diagonals = np.zeros((A.shape[0],))
         ei = np.zeros((A.shape[0],))
@@ -280,8 +369,12 @@ class NystromSolver:
     def compute_log_terms(self) -> None:
         """
         Compute and store logarithmic terms for multiply connected domains.
-        """
 
+        Parameters
+        ----------
+        K : MeshCell
+            Mesh MeshCell
+        """
         # traces and gradients of logarithmic corrections
         self.lam_trace = log_terms.get_log_trace(self.K)
         self.lam_x1_trace, self.lam_x2_trace = log_terms.get_log_grad(self.K)
@@ -306,9 +399,19 @@ class NystromSolver:
 
     def Su(self, vals: np.ndarray, dlam_du_wgt: np.ndarray) -> np.ndarray:
         """
-        Abstraction of the operator
-            S_u = int_{dK} u (d_lambda / du) ds
-        where u is a vector field defined on the boundary of K.
+        Apply the operator S_u(vals) = int_{dK} vals * d_lambda/du ds.
+
+        Parameters
+        ----------
+        vals : np.ndarray
+            Vector vals
+        dlam_du_wgt : np.ndarray
+            Weighted tangential/normal derivatives of log terms.
+
+        Returns
+        -------
+        np.ndarray
+            Result of the operator S_u applied to vals.
         """
         out = np.zeros((self.K.num_holes,))
         for i in range(self.K.num_holes):
@@ -319,17 +422,33 @@ class NystromSolver:
 
     def Sn(self, vals: np.ndarray) -> np.ndarray:
         """
-        The operator
-            S_n = int_{dK} (d_lambda / dn) vals ds
-        where n is the outward normal.
+        Apply the operator S_n(vals) = int_{dK} vals * d_lambda/dn ds.
+
+        Parameters
+        ----------
+        vals : np.ndarray
+            Vector vals
+
+        Returns
+        -------
+        np.ndarray
+            Result of the operator S_n applied to vals.
         """
         return self.Su(vals, self.dlam_dn_wgt)
 
     def St(self, vals: np.ndarray) -> np.ndarray:
         """
-        The operator
-            S_n = int_{dK} (d_lambda / dt) vals ds
-        where t is the unit tangent.
+        Apply the operator S_n(vals) = int_{dK} vals * d_lambda / dt ds.
+
+        Parameters
+        ----------
+        vals : np.ndarray
+            Vector vals
+
+        Returns
+        -------
+        np.ndarray
+            Result of the operator S_t applied to vals.
         """
         return self.Su(vals, self.dlam_dt_wgt)
 
@@ -337,14 +456,22 @@ class NystromSolver:
 
     def linop4singlelayer(self, u: np.ndarray) -> np.ndarray:
         """
-        The single layer operator applied to u.
+        Apply the single layer operator to u.
+
+        Parameters
+        ----------
+        u : np.ndarray
+            Vector u
+
+        Returns
+        -------
+        np.ndarray
+            Result of the single layer operator applied to u.
         """
         return self.single_layer_mat @ u
 
     def build_single_layer_mat(self) -> None:
-        """
-        Construct the single layer operator matrix.
-        """
+        """Construct the single layer operator matrix."""
         self.single_layer_mat = np.zeros((self.K.num_pts, self.K.num_pts))
         for i in range(self.K.num_holes + 1):
             ii1 = self.K.component_start_idx[i]
@@ -358,8 +485,20 @@ class NystromSolver:
 
     def single_layer_component_block(self, i: int, j: int) -> np.ndarray:
         """
-        Block of the single layer operator matrix corresponding to the i-th
-        and j-th components of the boundary of K.
+        Block of the single layer operator matrix by components.
+
+        Parameters
+        ----------
+        i : int
+            Component i
+        j : int
+            Component j
+
+        Returns
+        -------
+        np.ndarray
+            Block of the single layer operator matrix for the components i and
+            j.
         """
         B_comp = np.zeros(
             (
@@ -385,10 +524,20 @@ class NystromSolver:
 
     def single_layer_edge_block(self, e: Edge, f: Edge, qm: Quad) -> np.ndarray:
         """
-        Block of the single layer operator matrix corresponding to the edges e
-        and f. The Quadrature object qm is the Martensen Quadrature.
-        """
+        Block of the single layer operator matrix corresponding by edges.
 
+        Parameters
+        ----------
+        e : Edge
+            Edge e
+        f : Edge
+            Edge f
+
+        Returns
+        -------
+        np.ndarray
+            Block of the single layer operator matrix for the edges e and f.
+        """
         # allocate block
         # B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
 
@@ -411,30 +560,11 @@ class NystromSolver:
                 qm.wgt,
                 qm.t,
             )
-            # for i in range(e.num_pts - 1):
-            #     for j in range(j_start, f.num_pts - 1):
-            #         ij = abs(i - j)
-            #         if qm.t[ij] < 1e-14:
-            #             if e.dx_norm[i] < 1e-14:
-            #                 B_edge[i, i] = 0.0
-            #             else:
-            #                 B_edge[i, i] = 2 * np.log(e.dx_norm[j])
-            #         else:
-            #             xy = e.x[:, i] - f.x[:, j]
-            #             xy2 = np.dot(xy, xy)
-            #             B_edge[i, j] = np.log(xy2 / qm.t[ij])
-            #         B_edge[i, j] *= h
-            #         B_edge[i, j] += qm.wgt[ij]
 
         else:  # different edges: Kress only
             B_edge = _single_layer_distinct_edge_block(
                 e.num_pts, f.num_pts, h, e.x, f.x, j_start
             )
-            # for i in range(e.num_pts - 1):
-            #     for j in range(j_start, f.num_pts - 1):
-            #         xy = e.x[:, i] - f.x[:, j]
-            #         xy2 = np.dot(xy, xy)
-            #         B_edge[i, j] = np.log(xy2) * h
 
         # raise exception when non-numeric value encountered
         if np.isnan(B_edge).any() or np.isinf(B_edge).any():
@@ -446,7 +576,17 @@ class NystromSolver:
 
     def linop4doublelayer(self, u: np.ndarray) -> np.ndarray:
         """
-        Operator for the double layer potential applied to u.
+        Apply the operator for the double layer potential to u.
+
+        Parameters
+        ----------
+        u : np.ndarray
+            Vector u
+
+        Returns
+        -------
+        np.ndarray
+            Result of the double layer operator applied to u.
         """
         corner_values = u[self.K.closest_vert_idx]
         res = 0.5 * (u - corner_values)
@@ -455,9 +595,7 @@ class NystromSolver:
         return res
 
     def build_double_layer_mat(self) -> None:
-        """
-        Construct the double layer operator matrix.
-        """
+        """Construct the double layer operator matrix."""
         self.double_layer_mat = np.zeros((self.K.num_pts, self.K.num_pts))
         for i in range(self.K.num_holes + 1):
             ii1 = self.K.component_start_idx[i]
@@ -475,8 +613,20 @@ class NystromSolver:
         self, ci: ClosedContour, cj: ClosedContour
     ) -> np.ndarray:
         """
-        Block of the double layer operator matrix corresponding to the i-th
-        and j-th components of the boundary of K.
+        Get the block of the double layer operator matrix by components.
+
+        Parameters
+        ----------
+        ci : ClosedContour
+            Component ci
+        cj : ClosedContour
+            Component cj
+
+        Returns
+        -------
+        np.ndarray
+            Block of the double layer operator matrix for the components ci and
+            cj.
         """
         B_comp = np.zeros((ci.num_pts, cj.num_pts))
         for k in range(ci.num_edges):
@@ -492,13 +642,20 @@ class NystromSolver:
 
     def double_layer_edge_block(self, e: Edge, f: Edge) -> np.ndarray:
         """
-        Block of the double layer operator matrix corresponding to the edges e
-        and f.
+        Get the block of the double layer operator matrix by edges.
+
+        Parameters
+        ----------
+        e : Edge
+            Edge e
+        f : Edge
+            Edge f
+
+        Returns
+        -------
+        np.ndarray
+            Block of the double layer operator matrix for the edges e and f.
         """
-
-        # allocate block
-        # B_edge = np.zeros((e.num_pts - 1, f.num_pts - 1))
-
         # trapezoid step size
         h = 1 / (f.num_pts - 1)
 
@@ -540,7 +697,6 @@ class NystromSolver:
     # DEBUGGING ###############################################################
 
     def _get_operator_matrix(self, A: LinearOperator) -> np.ndarray:
-        """Return the matrix representation of a linear operator"""
         I = np.eye(A.shape[0])
         A_mat = np.zeros(A.shape)
         for i in range(A.shape[0]):
@@ -548,7 +704,6 @@ class NystromSolver:
         return A_mat
 
     def _get_operator_condition_number(self, A: LinearOperator) -> float:
-        """Compute the condition number of a linear operator"""
         A_mat = self._get_operator_matrix(A)
         return np.linalg.cond(A_mat)
 

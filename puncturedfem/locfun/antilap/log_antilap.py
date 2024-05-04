@@ -72,7 +72,6 @@ def get_log_antilap_weighted_normal_derivative(K: MeshCell) -> np.ndarray:
     return dLAM_dn_wgt
 
 
-
 def _log_antilap(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     """
     Get an anti-Laplacian of a logarithmic term.

@@ -51,7 +51,6 @@ def get_anti_laplacian_harmonic(
 def _antilap_simply_connected(
     nyst: NystromSolver, phi: np.ndarray, phi_hat: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-
     K = nyst.K
 
     # length of interval of integration in parameter space
@@ -87,7 +86,6 @@ def _antilap_simply_connected(
 def _antilap_multiply_connected(
     nyst: NystromSolver, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-
     K = nyst.K
 
     # compute F * t and \hat F * t

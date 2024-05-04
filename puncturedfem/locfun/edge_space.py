@@ -1,8 +1,9 @@
 """
-edge_space.py
-=============
+Spaces of polynomial traces on an edge.
 
-Module containing the EdgeSpace class for managing spaces of trace functions.
+Classes
+-------
+EdgeSpace
 """
 
 import numpy as np
@@ -17,9 +18,7 @@ from .poly.poly import Polynomial
 
 class EdgeSpace:
     """
-    The space of Polynomial traces of degree  <= deg on an Edge.
-
-    TODO: deg > 3 is still experimental, use with caution.
+    The space of polynomial traces on an edge.
 
     Attributes
     ----------
@@ -41,6 +40,10 @@ class EdgeSpace:
         Number of Edge functions.
     num_funs : int
         Total number of functions in the space.
+
+    Notes
+    -----
+    - deg > 3 is still experimental, use with caution.
     """
 
     e: Edge
@@ -55,14 +58,14 @@ class EdgeSpace:
 
     def __init__(self, e: Edge, deg: int) -> None:
         """
-        Constructor for EdgeSpace class.
+        Build the space of polynomial traces on an edge.
 
         Parameters
         ----------
         e : Edge
             Edge on which the space is defined.
         deg : int
-            Maximum Polynomial degree.
+            Maximum polynomial degree.
         """
         self.edge_fun_traces = []
         self.vert_fun_traces = []
@@ -79,6 +82,11 @@ class EdgeSpace:
     def set_edge(self, e: Edge) -> None:
         """
         Set the Edge on which the space is defined.
+
+        Parameters
+        ----------
+        e : Edge
+            Edge on which the space is defined.
         """
         if not isinstance(e, Edge):
             raise TypeError("e must be an Edge")
@@ -86,7 +94,12 @@ class EdgeSpace:
 
     def set_deg(self, deg: int) -> None:
         """
-        Set the maximum Polynomial degree.
+        Set the maximum polynomial degree.
+
+        Parameters
+        ----------
+        deg : int
+            Maximum polynomial degree.
         """
         if not isinstance(deg, int):
             raise TypeError("deg must be an integer")
@@ -95,25 +108,19 @@ class EdgeSpace:
         self.deg = deg
 
     def find_num_funs(self) -> None:
-        """
-        Find the total number of functions in the space.
-        """
+        """Find the total number of functions in the space."""
         self.num_funs = self.num_vert_funs + self.num_edge_funs
 
     def compute_num_vert_funs(self) -> None:
-        """
-        Number of vertex functions is set to self.num_vert_funs.
-        """
+        """Find number of vertex functions is set to self.num_vert_funs."""
         self.num_vert_funs = len(self.vert_fun_traces)
 
     def compute_num_edge_funs(self) -> None:
-        """
-        Number of Edge functions is set to self.num_edge_funs.
-        """
+        """Find number of edge functions is set to self.num_edge_funs."""
         self.num_edge_funs = len(self.edge_fun_traces)
 
     def generate_vert_fun_global_keys(self) -> None:
-        """Generate global keys for Edge and vertex functions"""
+        """Generate global keys for edge and vertex functions."""
         self.vert_fun_global_keys = []
         if self.e.is_loop:
             return
@@ -121,7 +128,7 @@ class EdgeSpace:
             self.vert_fun_global_keys.append(GlobalKey("Vert", vert_idx=k))
 
     def generate_edge_fun_global_keys(self) -> None:
-        """Generate global keys for Edge and vertex functions"""
+        """Generate global keys for edge and vertex functions."""
         self.edge_fun_global_keys = []
         for k in range(self.num_edge_funs):
             self.edge_fun_global_keys.append(
@@ -130,16 +137,17 @@ class EdgeSpace:
 
     def build_spanning_set(self) -> None:
         """
-        Spanning set of P_p(e) using traces of
-                L_m(x_1) * L_n(x_2) - a * ell_0 - b * ell_1
-        where
-                L_j is the jth integrated Legendre Polynomial,
-                a = L_m(y_1) * L_n(y_2),
-                b = L_m(z_1) * L_n(z_2),
-                y = (y_1, y_2) starting vertex of Edge
-                z = (z_1, z_2) ending vertex of Edge
-        """
+        Build a spanning set of the space of polynomial traces on an edge.
 
+        Spanning set of P_p(e) using traces of
+            L_m(x_1) * L_n(x_2) - a * ell_0 - b * ell_1
+        where
+            L_j is the jth integrated Legendre Polynomial,
+            a = L_m(y_1) * L_n(y_2),
+            b = L_m(z_1) * L_n(z_2),
+            y = (y_1, y_2) starting vertex of Edge
+            z = (z_1, z_2) ending vertex of Edge
+        """
         # compute Legendre tensor products
         self.edge_fun_traces = integrated_legendre_tensor_products(self.deg)
 
@@ -208,11 +216,12 @@ class EdgeSpace:
 
     def transform_coordinates_to_bounding_box(self) -> None:
         """
+        Map the square [-1, 1] x [-1, 1] to the bounding box of the edge.
+
         Transform the domain of the Legendre tensor products from the square
         [-1, 1] x [-1, 1] to the bounding box of the Edge, by composing with
         an affine change of coordinates (i.e. deg=1 Polynomials).
         """
-
         # get bounding box
         xmin, xmax, ymin, ymax = self.e.get_bounding_box()
 
@@ -243,15 +252,21 @@ class EdgeSpace:
         for j, f in enumerate(self.edge_fun_traces):
             self.edge_fun_traces[j] = f.compose(qx, qy)
 
-    def reduce_to_basis(self) -> None:
+    def reduce_to_basis(self, tol: float = 1e-6) -> None:
         """
-        Reduce spanning set to basis by determining the pivot columns of the
-        mass matrix.
+        Reduce spanning set to basis.
+
+        The pivot columns of the mass matrix M_ij = int_e phi_i phi_j ds are
+        identified and the corresponding edge functions are set as the basis.
+
+        Parameters
+        ----------
+        tol : float
+            Tolerance for low-rank approximation of the mass matrix.
         """
         M = self.get_gram_matrix()
 
         # replace M with a low-rank approximation
-        tol = 1e-6
         if np.shape(M)[0] > 0:
             U, S, Vh = np.linalg.svd(M)
             S_max = np.max(S)
@@ -271,7 +286,12 @@ class EdgeSpace:
 
     def get_gram_matrix(self) -> np.ndarray:
         """
-        Return the mass matrix M_ij = int_e phi_i phi_j ds.
+        Compute the mass matrix M_ij = int_e phi_i phi_j ds.
+
+        Returns
+        -------
+        M : np.ndarray
+            Mass matrix.
         """
         m = len(self.edge_fun_traces)
         M = np.zeros((m, m))
@@ -287,9 +307,11 @@ class EdgeSpace:
     @deprecated(version="0.4.3", reason="Causes numerical instability")
     def diagonal_rescale(self, M: np.ndarray) -> np.ndarray:
         """
-        Return the normalized mass matrix M_ij / sqrt(M_ii * M_jj).
+        Get the normalized mass matrix M_ij / sqrt(M_ii * M_jj).
 
-        (!) DEPRECATED
+        Notes
+        -----
+        - This function is deprecated due to numerical instability.
         """
         m = np.shape(M)[0]
         for i in range(m):
@@ -305,7 +327,9 @@ class EdgeSpace:
         """
         Return the matrix M with rows and columns with zero diagonals removed.
 
-        (!) DEPRECATED
+        Notes
+        -----
+        - This function is deprecated due to numerical instability.
         """
         m = np.shape(M)[0]
         idx = []
@@ -320,11 +344,16 @@ class EdgeSpace:
                 N[j, i] = N[i, j]
         return N
 
-    def get_basis_index_set(
-        self, M: np.ndarray, tol: float = 1e-6
-    ) -> list[int]:
+    def get_basis_index_set(self, M: np.ndarray, tol: float) -> list[int]:
         """
         Return the index set of the pivot columns of the matrix M.
+
+        Parameters
+        ----------
+        M : np.ndarray
+            Matrix.
+        tol : float
+            Tolerance for low-rank approximation.
         """
         idx: list[int] = []
         if np.shape(M)[0] == 0:
