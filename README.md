@@ -69,7 +69,7 @@ Furthermore, this repo contains examples presented with [Jupyter notebooks](http
 - [Jeffrey S. Ovall](https://sites.google.com/pdx.edu/jeffovall) (1):
 principal investigator
 - [Samuel E. Reynolds](https://sites.google.com/view/samreynolds) (1):
-lead developer
+maintainer, lead developer
 - [Zack Kenyon](https://github.com/zackkenyon) (1):
 junior developer
 
@@ -84,10 +84,11 @@ Funding for this project was provided by the National Science Foundation through
 - **NSF RTG grant DMS-2136228**
 
 ## Disclaimers
-- This code is intended to serve as a prototype, and has not necessarily been optimized for performance.
-- This project is under heavy development, which may result to changes in to the API. Consult the examples for the latest suggested usage.
+This package is an experimental prototype.
+- It is unlikely to be suitable for production use.
+- It is under heavy development, which may sometimes result in breaking changes.
 
-## License
+## License (GPLv3)
 Copyright (C) 2022 - 2024, Jeffrey S. Ovall and Samuel E. Reynolds.
 
 This program is free software: you can redistribute it and/or modify it
