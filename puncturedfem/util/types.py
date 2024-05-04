@@ -1,8 +1,17 @@
 """
-types.py
-========
+Type aliases used throughout the PuncturedFEM package.
 
-This module contains type aliases used throughout the puncturedfem package.
+Type aliases
+------------
+FloatLike : Union[int, float, np.ndarray]
+    Type alias for a float-like object.
+Func_R2_R : Callable[[FloatLike, FloatLike], FloatLike]
+    Type alias for a function that maps R^2 to R.
+
+Functions
+---------
+is_Func_R2_R
+    Check if a function is a map from R^2 to R.
 """
 
 import inspect
