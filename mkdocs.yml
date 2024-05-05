@@ -3,7 +3,23 @@ docs_dir: doc
 repo_url: https://github.com/samreynoldsmath/PuncturedFEM
 edit_uri: edit/main/doc
 theme:
-  name: readthedocs
+  name: material
+  logo: logo/pacman.svg
+  palette:
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   highlightjs: true
   features:
     - content.action.view
