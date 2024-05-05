@@ -1,8 +1,9 @@
 """
-plot_global_solution.py
-=======================
+Plot a local function.
 
-Module for plotting the global solution.
+Classes
+-------
+LocalFunctionPlot
 """
 
 from typing import Any, Optional
@@ -19,7 +20,24 @@ from .plot_util import save_figure
 
 class LocalFunctionPlot:
     """
-    Class for plotting a local function.
+    Plot a local function.
+
+    Attributes
+    ----------
+    v : LocalFunction
+        The local function to be plotted.
+    fill : bool
+        If True, a heatmap is plotted. If False, a contour plot is plotted.
+    title : str
+        The title of the plot.
+    levels : int
+        The number of levels in the contour plot.
+    show_colorbar : bool
+        If True, a colorbar is shown.
+    show_axis : bool
+        If True, the axis is shown.
+    colormap : Optional[Colormap]
+        The colormap used for the plot.
     """
 
     v: LocalFunction
@@ -32,7 +50,7 @@ class LocalFunctionPlot:
 
     def __init__(self, v: LocalFunction) -> None:
         """
-        Constructor for the LocalFunctionPlot class.
+        Initialize a LocalFunctionPlot object.
 
         Parameters
         ----------
@@ -44,15 +62,17 @@ class LocalFunctionPlot:
     def set_local_function(self, v: LocalFunction) -> None:
         """
         Set the local function to be plotted.
+
+        Parameters
+        ----------
+        v : LocalFunction
+            The local function to be plotted.
         """
         if not isinstance(v, LocalFunction):
             raise TypeError("v must be a LocalFunction")
         self.v = v
 
     def _unpack_kwargs(self, kwargs: dict) -> None:
-        """
-        Unpack the keyword arguments.
-        """
         self.fill = kwargs.get("fill", True)
         self.title = kwargs.get("title", "")
         self.levels = kwargs.get("levels", 32)
@@ -67,9 +87,6 @@ class LocalFunctionPlot:
         filename: str = "",
         **kwargs: Any
     ) -> None:
-        """
-        Draw the plot.
-        """
         self._unpack_kwargs(kwargs)
         edges = self.v.nyst.K.get_edges()
         MeshPlot(edges).draw(show_plot=False, keep_open=True)
@@ -98,7 +115,27 @@ class LocalFunctionPlot:
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
         """
-        Draw the plot of the internal values. (Alias for draw_vals.)
+        Draw the plot of the internal values.
+
+        Parameters
+        ----------
+        show_plot : bool
+            If True, the plot is shown.
+        filename : str
+            If not empty, the plot is saved to this file.
+        fill : bool
+            If True, a heatmap is plotted. If False, a contour plot is plotted.
+            Default is True.
+        title : str
+            The title of the plot. Default is "", i.e. no title.
+        levels : int
+            The number of levels in the contour plot. Default is 32.
+        show_colorbar : bool
+            If True, a colorbar is shown. Default is True.
+        show_axis : bool
+            If True, the axis is shown. Default is True.
+        colormap : Optional[Colormap]
+            The colormap used for the plot. Default is None.
         """
         self.draw_vals(show_plot=show_plot, filename=filename, **kwargs)
 
@@ -107,6 +144,26 @@ class LocalFunctionPlot:
     ) -> None:
         """
         Draw the plot of the internal values.
+
+        Parameters
+        ----------
+        show_plot : bool
+            If True, the plot is shown.
+        filename : str
+            If not empty, the plot is saved to this file.
+        fill : bool
+            If True, a heatmap is plotted. If False, a contour plot is plotted.
+            Default is True.
+        title : str
+            The title of the plot. Default is "", i.e. no title.
+        levels : int
+            The number of levels in the contour plot. Default is 32.
+        show_colorbar : bool
+            If True, a colorbar is shown. Default is True.
+        show_axis : bool
+            If True, the axis is shown. Default is True.
+        colormap : Optional[Colormap]
+            The colormap used for the plot. Default is None.
         """
         self._draw_generic(
             vals=self.v.int_vals,
@@ -120,6 +177,26 @@ class LocalFunctionPlot:
     ) -> None:
         """
         Draw the plot of the x1 component of the gradient.
+
+        Parameters
+        ----------
+        show_plot : bool
+            If True, the plot is shown.
+        filename : str
+            If not empty, the plot is saved to this file.
+        fill : bool
+            If True, a heatmap is plotted. If False, a contour plot is plotted.
+            Default is True.
+        title : str
+            The title of the plot. Default is "", i.e. no title.
+        levels : int
+            The number of levels in the contour plot. Default is 32.
+        show_colorbar : bool
+            If True, a colorbar is shown. Default is True.
+        show_axis : bool
+            If True, the axis is shown. Default is True.
+        colormap : Optional[Colormap]
+            The colormap used for the plot. Default is None.
         """
         self._draw_generic(
             vals=self.v.int_grad1,
@@ -133,6 +210,26 @@ class LocalFunctionPlot:
     ) -> None:
         """
         Draw the plot of the x2 component of the gradient.
+
+        Parameters
+        ----------
+        show_plot : bool
+            If True, the plot is shown.
+        filename : str
+            If not empty, the plot is saved to this file.
+        fill : bool
+            If True, a heatmap is plotted. If False, a contour plot is plotted.
+            Default is True.
+        title : str
+            The title of the plot. Default is "", i.e. no title.
+        levels : int
+            The number of levels in the contour plot. Default is 32.
+        show_colorbar : bool
+            If True, a colorbar is shown. Default is True.
+        show_axis : bool
+            If True, the axis is shown. Default is True.
+        colormap : Optional[Colormap]
+            The colormap used for the plot. Default is None.
         """
         self._draw_generic(
             vals=self.v.int_grad2,
@@ -146,6 +243,26 @@ class LocalFunctionPlot:
     ) -> None:
         """
         Draw the plot of the norm of the gradient.
+
+        Parameters
+        ----------
+        show_plot : bool
+            If True, the plot is shown.
+        filename : str
+            If not empty, the plot is saved to this file.
+        fill : bool
+            If True, a heatmap is plotted. If False, a contour plot is plotted.
+            Default is True.
+        title : str
+            The title of the plot. Default is "", i.e. no title.
+        levels : int
+            The number of levels in the contour plot. Default is 32.
+        show_colorbar : bool
+            If True, a colorbar is shown. Default is True.
+        show_axis : bool
+            If True, the axis is shown. Default is True.
+        colormap : Optional[Colormap]
+            The colormap used for the plot. Default is None.
         """
         self._draw_generic(
             vals=np.sqrt(self.v.int_grad1**2 + self.v.int_grad2**2),
