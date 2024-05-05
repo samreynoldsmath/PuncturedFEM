@@ -1,9 +1,10 @@
 """
-BilinearForm.py
-================
+Bilinear forms.
 
-Module containing the BilinearForm class, which is used to represent a bilinear
-form.
+Classes
+-------
+BilinearForm
+    Represents a bilinear form arising from a diffusion-reaction equation.
 """
 
 from ..locfun.locfun import LocalFunction
@@ -13,12 +14,23 @@ from ..locfun.poly.poly import Polynomial
 
 class BilinearForm:
     """
+    Bilinear form for a diffusion-reaction equation.
+
     Represents a bilinear form of the form
         a(u, v) = (D grad u, grad v) + (R u, v)
     where D is the diffusion constant, R is the reaction constant. Also includes
     a right-hand side Polynomial f, so that the weak problem is
         a(u, v) = (D grad u, grad v) + (R u, v) = (f, v)
     for all v in V.
+
+    Attributes
+    ----------
+    diffusion_constant : float
+        Diffusion constant D
+    reaction_constant : float
+        Reaction constant R
+    rhs_poly : Polynomial
+        Right-hand side Polynomial f
     """
 
     diffusion_constant: float
@@ -32,7 +44,7 @@ class BilinearForm:
         rhs_poly: Polynomial,
     ) -> None:
         """
-        Constructor for BilinearForm class.
+        Initialize the BilinearForm object.
 
         Parameters
         ----------
@@ -48,9 +60,7 @@ class BilinearForm:
         self.set_rhs_poly(rhs_poly)
 
     def __str__(self) -> str:
-        """
-        Returns a string representation of the bilinear form.
-        """
+        """Return a string representation of the bilinear form."""
         s = "BilinearForm:"
         s += f"\n\tD: {self.diffusion_constant}"
         s += f"\n\tR: {self.reaction_constant}"
@@ -59,19 +69,34 @@ class BilinearForm:
 
     def set_diffusion_constant(self, diffusion_constant: float) -> None:
         """
-        Sets the diffusion constant D.
+        Set the diffusion constant D.
+
+        Parameters
+        ----------
+        diffusion_constant : float
+            The diffusion constant D
         """
         self.diffusion_constant = diffusion_constant
 
     def set_reaction_constant(self, reaction_constant: float) -> None:
         """
-        Sets the reaction constant R.
+        Set the reaction constant R.
+
+        Parameters
+        ----------
+        reaction_constant : float
+            The reaction constant R
         """
         self.reaction_constant = reaction_constant
 
     def set_rhs_poly(self, f_poly: Polynomial) -> None:
         """
-        Sets the right-hand side Polynomial f.
+        Set the right-hand side polynomial f.
+
+        Parameters
+        ----------
+        f_poly : Polynomial
+            The right-hand side polynomial f
         """
         self.rhs_poly = f_poly
 
@@ -79,26 +104,53 @@ class BilinearForm:
 
     def eval_h1(self, u: LocalFunction, v: LocalFunction) -> float:
         """
-        Returns the H^1 semi-inner product of twoLocalFunction objects u and v.
+        Return the H^1 semi-inner product of two LocalFunction objects u and v.
+
+        Parameters
+        ----------
+        u : LocalFunction
+            The first LocalFunction object
+        v : LocalFunction
+            The second LocalFunction object
         """
         return u.get_h1_semi_inner_prod(v)
 
     def eval_l2(self, u: LocalFunction, v: LocalFunction) -> float:
         """
-        Returns the L^2 inner product of twoLocalFunction objects u and v.
+        Return the L^2 inner product of two LocalFunction objects u and v.
+
+        Parameters
+        ----------
+        u : LocalFunction
+            The first LocalFunction object
+        v : LocalFunction
+            The second LocalFunction object
         """
         return u.get_l2_inner_prod(v)
 
     def eval_with_h1_and_l2(self, h1: float, l2: float) -> float:
         """
-        Returns the bilinear form a(u,v) given the h1 and l2 (semi-)inner
-        products of u and v.
+        Get the bilinear form a(u,v) given h1 and l2 inner products.
+
+        Parameters
+        ----------
+        h1 : float
+            The H^1 semi-inner product (grad u, grad v)
+        l2 : float
+            The L^2 inner product (u, v)
         """
         return self.diffusion_constant * h1 + self.reaction_constant * l2
 
     def eval(self, u: LocalFunction, v: LocalFunction) -> float:
         """
-        Evaluates the bilinear form on twoLocalFunction objects u and v.
+        Evaluate the bilinear form on two LocalFunction objects u and v.
+
+        Parameters
+        ----------
+        u : LocalFunction
+            The first LocalFunction object
+        v : LocalFunction
+            The second LocalFunction object
         """
         h1 = u.get_h1_semi_inner_prod(v)
         l2 = u.get_l2_inner_prod(v)
@@ -106,7 +158,12 @@ class BilinearForm:
 
     def eval_rhs(self, v: LocalFunction) -> float:
         """
-        Evaluates the right-hand side Polynomial f on aLocalFunction object v.
+        Evaluate the right-hand side Polynomial f on a LocalFunction object v.
+
+        Parameters
+        ----------
+        v : LocalFunction
+            The LocalFunction object to evaluate f on
         """
         m = len(v.poly_trace.polys)
         poly_trace = PiecewisePolynomial(

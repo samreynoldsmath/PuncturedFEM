@@ -1,9 +1,10 @@
 """
-solver.py
-=========
+Solve the global linear system.
 
-Module containing the Solver class, which is a convenience class for solving
-the global linear system.
+Classes
+-------
+Solver
+    Solve the global linear system.
 """
 
 from typing import Union
@@ -20,7 +21,7 @@ from .globfunsp import GlobalFunctionSpace
 
 class Solver:
     """
-    Convenience class for solving the global linear system.
+    Solve the global linear system.
 
     Attributes
     ----------
@@ -69,7 +70,7 @@ class Solver:
 
     def __init__(self, V: GlobalFunctionSpace, a: BilinearForm) -> None:
         """
-        Constructor for Solver class.
+        Initialize the Solver.
 
         Parameters
         ----------
@@ -82,9 +83,7 @@ class Solver:
         self.set_bilinear_form(a)
 
     def __str__(self) -> str:
-        """
-        Return string representation.
-        """
+        """Get string representation."""
         s = "Solver:\n"
         s += f"\tV: {self.V}\n"
         s += f"\ta: {self.a}\n"
@@ -96,6 +95,11 @@ class Solver:
     def set_global_function_space(self, V: GlobalFunctionSpace) -> None:
         """
         Set the global function space.
+
+        Parameters
+        ----------
+        V : GlobalFunctionSpace
+            Global function space
         """
         if not isinstance(V, GlobalFunctionSpace):
             raise TypeError("V must be a GlobalFunctionSpace")
@@ -104,6 +108,11 @@ class Solver:
     def set_bilinear_form(self, a: BilinearForm) -> None:
         """
         Set the bilinear form.
+
+        Parameters
+        ----------
+        a : BilinearForm
+            Bilinear form
         """
         if not isinstance(a, BilinearForm):
             raise TypeError("a must be a BilinearForm")
@@ -112,11 +121,18 @@ class Solver:
     # SOLVE LINEAR SYSTEM ####################################################
 
     def solve(self) -> None:
-        """Solve linear system"""
+        """Solve the linear system."""
         self.soln = spsolve(self.glob_mat, self.glob_rhs)
 
     def get_solution(self) -> ndarray:
-        """Return solution vector"""
+        """
+        Get the solution vector.
+
+        Returns
+        -------
+        ndarray
+            Solution vector
+        """
         if self.soln is None:
             self.solve()
         return self.soln
@@ -129,7 +145,18 @@ class Solver:
         processes: int = 1,
         compute_interior_values: bool = True,
     ) -> None:
-        """Assemble global system matrix"""
+        """
+        Assemble the global system matrix and right-hand side vector.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Print progress, by default True
+        processes : int, optional
+            Number of processes to use, by default 1
+        compute_interior_values : bool, optional
+            Compute interior values, by default True
+        """
         self.build_values_and_indexes(
             verbose=verbose,
             processes=processes,
@@ -146,7 +173,18 @@ class Solver:
         processes: int = 1,
         compute_interior_values: bool = True,
     ) -> None:
-        """Build values and indexes"""
+        """
+        Build values and indexes.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Print progress, by default True
+        processes : int, optional
+            Number of processes to use, by default 1
+        compute_interior_values : bool, optional
+            Compute interior values, by default True
+        """
         if processes == 1:
             self.build_values_and_indexes_sequential(
                 verbose=verbose, compute_interior_values=compute_interior_values
@@ -168,6 +206,20 @@ class Solver:
     ) -> None:
         """
         Build values and indexes in parallel.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Print progress, by default True
+        processes : int, optional
+            Number of processes to use, by default 1
+        compute_interior_values : bool, optional
+            Compute interior values, by default True
+
+        Raises
+        ------
+        NotImplementedError
+            Parallel assembly not yet implemented
         """
         raise NotImplementedError("Parallel assembly not yet implemented")
 
@@ -176,8 +228,14 @@ class Solver:
     ) -> None:
         """
         Build values and indexes sequentially.
-        """
 
+        Parameters
+        ----------
+        verbose : bool, optional
+            Print progress, by default True
+        compute_interior_values : bool, optional
+            Compute interior values, by default True
+        """
         self.rhs_idx = []
         self.rhs_vals = []
         self.row_idx = []
@@ -279,18 +337,12 @@ class Solver:
                                 self.mat_vals[k] = 0.0
 
     def find_num_funs(self) -> None:
-        """
-        Find the number of global functions and run size checks.
-        """
+        """Find the number of global functions and run size checks."""
         self.num_funs = self.V.num_funs
         self.check_sizes()
 
     def check_sizes(self) -> None:
-        """
-        Check that the sizes of the global system matrix and right-hand side
-        vector are correct.
-        """
-
+        """Check that the sizes of linear system components are consistent."""
         # rhs
         L = 1 + max(self.rhs_idx)
         if L > self.num_funs:
@@ -305,7 +357,7 @@ class Solver:
             raise ValueError(f"N > self.num_funs ({N} > {self.num_funs})")
 
     def build_matrix_and_rhs(self) -> None:
-        """Build global system matrix and right-hand side vector"""
+        """Build the global matrix and right-hand side vector."""
         self.glob_mat = csr_matrix(
             (self.mat_vals, (self.row_idx, self.col_idx)),
             shape=(self.num_funs, self.num_funs),
@@ -316,14 +368,22 @@ class Solver:
         )
 
     def build_stiffness_matrix(self) -> None:
-        """Build stiffness matrix"""
+        """
+        Build stiffness matrix, A_ij = int_Omega grad v_i * grad v_j dx.
+
+        Result is stored in self.stiff_mat.
+        """
         self.stiff_mat = csr_matrix(
             (self.stiff_vals, (self.row_idx, self.col_idx)),
             shape=(self.num_funs, self.num_funs),
         )
 
     def build_mass_matrix(self) -> None:
-        """Build mass matrix"""
+        """
+        Build mass matrix, M_ij = int_Omega v_i * v_j dx.
+
+        Result is stored in self.mass_mat.
+        """
         self.mass_mat = csr_matrix(
             (self.mass_vals, (self.row_idx, self.col_idx)),
             shape=(self.num_funs, self.num_funs),
@@ -336,6 +396,13 @@ class Solver:
     ) -> ndarray:
         """
         Compute a linear combination of the basis functions on a MeshCell.
+
+        Parameters
+        ----------
+        cell_idx : int
+            MeshCell index
+        coef : ndarray
+            Coefficients
         """
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
         int_vals = self.interior_values[abs_cell_idx]
@@ -347,6 +414,13 @@ class Solver:
     def get_coef_on_mesh(self, cell_idx: int, u: ndarray) -> ndarray:
         """
         Get the coefficients of the basis functions on a MeshCell.
+
+        Parameters
+        ----------
+        cell_idx : int
+            MeshCell index
+        u : ndarray
+            Solution vector
         """
         abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
         keys = self.V.cell_dofs[abs_cell_idx]
