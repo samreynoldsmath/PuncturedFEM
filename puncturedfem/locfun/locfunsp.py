@@ -234,7 +234,7 @@ class LocalFunctionSpace:
                     vert_idx_set.add(e.endpnt.idx)
         vert_keys: list[GlobalKey] = []
         for vert_idx in vert_idx_set:
-            vert_keys.append(GlobalKey(fun_type="Vert", vert_idx=vert_idx))
+            vert_keys.append(GlobalKey(fun_type="vert", vert_idx=vert_idx))
 
         # initialize list of vertex functions and set traces
         self.vert_funs = []

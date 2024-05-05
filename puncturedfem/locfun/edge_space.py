@@ -125,14 +125,14 @@ class EdgeSpace:
         if self.e.is_loop:
             return
         for k in [self.e.anchor.idx, self.e.endpnt.idx]:
-            self.vert_fun_global_keys.append(GlobalKey("Vert", vert_idx=k))
+            self.vert_fun_global_keys.append(GlobalKey("vert", vert_idx=k))
 
     def generate_edge_fun_global_keys(self) -> None:
         """Generate global keys for edge and vertex functions."""
         self.edge_fun_global_keys = []
         for k in range(self.num_edge_funs):
             self.edge_fun_global_keys.append(
-                GlobalKey("Edge", edge_idx=self.e.idx, edge_space_idx=k)
+                GlobalKey("edge", edge_idx=self.e.idx, edge_space_idx=k)
             )
 
     def build_spanning_set(self) -> None:
@@ -344,7 +344,7 @@ class EdgeSpace:
                 N[j, i] = N[i, j]
         return N
 
-    def get_basis_index_set(self, M: np.ndarray, tol: float) -> list[int]:
+    def get_basis_index_set(self, M: np.ndarray, tol: float = 1e-12) -> list[int]:
         """
         Return the index set of the pivot columns of the matrix M.
 
