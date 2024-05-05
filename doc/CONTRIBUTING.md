@@ -25,7 +25,7 @@ Final steps:
 - Open a pull request
 
 ### Prerequisites
-- [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (don't forget to [configure your username and email](https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup)
+- [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (don't forget to [configure your username and email](https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup))
 - [python3](https://www.python.org/) (version 3.9 or later)
 - [pip](https://pypi.org/project/pip/) (should be installed with Python)
 - [venv](https://docs.python.org/3/library/venv.html) (or another virtual environment manager)
