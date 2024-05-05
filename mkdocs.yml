@@ -2,36 +2,44 @@ site_name: Punctured FEM
 docs_dir: doc
 repo_url: https://github.com/samreynoldsmath/PuncturedFEM
 edit_uri: edit/main/doc
+
 theme:
   name: material
-  logo: logo/pacman.svg
+  logo: logo/ghost.png
+  favicon: logo/ghost.png
+  highlightjs: true
+  features:
+    - content.action.view
+  features:
+    - content.code.copy
   palette:
-
-    # Palette toggle for light mode
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
 
     # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
-  highlightjs: true
-  features:
-    - content.action.view
+        icon: material/weather-night
+        name: Switch to system preference
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
 
 plugins:
   - search
+  - mkdocs-jupyter:
+      execute: false
+      include: ["*.ipynb"]
   - mkdocstrings:
       handlers:
         # See: https://mkdocstrings.github.io/python/usage/
         python:
           options:
             docstring_style: numpy
+
 markdown_extensions:
   - markdown_include.include:
       base_path: .
@@ -62,6 +70,15 @@ nav:
     - 'Roadmap': ROADMAP.md
     - 'Changelog': CHANGELOG.md
     - 'Contributing': CONTRIBUTING.md
+  - 'Tutorials':
+      - src/examples/ex0a-mesh-building.ipynb
+      - src/examples/ex0b-trace.ipynb
+      - src/examples/ex1a-square-hole.ipynb
+      - src/examples/ex1b-pacman.ipynb
+      - src/examples/ex1c-ghost.ipynb
+      - src/examples/ex1d-hat-tile.ipynb
+      - src/examples/ex1e-heavy-sampling.ipynb
+      - src/examples/ex2-pacman-fem.ipynb
   - 'Mesh':
     - 'ClosedContour': src/mesh/closed_contour.md
     - 'Edge': src/mesh/edge.md
