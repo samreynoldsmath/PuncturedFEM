@@ -16,36 +16,47 @@ These are features that are planned for the future, but are not yet implemented.
 ### Examples
 - [ ] add example of "subdivision refinement"
 - [ ] eigenvalue problem
-### Maintenance
+## Documentation
+- [ ] add: mathematical background
+### Project Management
 - [ ] add: `.github/workflows/` directory for CI/CD
-    - [ ] add: `format.yml` for formatting with `black` and `isort`
-    - [ ] add: `lint.yml` for linting with `pylint` and `mypy`
-    - [ ] add: `test.yml` for running tests with `pytest`
-    - [ ] add: `doc.yml` for building documentation with `mkdocs`
-- [ ] replace the default handling of traces in `LocalFunction` class with
-  `DirichletTrace`
-- [ ] deprecate `PiecewisePolynomial` class
-- [ ] rename vertex and edge indices to something more descriptive (global mesh
-  properties, not local to a cell)
-- [ ] move `jacobi_preconditioner()` static method of `nystrom` class to
-  separate module
-- [ ] reduce redundant/duplicate code in computation of logarithmic terms,
+  - [ ] add: `format.yml` for formatting with `black` and `isort`
+  - [ ] add: `lint.yml` for linting with `pylint` and `mypy`
+  - [ ] add: `test.yml` for running tests with `pytest`
+  - [ ] add: `doc.yml` for building documentation with `mkdocs`
+### Maintenance
+- [ ] fix disabled pylint messages
+- [ ] `LocalFunction` improvements:
+  - [ ] interior value interpolation for points close to the boundary
+  - [ ] replace the default handling of traces in `LocalFunction` class with `DirichletTrace` improvements:
+  - [ ] reduce redundant/duplicate code in computation of logarithmic terms,
   especially anti-Laplacians of logarithmic functions
-- [ ] use binary exponentiation algorithm for `Polynomial.pow()`
-- [ ] use `set` instead of `list` for vertex and cell indices in `PlanarMesh`
-  class
-- [ ] eliminate redundant calls to parameterize in `ClosedContour.parameterize()`
-- [ ] `Monomial`:
+  - [ ] move weighted normal and tangential derivatives into `DirichletTrace`
+  class, simplify the `LocalFunction` class
+  - [ ] move `jacobi_preconditioner()` static method of `NystromSolver` class to
+- [ ] `Polynomial` improvements:
+  - [ ] deprecate `PiecewisePolynomial` class
+  - [ ] replace `eval()` method with `__call__()` method
+  - [ ] allow for `Floatlike` output from `eval()` method
+  - [ ] use sets instead of lists of `Monomial` objects in `Polynomial` class
+  - [ ] deprecate `barycentric_products()` function
+  - [ ] allow `barycentric_coordinates()` to accept a list of `Vert` objects
+  - [ ] use binary exponentiation algorithm for `Polynomial.pow()`
+  - [ ] weighted normal derivative of `Polynomial` objects in separate module
+- [ ] `Monomial` improvements:
   - [ ] replace `eval()` method with `__call__()` method
   - [ ] allow for `Floatlike` output from `eval()` method
   - [ ] deprecate `is_zero()` method
-- [ ] `MultiIndex`:
+- [ ] `MultiIndex` improvements:
   - [ ] use `Tuple` instead of `List` to set multi-index
-- [ ] use sets instead of lists of `Monomial` objects in `Polynomial` class
-- [ ] deprecate `barycentric_products()` function
-- [ ] allow `barycentric_coordinates()` to accept a list of `Vert` objects
-- [ ] weighted normal derivative of `Polynomial` objects in separate module
-- [ ] fix disabled pylint messages
+- [ ] `PlanarMesh` improvements:
+  - [ ] rename vertex and edge indices to something more descriptive (global mesh
+  properties, not local to a cell)
+  - [ ] use `set` instead of `list` for vertex and cell indices in `PlanarMesh`
+  class
+  - [ ] eliminate redundant calls to parameterize in `ClosedContour.parameterize()`
+  separate module
+
 ### Known bugs
 - [ ] `Polynomial` not recognized as a callable map when passed to
   `is_Func_R2_R()`
@@ -80,7 +91,6 @@ These are features that are not yet planned, but are under consideration.
 - [ ] type validation with `pydantic`
 - [ ] add logging with `logging` module
 - [ ] save and load `PlanarMesh` objects to/from file
-- [ ] interior value interpolation for points close to the boundary
 - [ ] modify `LocalFunctionSpace` to treat a split edge as a single edge
 - [ ] add batch processing for multiple `LocalFunctions`
 - [ ] use multiprocessing to speed up computation

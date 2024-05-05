@@ -6,13 +6,16 @@
 - [x] remove import management boilerplate from examples
 ### Documentation
 - [x] change: installation instructions for developers to build the package locally with `pip install -e .`
-- [ ] change: update docstrings to use NumPy documentation format
 - [ ] add: table of contents
-- [ ] add: tutorials
-    - [ ] mesh construction
-    - [ ] local function spaces
-    - [ ] FEM solver
-- [ ] add: mathematical background
+- [x] add: tutorials
+- [x] change: update docstrings to use NumPy documentation format
+    - [x] `locfun`
+    - [x] `mesh` (except for `edgelib`)
+    - [x] `plot`
+    - [x] `solver`
+    - [x] `util`
+- [x] change: MkDocs theme to `material`
+- [x] add: site logo
 
 
 ## [v0.4.5] - 2024 Apr 24
