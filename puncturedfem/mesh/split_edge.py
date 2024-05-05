@@ -1,8 +1,10 @@
 """
-split_edge.py
-=============
+Splitting edges.
 
-Module containing the split_edge() function.
+Functions
+---------
+split_edge(e, t_split=None, num_edges=None)
+    Split the edge e at the parameter t_split and returns the resulting edges.
 """
 
 from typing import Optional, Union
@@ -22,7 +24,8 @@ def split_edge(
     num_edges: Optional[int] = None,
 ) -> Union[list[Edge], tuple[Edge, Edge]]:
     """
-    Splits the edge e at the parameter t_split and returns the resulting edges.
+    Split the edge e at the parameter t_split and returns the resulting edges.
+
     If t_split is a list of parameters, the edge is split at each parameter in
     the list. If num_edges is provided, the edge is split into num_edges equal
     parts.
@@ -72,13 +75,7 @@ def split_edge(
 
 
 def _split_edge_multiple(e: Edge, t_split: list[float]) -> list[Edge]:
-    """
-    Splits the edge e at the parameters in t_split and returns the resulting
-    edges
-    """
-    t_split = list(set(t_split))
     t_split.sort()
-
     edges = []
     for t in t_split:
         e1, e2 = _split_edge_single(e, t)
@@ -89,10 +86,6 @@ def _split_edge_multiple(e: Edge, t_split: list[float]) -> list[Edge]:
 
 
 def _split_edge_single(e: Edge, t_split: float = np.pi) -> tuple[Edge, Edge]:
-    """
-    Splits the edge e at the parameter t_split and returns the two resulting
-    edges
-    """
     a, b = e.t_bounds
     gamma = e.get_parameterization_module()
     T_split = np.array([a, t_split, b])

@@ -1,11 +1,20 @@
 """
-quad.py
-=======
-
-Module for the Quad class, which represents a 1-dimensional Quadrature object.
+1-dimensional quadrature object.
 
 Also includes a convenience function for generating a dictionary of Quad
 objects.
+
+Classes
+-------
+Quad
+    1-dimensional quadrature object
+QuadDict
+    Dictionary holding quadratures
+
+Functions
+---------
+get_quad_dict(n=16, p=7)
+    Return a dictionary of Quad objects
 """
 
 from __future__ import annotations
@@ -17,7 +26,16 @@ import numpy as np
 
 
 class QuadDict(TypedDict):
-    """Dictionary holding quadratures"""
+    """
+    Dictionary holding quadratures.
+
+    Attributes
+    ----------
+    trap : Quad
+        Trapezoid rule
+    kress : Quad
+        Kress quadrature
+    """
 
     trap: Quad
     kress: Quad
@@ -50,18 +68,23 @@ def get_quad_dict(n: int = 16, p: int = 7) -> QuadDict:
 
 class Quad:
     """
-    Quad: 1-dimensional Quadrature object
+    1-dimensional quadrature object.
 
-    Attributes:
-        type: str = label for Quadrature variant
-        n: int = interval sampled at 2*n points, excluding the last endpoint
-        h: float = pi / n sample spacing in tau
-        t: array (len=2*n) of sampled parameter between 0 and 2*pi
-        wgt: array (len=2*n) of values of lambda'(tau)
-
-    Comment:
-        Defaults to the trapezoid rule with n = 16.
-        Kress parameter defaults to p = 7.
+    Attributes
+    ----------
+    type : str
+        Label for quadrature variant. Default is "trap", for trapezoid rule.
+        Other options are "kress" and "martensen".
+    n : int
+        Interval sampled at 2*n points, excluding the last endpoint.
+    N : int
+        Number of points in the quadrature.
+    h : float
+        Step size.
+    t : np.ndarray
+        Sample points.
+    wgt : np.ndarray
+        Quadrature weights.
     """
 
     type: str
@@ -73,7 +96,7 @@ class Quad:
 
     def __init__(self, qtype: str = "trap", n: int = 16, p: int = 7) -> None:
         """
-        Constructor for Quad object.
+        Initialize a Quad object.
 
         Parameters
         ----------
@@ -99,9 +122,7 @@ class Quad:
         self.trap()
 
     def __repr__(self) -> str:
-        """ "
-        Print method
-        """
+        """Return a string representation of the Quad object."""
         msg = f"Quad object \n\ttype\t{self.type} \n\tn\t{self.n}"
         return msg
 
@@ -116,7 +137,7 @@ class Quad:
 
     def trap(self) -> None:
         """
-        Trapezoid rule (default)
+        Trapezoid rule (default).
 
         Technically, this defines a left-hand sum. But in our context,
         all functions are periodic, since we are parameterizing closed
@@ -126,20 +147,15 @@ class Quad:
 
     def kress(self, p: int) -> None:
         """
-        Kress Quadrature
+        Kress quadrature.
 
-        Used to parameterize an Edge that terminates at corners.
-
-        For a complete description, see:
-
-        R. Kress, A Nyström method for boundary integral equations in domains
-        with corners, Numer. Math., 58 (1990), pp. 145-161.
+        Used to parameterize an Edge that terminates at corners. For a complete
+        description, see:
+            R. Kress, A Nyström method for boundary integral equations in
+            domains with corners, Numer. Math., 58 (1990), pp. 145-161.
         """
-
         if p < 2:
             raise ValueError("Kress parameter p must be an integer at least 2")
-
-        # self.type += f'_{p}'
 
         s = self.t / np.pi - 1
         s2 = s * s
@@ -154,14 +170,12 @@ class Quad:
 
     def martensen(self) -> None:
         """
-        Martensen Quadrature
+        Martensen Quadrature.
 
-        E. Martensen, Über eine M
-        ethode zum räumlichen Neumannschen Problem
+        E. Martensen, Über eine Methode zum räumlichen Neumannschen Problem
         mit einer An-wendung für torusartige Berandungen, Acta Math., 109
         (1963), pp. 75-135.
         """
-
         self.wgt = np.zeros((2 * self.n + 1,))
         for m in range(1, self.n + 1):
             self.wgt += np.cos(m * self.t) / m

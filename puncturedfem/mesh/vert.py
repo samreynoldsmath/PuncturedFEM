@@ -1,8 +1,10 @@
 """
-Vert.py
-=======
+Vertex in a planar mesh.
 
-Module for the Vert class, which represents a vertex in a planar mesh.
+Classes
+-------
+Vert
+    Represents a vertex in a planar mesh.
 """
 
 from __future__ import annotations
@@ -10,8 +12,10 @@ from __future__ import annotations
 
 class Vert:
     """
-    Represents a vertex in a planar mesh. Stores the vertex's global index and
-    coordinates.
+    Represents a vertex in a planar mesh.
+
+    Also stores topological information in the form of the vertex's global index
+    and coordinates.
 
     Attributes
     ----------
@@ -29,7 +33,7 @@ class Vert:
 
     def __init__(self, x: float, y: float, idx: int = -1) -> None:
         """
-        Constructor for the Vert class.
+        Initialize a Vert object.
 
         Parameters
         ----------
@@ -43,7 +47,16 @@ class Vert:
 
     def set_idx(self, idx: int) -> None:
         """
-        Sets the global vertex index.
+        Set the global vertex index.
+
+        Parameters
+        ----------
+        idx : int
+            Index of the vertex in the mesh.
+
+        The following attributes are set:
+        idx : int
+            The global index of the vertex.
         """
         if not isinstance(idx, int):
             raise TypeError("idx must be an integer")
@@ -51,7 +64,20 @@ class Vert:
 
     def set_coord(self, x: float, y: float) -> None:
         """
-        Sets the coordinates of the vertex.
+        Set the coordinates of the vertex.
+
+        Parameters
+        ----------
+        x : float
+            The x-coordinate of the vertex.
+        y : float
+            The y-coordinate of the vertex.
+
+        The following attributes are set:
+        x : float
+            The x-coordinate of the vertex.
+        y : float
+            The y-coordinate of the vertex.
         """
         if isinstance(x, int):
             x = float(x)
@@ -63,20 +89,21 @@ class Vert:
         self.y = y
 
     def __str__(self) -> str:
-        """
-        Returns a string representation of the vertex.
-        """
+        """Return a string representation of the vertex."""
         return f"[vert{self.idx}]({self.x}, {self.y})"
 
     def __repr__(self) -> str:
-        """
-        Returns a string representation of the vertex.
-        """
+        """Return a string representation of the vertex."""
         return self.__str__()
 
     def __eq__(self, other: object) -> bool:
         """
-        Returns True if two Vertices have the same coordinates.
+        Return True if two Vertices have the same coordinates.
+
+        Parameters
+        ----------
+        other : object
+            Another Vert object.
         """
         if not isinstance(other, Vert):
             return NotImplemented
@@ -87,8 +114,15 @@ class Vert:
 
     def __add__(self, other: object) -> Vert:
         """
+        Define the addition of two Verts.
+
         Returns a new Vert with coordinates equal to the sum of the
         coordinates of the two Verts.
+
+        Parameters
+        ----------
+        other : object
+            Another Vert object.
         """
         if not isinstance(other, Vert):
             raise TypeError("Cannot add non-Vert to Vert")
@@ -96,8 +130,15 @@ class Vert:
 
     def __sub__(self, other: object) -> Vert:
         """
-        Returns a new Vert with coordinates equal to the difference of the
+        Define the subtraction of two Verts.
+
+        Return a new Vert with coordinates equal to the difference of the
         coordinates of the two Verts.
+
+        Parameters
+        ----------
+        other : object
+            Another Vert object.
         """
         if not isinstance(other, Vert):
             raise TypeError("Cannot subtract non-Vert from Vert")
@@ -105,9 +146,16 @@ class Vert:
 
     def __mul__(self, other: object) -> Vert:
         """
-        Returns a new Vert with coordinates equal to the product of the
+        Define multiplication of two Verts or a Vert and a scalar.
+
+        Return a new Vert with coordinates equal to the product of the
         coordinates of the two Verts, or the coordinates of the Vert multiplied
         by the scalar.
+
+        Parameters
+        ----------
+        other : object
+            Another Vert object or a scalar.
         """
         if isinstance(other, (int, float)):
             return Vert(self.x * other, self.y * other)
@@ -119,9 +167,16 @@ class Vert:
 
     def __rmul__(self, other: object) -> Vert:
         """
-        Returns a new Vert with coordinates equal to the product of the
+        Define multiplication of two Verts or a Vert and a scalar.
+
+        Return a new Vert with coordinates equal to the product of the
         coordinates of the two Verts, or the coordinates of the Vert multiplied
         by the scalar.
+
+        Parameters
+        ----------
+        other : object
+            Another Vert object or a scalar.
         """
         if isinstance(other, (int, float)):
             return Vert(self.x * other, self.y * other)
@@ -133,9 +188,16 @@ class Vert:
 
     def __truediv__(self, other: object) -> Vert:
         """
-        Returns a new Vert with coordinates equal to the quotient of the
+        Define division of two Verts or a Vert and a scalar.
+
+        Return a new Vert with coordinates equal to the quotient of the
         coordinates of the two Verts, or the coordinates of the Vert divided by
         the scalar.
+
+        Parameters
+        ----------
+        other : object
+            Another Vert object or a scalar.
         """
         if isinstance(other, (int, float)):
             if other == 0:
@@ -149,6 +211,11 @@ class Vert:
 
     def norm(self) -> float:
         """
-        Returns the Euclidean norm of the vertex.
+        Return the Euclidean norm of the vertex.
+
+        Returns
+        -------
+        float
+            The Euclidean norm of the vertex.
         """
         return (self.x**2 + self.y**2) ** 0.5

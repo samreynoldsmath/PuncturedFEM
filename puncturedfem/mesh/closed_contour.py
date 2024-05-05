@@ -1,9 +1,10 @@
 """
-ClosedContour.py
-=================
+Closed contour in the plane.
 
-Module containing the ClosedContour class, which represents a closed contour
-in the plane.
+Classes
+-------
+ClosedContour
+    List of edges forming a closed contour.
 """
 
 from typing import Optional
@@ -25,8 +26,9 @@ from .vert import Vert
 
 class ClosedContour:
     """
-    List of edges forming a closed contour, assumed to be simple
-    with edges listed successively.
+    List of edges forming a closed contour.
+
+    Assumed to be simple with edges listed successively.
 
     Attributes
     ----------
@@ -66,7 +68,7 @@ class ClosedContour:
         edge_orients: Optional[list[int]] = None,
     ) -> None:
         """
-        Constructor for ClosedContour class.
+        Initialize a ClosedContour object.
 
         Parameters
         ----------
@@ -93,8 +95,10 @@ class ClosedContour:
 
     def set_mesh_id(self, cell_id: int) -> None:
         """
-        Set the cell_id of the contour, which is the global index of the
-        MeshCell that the contour is part of the boundary of.
+        Set the cell_id of the contour.
+
+        This is the global index of the MeshCell that the contour is part of the
+        boundary of.
 
         Parameters
         ----------
@@ -140,7 +144,7 @@ class ClosedContour:
 
     def add_edges(self, edges: list[Edge], edge_orients: list[int]) -> None:
         """
-        Add edges to contour.
+        Add a list of edges to contour.
 
         Parameters
         ----------
@@ -192,9 +196,7 @@ class ClosedContour:
         self.find_interior_point()
 
     def deparameterize(self) -> None:
-        """
-        Deletes the sampled points of the edges comprising the contour.
-        """
+        """Delete the sampled points of the edges comprising the contour."""
         for e in self.edges:
             e.deparameterize()
         self.num_pts = 0
@@ -202,10 +204,11 @@ class ClosedContour:
 
     def find_num_pts(self) -> None:
         """
-        Determine the total number of sampled points on the contour, which is
-        the sum of the number of sampled points on each edge, neglecting the
-        last point on each edge (since it is repeated on the next edge). Stores
-        the result in the attribute `num_pts`.
+        Determine the total number of sampled points on the contour.
+
+        This is the sum of the number of sampled points on each edge, neglecting
+        the last point on each edge (since it is repeated on the next edge).
+        Stores the result in the attribute `num_pts`.
 
         Raises
         ------
@@ -221,6 +224,7 @@ class ClosedContour:
     def find_local_vert_idx(self) -> None:
         """
         Determine the sampled point index of the starting point of each edge.
+
         Stores the result in the attribute `vert_idx`.
 
         Raises
@@ -236,9 +240,11 @@ class ClosedContour:
 
     def find_closest_local_vertex_index(self) -> None:
         """
-        Determine the sampled point index of the starting point of the closest
-        vertex to each sampled point on the contour. Stores the result in the
-        attribute `closest_vert_idx`.
+        Determine the index of the nearest index.
+
+        Specifically determine the sampled point index of the starting point of
+        the closest vertex to each sampled point on the contour. Stores the
+        result in the attribute `closest_vert_idx`.
 
         Raises
         ------
@@ -300,7 +306,9 @@ class ClosedContour:
         self, x: np.ndarray, y: np.ndarray
     ) -> np.ndarray:
         """
-        Returns a boolean array indicating whether each point (x[i], y[i]) is
+        Return which points lie in the interior of the contour.
+
+        Return a boolean array indicating whether each point (x[i], y[i]) is
         inside the contour.
 
         Parameters
@@ -344,8 +352,9 @@ class ClosedContour:
 
     def find_interior_point(self) -> None:
         """
-        Find a single point in the interior of the contour. Stores the result in
-        the attribute `interior_point`.
+        Find a single point in the interior of the contour.
+
+        Stores the result in the attribute `interior_point`.
 
         Raises
         ------
@@ -354,7 +363,6 @@ class ClosedContour:
         InteriorPointError
             If an interior point cannot be found.
         """
-
         if not self.is_parameterized():
             raise NotParameterizedError("finding interior point")
 
@@ -434,7 +442,7 @@ class ClosedContour:
 
     def get_sampled_points(self) -> tuple[np.ndarray, np.ndarray]:
         """
-        Returns the x1 and x2 coordinates of the boundary points.
+        Return the x1 and x2 coordinates of the boundary points.
 
         Returns
         -------
@@ -456,8 +464,7 @@ class ClosedContour:
         self, comp1: np.ndarray, comp2: np.ndarray
     ) -> np.ndarray:
         """
-        Returns the dot product (comp1, comp2) * unit_tangent for each sampled
-        point on the contour.
+        Return the dot product (comp1, comp2) * unit_tangent.
 
         Parameters
         ----------
@@ -493,8 +500,7 @@ class ClosedContour:
         self, comp1: np.ndarray, comp2: np.ndarray
     ) -> np.ndarray:
         """
-        Returns the dot product (comp1, comp2) * unit_normal for each sampled
-        point on the contour.
+        Return the dot product (comp1, comp2) * unit_normal.
 
         Parameters
         ----------
@@ -528,6 +534,8 @@ class ClosedContour:
 
     def multiply_by_dx_norm(self, vals: np.ndarray) -> np.ndarray:
         """
+        Return vals multiplied by the norm of the derivative of the curve.
+
         Returns f multiplied against the norm of the derivative of
         the curve parameterization.
 
@@ -585,9 +593,10 @@ class ClosedContour:
         self, vals_dx_norm: np.ndarray
     ) -> float:
         """
-        Quadrature to approximate the integral of vals over the contour, where
-        vals_dx_norm is already multiplied by the norm of the derivative of the
-        curve parameterization.
+        Quadrature to approximate the integral of vals over the contour.
+
+        Assumes vals_dx_norm is already multiplied by the norm of the derivative
+        of the curve parameterization.
 
         Parameters
         ----------
@@ -608,7 +617,6 @@ class ClosedContour:
             If vals_dx_norm is not a vector or is not the same length as the
             number of sampled points on the contour.
         """
-
         # check inputs
         if not self.is_parameterized():
             raise NotParameterizedError("integrating over boundary")
