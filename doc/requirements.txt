@@ -55,7 +55,11 @@ jupyterlab-pygments==0.3.0
 jupytext==1.16.1
     # via mkdocs-jupyter
 lxml==5.2.1
-    # via nbconvert
+    # via
+    #   lxml-html-clean
+    #   nbconvert
+lxml-html-clean==0.1.1
+    # via -r doc/requirements.in
 markdown==3.3.7
     # via
     #   markdown-include
