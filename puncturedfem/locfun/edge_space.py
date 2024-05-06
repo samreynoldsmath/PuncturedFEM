@@ -344,7 +344,9 @@ class EdgeSpace:
                 N[j, i] = N[i, j]
         return N
 
-    def get_basis_index_set(self, M: np.ndarray, tol: float = 1e-12) -> list[int]:
+    def get_basis_index_set(
+        self, M: np.ndarray, tol: float = 1e-12
+    ) -> list[int]:
         """
         Return the index set of the pivot columns of the matrix M.
 

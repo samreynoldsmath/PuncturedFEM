@@ -75,7 +75,8 @@ def integrated_legendre_polynomials(deg: int) -> list[Polynomial]:
     """
     Integrated Legendre polynomials up to degree deg.
 
-    The integrated Legendre polynomials are defined by the following recurrence relation:
+    The integrated Legendre polynomials are defined by the following recurrence
+    relation:
         P_0(x) = 1
         P_1(x) = x
         P_{n+1}(x) = (2n + 1)^{-1/2}[(2n + 1)xP_n(x) - nP_{n-1}(x)]

@@ -55,7 +55,8 @@ def get_log_antilap_weighted_normal_derivative(K: MeshCell) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        Weighted normal derivative of an anti-Laplacian of logarithmic terms on the boundary
+        Weighted normal derivative of an anti-Laplacian of logarithmic terms on
+        the boundary
     """
     dLAM_dn_wgt = np.zeros((K.num_pts, K.num_holes))
     for j in range(K.num_holes):

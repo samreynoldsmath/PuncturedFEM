@@ -34,7 +34,8 @@ def join_points(x: np.ndarray, a: Vert, b: Vert) -> np.ndarray:
     Parameters
     ----------
     x : np.ndarray
-        Array of shape (2, n) representing the points on the curve to be transformed.
+        Array of shape (2, n) representing the points on the curve to be
+        transformed.
     a : Vert
         Starting point.
     b : Vert
@@ -81,7 +82,8 @@ def rotate(x: np.ndarray, theta: float) -> np.ndarray:
     Parameters
     ----------
     x : np.ndarray
-        Array of shape (2, n) representing the points on the curve to be transformed.
+        Array of shape (2, n) representing the points on the curve to be
+        transformed.
     theta : float
         Angle of rotation in degrees.
 
@@ -103,7 +105,8 @@ def reflect_across_x_axis(x: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     x : np.ndarray
-        Array of shape (2, n) representing the points on the curve to be transformed.
+        Array of shape (2, n) representing the points on the curve to be
+        transformed.
 
     Returns
     -------
@@ -121,7 +124,8 @@ def reflect_across_y_axis(x: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     x : np.ndarray
-        Array of shape (2, n) representing the points on the curve to be transformed.
+        Array of shape (2, n) representing the points on the curve to be
+        transformed.
 
     Returns
     -------
@@ -139,7 +143,8 @@ def translate(x: np.ndarray, a: Vert) -> np.ndarray:
     Parameters
     ----------
     x : np.ndarray
-        Array of shape (2, n) representing the points on the curve to be transformed.
+        Array of shape (2, n) representing the points on the curve to be
+        transformed.
     a : Vert
         Translation vector.
 
@@ -160,7 +165,8 @@ def dilate(x: np.ndarray, alpha: float) -> np.ndarray:
     Parameters
     ----------
     x : np.ndarray
-        Array of shape (2, n) representing the points on the curve to be transformed.
+        Array of shape (2, n) representing the points on the curve to be
+        transformed.
     alpha : float
         Dilation factor.
 
@@ -189,7 +195,8 @@ def apply_orthogonal_transformation(x: np.ndarray, A: np.ndarray) -> np.ndarray:
     A : np.ndarray
         2 by 2 orthogonal matrix.
     x : np.ndarray
-        Array of shape (2, n) representing the points on the curve to be transformed.
+        Array of shape (2, n) representing the points on the curve to be
+        transformed.
 
     Returns
     -------

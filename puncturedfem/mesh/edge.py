@@ -744,8 +744,8 @@ class Edge:
         vals : np.ndarray
             The values to integrate.
         ignore_endpoint : bool, optional
-            If True, the endpoint of the Edge is not included in the integration.
-            Default is False.
+            If True, the endpoint of the Edge is not included in the
+            integration. Default is False.
 
         Returns
         -------
@@ -770,8 +770,8 @@ class Edge:
         vals_dx_norm : np.ndarray
             The values to integrate, already multiplied by dx_norm.
         ignore_endpoint : bool, optional
-            If True, the endpoint of the Edge is not included in the integration.
-            Default is False.
+            If True, the endpoint of the Edge is not included in the
+            integration. Default is False.
 
         Returns
         -------

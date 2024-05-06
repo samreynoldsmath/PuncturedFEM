@@ -6,6 +6,7 @@
 - [ ] interior value interpolation for points close to the boundary
 ### Examples
 - [x] remove import management boilerplate from examples
+- [x] change example naming convention
 ### Documentation
 - [x] change: installation instructions for developers to build the package locally with `pip install -e .`
 - [ ] add: table of contents

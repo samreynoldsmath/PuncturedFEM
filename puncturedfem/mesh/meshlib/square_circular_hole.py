@@ -3,15 +3,14 @@ Planar mesh with a square domain and a circular hole.
 
 Routines in this module
 -----------------------
-square_circular_hole
-_get_verts
-_get_edges
+square_circular_hole _get_verts _get_edges
 
 Notes
 -----
-- The square domain is defined by the vertices (0, 0), (1, 0), (1, 1), and (0, 1).
+- The square is defined by the vertices (0, 0), (1, 0), (1, 1), and (0, 1).
 - The circular hole is defined by the center (0.5, 0.5) and radius 0.25.
-- The mesh consists of 2 cells. The square domain is cell 0 and the circular hole is cell 1.
+- The mesh consists of 2 cells. The square domain is cell 0 and the circular
+  hole is cell 1.
 """
 
 from ..edge import Edge

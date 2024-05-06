@@ -26,7 +26,8 @@ class DegreeError(Exception):
     """
     Exception raised if Polynomial degree is not valid.
 
-    The degree of a Polynomial is the maximum degree of its terms, and must be a non-negative integer.
+    The degree of a Polynomial is the maximum degree of its terms, and must be a
+    non-negative integer.
     """
 
     def __init__(self, msg: str = "") -> None:
@@ -62,7 +63,8 @@ class PolynomialError(Exception):
     """
     Exception raised if Polynomial is not valid.
 
-    A Polynomial is valid if it is a list of terms, where each term is a pair of a coefficient and a multi-index.
+    A Polynomial is valid if it is a list of terms, where each term is a pair of
+    a coefficient and a multi-index.
     """
 
     def __init__(self, msg: str = "") -> None:

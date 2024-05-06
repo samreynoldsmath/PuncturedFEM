@@ -33,7 +33,8 @@ class PiecewisePolynomial:
 
     Notes
     -----
-    - This class will be deprecated in a future release. Use DirichletTrace instead.
+    - This class will be deprecated in a future release. Use DirichletTrace
+      instead.
     """
 
     polys: list[Polynomial]
