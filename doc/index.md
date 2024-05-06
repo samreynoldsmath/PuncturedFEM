@@ -2,6 +2,8 @@
 
 The PuncturedFEM package is a Python package for solving partial differential equations with nonstandard meshes.
 
+This package is still under heavy development. Check out our [roadmap](ROADMAP.md) for a list of planned features and known bugs.
+
 ## Quickstart
 Install the package with pip:
 ```bash
