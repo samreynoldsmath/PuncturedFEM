@@ -54,6 +54,8 @@ class Vert:
         idx : int
             Index of the vertex in the mesh.
 
+        Notes
+        -----
         The following attributes are set:
         idx : int
             The global index of the vertex.
@@ -73,6 +75,8 @@ class Vert:
         y : float
             The y-coordinate of the vertex.
 
+        Notes
+        -----
         The following attributes are set:
         x : float
             The x-coordinate of the vertex.

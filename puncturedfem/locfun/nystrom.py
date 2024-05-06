@@ -321,6 +321,8 @@ class NystromSolver:
         precond_type : Optional[str]
             Preconditioner type, by default "jacobi"
 
+        Notes
+        -----
         Available preconditioners:
         - "jacobi": Jacobi preconditioner
         """
@@ -370,10 +372,17 @@ class NystromSolver:
         """
         Compute and store logarithmic terms for multiply connected domains.
 
-        Parameters
-        ----------
-        K : MeshCell
-            Mesh MeshCell
+        Notes
+        -----
+        The following attributes are computed and stored:
+        - lam_trace: Trace of the logarithmic terms
+        - lam_x1_trace: Gradient of the logarithmic terms in the x1 direction
+        - lam_x2_trace: Gradient of the logarithmic terms in the x2 direction
+        - dlam_dt_wgt: Weighted tangential derivatives of the logarithmic terms
+        - dlam_dn_wgt: Weighted normal derivatives of the logarithmic terms
+        - T1_dlam_dt: Single layer operator applied to the tangential
+          derivatives of the logarithmic terms
+        - Sn_lam: H1 seminorms of the logarithmic terms
         """
         # traces and gradients of logarithmic corrections
         self.lam_trace = log_terms.get_log_trace(self.K)

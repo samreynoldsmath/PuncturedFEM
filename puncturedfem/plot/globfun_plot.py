@@ -116,6 +116,9 @@ class GlobalFunctionPlot:
             If True, the plot is shown. Default is True.
         filename : str, optional
             If not empty, the plot is saved to this file. Default is "".
+
+        Other Parameters
+        ----------------
         fill : bool, optional
             If True, a heatmap is plotted. If False, a contour plot is plotted.
             Default is True.

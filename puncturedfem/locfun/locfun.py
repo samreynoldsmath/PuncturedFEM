@@ -129,7 +129,7 @@ class LocalFunction:
         has_poly_trace : bool, optional
             Whether or not the local function has a piecewise Polynomial trace,
             by default True
-        id : Optional[GlobalKey], optional
+        key : Optional[GlobalKey], optional
             Global key, by default None
         """
         self.set_key(key)

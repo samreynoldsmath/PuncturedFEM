@@ -233,6 +233,8 @@ class MeshCell:
         edges : list[Edge]
             The edges in the cell.
 
+        Notes
+        -----
         The following attributes are set:
         - components: the boundary components of the cell
         - num_holes: the number of holes in the cell

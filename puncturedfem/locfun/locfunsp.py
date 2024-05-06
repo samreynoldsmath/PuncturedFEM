@@ -222,6 +222,8 @@ class LocalFunctionSpace:
         edge_spaces : list[EdgeSpace]
             List of EdgeSpace objects for each Edge in K.
 
+        Notes
+        -----
         Sets the following attribute:
             vert_funs: list of vertex functions.
         """

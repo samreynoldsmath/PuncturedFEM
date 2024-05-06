@@ -123,6 +123,9 @@ class LocalFunctionPlot:
             If True, the plot is shown.
         filename : str
             If not empty, the plot is saved to this file.
+
+        Other Parameters
+        ----------------
         fill : bool
             If True, a heatmap is plotted. If False, a contour plot is plotted.
             Default is True.
@@ -151,6 +154,9 @@ class LocalFunctionPlot:
             If True, the plot is shown.
         filename : str
             If not empty, the plot is saved to this file.
+
+        Other Parameters
+        ----------------
         fill : bool
             If True, a heatmap is plotted. If False, a contour plot is plotted.
             Default is True.
@@ -184,6 +190,9 @@ class LocalFunctionPlot:
             If True, the plot is shown.
         filename : str
             If not empty, the plot is saved to this file.
+
+        Other Parameters
+        ----------------
         fill : bool
             If True, a heatmap is plotted. If False, a contour plot is plotted.
             Default is True.
@@ -217,6 +226,9 @@ class LocalFunctionPlot:
             If True, the plot is shown.
         filename : str
             If not empty, the plot is saved to this file.
+
+        Other Parameters
+        ----------------
         fill : bool
             If True, a heatmap is plotted. If False, a contour plot is plotted.
             Default is True.
@@ -250,6 +262,9 @@ class LocalFunctionPlot:
             If True, the plot is shown.
         filename : str
             If not empty, the plot is saved to this file.
+
+        Other Parameters
+        ----------------
         fill : bool
             If True, a heatmap is plotted. If False, a contour plot is plotted.
             Default is True.

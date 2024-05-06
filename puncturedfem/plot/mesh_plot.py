@@ -92,6 +92,22 @@ class MeshPlot:
         filename : str, optional
             The filename to save the plot to. The default is "", which results
             in no file being saved.
+
+        Other Parameters
+        ----------------
+        title : str, optional
+            The title of the plot. The default is "", i.e. no title.
+        show_orientation : bool, optional
+            If True, the orientation of the edges is shown. The default is
+            False.
+        show_grid : bool, optional
+            If True, the grid is shown. The default is False.
+        show_axis : bool, optional
+            If True, the axis is shown. The default is True.
+        keep_open : bool, optional
+            If True, the plot is kept open. The default is False.
+        pad : float, optional
+            The padding around the plot. The default is 0.1.
         """
         self._unpack_kwargs(kwargs)
 
