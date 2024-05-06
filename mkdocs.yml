@@ -2,20 +2,46 @@ site_name: Punctured FEM
 docs_dir: doc
 repo_url: https://github.com/samreynoldsmath/PuncturedFEM
 edit_uri: edit/main/doc
+
 theme:
-  name: readthedocs
+  name: material
+  logo: logo/ghost.png
+  favicon: logo/ghost.png
   highlightjs: true
   features:
     - content.action.view
+  features:
+    - content.code.copy
+  palette:
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Switch to system preference
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
 
 plugins:
   - search
+  - mkdocs-jupyter:
+      execute: false
+      # include_source: True
+      include: ["*.ipynb"]
+      ignore: ["examples/Spacefilling.ipynb"]
   - mkdocstrings:
       handlers:
         # See: https://mkdocstrings.github.io/python/usage/
         python:
           options:
             docstring_style: numpy
+
 markdown_extensions:
   - markdown_include.include:
       base_path: .
@@ -40,38 +66,48 @@ extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
-  - 'Home': index.md
-  - 'Getting started':
+  - 'About':
+    - 'Home': index.md
     - 'Installation': src/quickstart/installation.md
-  - 'User guide':
-    - 'Mesh':
-      - 'Edge': src/mesh/edge.md
-      - 'ClosedContour': src/mesh/closed_contour.md
-      - 'MeshCell': src/mesh/cell.md
-      - 'PlanarMesh': src/mesh/planar_mesh.md
-      - 'Quad': src/mesh/quad.md
-      - 'QuadDict': src/mesh/quad_dict.md
-      - 'Vert': src/mesh/vert.md
-      - 'get_quad_dict': src/mesh/get_quad_dict.md
-      - 'meshlib': src/mesh/meshlib.md
-      - 'mesh_builder': src/mesh/mesh_builder.md
-      - 'split_edge': src/mesh/split_edge.md
-    - 'Local Poisson spaces':
-      - 'Polynomial': src/locfun/polynomial.md
-      - 'DirichletTrace': src/locfun/dirichlet_trace.md
-      - 'NystromSolver': src/locfun/nystrom_solver.md
-      - 'LocalFunction': src/locfun/locfun.md
-      - 'LocalFunctionSpace': src/locfun/locfunsp.md
-    - 'Global Poisson spaces':
-      - 'BilinearForm': src/solver/bilinear_form.md
-      - 'GlobalFunctionSpace': src/solver/globfunsp.md
-      - 'Solver': src/solver/solver.md
-    - 'Plotting':
-      - 'GlobalFunctionPlot': src/plot/global_function_plot.md
-      - 'LocalFunctionPlot': src/plot/local_function_plot.md
-      - 'MeshPlot': src/plot/mesh_plot.md
-      - 'TracePlot': src/plot/trace_plot.md
-  - 'Development':
     - 'Roadmap': ROADMAP.md
-    - 'Contributing': CONTRIBUTING.md
     - 'Changelog': CHANGELOG.md
+    - 'Contributing': CONTRIBUTING.md
+  - 'Tutorials':
+      - src/examples/ex0.1-mesh-building.ipynb
+      - src/examples/ex0.2-trace.ipynb
+  - 'Examples':
+      - src/examples/ex1.1-square-hole.ipynb
+      - src/examples/ex1.2-pacman.ipynb
+      - src/examples/ex1.3-ghost.ipynb
+      - src/examples/ex1.4-hat-tile.ipynb
+      - src/examples/ex1.5-heavy-sampling.ipynb
+      - src/examples/ex2.1-pacman-fem.ipynb
+  - 'Mesh':
+    - 'ClosedContour': src/mesh/closed_contour.md
+    - 'Edge': src/mesh/edge.md
+    - 'MeshCell': src/mesh/cell.md
+    - 'PlanarMesh': src/mesh/planar_mesh.md
+    - 'Quad': src/mesh/quad.md
+    - 'QuadDict': src/mesh/quad_dict.md
+    - 'Vert': src/mesh/vert.md
+    - 'get_quad_dict': src/mesh/get_quad_dict.md
+    - 'meshlib': src/mesh/meshlib.md
+    - 'mesh_builder': src/mesh/mesh_builder.md
+    - 'split_edge': src/mesh/split_edge.md
+  - 'Local Poisson spaces':
+    - 'DirichletTrace': src/locfun/dirichlet_trace.md
+    - 'LocalFunction': src/locfun/locfun.md
+    - 'LocalFunctionSpace': src/locfun/locfunsp.md
+    - 'Monomial': src/locfun/monomial.md
+    - 'MultiIndex': src/locfun/multi_index.md
+    - 'NystromSolver': src/locfun/nystrom_solver.md
+    - 'Polynomial': src/locfun/polynomial.md
+  - 'Global Poisson spaces':
+    - 'BilinearForm': src/solver/bilinear_form.md
+    - 'GlobalFunctionSpace': src/solver/globfunsp.md
+    - 'Solver': src/solver/solver.md
+  - 'Plotting':
+    - 'GlobalFunctionPlot': src/plot/global_function_plot.md
+    - 'LocalFunctionPlot': src/plot/local_function_plot.md
+    - 'MeshPlot': src/plot/mesh_plot.md
+    - 'TracePlot': src/plot/trace_plot.md

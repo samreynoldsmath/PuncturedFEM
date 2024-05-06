@@ -1,8 +1,5 @@
 """
-poly_eval.py
-============
-
-Module containing functions for evaluating Polynomials.
+Evaluating Polynomials.
 
 Routines in this module
 -----------------------
@@ -20,7 +17,14 @@ from .poly import Polynomial
 
 def get_poly_traces_edge(e: Edge, polys: list[Polynomial]) -> np.ndarray:
     """
-    Evaluates the Polynomials in polys on the Edge e.
+    Evaluate the Polynomials in polys on the Edge e.
+
+    Parameters
+    ----------
+    e : Edge
+        The Edge on which to evaluate the Polynomials.
+    polys : list[Polynomial]
+        The Polynomials to evaluate.
     """
     return get_poly_vals(x=e.x[0, :], y=e.x[1, :], polys=polys)
 
@@ -30,7 +34,16 @@ def get_poly_vals(
     x: np.ndarray, y: np.ndarray, polys: list[Polynomial]
 ) -> np.ndarray:
     """
-    Evaluates the Polynomials in polys at the points (x[j], y[j]).
+    Evaluate the Polynomials in polys at the points (x[j], y[j]).
+
+    Parameters
+    ----------
+    x : np.ndarray
+        The x-coordinates of the points.
+    y : np.ndarray
+        The y-coordinates of the points.
+    polys : list[Polynomial]
+        The Polynomials to evaluate.
     """
     num_pts = len(x)
     if len(y) != num_pts:

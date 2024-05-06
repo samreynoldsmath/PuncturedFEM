@@ -1,8 +1,5 @@
 """
-barycentric.py
-==============
-
-Module containing functions for working with barycentric coordinates.
+Barycentric coordinates.
 
 Routines in this module
 -----------------------
@@ -25,7 +22,21 @@ def barycentric_coordinates_edge(
     e: Edge,
 ) -> tuple[Polynomial, Polynomial, Polynomial]:
     """
-    Returns the barcentric coordinates ell = [ell0, ell1, ell2]
+    Barycentric coordinates for an edge.
+
+    Parameters
+    ----------
+    e : Edge
+        Edge object.
+
+    Returns
+    -------
+    tuple[Polynomial, Polynomial, Polynomial]
+        Barycentric coordinates.
+
+    Notes
+    -----
+    Returns the barycentric coordinates ell = [ell0, ell1, ell2]
     where ellj is a Polynomial object and the point z2 is constructed
     from z0,z1 to form an equilateral triangle, with z0,z1 being the
     endpoints of the Edge e.
@@ -41,8 +52,21 @@ def barycentric_coordinates(
     z0: ndarray, z1: ndarray, z2: ndarray
 ) -> tuple[Polynomial, Polynomial, Polynomial]:
     """
-    Returns the barycentric coordinates ell = [ell0, ell1, ell2]
-    where ellj is a Polynomial object
+    Barycentric coordinates for a triangle.
+
+    Parameters
+    ----------
+    z0 : ndarray
+        First vertex of the triangle.
+    z1 : ndarray
+        Second vertex of the triangle.
+    z2 : ndarray
+        Third vertex of the triangle.
+
+    Returns
+    -------
+    tuple[Polynomial, Polynomial, Polynomial]
+        Barycentric coordinates.
     """
     z = zeros((3, 2))
     z[0, :] = z0
@@ -79,10 +103,24 @@ def barycentric_coordinates(
 
 def barycentric_products(e: Edge, deg: int) -> list[ndarray]:
     """
-    DEPRECATED
+    Products of barycentric coordinates up to degree deg.
 
-    Returns a spanning set of the space of Polynomials of degree deg <= 3 by
-    computing the products of the barycentric coordinates
+    Parameters
+    ----------
+    e : Edge
+        Edge object.
+    deg : int
+        Maximum degree. Must be 1, 2, or 3.
+
+    Returns
+    -------
+    list[ndarray]
+        List of numpy arrays containing the products of the barycentric
+        coordinates up to degree deg.
+
+    Notes
+    -----
+    This function is deprecated and will be removed in a future release.
     """
     if deg > 3:
         raise NotImplementedError("Only implemented for deg <= 3")

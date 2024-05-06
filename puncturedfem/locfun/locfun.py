@@ -1,9 +1,9 @@
 """
-locfun.py
-=========
+Elements of the local Poisson space V_p(K).
 
-Module containing the LocalFunction class for managing elements of the local
-Poisson space V_p(K).
+Classes
+-------
+LocalFunction
 """
 
 from typing import Optional
@@ -21,75 +21,34 @@ from .poly.poly import Polynomial
 
 class LocalFunction:
     """
-    Element of the local Poisson space V_p(K), whose trace is continuous and a
-    Polynomial of degree <= p on each Edge of K, and whose Laplacian is a
-    Polynomial of degree <= p-2 on each Edge of K.
+    Element of the local Poisson space V_p(K).
 
-    Can also be used to represent functions with an arbitrary continuous trace
-    on the boundary of K.
-
-    Any such function v can be decomposed as
+    The trace is continuous and a Polynomial of degree <= p on each Edge of K,
+    and whose Laplacian is a Polynomial of degree <= p-2 on each Edge of K. Can
+    also be used to represent functions with an arbitrary continuous trace on
+    the boundary of K. Any such function v can be decomposed as
         v = P + phi
     where P is a Polynomial of degree <= p in K and phi is a harmonic function.
     (Note that this decomposition is not unique, since there are harmonic
     Polynomials). We refer to P as the "Polynomial part" and phi as the
-    "harmonic part".
-
-    Furthermore, in multiply connected MeshCells the harmonic part can be
-    decomposed as
+    "harmonic part". Furthermore, in multiply connected MeshCells the harmonic
+    part can be decomposed as
         phi = psi + sum_{j=1}^m a_j log |x - xi_j|
     where xi_j is a fixed arbitrary point in the jth hole of K, and psi is a
     harmonic function with a harmonic conjugate psi_hat. We refer to psi as the
-    "conjugable part".
-
-    Given a parametrization x(tau) of the boundary of K, we refer to
+    "conjugable part". Given a parametrization x(tau) of the boundary of K, we
+    refer to
         (d / dtau) v(x(tau)) = nabla v(x(tau)) * x'(tau)
     as the "weighted normal derivative" of v, which we commonly abbreviate in
     code with "wnd". Similarly, the "weighted tangential derivative" is
-    abbreviated "wtd".
-
-    An "anti-Laplacian" of u is any function U such that
+    abbreviated "wtd". An "anti-Laplacian" of u is any function U such that
         Delta U = u
     where Delta is the Laplacian operator. In particular, we desire an anti-
     Laplacian of the harmonic part phi, as well as its weighted normal
     derivative. This allows us to compute the L^2 inner product of two local
-    functions v and w using only boundary integrals.
-
-    Interior values of a local function v, as well as its gradient, can be
-    computed using Cauchy's integral formula.
-
-
-    Usage
-    -----
-    Define an instance by passing a Nystrom nyst object, a its Laplacian
-    Polynomial, and (optionally) a piecewise Polynomial trace:
-        >>> v =LocalFunction(nyst, lap_poly, poly_trace)
-    where poly_trace defaults to the zero Polynomial if not specified. If one
-    wishes to use a local function with an arbitrary continuous trace, then
-    the has_poly_trace flag should be set to False:
-        >>> v =LocalFunction(nyst, lap_poly, has_poly_trace=False)
-    The trace values can be set using the set_trace_values method:
-        >>> v.set_trace_values(trace_vals)
-    Executing the compute_all method will compute and store all relevant data
-    needed to compute volumetric integrals:
-        >>> v.compute_all()
-    Given another local function w, the H^1 semi-inner product can be computed
-    using the get_h1_semi_inner_prod method:
-        >>> val = v.get_h1_semi_inner_prod(w)
-    Similarly, the L^2 inner product can be computed using the
-    get_l2_inner_prod method:
-        >>> val = v.get_l2_inner_prod(w)
-    Interior values of v can be computed using the compute_interior_values
-    method:
-        >>> v.compute_interior_values()
-    and retrieved using the get_interior_values method:
-        >>> vals = v.get_interior_values()
-    The interior values are stored in v.int_vals, with the same shape and
-    indexing as the interior points of the MeshCell v.nyst.K. The components of
-    the gradient are stored in v.int_grad1 and v.int_grad2, respectively.
-    The "punctured square" example
-        examples/ex1a-square-hole.ipynb
-    demonstrates more detailed usage of theLocalFunction class.
+    functions v and w using only boundary integrals. Interior values of a local
+    function v, as well as its gradient, can be computed using Cauchy's integral
+    formula.
 
     Attributes
     ----------
@@ -151,13 +110,13 @@ class LocalFunction:
     def __init__(
         self,
         nyst: NystromSolver,
-        lap_poly: Polynomial = Polynomial(),  # TODO maybe should be None?
+        lap_poly: Polynomial = Polynomial(),
         poly_trace: Optional[PiecewisePolynomial] = None,
         has_poly_trace: bool = True,
         key: Optional[GlobalKey] = None,
     ) -> None:
         """
-        Constructor forLocalFunction class.
+        Build an element of the local Poisson space V_p(K).
 
         Parameters
         ----------
@@ -170,7 +129,7 @@ class LocalFunction:
         has_poly_trace : bool, optional
             Whether or not the local function has a piecewise Polynomial trace,
             by default True
-        id : Optional[GlobalKey], optional
+        key : Optional[GlobalKey], optional
             Global key, by default None
         """
         self.set_key(key)
@@ -181,7 +140,12 @@ class LocalFunction:
 
     def set_key(self, key: Optional[GlobalKey]) -> None:
         """
-        Sets the global key for the local function.
+        Set the global key for the local function.
+
+        Parameters
+        ----------
+        key : Optional[GlobalKey]
+            Global key.
         """
         if key is None:
             return
@@ -191,16 +155,35 @@ class LocalFunction:
 
     def set_nystrom_solver(self, nyst: NystromSolver) -> None:
         """
-        Sets the Nystrom nyst for the local function.
+        Set the Nystrom nyst for the local function.
+
+        Parameters
+        ----------
+        nyst : NystromSolver
+            Nystrom nyst object.
         """
         if not isinstance(nyst, NystromSolver):
             raise TypeError("nyst must be a NystromSolver")
         self.nyst = nyst
 
-    def compute_all(self) -> None:
+    def compute_all(self, compute_int_vals: bool = False) -> None:
         """
-        Computes all relevant data for reducing volumetric integrals
-        to boundary integrals
+        Compute all quantities associated with the local function.
+
+        The following quantities are computed:
+            - Dirichlet trace values (if has_poly_trace is True)
+            - Polynomial part (anti-Laplacian of polynomial Laplacian)
+            - Polynomial part trace
+            - Polynomial part weighted normal derivative
+            - Harmonic conjugate of harmonic part
+            - Weighted normal derivative of harmonic part
+            - Anti-Laplacian of harmonic part
+            - Interior values (if compute_int_vals is True)
+
+        Parameters
+        ----------
+        compute_int_vals : bool, optional
+            Whether or not to compute interior values, by default False.
         """
         if self.has_poly_trace:
             self.compute_trace_values()
@@ -210,11 +193,11 @@ class LocalFunction:
         self.compute_harmonic_conjugate()
         self.compute_harmonic_weighted_normal_derivative()
         self.compute_anti_laplacian_harmonic_part()
+        if compute_int_vals:
+            self.compute_interior_values()
 
     def clear(self) -> None:
-        """
-        Deletes all large np.ndarrays (to save memory)
-        """
+        """Delete all large np.ndarrays to save memory."""
         self.trace = np.zeros((0,))
         self.poly_part_trace = np.zeros((0,))
         self.poly_part_wnd = np.zeros((0,))
@@ -227,7 +210,12 @@ class LocalFunction:
     # Piecewise Polynomial Dirichlet trace ###################################
     def set_poly_trace(self, poly_trace: Optional[PiecewisePolynomial]) -> None:
         """
-        Sets the piecewise Polynomial trace to self.poly_trace.
+        Set the piecewise Polynomial trace to self.poly_trace.
+
+        Parameters
+        ----------
+        poly_trace : Optional[PiecewisePolynomial]
+            Piecewise Polynomial trace.
         """
         if poly_trace is None:
             self.poly_trace = PiecewisePolynomial(
@@ -244,27 +232,50 @@ class LocalFunction:
 
     def get_poly_trace(self) -> PiecewisePolynomial:
         """
-        Returns the piecewise Polynomial trace.
+        Get the piecewise Polynomial trace.
+
+        Returns
+        -------
+        PiecewisePolynomial
+            Piecewise Polynomial trace.
         """
         return self.poly_trace
 
     # Dirichlet trace values #################################################
     def set_trace_values(self, vals: np.ndarray) -> None:
         """
-        Sets the Dirichlet trace values to self.trace.
+        Set the Dirichlet trace values to self.trace.
+
+        Parameters
+        ----------
+        vals : np.ndarray
+            Dirichlet trace values.
         """
         self.trace = vals
 
     def get_trace_values(self) -> np.ndarray:
         """
-        Returns the Dirichlet trace values.
+        Get the Dirichlet trace values.
+
+        Returns
+        -------
+        np.ndarray
+            Dirichlet trace values.
         """
         return self.trace
 
     def compute_trace_values(self) -> None:
         """
-        Computes the Dirichlet trace values from the piecewise Polynomial trace
-        and stores them in self.trace.
+        Compute the Dirichlet trace values.
+
+        The trace values are stored in self.trace. The trace values are
+        computed by evaluating the piecewise polynomial trace on the boundary,
+        if it has been set.
+
+        Raises
+        ------
+        SizeMismatchError
+            If the local function does not have a piecewise Polynomial trace.
         """
         if not self.has_poly_trace:
             raise SizeMismatchError(
@@ -291,7 +302,17 @@ class LocalFunction:
     # Laplacian (Polynomial) #################################################
     def set_laplacian_polynomial(self, p: Polynomial) -> None:
         """
-        Sets the Laplacian Polynomial to self.lap.
+        Set the Laplacian Polynomial to self.lap.
+
+        Parameters
+        ----------
+        p : Polynomial
+            Polynomial representing the Laplacian: p = Delta v.
+
+        Raises
+        ------
+        TypeError
+            If p is not a Polynomial.
         """
         if not isinstance(p, Polynomial):
             raise TypeError("p must be a Polynomial")
@@ -299,14 +320,26 @@ class LocalFunction:
 
     def get_laplacian_polynomial(self) -> Polynomial:
         """
-        Returns the Laplacian Polynomial.
+        Get the Laplacian polynomial: p = Delta v.
+
+        Returns
+        -------
+        Polynomial
+            Polynomial representing the Laplacian: p = Delta v.
         """
         return self.lap
 
     # Polynomial part (Polynomial anti-Laplacian of Laplacian) ###############
     def set_polynomial_part(self, P_poly: Polynomial) -> None:
         """
-        Sets the Polynomial part to self.poly_part.
+        Set the polynomial part: P = v - phi.
+
+        The polynomial part is stored in self.poly_part.
+
+        Parameters
+        ----------
+        P_poly : Polynomial
+            Polynomial part: P = v - phi.
         """
         if not isinstance(P_poly, Polynomial):
             raise TypeError("P_poly must be a Polynomial")
@@ -314,35 +347,53 @@ class LocalFunction:
 
     def get_polynomial_part(self) -> Polynomial:
         """
-        Returns the Polynomial part.
+        Get the Polynomial part: P = v - phi.
+
+        Returns
+        -------
+        Polynomial
+            Polynomial part P = v - phi.
         """
         return self.poly_part
 
     def compute_polynomial_part(self) -> None:
         """
-        Computes the Polynomial part from the Laplacian Polynomial and stores
-        it in self.poly_part.
+        Compute the polynomial part: P = v - phi.
+
+        The Polynomial part is stored in self.poly_part.
         """
         self.poly_part = self.lap.anti_laplacian()
 
     # Polynomial part trace ##################################################
     def set_polynomial_part_trace(self, P_trace: np.ndarray) -> None:
         """
-        Sets the Dirichlet trace values of the Polynomial part to
-        self.poly_part_trace.
+        Set the trace values of the polynomial part: P = v - phi.
+
+        The trace values are stored in self.poly_part_trace.
+
+        Parameters
+        ----------
+        P_trace : np.ndarray
+            Dirichlet trace values of the Polynomial part: P = v - phi.
         """
         self.poly_part_trace = P_trace
 
     def get_polynomial_part_trace(self) -> np.ndarray:
         """
-        Returns the Dirichlet trace values of the Polynomial part.
+        Get the trace values of the Polynomial part: P = v - phi.
+
+        Returns
+        -------
+        np.ndarray
+            Dirichlet trace values of the Polynomial part.
         """
         return self.poly_part_trace
 
     def compute_polynomial_part_trace(self) -> None:
         """
-        Computes the Dirichlet trace values of the Polynomial part and stores
-        them in self.poly_part_trace.
+        Compute the trace values of the polynomial part: P = v - phi.
+
+        The trace values are stored in self.poly_part_trace.
         """
         x1, x2 = self.nyst.K.get_boundary_points()
         self.poly_part_trace = self.poly_part(x1, x2)
@@ -352,21 +403,33 @@ class LocalFunction:
         self, P_wnd: np.ndarray
     ) -> None:
         """
-        Sets the weighted normal derivative of the Polynomial part to
-        self.poly_part_wnd.
+        Set the weighted normal derivative of the polynomial part: P = v - phi.
+
+        The weighted normal derivative is stored in self.poly_part_wnd.
+
+        Parameters
+        ----------
+        P_wnd : np.ndarray
+            Weighted normal derivative of the Polynomial part: P = v - phi.
         """
         self.poly_part_wnd = P_wnd
 
     def get_polynomial_part_weighted_normal_derivative(self) -> np.ndarray:
         """
-        Returns the weighted normal derivative of the Polynomial part.
+        Get the weighted normal derivative of the polynomial part.
+
+        Returns
+        -------
+        np.ndarray
+            Values of the weighted normal derivative of the polynomial part.
         """
         return self.poly_part_wnd
 
     def compute_polynomial_part_weighted_normal_derivative(self) -> None:
         """
-        Computes the weighted normal derivative of the Polynomial part and
-        stores it in self.poly_part_wnd.
+        Compute the weighted normal derivative of the polynomial part.
+
+        The weighted normal derivative is stored in self.poly_part_wnd.
         """
         x1, x2 = self.nyst.K.get_boundary_points()
         g1, g2 = self.poly_part.grad()
@@ -376,29 +439,43 @@ class LocalFunction:
     # harmonic part ##########################################################
     def get_harmonic_part_trace(self) -> np.ndarray:
         """
-        Returns the Dirichlet trace of the harmonic part.
+        Get the Dirichlet trace of the harmonic part: phi = v - P.
+
+        Returns
+        -------
+        np.ndarray
+            Dirichlet trace values of the harmonic part.
         """
         return self.trace - self.poly_part_trace
 
     # harmonic conjugate #####################################################
     def set_harmonic_conjugate(self, hc_vals: np.ndarray) -> None:
         """
-        Sets the Dirichlet trace values of the harmonic conjugate of the
-        harmonic part to self.conj_trace.
+        Set the trace values of the harmonic conjugate.
+
+        Parameters
+        ----------
+        hc_vals : np.ndarray
+            Dirichlet trace values of the harmonic conjugate.
         """
         self.conj_trace = hc_vals
 
     def get_harmonic_conjugate(self) -> np.ndarray:
         """
-        Returns the Dirichlet trace values of the harmonic conjugate of the
-        harmonic part.
+        Get the Dirichlet trace values of the harmonic conjugate.
+
+        Returns
+        -------
+        np.ndarray
+            Dirichlet trace values of the harmonic conjugate.
         """
         return self.conj_trace
 
     def compute_harmonic_conjugate(self) -> None:
         """
-        Computes the Dirichlet trace values of the harmonic conjugate of the
-        harmonic part and stores them in self.conj_trace.
+        Compute the Dirichlet trace values of the harmonic conjugate.
+
+        The trace values are stored in self.conj_trace.
         """
         phi_trace = self.get_harmonic_part_trace()
         self.conj_trace, self.log_coef = self.nyst.get_harmonic_conjugate(
@@ -408,13 +485,25 @@ class LocalFunction:
     # logarithmic coefficients ###############################################
     def set_logarithmic_coefficients(self, log_coef: np.ndarray) -> None:
         """
-        Sets the logarithmic coefficients of the harmonic part to self.log_coef.
+        Set the logarithmic coefficients of the harmonic part.
+
+        The logarithmic coefficients are stored in self.log_coef.
+
+        Parameters
+        ----------
+        log_coef : np.ndarray
+            Logarithmic coefficients of the harmonic part.
         """
         self.log_coef = log_coef
 
     def get_logarithmic_coefficients(self) -> np.ndarray:
         """
-        Returns the logarithmic coefficients of the harmonic part.
+        Get the logarithmic coefficients of the harmonic part.
+
+        Returns
+        -------
+        np.ndarray
+            Logarithmic coefficients of the harmonic part.
         """
         return self.log_coef
 
@@ -425,21 +514,33 @@ class LocalFunction:
         self, hc_wnd: np.ndarray
     ) -> None:
         """
-        Sets the weighted normal derivative of the harmonic part to
-        self.harm_part_wnd.
+        Set the weighted normal derivative of the harmonic part.
+
+        The weighted normal derivative is stored in self.harm_part_wnd.
+
+        Parameters
+        ----------
+        hc_wnd : np.ndarray
+            Weighted normal derivative of the harmonic part.
         """
         self.harm_part_wnd = hc_wnd
 
     def get_harmonic_weighted_normal_derivative(self) -> np.ndarray:
         """
-        Returns the weighted normal derivative of the harmonic part.
+        Get the weighted normal derivative of the harmonic part.
+
+        Returns
+        -------
+        np.ndarray
+            Values of the weighted normal derivative of the harmonic part.
         """
         return self.harm_part_wnd
 
     def compute_harmonic_weighted_normal_derivative(self) -> None:
         """
-        Computes the weighted normal derivative of the harmonic part and stores
-        it in self.harm_part_wnd.
+        Compute the weighted normal derivative of the harmonic part.
+
+        The weighted normal derivative is stored in self.harm_part_wnd.
         """
         self.harm_part_wnd = (
             d2n.trace2tangential.get_weighted_tangential_derivative_from_trace(
@@ -453,7 +554,16 @@ class LocalFunction:
     # harmonic conjugable part psi ###########################################
     def get_conjugable_part(self) -> np.ndarray:
         """
-        Returns the harmonic conjugable part psi.
+        Return the harmonic conjugable part psi.
+
+        The conjugable part of a harmonic function phi is the harmonic function
+        psi such that phi = psi + sum_{j=1}^m a_j log |x - xi_j|, with psi
+        having a harmonic conjugate psi_hat.
+
+        Returns
+        -------
+        np.ndarray
+            Dirichlet trace values of the harmonic conjugable part.
         """
         lam = d2n.log_terms.get_log_trace(self.nyst.K)
         phi = self.get_harmonic_part_trace()
@@ -464,22 +574,31 @@ class LocalFunction:
         self, anti_laplacian_vals: np.ndarray
     ) -> None:
         """
-        Sets the Dirichlet trace values of an anti-Laplacian of the harmonic
-        part to self.antilap_trace.
+        Set the trace values of an anti-Laplacian of the harmonic part.
+
+        Parameters
+        ----------
+        anti_laplacian_vals : np.ndarray
+            Dirichlet trace values of an anti-Laplacian of the harmonic part.
         """
         self.antilap_trace = anti_laplacian_vals
 
     def get_anti_laplacian_harmonic_part(self) -> np.ndarray:
         """
-        Returns the Dirichlet trace values of an anti-Laplacian of the harmonic
-        part.
+        Get the trace values of an anti-Laplacian of the harmonic part.
+
+        Returns
+        -------
+        np.ndarray
+            Dirichlet trace values of an anti-Laplacian of the harmonic part.
         """
         return self.antilap_trace
 
     def compute_anti_laplacian_harmonic_part(self) -> None:
         """
-        Computes the Dirichlet trace values of an anti-Laplacian of the
-        harmonic part and stores them in self.antilap_trace.
+        Compute the trace values of an anti-Laplacian of the harmonic part.
+
+        The trace values are stored in self.antilap_trace.
         """
         psi = self.get_conjugable_part()
         psi_hat = self.conj_trace
@@ -493,10 +612,13 @@ class LocalFunction:
     # H^1 semi-inner product #################################################
     def get_h1_semi_inner_prod(self, other: object) -> float:
         """
-        Returns the H^1 semi-inner product
-            int_K grad(self) * grad(other) dx
-        """
+        Return the H^1 semi-inner product int_K grad(self) * grad(other) dx.
 
+        Parameters
+        ----------
+        other : object
+            Another LocalFunction.
+        """
         if not isinstance(other, LocalFunction):
             raise TypeError("other must be aLocalFunction")
 
@@ -518,10 +640,13 @@ class LocalFunction:
     # L^2 inner product ######################################################
     def get_l2_inner_prod(self, other: object) -> float:
         """
-        Returns the L^2 inner product
-            int_K (self) * (other) dx
-        """
+        Return the L^2 inner product int_K (self) * (other) dx.
 
+        Parameters
+        ----------
+        other : object
+            Another LocalFunction.
+        """
         if not isinstance(other, LocalFunction):
             raise TypeError("other must be aLocalFunction")
 
@@ -561,11 +686,17 @@ class LocalFunction:
 
     def compute_interior_values(self, compute_grad: bool = True) -> None:
         """
-        Computes the interior values and stores them in self.int_vals. Also
-        computes the components of the gradient and stores them in
-        self.int_grad1 and self.int_grad2.
-        """
+        Compute the interior values.
 
+        Also compute the components of the gradient if compute_grad is True. The
+        interior values are stored in self.int_vals, and the gradient components
+        are stored in self.int_grad1 and self.int_grad2.
+
+        Parameters
+        ----------
+        compute_grad : bool, optional
+            Whether or not to compute the gradient, by default True.
+        """
         # points for evaluation
         y1 = self.nyst.K.int_x1[self.nyst.K.is_inside]
         y2 = self.nyst.K.int_x2[self.nyst.K.is_inside]

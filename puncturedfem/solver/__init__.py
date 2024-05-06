@@ -1,8 +1,5 @@
 """
-Solver
-======
-
-Subpackage for solving the global weak form.
+Set up and solve the finite element linear system.
 
 Modules
 -------

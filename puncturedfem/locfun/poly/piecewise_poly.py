@@ -1,11 +1,9 @@
 """
-piecewise_poly.py
-=================
+Wrapper for a list of Polynomials.
 
-Module containing the PiecewisePolynomial class. It is essentially a wrapper
-for a list of Polynomials.
-
-TODO: Deprecate the PiecewisePolynomial class
+Classes
+-------
+PiecewisePolynomial
 """
 
 from typing import Optional
@@ -19,15 +17,30 @@ from .poly import Polynomial
 from .poly_exceptions import PolynomialError
 
 
+# @deprecated(version="0.5.0", reason="Use DirichletTrace instead")
 class PiecewisePolynomial:
-    """List of Polynomials used to represent traces of vertex and Edge funs"""
+    """
+    List of Polynomials used to represent traces of vertex and Edge functions.
+
+    Attributes
+    ----------
+    polys : list[Polynomial]
+        List of Polynomials in the PiecewisePolynomial.
+    num_polys : int
+        Number of Polynomials in the PiecewisePolynomial.
+    idx : int
+        Identifier for the PiecewisePolynomial.
+
+    Notes
+    -----
+    - This class will be deprecated in a future release. Use DirichletTrace
+      instead.
+    """
 
     polys: list[Polynomial]
     num_polys: int
-    id: int  # used to associate function with an Edge or vertex
+    idx: int  # used to associate function with an edge or vertex
 
-    # TODO: deprecated in favor of DirichletTrace
-    # @deprecated(version="0.5.0", reason="Use DirichletTrace instead")
     def __init__(
         self,
         num_polys: int = 1,
@@ -35,7 +48,7 @@ class PiecewisePolynomial:
         idx: int = 0,
     ) -> None:
         """
-        Constructor for PiecewisePolynomial class.
+        List of Polynomials used to represent Dirichlet traces.
 
         Parameters
         ----------
@@ -47,12 +60,17 @@ class PiecewisePolynomial:
             Identifier for the PiecewisePolynomial. Default is 0.
         """
         self.set_idx(idx)
-        self.set_num_polys(num_polys)  # TODO: determine num_polys automatically
+        self.set_num_polys(num_polys)
         self.set_polys(polys)
 
     def set_idx(self, idx: int) -> None:
         """
-        Sets the identifier for the PiecewisePolynomial.
+        Set the identifier for the PiecewisePolynomial.
+
+        Parameters
+        ----------
+        idx : int
+            Identifier for the PiecewisePolynomial.
         """
         if not isinstance(idx, int):
             raise TypeError("idx must be an integer")
@@ -62,7 +80,12 @@ class PiecewisePolynomial:
 
     def set_num_polys(self, num_polys: int) -> None:
         """
-        Sets the number of Polynomials in the PiecewisePolynomial.
+        Set the number of Polynomials in the PiecewisePolynomial.
+
+        Parameters
+        ----------
+        num_polys : int
+            Number of Polynomials in the PiecewisePolynomial.
         """
         if not isinstance(num_polys, int):
             raise TypeError("num_polys must be a integer")
@@ -72,7 +95,12 @@ class PiecewisePolynomial:
 
     def set_polys(self, polys: Optional[list[Polynomial]] = None) -> None:
         """
-        Sets the list of Polynomials in the PiecewisePolynomial.
+        Set the list of Polynomials in the PiecewisePolynomial.
+
+        Parameters
+        ----------
+        polys : list[Polynomial], optional
+            List of Polynomials in the PiecewisePolynomial. Default is None.
         """
         if polys is None:
             self.polys = [Polynomial() for _ in range(self.num_polys)]
@@ -81,7 +109,12 @@ class PiecewisePolynomial:
 
     def eval_on_edges(self, edges: list[Edge]) -> ndarray:
         """
-        Evaluates the PiecewisePolynomial on a list of edges.
+        Evaluate the PiecewisePolynomial on a list of edges.
+
+        Parameters
+        ----------
+        edges : list[Edge]
+            List of edges on which to evaluate the PiecewisePolynomial.
         """
         m = len(edges)
         if m != self.num_polys:
@@ -103,7 +136,12 @@ class PiecewisePolynomial:
 
     def eval_on_mesh_boundary(self, K: MeshCell) -> ndarray:
         """
-        Evaluates the PiecewisePolynomial on the boundary of a MeshCell.
+        Evaluate the PiecewisePolynomial on the boundary of a MeshCell.
+
+        Parameters
+        ----------
+        K : MeshCell
+            MeshCell on which to evaluate the PiecewisePolynomial.
         """
         edges = K.get_edges()
         return self.eval_on_edges(edges)

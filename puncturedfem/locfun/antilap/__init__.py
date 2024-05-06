@@ -1,7 +1,4 @@
 """
-antilap
-=======
-
 Anti-Laplacians of harmonic functions.
 
 Modules

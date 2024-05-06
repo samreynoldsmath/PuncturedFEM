@@ -1,9 +1,10 @@
 """
-GlobalFunctionSpace.py
-========================
+Global function spaces.
 
-Module containing the GlobalFunctionSpace class, which is used to represent a
-global function space.
+Classes
+-------
+GlobalFunctionSpace
+    Represents a global function space V_p(T) on a planar mesh T of degree p.
 """
 
 from tqdm import tqdm
@@ -17,7 +18,30 @@ from .globkey import GlobalKey
 
 class GlobalFunctionSpace:
     """
-    Represents a global function space V_p(T) on a planar mesh T of degree p.
+    Global function space V_p(T) on a planar mesh T of degree p.
+
+    Attributes
+    ----------
+    T : PlanarMesh
+        Planar mesh
+    deg : int
+        Degree of polynomial space
+    quad_dict : QuadDict
+        Dictionary of quadrature rules
+    num_funs : int
+        Number of functions in the space
+    num_vert_funs : int
+        Number of vertex functions
+    num_edge_funs : int
+        Number of edge functions
+    num_bubb_funs : int
+        Number of bubble functions
+    edge_spaces : list[EdgeSpace]
+        List of edge spaces
+    edge_fun_cumsum : list[int]
+        Cumulative sum of the number of edge functions
+    cell_dofs : list[list[GlobalKey]]
+        List of lists of global keys for each cell
     """
 
     T: PlanarMesh
@@ -39,16 +63,16 @@ class GlobalFunctionSpace:
         verbose: bool = True,
     ) -> None:
         """
-        Constructor for GlobalFunctionSpace class.
+        Initialize a GlobalFunctionSpace object.
 
         Parameters
         ----------
         T : PlanarMesh
             Planar mesh
         deg : int
-            Degree of Polynomial space
+            Degree of polynomial space
         quad_dict : dict[str, Quad]
-            Dictionary of Quadrature rules
+            Dictionary of quadrature rules
         verbose : bool, optional
             If True, print progress bars, by default True
         """
@@ -65,9 +89,7 @@ class GlobalFunctionSpace:
             print(self)
 
     def __str__(self) -> str:
-        """
-        Returns a string representation of the global function space.
-        """
+        """Return a string representation of the global function space."""
         s = "GlobalFunctionSpace:"
         s += f"\n\tT: {self.T}"
         s += f"\n\tdeg: {self.deg}"
@@ -81,7 +103,12 @@ class GlobalFunctionSpace:
 
     def set_mesh(self, T: PlanarMesh) -> None:
         """
-        Sets the mesh T.
+        Set the mesh T.
+
+        Parameters
+        ----------
+        T : PlanarMesh
+            Planar mesh
         """
         if not isinstance(T, PlanarMesh):
             raise TypeError("T must be a PlanarMesh")
@@ -89,7 +116,12 @@ class GlobalFunctionSpace:
 
     def set_deg(self, deg: int) -> None:
         """
-        Sets the degree of the Polynomial space.
+        Set the degree of the polynomial space.
+
+        Parameters
+        ----------
+        deg : int
+            Degree of polynomial space
         """
         if not isinstance(deg, int):
             raise TypeError("deg must be an integer")
@@ -101,7 +133,12 @@ class GlobalFunctionSpace:
 
     def build_edge_spaces(self, verbose: bool = True) -> None:
         """
-        Builds the Edge spaces for each Edge in the mesh.
+        Build the Edge spaces for each edge in the mesh.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            If True, print progress bars, by default True
         """
         self.edge_spaces = []
         if verbose:
@@ -123,7 +160,16 @@ class GlobalFunctionSpace:
         compute_interior_values: bool = True,
     ) -> LocalFunctionSpace:
         """
-        Builds the local function space V_p(K) for a MeshCell K.
+        Build the local function space V_p(K) for a MeshCell K.
+
+        Parameters
+        ----------
+        cell_idx : int
+            Index of the cell K in the mesh
+        verbose : bool, optional
+            If True, print progress bars, by default True
+        compute_interior_values : bool, optional
+            If True, compute the values of interior functions, by default True
         """
         abs_cell_idx = self.T.get_abs_cell_idx(cell_idx)
         K = self.T.get_cells(cell_idx)
@@ -150,7 +196,13 @@ class GlobalFunctionSpace:
 
     def compute_dimension(self) -> None:
         """
-        Computes the dimension of the function space.
+        Compute the dimension of the function space.
+
+        The following attributes are computed:
+        - num_funs: total number of functions
+        - num_vert_funs: number of vertex functions
+        - num_edge_funs: number of edge functions
+        - num_bubb_funs: number of bubble functions
         """
         self.compute_num_vert_funs()
         self.compute_num_edge_funs()
@@ -161,13 +213,19 @@ class GlobalFunctionSpace:
 
     def compute_num_vert_funs(self) -> None:
         """
-        Computes the number of vertex functions.
+        Compute the number of vertex functions.
+
+        The following attributes are computed:
+        - num_vert_funs: number of vertex functions
         """
         self.num_vert_funs = self.T.num_verts
 
     def compute_num_edge_funs(self) -> None:
         """
-        Computes the number of Edge functions.
+        Compute the number of edge functions.
+
+        The following attributes are computed:
+        - num_edge_funs: number of edge functions
         """
         self.num_edge_funs = 0
         for b in self.edge_spaces:
@@ -175,14 +233,20 @@ class GlobalFunctionSpace:
 
     def compute_num_bubb_funs(self) -> None:
         """
-        Computes the number of bubble functions.
+        Compute the number of bubble functions.
+
+        The following attributes are computed:
+        - num_bubb_funs: number of bubble functions
         """
         num_bubb = (self.deg * (self.deg - 1)) // 2
         self.num_bubb_funs = self.T.num_cells * num_bubb
 
     def compute_edge_fun_cumsum(self) -> None:
         """
-        Computes the cumulative sum of the number of Edge functions.
+        Compute the cumulative sum of the number of edge functions.
+
+        The following attribute is computed:
+        - edge_fun_cumsum: cumulative sum of the number of edge functions
         """
         self.edge_fun_cumsum = [0]
         for b in self.edge_spaces:
@@ -194,7 +258,19 @@ class GlobalFunctionSpace:
 
     def get_global_idx(self, key: GlobalKey, abs_cell_idx: int) -> int:
         """
-        Returns the global index of a local function.
+        Return the global index of a local function.
+
+        Parameters
+        ----------
+        key : GlobalKey
+            Local key of the function
+        abs_cell_idx : int
+            Absolute cell index
+
+        Returns
+        -------
+        int
+            Global index of the function
         """
         BUBB_START_IDX = 0
         VERT_START_IDX = self.num_bubb_funs
@@ -206,12 +282,12 @@ class GlobalFunctionSpace:
             idx += key.bubb_space_idx
             if not self.is_in_range(idx, BUBB_START_IDX, VERT_START_IDX):
                 raise IndexError("bubble function index out of range")
-        if key.fun_type == "Vert":
+        if key.fun_type == "vert":
             idx = VERT_START_IDX
             idx += self.T.vert_idx_list.index(key.vert_idx)
             if not self.is_in_range(idx, VERT_START_IDX, EDGE_START_IDX):
                 raise IndexError("vertex function index out of range")
-        if key.fun_type == "Edge":
+        if key.fun_type == "edge":
             idx = self.num_bubb_funs + self.num_vert_funs
             idx += self.edge_fun_cumsum[key.edge_idx]
             idx += key.edge_space_idx
@@ -221,18 +297,37 @@ class GlobalFunctionSpace:
 
     def is_in_range(self, idx: int, lo: int, hi: int) -> bool:
         """
-        Returns True if idx is in the range [lo, hi).
+        Return True if idx is in the range [lo, hi).
+
+        Parameters
+        ----------
+        idx : int
+            Index to check
+        lo : int
+            Lower bound
+        hi : int
+            Upper bound
+
+        Returns
+        -------
+        bool
+            True if idx is in the range [lo, hi)
         """
         return lo <= idx < hi
 
     def fun_is_on_boundary(self, key: GlobalKey) -> bool:
         """
-        Returns True if a global function is on the boundary.
+        Return True if a global function is on the boundary.
+
+        Parameters
+        ----------
+        key : GlobalKey
+            Global key of the function
         """
         if key.fun_type == "bubb":
             return False
-        if key.fun_type == "Vert":
+        if key.fun_type == "vert":
             return self.T.vert_is_on_boundary(key.vert_idx)
-        if key.fun_type == "Edge":
+        if key.fun_type == "edge":
             return self.T.edge_is_on_boundary(key.edge_idx)
         raise ValueError("Invalid function type")

@@ -1,8 +1,5 @@
 """
-bounding_box.py
-=================
-
-Module for computing the bounding box of a set of points.
+Bounding box of a set of points.
 
 Functions
 ---------
@@ -27,7 +24,6 @@ def get_bounding_box(
     tol : float, optional
         Tolerance for determining whether the points are all the same.
     """
-
     xmin = np.min(x)
     xmax = np.max(x)
     ymin = np.min(y)

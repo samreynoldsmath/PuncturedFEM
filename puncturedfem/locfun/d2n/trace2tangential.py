@@ -1,9 +1,5 @@
 """
-trace2tangential.py
-===================
-
-Tangential derivatives of a harmonic function on a simply or multiply connected
-domain, computed from its trace on the boundary.
+Tangential derivatives from traces.
 
 Routines in this module
 -----------------------
@@ -27,11 +23,20 @@ def get_weighted_tangential_derivative_from_trace(
     K: MeshCell, f_vals: np.ndarray
 ) -> np.ndarray:
     """
-    Returns df / ds = nabla f(x(t)) * x'(t) by computing the derivative
-    of f(x(t)) with respect to the scalar parameter t, where x(t)
-    is a parameterization of the boundary
-    """
+    Compute the weighted tangential derivative from the trace.
 
+    Parameters
+    ----------
+    K : MeshCell
+        Mesh cell.
+    f_vals : np.ndarray
+        Values of the function on the boundary.
+
+    Returns
+    -------
+    df_dt_wgt : np.ndarray
+        Weighted tangential derivative.
+    """
     df_dt_wgt = np.zeros((K.num_pts,))
 
     for i in range(K.num_holes + 1):

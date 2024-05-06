@@ -1,9 +1,9 @@
 """
-trace.py
-========
+Dirichlet trace.
 
-This module contains the class `DirichletTrace` which is used to represent the
-trace of a LocalFunction on the boundary of a MeshCell.
+Classes
+-------
+DirichletTrace
 """
 
 from typing import Optional, Union
@@ -18,6 +18,8 @@ from .poly.poly import Polynomial
 
 class DirichletTrace:
     """
+    Dirichlet trace.
+
     This class is used to represent the trace of a LocalFunction on the
     boundary of a MeshCell. The trace is represented as a list of edges, and
     the values of the trace on the edges are stored in an array. The class also
@@ -36,10 +38,6 @@ class DirichletTrace:
         The functions used to define the trace.
     edge_sampled_indices : list[tuple[int, int]]
         The start and end indices of the edges in the values array.
-
-    Usage
-    -----
-    See examples/ex0b-trace.ipynb for a tutorial on how to use this class.
     """
 
     edges: list[Edge]
@@ -57,7 +55,7 @@ class DirichletTrace:
         values: Optional[Union[FloatLike, list[FloatLike]]] = None,
     ) -> None:
         """
-        Constructor for the DirichletTrace class.
+        Construct a DirichletTrace object.
 
         Parameters
         ----------
@@ -84,8 +82,6 @@ class DirichletTrace:
             return
         if funcs is not None:
             self.set_funcs(funcs)
-        # TODO: Add functionality to set funcs automatically in the same way as
-        # in the LocalFunctionSpace class
 
     def set_edges(self, edges: Union[MeshCell, list[Edge]]) -> None:
         """
@@ -109,7 +105,19 @@ class DirichletTrace:
     def get_edge_sampled_point_indices(
         self, edge_index: int
     ) -> tuple[int, int]:
-        """Return the indices of the sampled points on given edge"""
+        """
+        Get the indices of the sampled points on given edge.
+
+        Parameters
+        ----------
+        edge_index : int
+            The index of the edge.
+
+        Returns
+        -------
+        tuple[int, int]
+            The start and end indices of the sampled points on the edge.
+        """
         return self.edge_sampled_indices[edge_index]
 
     def set_trace_values_on_edge(
@@ -211,15 +219,16 @@ class DirichletTrace:
         ----------
         funcs : Union[Func_R2_R, list[Func_R2_R]]
             The functions used to define the trace.
+        compute_vals : bool, optional
+            A flag indicating whether the values of the trace should be
+            computed. Default is True.
         """
         if not isinstance(funcs, list):
-            # TODO: a Polynomial should be recognized as a callable map
             if isinstance(funcs, Polynomial):
                 funcs = [funcs for _ in range(self.num_edges)]
             elif is_Func_R2_R(funcs):
                 funcs = [funcs for _ in range(self.num_edges)]
         if isinstance(funcs, list):
-            # TODO: a Polynomial should be recognized as a callable map
             is_accepted = True
             for func in funcs:
                 if isinstance(func, Polynomial):
@@ -245,8 +254,7 @@ class DirichletTrace:
         self, edge_index: int, poly: Polynomial, compute_vals: bool = True
     ) -> None:
         """
-        Set the function used to define the trace on a specific edge from a
-        polynomial.
+        Set the polynomial used to define the trace on a specific edge.
 
         Parameters
         ----------
@@ -254,6 +262,9 @@ class DirichletTrace:
             The index of the edge on which the function is set.
         poly : Polynomial
             The polynomial used to define the trace on the edge.
+        compute_vals : bool, optional
+            A flag indicating whether the values of the trace should be
+            computed. Default is True.
         """
         if not isinstance(edge_index, int):
             raise ValueError("'edge_index' must be of type int")
@@ -299,7 +310,9 @@ class DirichletTrace:
 
     def find_num_pts(self) -> None:
         """
-        Find the number of points on the edges.
+        Find the total number of sampled points on the edges.
+
+        The result is stored in the attribute 'num_pts'.
         """
         if not self.edges_are_parametrized():
             raise ValueError("All edges must be parametrized")
@@ -308,6 +321,8 @@ class DirichletTrace:
     def find_edge_sampled_indices(self) -> None:
         """
         Find the start and end indices of the edges in the values array.
+
+        The result is stored in the attribute 'edge_sampled_indices'.
         """
         if not self.edges_are_parametrized():
             raise ValueError("All edges must be parametrized")
@@ -320,8 +335,12 @@ class DirichletTrace:
 
     def find_values(self) -> None:
         """
-        Find the values of the trace on the edges by evaluating the trace
-        functions at the sampled points on each edge.
+        Find the values of the trace on the edges.
+
+        This is done by evaluating the trace functions at the sampled points on
+        each edge.
+
+        The result is stored in the attribute 'values'.
         """
         if not hasattr(self, "funcs"):
             raise ValueError("The functions must be set before evaluating")

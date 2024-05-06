@@ -1,8 +1,5 @@
 """
-legendre.py
-===========
-
-Module containing functions for working with Legendre Polynomials.
+Legendre Polynomials.
 
 Routines in this module
 -----------------------
@@ -20,9 +17,17 @@ from .poly import Polynomial
 
 def legendre_polynomials(deg: int) -> list[Polynomial]:
     """
-    Returns an array of Polynomial objects
-            [p_0, p_1, ..., p_deg]
-    where p_j is the jth Legendre Polynomial
+    Legendre polynomials up to degree deg as an array of Polynomial objects.
+
+    The Legendre polynomials are defined by the following recurrence relation:
+        P_0(x) = 1
+        P_1(x) = x
+        (n + 1)P_{n+1}(x) = (2n + 1)xP_n(x) - nP_{n-1}(x)
+
+    Parameters
+    ----------
+    deg : int
+        Degree of the highest Legendre Polynomial in the array.
     """
     polys = []
     polys.append(Polynomial([(1.0, 0, 0)]))
@@ -37,7 +42,9 @@ def legendre_polynomials(deg: int) -> list[Polynomial]:
 
 def legendre_tensor_products(deg: int) -> list[Polynomial]:
     """
-    Returns the tensor products of the Legendre Polynomials up to degree deg as
+    Tensor products of the Legendre Polynomials up to degree deg.
+
+    The tensor products of the Legendre Polynomials up to degree deg as
     an array of Polynomial objects. The array is ordered in "triangular"
     fashion:
         0x0, 0x1, 0x2, ..., 0x(d-1), 0xd
@@ -46,6 +53,11 @@ def legendre_tensor_products(deg: int) -> list[Polynomial]:
         (d-1)x0, (d-1)x1
         dx0
     which is read left to right, top to bottom.
+
+    Parameters
+    ----------
+    deg : int
+        Degree of the highest Legendre Polynomial in the array.
     """
     p = legendre_polynomials(deg)
     q = []
@@ -61,8 +73,18 @@ def legendre_tensor_products(deg: int) -> list[Polynomial]:
 
 def integrated_legendre_polynomials(deg: int) -> list[Polynomial]:
     """
-    Returns an array of Polynomial objects [q_0, q_1, ..., q_deg] where q_j is
-    the jth integrated Legendre Polynomial
+    Integrated Legendre polynomials up to degree deg.
+
+    The integrated Legendre polynomials are defined by the following recurrence
+    relation:
+        P_0(x) = 1
+        P_1(x) = x
+        P_{n+1}(x) = (2n + 1)^{-1/2}[(2n + 1)xP_n(x) - nP_{n-1}(x)]
+
+    Parameters
+    ----------
+    deg : int
+        Degree of the highest Legendre Polynomial in the array.
     """
     polys = []
     p = legendre_polynomials(deg)
@@ -76,9 +98,12 @@ def integrated_legendre_polynomials(deg: int) -> list[Polynomial]:
 
 def integrated_legendre_tensor_products(deg: int) -> list[Polynomial]:
     """
-    Returns the tensor products of the integrated Legendre Polynomials up to
-    degree deg as an array of Polynomial objects. The array is ordered the same
-    as in legendre_tensor_products().
+    Integrated tensor products of the Legendre Polynomials up to degree deg.
+
+    Parameters
+    ----------
+    deg : int
+        Degree of the highest Legendre Polynomial in the array.
     """
     p = integrated_legendre_polynomials(deg)
     q = []
@@ -94,7 +119,12 @@ def integrated_legendre_tensor_products(deg: int) -> list[Polynomial]:
 
 def swap_coordinates_of_poly_argument(p: Polynomial) -> Polynomial:
     """
-    Returns the Polynomial q(x,y) = p(y,x)
+    Return the Polynomial q(x,y) = p(y,x).
+
+    Parameters
+    ----------
+    p : Polynomial
+        The Polynomial to swap the coordinates of.
     """
     q = Polynomial()
     for mono in p.monos:

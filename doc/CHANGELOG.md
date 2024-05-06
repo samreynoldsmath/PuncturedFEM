@@ -1,7 +1,28 @@
 # Changelog
 
 
-## [v0.4.5]
+## [Unreleased]
+### Features
+- [ ] interior value interpolation for points close to the boundary
+### Examples
+- [x] remove import management boilerplate from examples
+- [x] change example naming convention
+### Documentation
+- [x] change: installation instructions for developers to build the package locally with `pip install -e .`
+- [ ] add: table of contents
+- [x] add: tutorials
+- [x] change: update docstrings to use NumPy documentation format
+    - [x] `locfun`
+    - [x] `mesh` (except for `edgelib`)
+    - [x] `plot`
+    - [x] `solver`
+    - [x] `util`
+- [x] change: MkDocs theme to `material`
+- [x] add: site logo
+- [ ] update `doc/logo/pacman.svg`
+
+
+## [v0.4.5] - 2024 Apr 24
 ### Maintenance
 - [x] change dependency: Python 3.9 (was 3.11)
 - [x] change dependency: `scipy` 1.12 (was 1.11)
@@ -10,7 +31,7 @@
 - [x] fix: use `Union` for type hints rather than ` | ` operator (to support Python 3.9)
 
 
-## [v0.4.4] - 2024 Mar 07
+## [v0.4.4] - 2024 Apr 07
 ### Documentation
 - [x] change: `README.md`
     - [x] add: installation instructions with `pip`

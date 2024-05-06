@@ -1,8 +1,10 @@
 """
-cell.py
-=======
+Mesh cell.
 
-Module containing the cell class, used to represent a mesh cell.
+Classes
+-------
+MeshCell
+    Class representing a mesh cell, which may be multiply connected.
 """
 
 import numpy as np
@@ -20,7 +22,7 @@ from .quad import QuadDict
 
 class MeshCell:
     """
-    Class representing a mesh cell, which may be multiply connected.
+    Represent a mesh cell, which may be multiply connected.
 
     Contains:
         - parameterization of the boundary
@@ -72,14 +74,20 @@ class MeshCell:
         atol: float = 0.02,
     ) -> None:
         """
-        Constructor for the cell class.
+        Initialize a MeshCell object.
 
         Parameters
         ----------
-        id : int
+        idx : int
             The cell id.
         edges : list[Edge]
             The edges in the cell.
+        int_mesh_size : tuple[int, int], optional
+            The size of the interior mesh, by default (101, 101)
+        rtol : float, optional
+            The relative tolerance for interior points, by default 0.02
+        atol : float, optional
+            The absolute tolerance for interior points, by default 0.02
         """
         self.set_idx(idx)
         self.find_edge_orientations(edges)
@@ -92,7 +100,14 @@ class MeshCell:
     # MESH TOPOLOGY ##########################################################
 
     def set_idx(self, idx: int) -> None:
-        """Set the global cell index"""
+        """
+        Set the global cell index.
+
+        Parameters
+        ----------
+        idx : int
+            The cell index.
+        """
         if not isinstance(idx, int):
             raise TypeError(f"idx = {idx} invalid, must be a positive integer")
         if idx < 0:
@@ -100,7 +115,17 @@ class MeshCell:
         self.idx = idx
 
     def find_edge_orientations(self, edges: list[Edge]) -> None:
-        """Find the orientation of each Edge in the cell"""
+        """
+        Find the orientation of each Edge in the cell.
+
+        The orientation is +1 if the Edge starts at the cell, -1 if it ends
+        at the cell, and 0 if the Edge is not incident to the cell.
+
+        Parameters
+        ----------
+        edges : list[Edge]
+            The edges in the cell.
+        """
         self.edge_orients = []
         for e in edges:
             if self.idx == e.pos_cell_idx:
@@ -117,11 +142,23 @@ class MeshCell:
     # LOCAL EDGE MANAGEMENT ##################################################
 
     def find_num_edges(self) -> None:
-        """Find the number of edges in the cell"""
+        """
+        Find the number of edges in the cell.
+
+        The following attributes are set:
+        - num_edges: the number of edges in the cell
+        """
         self.num_edges = sum(c.num_edges for c in self.components)
 
     def get_edges(self) -> list[Edge]:
-        """Returns a list of all edges in the cell"""
+        """
+        Return a list of all edges in the cell.
+
+        Returns
+        -------
+        list[Edge]
+            A list of all edges in the cell.
+        """
         edges = []
         for c in self.components:
             for e in c.edges:
@@ -130,15 +167,13 @@ class MeshCell:
 
     def get_edge_endpoint_incidence(self, edges: list[Edge]) -> np.ndarray:
         """
-        Returns incidence array: for each Edge i, point to an Edge j
-        whose starting point is the terminal point of Edge i
+        Get the incidence array for the edges in the cell.
 
+        Return incidence array: for each Edge i, point to an Edge j whose
+        starting point is the terminal point of Edge i
                 Edge i          vertex     Edge j
                 --->--->--->--- o --->--->--->---
         """
-        # if not self.is_parameterized():
-        #     raise NotParameterizedError('finding Edge endpoint incidence')
-
         # form distance matrix between endpoints of edges
         num_edges = len(edges)
         distance = np.zeros((num_edges, num_edges))
@@ -190,7 +225,20 @@ class MeshCell:
         return incidence
 
     def find_boundary_components(self, edges: list[Edge]) -> None:
-        """Finds the boundary components of the cell"""
+        """
+        Find the boundary components of the cell.
+
+        Parameters
+        ----------
+        edges : list[Edge]
+            The edges in the cell.
+
+        Notes
+        -----
+        The following attributes are set:
+        - components: the boundary components of the cell
+        - num_holes: the number of holes in the cell
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("finding closed contours")
 
@@ -232,24 +280,20 @@ class MeshCell:
                 )
             )
 
-    def find_hole_interior_points(self) -> None:
-        """
-        DEPRECATED: Automatically find a point in the interior of each hole.
-
-        Finds a point by creating a rectangular grid of points and
-        eliminating those that are not in the interior. Among those
-        that are in the interior, a point that lies a maximum distance
-        from the boundary is chosen.
-        """
-        raise NotImplementedError()
-
     # PARAMETERIZATION #######################################################
     def is_parameterized(self) -> bool:
-        """Returns True if the cell is parameterized"""
+        """
+        Return whether all edges of the cell are parameterized.
+
+        Returns
+        -------
+        bool
+            True if the cell is parameterized, False otherwise.
+        """
         return all(c.is_parameterized() for c in self.components)
 
     def parameterize(self, quad_dict: QuadDict) -> None:
-        """Parameterize each Edge"""
+        """Parameterize each edge."""
         for c in self.components:
             c.parameterize(quad_dict)
         self.find_num_pts()
@@ -260,20 +304,20 @@ class MeshCell:
         self.quad_dict = quad_dict
 
     def deparameterize(self) -> None:
-        """Remove parameterization of each Edge"""
+        """Remove parameterization of each edge."""
         for c in self.components:
             c.deparameterize()
         self.num_pts = 0
         self.component_start_idx = []
 
     def find_num_pts(self) -> None:
-        """Record the total number of sampled points on the boundary"""
+        """Record the total number of sampled points on the boundary."""
         if not self.is_parameterized():
             raise NotParameterizedError("finding num_pts")
         self.num_pts = sum(c.num_pts for c in self.components)
 
     def find_component_start_idx(self) -> None:
-        """Find the index of sampled points corresponding to each component"""
+        """Find the index of sampled points corresponding to each component."""
         if not self.is_parameterized():
             raise NotParameterizedError("finding component_start_idx")
         self.component_start_idx = []
@@ -284,7 +328,7 @@ class MeshCell:
         self.component_start_idx.append(idx)
 
     def find_outer_boundary(self) -> None:
-        """Find the outer boundary of the cell"""
+        """Find the outer boundary of the cell."""
         if not self.is_parameterized():
             raise NotParameterizedError("finding outer boundary")
         # find component that contains all other components
@@ -302,7 +346,7 @@ class MeshCell:
         self.components[outer_boundary_idx] = temp
 
     def find_closest_vert_idx(self) -> None:
-        """Find the closest vertex in the mesh to each sampled point"""
+        """Find the closest vertex in the mesh to each sampled point."""
         if not self.is_parameterized():
             raise NotParameterizedError("finding closest_vert_idx")
         self.closest_vert_idx = np.zeros((self.num_pts,), dtype=int)
@@ -314,7 +358,20 @@ class MeshCell:
     # INTERIOR POINTS ########################################################
 
     def get_bounding_box(self) -> tuple[float, float, float, float]:
-        """Returns the bounding box of the cell"""
+        """
+        Return the bounding box of the cell.
+
+        Returns
+        -------
+        xmin : float
+            The minimum x-coordinate of the cell.
+        xmax : float
+            The maximum x-coordinate of the cell.
+        ymin : float
+            The minimum y-coordinate of the cell.
+        ymax : float
+            The maximum y-coordinate of the cell.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("getting bounding box")
         x1, x2 = self.get_boundary_points()
@@ -326,7 +383,20 @@ class MeshCell:
 
     def is_in_interior(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
-        Returns a boolean array indicating whether each point is in the interior
+        Return a boolean array indicating whether each point is in the interior.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            The x-coordinates of the points.
+        y : np.ndarray
+            The y-coordinates of the points, same shape as x.
+
+        Returns
+        -------
+        np.ndarray
+            A boolean array indicating whether each point is in the interior,
+            same shape as x and y.
         """
         if not self.is_parameterized():
             raise NotParameterizedError("checking if points are in interior")
@@ -339,7 +409,21 @@ class MeshCell:
         return is_in
 
     def get_distance_to_boundary(self, x: float, y: float) -> float:
-        """Returns the distance to the boundary at each point"""
+        """
+        Return the distance to the boundary at each point.
+
+        Parameters
+        ----------
+        x : float
+            The x-coordinate of the point.
+        y : float
+            The y-coordinate of the point.
+
+        Returns
+        -------
+        float
+            The distance to the boundary at the point.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("getting distance to boundary")
         dist = float("inf")
@@ -348,7 +432,16 @@ class MeshCell:
         return dist
 
     def set_interior_mesh_size(self, rows: int, cols: int) -> None:
-        """Set the size of the mesh of interior points"""
+        """
+        Set the size of the mesh of interior points.
+
+        Parameters
+        ----------
+        rows : int
+            The number of rows in the mesh.
+        cols : int
+            The number of columns in the mesh.
+        """
         self.int_mesh_size = (rows, cols)
 
     def set_interior_point_tolerance(
@@ -357,6 +450,12 @@ class MeshCell:
         """
         Set the minimum distance to the boundary for sampled interior points.
 
+        Parameters
+        ----------
+        rtol : float, optional
+            The relative tolerance, by default 0.02
+        atol : float, optional
+            The absolute tolerance, by default 0.02
         """
         msg = " must be a positive number"
         if not isinstance(atol, (float, int)):
@@ -372,11 +471,14 @@ class MeshCell:
 
     def generate_interior_points(self) -> None:
         """
-        Returns (x, y, is_inside) where x,y are a meshgrid covering the
-        cell K, and is_inside is a boolean array that is True for
-        interior points
-        """
+        Generate interior points for the cell.
 
+        The following attributes are set:
+        - int_x1: the x-coordinates of the interior points
+        - int_x2: the y-coordinates of the interior points
+        - is_inside: a boolean array indicating whether each point is in the
+          interior
+        """
         rows, cols = self.int_mesh_size
 
         # find region of interest
@@ -406,7 +508,19 @@ class MeshCell:
 
     # FUNCTION EVALUATION ####################################################
     def evaluate_function_on_boundary(self, fun: Func_R2_R) -> np.ndarray:
-        """Return fun(x) for each sampled point on contour"""
+        """
+        Return fun(x) for each sampled point on the cell boundary.
+
+        Parameters
+        ----------
+        fun : Func_R2_R
+            The function to evaluate.
+
+        Returns
+        -------
+        np.ndarray
+            The values of fun(x) at each sampled point on the boundary.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("evaluating function on boundary")
         vals = np.zeros((self.num_pts,))
@@ -417,7 +531,16 @@ class MeshCell:
         return vals
 
     def get_boundary_points(self) -> tuple[np.ndarray, np.ndarray]:
-        """Returns the x1 and x2 coordinates of the boundary points"""
+        """
+        Return the boundary points.
+
+        Returns
+        -------
+        x1 : np.ndarray
+            The x-coordinates of the boundary points.
+        x2 : np.ndarray
+            The y-coordinates of the boundary points.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("getting boundary points")
         x1 = np.zeros((self.num_pts,))
@@ -429,7 +552,14 @@ class MeshCell:
         return x1, x2
 
     def get_unit_tangent(self) -> tuple[np.ndarray, np.ndarray]:
-        """Returns the components of the unit tangent vector"""
+        """
+        Return the components of the unit tangent vector.
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            The components of the unit tangent vector.
+        """
         zeros = np.zeros((self.num_pts,))
         ones = np.ones((self.num_pts,))
         t1 = self.dot_with_tangent(ones, zeros)
@@ -437,7 +567,14 @@ class MeshCell:
         return t1, t2
 
     def get_unit_normal(self) -> tuple[np.ndarray, np.ndarray]:
-        """Returns the components of the unit normal vector"""
+        """
+        Return the components of the unit normal vector.
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            The components of the unit normal vector.
+        """
         zeros = np.zeros((self.num_pts,))
         ones = np.ones((self.num_pts,))
         n1 = self.dot_with_normal(ones, zeros)
@@ -445,14 +582,35 @@ class MeshCell:
         return n1, n2
 
     def get_dx_norm(self) -> np.ndarray:
-        """Returns the norm of the first derivative"""
+        """
+        Return the norm of the first derivative.
+
+        Returns
+        -------
+        np.ndarray
+            The norm of the first derivative.
+        """
         ones = np.ones((self.num_pts,))
         return self.multiply_by_dx_norm(ones)
 
     def dot_with_tangent(
         self, comp1: np.ndarray, comp2: np.ndarray
     ) -> np.ndarray:
-        """Returns the dot product (comp1, comp2) * unit_tangent"""
+        """
+        Return the dot product (comp1, comp2) * unit_tangent.
+
+        Parameters
+        ----------
+        comp1 : np.ndarray
+            The first component of the vector.
+        comp2 : np.ndarray
+            The second component of the vector.
+
+        Returns
+        -------
+        np.ndarray
+            The dot product (comp1, comp2) * unit_tangent.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with tangent")
         if len(comp1) != self.num_pts or len(comp2) != self.num_pts:
@@ -471,7 +629,21 @@ class MeshCell:
     def dot_with_normal(
         self, comp1: np.ndarray, comp2: np.ndarray
     ) -> np.ndarray:
-        """Returns the dot product (comp1, comp2) * unit_normal"""
+        """
+        Return the dot product (comp1, comp2) * unit_normal.
+
+        Parameters
+        ----------
+        comp1 : np.ndarray
+            The first component of the vector.
+        comp2 : np.ndarray
+            The second component of the vector.
+
+        Returns
+        -------
+        np.ndarray
+            The dot product (comp1, comp2) * unit_normal.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("dotting with normal")
         if len(comp1) != self.num_pts or len(comp2) != self.num_pts:
@@ -489,8 +661,17 @@ class MeshCell:
 
     def multiply_by_dx_norm(self, vals: np.ndarray) -> np.ndarray:
         """
-        Returns f multiplied against the norm of the derivative of
-        the curve parameterization
+        Return vals * dx_norm for each sampled point on the cell boundary.
+
+        Parameters
+        ----------
+        vals : np.ndarray
+            The values of f at each sampled point on the boundary.
+
+        Returns
+        -------
+        np.ndarray
+            The values of f * dx_norm at each sampled point on the boundary.
         """
         if not self.is_parameterized():
             raise NotParameterizedError("multiplying by dx_norm")
@@ -507,7 +688,19 @@ class MeshCell:
 
     # INTEGRATION ############################################################
     def integrate_over_boundary(self, vals: np.ndarray) -> float:
-        """Integrate vals over the boundary"""
+        """
+        Integrate vals over the boundary.
+
+        Parameters
+        ----------
+        vals : np.ndarray
+            The values of f at each sampled point on the boundary.
+
+        Returns
+        -------
+        float
+            The integral of f over the boundary.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("integrating over boundary")
         vals_dx_norm = self.multiply_by_dx_norm(vals)
@@ -516,7 +709,19 @@ class MeshCell:
     def integrate_over_boundary_preweighted(
         self, vals_dx_norm: np.ndarray
     ) -> float:
-        """Integrate vals over the boundary without multiplying by dx_norm"""
+        """
+        Integrate vals over the boundary without multiplying by dx_norm.
+
+        Parameters
+        ----------
+        vals_dx_norm : np.ndarray
+            The values of f * dx_norm at each sampled point on the boundary.
+
+        Returns
+        -------
+        float
+            The integral of f over the boundary.
+        """
         if not self.is_parameterized():
             raise NotParameterizedError("integrating over boundary")
         if len(vals_dx_norm) != self.num_pts:

@@ -1,9 +1,5 @@
 """
-locfun
-======
-
-Tools for local functions and local function spaces.
-
+Local functions and local function spaces.
 
 Subpackages
 -----------

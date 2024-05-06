@@ -1,9 +1,9 @@
 """
-poly.py
-=======
+Polynomial in two variables.
 
-Module containing the Polynomial class, which is used to represent
-Polynomials in two variables, and is basically a list of Monomials.
+Classes
+-------
+Polynomial
 """
 
 from __future__ import annotations
@@ -21,7 +21,12 @@ from .poly_exceptions import MultiIndexError, PolynomialError
 
 class Polynomial:
     """
-    Treated as a list of Monomial objects
+    Polynomial in two variables, represented as a list of Monomials.
+
+    Attributes
+    ----------
+    monos : list[Monomial]
+        List of Monomials in the Polynomial.
     """
 
     monos: list[Monomial]
@@ -30,7 +35,7 @@ class Polynomial:
         self, coef_multidx_pairs: Optional[list[tuple[float, int, int]]] = None
     ) -> None:
         """
-        Constructor for the Polynomial class.
+        Polynomial in two variables, represented as a list of Monomials.
 
         Parameters
         ----------
@@ -43,7 +48,12 @@ class Polynomial:
         self, coef_multidx_pairs: Optional[list[tuple[float, int, int]]] = None
     ) -> None:
         """
-        Sets the Polynomial to the list of coefficient / multi-index pairs.
+        Set the Polynomial to the list of coefficient / multi-index pairs.
+
+        Parameters
+        ----------
+        coef_multidx_pairs : list[tuple[float, int, int]], optional
+            List of coefficient / multi-index pairs, by default None
         """
         self.monos = []
         if coef_multidx_pairs is None:
@@ -64,7 +74,12 @@ class Polynomial:
 
     def copy(self) -> Polynomial:
         """
-        Returns a copy of the Polynomial.
+        Get a copy of the Polynomial.
+
+        Returns
+        -------
+        Polynomial
+            A copy of the Polynomial.
         """
         new = Polynomial()
         new.add_monomials(self.monos)
@@ -72,14 +87,24 @@ class Polynomial:
 
     def add_monomial(self, m: Monomial) -> None:
         """
-        Adds a Monomial to the Polynomial
+        Add a Monomial to the Polynomial.
+
+        Parameters
+        ----------
+        m : Monomial
+            Monomial to add to the Polynomial.
         """
         if not m.is_zero():
             self.monos.append(m)
 
     def add_monomials(self, monos: Optional[list[Monomial]] = None) -> None:
         """
-        Adds a list of Monomials to the Polynomial
+        Add a list of Monomials to the Polynomial.
+
+        Parameters
+        ----------
+        monos : list[Monomial], optional
+            List of Monomials to add to the Polynomial, by default None
         """
         if monos is None:
             return
@@ -88,17 +113,13 @@ class Polynomial:
         self.consolidate()
 
     def remove_zeros(self) -> None:
-        """
-        Removes terms with zero coefficients
-        """
+        """Remove terms with zero coefficients."""
         for i in range(len(self.monos), 0, -1):
             if self.monos[i - 1].is_zero():
                 del self.monos[i - 1]
 
     def consolidate(self) -> None:
-        """
-        Consolidates the coefficients of repeated indices
-        """
+        """Consolidate the coefficients of repeated indices."""
         N = len(self.monos)
         for i in range(N):
             for j in range(i + 1, N):
@@ -110,9 +131,12 @@ class Polynomial:
 
     def sort(self) -> None:
         """
-        Sorts the Monomials according to multi-index id
+        Sort the Monomials according to multi-index id.
 
-        (Using Insertion Sort since Monomial list is assumed be be short)
+        Notes
+        -----
+        Using Insertion Sort algorithm since Monomial list is assumed be be
+        short.
         """
         for i in range(len(self.monos)):
             j = i
@@ -124,8 +148,18 @@ class Polynomial:
 
     def add_monomial_with_idx(self, coef: float, idx: int) -> None:
         """
-        Adds a Monomial with a given multi-index idx, defined with a
-        'upper triangular' ordering
+        Add a Monomial with a given lexicographical index idx.
+
+        Parameters
+        ----------
+        coef : float
+            Coefficient of the Monomial.
+        idx : int
+            Lexicographical index of the Monomial.
+
+        See Also
+        --------
+        MultiIndex
         """
         m = Monomial()
         m.set_multidx_from_idx(idx)
@@ -137,8 +171,23 @@ class Polynomial:
         self, coef_list: list[float], idx_list: list[int]
     ) -> None:
         """
-        Adds a list of Monomials with a given list of multi-index ids,
-        defined with a 'upper triangular' ordering
+        Add list of Monomials with given lexicographical indices.
+
+        Parameters
+        ----------
+        coef_list : list[float]
+            List of coefficients of the Monomials.
+        idx_list : list[int]
+            List of lexicographical indices of the Monomials.
+
+        Raises
+        ------
+        PolynomialError
+            If the number of coefficients and multi-indices are not equal.
+
+        See Also
+        --------
+        MultiIndex
         """
         if len(coef_list) != len(idx_list):
             raise PolynomialError(
@@ -150,20 +199,41 @@ class Polynomial:
 
     def is_zero(self) -> bool:
         """
-        Returns True if the Polynomial is zero
+        Is True if the Polynomial is zero.
+
+        Returns
+        -------
+        bool
+            True if the Polynomial is zero.
         """
         self.consolidate()
         return len(self.monos) == 0
 
     def set_to_zero(self) -> None:
         """
-        Sets the Polynomial to zero
+        Set the Polynomial to zero.
+
+        Notes
+        -----
+        This is done by removing all Monomials from the Polynomial.
         """
         self.monos = []
 
     def _eval(self, x: FloatLike, y: FloatLike) -> np.ndarray:
         """
-        Evaluates the Polynomial at the point (x, y)
+        Evaluate the Polynomial at the point (x, y).
+
+        Parameters
+        ----------
+        x : FloatLike
+            x-coordinate of the point.
+        y : FloatLike
+            y-coordinate of the point.
+
+        Returns
+        -------
+        np.ndarray
+            Value of the Polynomial at the point (x, y).
         """
         val = np.zeros(np.shape(x))
         for m in self.monos:
@@ -172,19 +242,40 @@ class Polynomial:
 
     def pow(self, exponent: int) -> Polynomial:
         """
-        Raises the Polynomial to a nonnegative integer power
+        Raise the Polynomial to a nonnegative integer power.
+
+        Parameters
+        ----------
+        exponent : int
+            Nonnegative integer exponent.
+
+        Returns
+        -------
+        Polynomial
+            Polynomial raised to the exponent.
         """
         if not isinstance(exponent, int) or exponent < 0:
             raise ValueError("Exponent must be nonnegative integer")
         new = Polynomial([(1.0, 0, 0)])
-        # TODO: use a binary exponentiation algorithm
         for _ in range(exponent):
             new *= self
         return new
 
     def compose(self, q1: Polynomial, q2: Polynomial) -> Polynomial:
         """
-        Returns a Polynomial new(x, y) = self(q1(x, y), q2(x, y))
+        Compose the Polynomial with two other Polynomials.
+
+        Parameters
+        ----------
+        q1 : Polynomial
+            Polynomial in x and y.
+        q2 : Polynomial
+            Polynomial in x and y.
+
+        Returns
+        -------
+        Polynomial
+            Composed Polynomial new(x,y) = self(q1(x,y), q2(x,y)).
         """
         new = Polynomial()
         for m in self.monos:
@@ -195,10 +286,20 @@ class Polynomial:
 
     def partial_deriv(self, var: str) -> Polynomial:
         """
-        Returns the partial derivative of the Polynomial with respect to
-        the variable var
+        Partial derivative of the Polynomial with respect to the variable var.
+
+        Parameters
+        ----------
+        var : str
+            Variable with respect to which the derivative is taken. Must be
+            either 'x' or 'y'.
+
+        Returns
+        -------
+        Polynomial
+            Partial derivative of the Polynomial with respect to the variable
+            var.
         """
-        # TODO: use an enum for x and y
         new = Polynomial()
         for m in self.monos:
             dm = m.partial_deriv(var)
@@ -207,7 +308,13 @@ class Polynomial:
 
     def grad(self) -> tuple[Polynomial, Polynomial]:
         """
-        Returns the gradient of the Polynomial
+        Gradient of the Polynomial.
+
+        Returns
+        -------
+        tuple[Polynomial, Polynomial]
+            Pair of the partial derivatives of the Polynomial with respect to
+            x and y.
         """
         gx = self.partial_deriv("x")
         gy = self.partial_deriv("y")
@@ -215,7 +322,12 @@ class Polynomial:
 
     def laplacian(self) -> Polynomial:
         """
-        Returns the Laplacian of the Polynomial
+        Laplacian of the Polynomial.
+
+        Returns
+        -------
+        Polynomial
+            Laplacian of the Polynomial: Delta f = f_{xx} + f_{yy}.
         """
         gx, gy = self.grad()
         gxx = gx.partial_deriv("x")
@@ -224,7 +336,12 @@ class Polynomial:
 
     def anti_laplacian(self) -> Polynomial:
         """
-        Returns a Polynomial anti-Laplacian of the Polynomial
+        Polynomial anti-Laplacian of the Polynomial.
+
+        Returns
+        -------
+        Polynomial
+            Polynomial P such that Delta P = self.
         """
         new = Polynomial()
 
@@ -262,7 +379,17 @@ class Polynomial:
 
     def get_weighted_normal_derivative(self, K: MeshCell) -> np.ndarray:
         """
-        TODO: this belongs elsewhere
+        Compute the weighted normal derivative of the Polynomial.
+
+        Parameters
+        ----------
+        K : MeshCell
+            MeshCell on whose boundary to compute the normal derivative.
+
+        Returns
+        -------
+        np.ndarray
+            Values of the weighted normal derivative of the Polynomial.
         """
         x1, x2 = K.get_boundary_points()
         gx, gy = self.grad()
@@ -273,7 +400,12 @@ class Polynomial:
 
     def __repr__(self) -> str:
         """
-        Returns a string representation of the Polynomial.
+        Get a string representation of the Polynomial.
+
+        Returns
+        -------
+        str
+            String representation of the Polynomial.
         """
         self.sort()
         if len(self.monos) == 0:
@@ -285,19 +417,41 @@ class Polynomial:
 
     def __str__(self) -> str:
         """
-        Returns a string representation of the Polynomial.
+        Get a string representation of the Polynomial.
+
+        Returns
+        -------
+        str
+            String representation of the Polynomial.
         """
         return self.__repr__()
 
     def __call__(self, x: FloatLike, y: FloatLike) -> np.ndarray:
         """
-        Evaluates the Polynomial at the point (x, y)
+        Evaluate the Polynomial at the point (x, y).
+
+        Parameters
+        ----------
+        x : FloatLike
+            x-coordinate of the point.
+        y : FloatLike
+            y-coordinate of the point.
+
+        Returns
+        -------
+        np.ndarray
+            Value of the Polynomial at the point (x, y).
         """
         return self._eval(x, y)
 
     def __eq__(self, other: object) -> bool:
         """
-        Tests equality between self and other
+        Test equality between self and other.
+
+        Parameters
+        ----------
+        other : object
+            Object to compare with self. Must be a Polynomial.
         """
         if not isinstance(other, Polynomial):
             raise TypeError("Cannot compare Polynomial to non-Polynomial")
@@ -312,8 +466,12 @@ class Polynomial:
 
     def __add__(self, other: object) -> Polynomial:
         """
-        Defines the addition operation self + other,
-        where other is either another Polynomial or a scalar
+        Define the addition operation self + other.
+
+        Parameters
+        ----------
+        other : object
+            Object to add to self. Must be either a Polynomial or a scalar.
         """
         if isinstance(other, Polynomial):
             new = Polynomial()
@@ -339,8 +497,12 @@ class Polynomial:
 
     def __radd__(self, other: object) -> Polynomial:
         """
-        Defines the addition operator other + self,
-        where other is either another Polynomial or a scalar
+        Define the addition operator other + self.
+
+        Parameters
+        ----------
+        other : object
+            Object to add to self. Must be either a Polynomial or a scalar.
         """
         if isinstance(other, (int, float)):
             return self + other
@@ -351,8 +513,12 @@ class Polynomial:
 
     def __iadd__(self, other: object) -> Polynomial:
         """
-        Defines the increment operation self += other
-        where other is either another Polynomial or a scalar
+        Define the increment operation self += other.
+
+        Parameters
+        ----------
+        other : object
+            Object to add to self. Must be either a Polynomial or a scalar.
         """
         if isinstance(other, Polynomial):
             for m in other.monos:
@@ -372,8 +538,13 @@ class Polynomial:
 
     def __mul__(self, other: object) -> Polynomial:
         """
-        Defines the multiplication operator self * other,
-        where other is either another Polynomial or a scalar
+        Define the multiplication operator self * other.
+
+        Parameters
+        ----------
+        other : object
+            Object to multiply with self. Must be either a Polynomial or a
+            scalar.
         """
         if isinstance(other, Polynomial):
             new = Polynomial()
@@ -394,8 +565,13 @@ class Polynomial:
 
     def __rmul__(self, other: object) -> Polynomial:
         """
-        Defines the multiplication operator other * self,
-        where other is either another Polynomial or a scalar
+        Define the multiplication operator other * self.
+
+        Parameters
+        ----------
+        other : object
+            Object to multiply with self. Must be either a Polynomial or a
+            scalar.
         """
         if isinstance(other, Polynomial):
             return self * other
@@ -408,24 +584,56 @@ class Polynomial:
 
     def __truediv__(self, other: object) -> Polynomial:
         """
-        Defines division by a scalar
+        Divide the Polynomial by a scalar.
+
+        Parameters
+        ----------
+        other : object
+            Scalar to divide the Polynomial by.
         """
         if isinstance(other, (int, float)):
             return self * (1 / other)
         raise TypeError("Division of a Polynomial must be by a scalar")
 
     def __neg__(self) -> Polynomial:
+        """Negate the Polynomial."""
         return -1 * self
 
     def __sub__(self, other: object) -> Polynomial:
+        """
+        Define the subtraction operator self - other.
+
+        Parameters
+        ----------
+        other : object
+            Object to subtract from self. Must be either a Polynomial or a
+            scalar.
+        """
         if isinstance(other, (int, float, Polynomial)):
             return self + (-1 * other)
         raise TypeError("Subtraction of a Polynomial must be from a Polynomial")
 
     def __rsub__(self, other: object) -> Polynomial:
+        """
+        Define the subtraction operator other - self.
+
+        Parameters
+        ----------
+        other : object
+            Object to subtract self from. Must be either a Polynomial or a
+            scalar.
+        """
         if isinstance(other, (int, float, Polynomial)):
             return other + (-1 * self)
         raise TypeError("Subtraction of a Polynomial must be from a Polynomial")
 
     def __pow__(self, exponent: int) -> Polynomial:
+        """
+        Define the exponentiation operator self ** exponent.
+
+        Parameters
+        ----------
+        exponent : int
+            Nonnegative integer exponent.
+        """
         return self.pow(exponent)

@@ -1,13 +1,17 @@
 """
-mesh_exceptions.py
-==================
+Exceptions for the mesh subpackage.
 
-Module containing exceptions for the mesh subpackage.
+Exceptions:
+    EdgeTransformationError: Raised if Edge transformation is not valid.
+    EmbeddingError: Raised if embedding is not valid.
+    InteriorPointError: Raised if point is not in interior of mesh.
+    NotParameterizedError: Raised if edges are not parameterized.
+    SizeMismatchError: Raised if array sizes do not match.
 """
 
 
 class EdgeTransformationError(Exception):
-    """Exception raised if Edge transformation is not valid"""
+    """Exception raised if Edge transformation is not valid."""
 
     def __init__(self, msg: str = "") -> None:
         super().__init__()
@@ -15,7 +19,7 @@ class EdgeTransformationError(Exception):
 
 
 class EmbeddingError(Exception):
-    """Exception raised if embedding is not valid"""
+    """Exception raised if embedding is not valid."""
 
     def __init__(self, msg: str = "") -> None:
         super().__init__()
@@ -23,7 +27,7 @@ class EmbeddingError(Exception):
 
 
 class InteriorPointError(Exception):
-    """Exception raised if point is not in interior of mesh"""
+    """Exception raised if point is not in interior of mesh."""
 
     def __init__(self, msg: str = "") -> None:
         super().__init__()
@@ -31,7 +35,7 @@ class InteriorPointError(Exception):
 
 
 class NotParameterizedError(Exception):
-    """Exception raised if edges are not parameterized"""
+    """Exception raised if edges are not parameterized."""
 
     def __init__(self, cant_do: str = "calling this method") -> None:
         super().__init__()
@@ -39,7 +43,7 @@ class NotParameterizedError(Exception):
 
 
 class SizeMismatchError(Exception):
-    """Exception raised if array sizes do not match"""
+    """Exception raised if array sizes do not match."""
 
     def __init__(self, msg: str = "") -> None:
         super().__init__()

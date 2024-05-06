@@ -1,9 +1,11 @@
 """
-fft_deriv.py
-============
+Differentiation using FFT.
 
-Fourier (anti-)differentiation of a periodic continuously differentiable
-function f: [0,L] -> R sampled on a uniform grid of N points.
+A periodic continuously differentiable function f: [0,L] -> R sampled on a
+uniform grid of N points can be differentiated using the FFT. The derivative
+df/dt is computed by taking the FFT of f, multiplying by 1j * N * omega, and
+taking the inverse FFT. The antiderivative of df/dt can be computed by taking
+the FFT of df/dt, multiplying by -1j / (N * omega), and taking the inverse FFT.
 
 Routines in this module
 -----------------------
@@ -20,7 +22,23 @@ import numpy as np
 
 def fft_derivative(f: np.ndarray, interval_length: float) -> np.ndarray:
     """
-    Returns df / dx sampled on a uniform grid of N points via the FFT. Assumes
+    First derivative of a periodic function.
+
+    Parameters
+    ----------
+    f : np.ndarray
+        Values of the function to differentiate.
+    interval_length : float
+        Period of the function.
+
+    Returns
+    -------
+    df : np.ndarray
+        Derivative of f.
+
+    Notes
+    -----
+    Returns df/dt sampled on a uniform grid of N points via the FFT. Assumes
     that f is periodic with period interval_length and that f is continuously
     differentiable.
     """
@@ -33,9 +51,25 @@ def fft_derivative(f: np.ndarray, interval_length: float) -> np.ndarray:
 
 def fft_antiderivative(df: np.ndarray, interval_length: float) -> np.ndarray:
     """
-    Returns f sampled on a uniform grid of N points via the FFT, up to an
-    additive constant. Assumes that df is periodic with period interval_length
-    and that df is continuous.
+    Antiderivative of a periodic function.
+
+    Parameters
+    ----------
+    df : np.ndarray
+        Values of the derivative to integrate.
+    interval_length : float
+        Period of the function.
+
+    Returns
+    -------
+    f : np.ndarray
+        Antiderivative of df.
+
+    Notes
+    -----
+    Returns the antiderivative of df/dt sampled on a uniform grid of N points
+    via the FFT. Assumes that f is periodic with period interval_length and
+    that df is continuous.
     """
     N = len(df)
     omega = np.fft.fft(df)

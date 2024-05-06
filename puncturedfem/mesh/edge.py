@@ -1,9 +1,10 @@
 """
-Edge.py
-=======
+Oriented edge in the plane.
 
-Module containing the Edge class, which represents an oriented Edge in the
-plane.
+Classes
+-------
+Edge
+    Oriented joining two vertices of a planar mesh.
 """
 
 from os import path
@@ -27,8 +28,10 @@ TOL = 1e-12
 
 class Edge:
     """
-    Oriented joining two Vertices of a planar mesh. This class contains both
-    the parameterization of the Edge as well as mesh topology information.
+    Oriented joining two vertices of a planar mesh.
+
+    This class contains both the parameterization of the edge as well as mesh
+    topology information.
 
     The orientation of the Edge is from the anchor vertex to the endpnt vertex.
     The positive MeshCell is the MeshCell such that the Edge is oriented
@@ -38,10 +41,6 @@ class Edge:
     positive MeshCell. The negative MeshCell is the MeshCell such that the
     boundary of the negative MeshCell intersects the boundary of the positive
     MeshCell exactly on this Edge.
-
-    Usage
-    -----
-    See examples/ex0-mesh-building.ipynb for examples of how to use this class.
 
     Attributes
     ----------
@@ -116,7 +115,7 @@ class Edge:
         **curve_opts: Any,
     ) -> None:
         """
-        Constructor for the Edge class.
+        Initialize an Edge object.
 
         Parameters
         ----------
@@ -148,7 +147,7 @@ class Edge:
         self.num_pts = -1
 
     def __str__(self) -> str:
-        """Return a string representation of the Edge"""
+        """Return a string representation of the Edge."""
         msg = ""
         if hasattr(self, "idx"):
             msg += f"idx:         {self.idx}\n"
@@ -160,7 +159,7 @@ class Edge:
     # MESH TOPOLOGY ##########################################################
 
     def set_idx(self, idx: Any) -> None:
-        """Set the id of the Edge"""
+        """Set the global index of the Edge."""
         if idx is None:
             return
         if not isinstance(idx, int):
@@ -170,7 +169,16 @@ class Edge:
         self.idx = idx
 
     def set_verts(self, anchor: Vert, endpnt: Vert) -> None:
-        """Set the anchor and endpnt Vertices of the Edge"""
+        """
+        Set the anchor and endpnt vertices of the edge.
+
+        Parameters
+        ----------
+        anchor : Vert
+            The vertex at the start of the Edge.
+        endpnt : Vert
+            The vertex at the end of the Edge.
+        """
         self.anchor = anchor
         self.endpnt = endpnt
         self.is_loop = self.anchor == self.endpnt
@@ -180,9 +188,7 @@ class Edge:
             self.diary = [("join_points", (anchor, endpnt))]
 
     def set_cells(self, pos_cell_idx: int, neg_cell_idx: int) -> None:
-        """
-        Set the positively and negatively oriented MeshCells of the Edge.
-        """
+        """Set the positively and negatively oriented MeshCells of the Edge."""
         self.pos_cell_idx = pos_cell_idx
         self.neg_cell_idx = neg_cell_idx
         self.is_on_mesh_boundary = (
@@ -194,6 +200,11 @@ class Edge:
     def set_curve_type(self, curve_type: str) -> None:
         """
         Set the curve_type string.
+
+        Parameters
+        ----------
+        curve_type : str
+            The type of curve used to parameterize the Edge.
         """
         if not isinstance(curve_type, str):
             raise ValueError("curve type must be a str")
@@ -206,6 +217,11 @@ class Edge:
     def set_t_bounds(self, t_bounds: tuple[float, float]) -> None:
         """
         Set the bounds on t, where x(t) parameterizes the curve.
+
+        Parameters
+        ----------
+        t_bounds : tuple[float, float]
+            The upper and lower bounds on t, respectively.
         """
         msg = "t_bounds must be a pair of floats with t_bounds[0] < t_bounds[1]"
         a, b = t_bounds
@@ -218,6 +234,14 @@ class Edge:
     def run_transform_diary(self) -> None:
         """
         Execute all the transformations in the diary.
+
+        This method is called after the parameterization of the Edge is
+        computed. The transformations are applied to the sampled points on the
+        Edge.
+
+        The diary is a list of tuples, where the first element is the name of
+        the method to call and the second element is a tuple of arguments to
+        pass to the method.
         """
         for method_name, args in self.diary:
             method = getattr(self, method_name)
@@ -225,7 +249,9 @@ class Edge:
 
     def get_parameterization_module(self) -> Any:
         """
-        Returns the module with the functions X, DX, DDX
+        Return the module with the functions X, DX, DDX.
+
+        The module is imported from the puncturedfem.mesh.edgelib package.
         """
         return __import__(
             f"puncturedfem.mesh.edgelib.{self.curve_type}",
@@ -234,8 +260,9 @@ class Edge:
 
     def parameterize(self, quad_dict: QuadDict) -> None:
         """
-        Parameterize the Edge using the specified Quadrature rule. The
-        parameterization is stored in the following attributes:
+        Parameterize the Edge using the specified Quadrature rule.
+
+        The parameterization is stored in the following attributes:
             x : np.ndarray
                 The sampled points on the Edge.
             unit_tangent : np.ndarray
@@ -248,7 +275,6 @@ class Edge:
             curvature : np.ndarray
                 The signed curvature at each sampled point on the Edge.
         """
-
         # check for acceptable quadrature type
         if self.quad_type not in ["trap", "kress"]:
             raise ValueError("Quad type not recognized")
@@ -298,16 +324,11 @@ class Edge:
         # apply transformations
         self.run_transform_diary()
 
-        # if self.is_loop:
-        #     self.translate(self.anchor)
-        # else:
-        #     self.join_points(self.anchor, self.endpnt)
-
         # store parameterization type
         self.quad_type = q.type
 
     def deparameterize(self) -> None:
-        """Reset the parameterization of the Edge"""
+        """Reset the parameterization of the Edge."""
         self.num_pts = -1
         self.x = np.zeros((0,))
         self.unit_tangent = np.zeros((0,))
@@ -319,7 +340,15 @@ class Edge:
     def get_sampled_points(
         self, ignore_endpoint: bool = True
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Return the sampled points on the Edge"""
+        """
+        Return the sampled points on the Edge.
+
+        Parameters
+        ----------
+        ignore_endpoint : bool, optional
+            If True, the endpoint of the Edge is not included in the returned
+            points. Default is True.
+        """
         if not self.is_parameterized:
             raise NotParameterizedError("getting sampled points")
         if ignore_endpoint:
@@ -327,7 +356,20 @@ class Edge:
         return self.x[0, :], self.x[1, :]
 
     def get_bounding_box(self) -> tuple[float, float, float, float]:
-        """Return the bounding box of the Edge"""
+        """
+        Return the bounding box of the Edge.
+
+        Returns
+        -------
+        x_min : float
+            The minimum x-coordinate of the edge.
+        x_max : float
+            The maximum x-coordinate of the edge.
+        y_min : float
+            The minimum y-coordinate of the edge.
+        y_max : float
+            The maximum y-coordinate of the edge.
+        """
         if not self.is_parameterized:
             raise NotParameterizedError("getting bounding box")
         return get_bounding_box(x=self.x[0, :], y=self.x[1, :])
@@ -335,8 +377,18 @@ class Edge:
     # TRANSFORMATION CONVENIENCE METHODS ######################################
 
     def join_points(self, a: Vert, b: Vert, write_diary: bool = True) -> None:
-        """Join the points a to b with this Edge."""
+        """
+        Join the points a to b with this Edge.
 
+        Parameters
+        ----------
+        a : Vert
+            The starting point of the Edge.
+        b : Vert
+            The ending point of the Edge.
+        write_diary : bool, optional
+            If True, record the transformation in the diary. Default is True.
+        """
         # check that specified endpoints are distinct
         ab_norm = np.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
         if ab_norm < TOL:
@@ -377,8 +429,16 @@ class Edge:
             self.set_verts(a, b)
 
     def rotate(self, theta: float, write_diary: bool = True) -> None:
-        """Rotate counterclockwise by theta (degrees)"""
+        """
+        Rotate counterclockwise by theta (degrees).
 
+        Parameters
+        ----------
+        theta : float
+            The angle of rotation in degrees.
+        write_diary : bool, optional
+            If True, record the transformation in the diary. Default is True.
+        """
         # record in transformation diary
         if write_diary:
             self.diary.append(("rotate", (theta,)))
@@ -391,8 +451,14 @@ class Edge:
             self.apply_orthogonal_transformation(R, write_diary=False)
 
     def reflect_across_x_axis(self, write_diary: bool = True) -> None:
-        """Reflect across the horizontal axis"""
+        """
+        Reflect across the horizontal axis.
 
+        Parameters
+        ----------
+        write_diary : bool, optional
+            If True, record the transformation in the diary. Default is True.
+        """
         # record in transformation diary
         if write_diary:
             self.diary.append(("reflect_across_x_axis", ()))
@@ -403,8 +469,14 @@ class Edge:
             self.apply_orthogonal_transformation(A, write_diary=False)
 
     def reflect_across_y_axis(self, write_diary: bool = True) -> None:
-        """Reflect across the vertical axis"""
+        """
+        Reflect across the vertical axis.
 
+        Parameters
+        ----------
+        write_diary : bool, optional
+            If True, record the transformation in the diary. Default is True.
+        """
         # record in transformation diary
         if write_diary:
             self.diary.append(("reflect_across_y_axis", ()))
@@ -418,13 +490,15 @@ class Edge:
 
     def reverse_orientation(self) -> None:
         """
-        Reverse the orientation of this Edge using the reparameterization
-        x(2 pi - t). The chain rule flips the sign of some derivative-based
-        quantities.
+        Reverse the orientation of this Edge.
+
+        A reparameterization x(2 pi - t). The chain rule flips the sign of some
+        derivative-based quantities.
+
+        Notes
+        -----
+        This should not be recorded in the transformation diary.
         """
-
-        # NOTE: DO NOT record in transformation diary
-
         # apply to sampled points
         if self.is_parameterized:
             # vector quantities
@@ -437,8 +511,16 @@ class Edge:
             self.curvature = -np.flip(self.curvature)
 
     def translate(self, a: Vert, write_diary: bool = True) -> None:
-        """Translate by a vector a"""
+        """
+        Translate by a vector a.
 
+        Parameters
+        ----------
+        a : Vert
+            The translation vector.
+        write_diary : bool, optional
+            If True, record the transformation in the diary. Default is True.
+        """
         # record in transformation diary
         if write_diary:
             self.diary.append(("translate", (a,)))
@@ -449,8 +531,16 @@ class Edge:
             self.x[1, :] += a.y
 
     def dilate(self, alpha: float, write_diary: bool = True) -> None:
-        """Dilate by a scalar alpha"""
+        """
+        Dilate by a scalar alpha.
 
+        Parameters
+        ----------
+        alpha : float
+            The dilation factor.
+        write_diary : bool, optional
+            If True, record the transformation in the diary. Default is True.
+        """
         # check that alpha is nonzero
         if np.abs(alpha) < TOL:
             raise EdgeTransformationError(
@@ -471,14 +561,21 @@ class Edge:
         self, A: np.ndarray, write_diary: bool = True
     ) -> None:
         """
+        Apply an orthogonal transformation to the sampled points on the Edge.
+
         Transforms 2-dimensional space with the linear map
                 x mapsto A * x
-        where A is a 2 by 2 orthogonal matrix, i.e. A^T * A = I
+        where A is a 2 by 2 orthogonal matrix, i.e. A^T * A = I It is important
+        that A is orthogonal, since the first derivative norm as well as the
+        curvature are invariant under such a transformation.
 
-        It is important that A is orthogonal, since the first derivative norm
-        as well as the curvature are invariant under such a transformation.
+        Parameters
+        ----------
+        A : np.ndarray
+            The orthogonal 2 by 2 transformation matrix.
+        write_diary : bool, optional
+            If True, record the transformation in the diary. Default is True.
         """
-
         # safety checks
         msg = "A must be a 2 by 2 orthogonal matrix"
         if np.shape(A) != (2, 2):
@@ -510,7 +607,22 @@ class Edge:
     def evaluate_function(
         self, fun: Func_R2_R, ignore_endpoint: bool = True
     ) -> np.ndarray:
-        """Return fun(x1, x2) for each sampled point on Edge"""
+        """
+        Return fun(x1, x2) for each sampled point on Edge.
+
+        Parameters
+        ----------
+        fun : Func_R2_R
+            The function to evaluate.
+        ignore_endpoint : bool, optional
+            If True, the endpoint of the Edge is not included in the returned
+            values. Default is True.
+
+        Returns
+        -------
+        np.ndarray
+            The values of fun(x1, x2) at each sampled point on the Edge.
+        """
         if not self.is_parameterized:
             raise NotParameterizedError("evaluating function")
         if ignore_endpoint:
@@ -526,8 +638,20 @@ class Edge:
         self, vals: np.ndarray, ignore_endpoint: bool = True
     ) -> np.ndarray:
         """
-        Returns f multiplied against the norm of the derivative of
-        the curve parameterization
+        Return f multiplied against the norm of the derivative of the curve.
+
+        Parameters
+        ----------
+        vals : np.ndarray
+            The values to multiply.
+        ignore_endpoint : bool, optional
+            If True, the endpoint of the Edge is not included in the returned
+            values. Default is True.
+
+        Returns
+        -------
+        np.ndarray
+            The values multiplied by the norm of the derivative of the curve.
         """
         if not self.is_parameterized:
             raise NotParameterizedError("multiplying by dx_norm")
@@ -543,7 +667,24 @@ class Edge:
     def dot_with_tangent(
         self, comp1: np.ndarray, comp2: np.ndarray, ignore_endpoint: bool = True
     ) -> np.ndarray:
-        """Returns the dot product (comp1, comp2) * unit_tangent"""
+        """
+        Return the dot product (comp1, comp2) * unit_tangent.
+
+        Parameters
+        ----------
+        comp1 : np.ndarray
+            The first component of the vector to dot with the unit tangent.
+        comp2 : np.ndarray
+            The second component of the vector to dot with the unit tangent.
+        ignore_endpoint : bool, optional
+            If True, the endpoint of the Edge is not included in the returned
+            values. Default is True.
+
+        Returns
+        -------
+        np.ndarray
+            The dot product (comp1, comp2) * unit_tangent.
+        """
         if not self.is_parameterized:
             raise NotParameterizedError("dotting with tangent")
         if ignore_endpoint:
@@ -560,7 +701,24 @@ class Edge:
     def dot_with_normal(
         self, comp1: np.ndarray, comp2: np.ndarray, ignore_endpoint: bool = True
     ) -> np.ndarray:
-        """Returns the dot product (comp1, comp2) * unit_normal"""
+        """
+        Return the dot product (comp1, comp2) * unit_normal.
+
+        Parameters
+        ----------
+        comp1 : np.ndarray
+            The first component of the vector to dot with the unit normal.
+        comp2 : np.ndarray
+            The second component of the vector to dot with the unit normal.
+        ignore_endpoint : bool, optional
+            If True, the endpoint of the Edge is not included in the returned
+            values. Default is True.
+
+        Returns
+        -------
+        np.ndarray
+            The dot product (comp1, comp2) * unit_normal.
+        """
         if not self.is_parameterized:
             raise NotParameterizedError("dotting with normal")
         if ignore_endpoint:
@@ -578,7 +736,22 @@ class Edge:
     def integrate_over_edge(
         self, vals: np.ndarray, ignore_endpoint: bool = False
     ) -> float:
-        """Integrate vals * dx_norm over the Edge via trapezoidal rule"""
+        """
+        Integrate vals * dx_norm over the Edge via trapezoidal rule.
+
+        Parameters
+        ----------
+        vals : np.ndarray
+            The values to integrate.
+        ignore_endpoint : bool, optional
+            If True, the endpoint of the Edge is not included in the
+            integration. Default is False.
+
+        Returns
+        -------
+        float
+            The integral of vals * dx_norm over the Edge.
+        """
         if not self.is_parameterized:
             raise NotParameterizedError("integrating over Edge")
         vals_dx_norm = self.multiply_by_dx_norm(vals, ignore_endpoint)
@@ -589,7 +762,22 @@ class Edge:
     def integrate_over_edge_preweighted(
         self, vals_dx_norm: np.ndarray, ignore_endpoint: bool = False
     ) -> float:
-        """Integrate vals_dx_norm over the Edge via trapezoidal rule"""
+        """
+        Integrate vals_dx_norm over the Edge via trapezoidal rule.
+
+        Parameters
+        ----------
+        vals_dx_norm : np.ndarray
+            The values to integrate, already multiplied by dx_norm.
+        ignore_endpoint : bool, optional
+            If True, the endpoint of the Edge is not included in the
+            integration. Default is False.
+
+        Returns
+        -------
+        float
+            The integral of vals_dx_norm over the Edge.
+        """
         if not self.is_parameterized:
             raise NotParameterizedError("integrating over Edge")
         h = 2 * np.pi / (self.num_pts - 1)

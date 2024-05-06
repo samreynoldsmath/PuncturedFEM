@@ -1,8 +1,9 @@
 """
-plot_global_solution.py
-=======================
+Plot global functions.
 
-Module for plotting the global solution.
+Classes
+-------
+GlobalFunctionPlot
 """
 
 from typing import Any, Optional
@@ -18,7 +19,24 @@ from .plot_util import get_axis_limits, get_figure_size, save_figure
 
 class GlobalFunctionPlot:
     """
-    Class for plotting a global function.
+    Plot a global function.
+
+    Attributes
+    ----------
+    solver : Solver
+        A Solver object, which contains the Mesh and the basis functions.
+    coef : ndarray
+        The coefficients of the linear combination of basis functions.
+    fill : bool
+        If True, a heatmap is plotted. If False, a contour plot is plotted.
+    title : str
+        The title of the plot.
+    show_colorbar : bool
+        If True, a colorbar is shown.
+    show_axis : bool
+        If True, the axis is shown.
+    colormap : Optional[Colormap]
+        The colormap used for the plot.
     """
 
     solver: Solver
@@ -31,7 +49,7 @@ class GlobalFunctionPlot:
 
     def __init__(self, solver: Solver, coef: Optional[ndarray] = None) -> None:
         """
-        Constructor for the GlobalFunctionPlot class.
+        Initialize a GlobalFunctionPlot object.
 
         Parameters
         ----------
@@ -45,7 +63,12 @@ class GlobalFunctionPlot:
 
     def set_solver(self, solver: Solver) -> None:
         """
-        Set the solver object, which contains the mesh and the basis functions.
+        Set the solver object.
+
+        Parameters
+        ----------
+        solver : Solver
+            A Solver object, which contains the Mesh and the basis functions.
         """
         if not isinstance(solver, Solver):
             raise TypeError("solver must be of type Solver")
@@ -54,6 +77,13 @@ class GlobalFunctionPlot:
     def set_coefficients(self, coef: Optional[ndarray] = None) -> None:
         """
         Set the coefficients of the linear combination of basis functions.
+
+        Parameters
+        ----------
+        coef : ndarray, optional
+            The coefficients of the linear combination of basis functions.
+            Default is None. If None, the solver object must have an attribute
+            soln.
         """
         if coef is None:
             if not hasattr(self.solver, "soln"):
@@ -68,9 +98,6 @@ class GlobalFunctionPlot:
         self.coef = coef
 
     def _unpack_kwargs(self, kwargs: dict) -> None:
-        """
-        Unpack the keyword arguments.
-        """
         self.fill = kwargs.get("fill", True)
         self.title = kwargs.get("title", "")
         self.show_colorbar = kwargs.get("show_colorbar", True)
@@ -89,6 +116,9 @@ class GlobalFunctionPlot:
             If True, the plot is shown. Default is True.
         filename : str, optional
             If not empty, the plot is saved to this file. Default is "".
+
+        Other Parameters
+        ----------------
         fill : bool, optional
             If True, a heatmap is plotted. If False, a contour plot is plotted.
             Default is True.
@@ -96,6 +126,10 @@ class GlobalFunctionPlot:
             The title of the plot. Default is "", i.e. no title.
         show_colorbar : bool, optional
             If True, a colorbar is shown. Default is True.
+        show_axis : bool, optional
+            If True, the axis is shown. Default is True.
+        colormap : Optional[Colormap], optional
+            The colormap used for the plot. Default is None.
         """
         self._unpack_kwargs(kwargs)
         _plot_linear_combo(
@@ -122,9 +156,6 @@ def _plot_linear_combo(
     show_colorbar: bool = True,
     colormap: Optional[Colormap] = None,
 ) -> None:
-    """
-    Plot a linear combination of the basis functions.
-    """
     if not (show_fig or save_fig):
         return
     # compute linear combo on each MeshCell, determine range of global values
@@ -203,48 +234,3 @@ def _plot_linear_combo(
         plt.show()
 
     plt.close(fig)
-
-
-# def _get_axis_limits(solver: Solver) -> tuple[float, float, float, float]:
-#     """
-#     Get the axis limits.
-#     """
-#     min_x = inf
-#     max_x = -inf
-#     min_y = inf
-#     max_y = -inf
-#     for e in solver.V.T.edges:
-#         min_x = _update_min(min_x, e.x[0, :])
-#         max_x = _update_max(max_x, e.x[0, :])
-#         min_y = _update_min(min_y, e.x[1, :])
-#         max_y = _update_max(max_y, e.x[1, :])
-#     return min_x, max_x, min_y, max_y
-
-
-# def _update_min(current_min: float, candidates: ndarray) -> float:
-#     """
-#     Update the minimum value.
-#     """
-#     min_candidate = min(candidates)
-#     return min(current_min, min_candidate)
-
-
-# def _update_max(current_max: float, candidates: ndarray) -> float:
-#     """
-#     Update the maximum value.
-#     """
-#     max_candidate = max(candidates)
-#     return max(current_max, max_candidate)
-
-
-# def _get_figure_size(
-#     min_x: float, max_x: float, min_y: float, max_y: float
-# ) -> tuple[float, float]:
-#     """
-#     Get the figure size.
-#     """
-#     dx = max_x - min_x
-#     dy = max_y - min_y
-#     h = 4.0
-#     w = h * dx / dy
-#     return w, h

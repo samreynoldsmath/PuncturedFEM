@@ -33,9 +33,9 @@ The multiply connected case is discussed in [5].
 
 ### Examples used in publications
 - Jeffrey S. Ovall, and Samuel E. Reynolds, "Evaluation of inner products of implicitly-defined finite element functions on multiply connected planar mesh cells" [5]
-  - [Example 4.1 (Punctured Square)](https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/ex1a-square-hole.ipynb)
-  - [Example 4.2 (Pac-Man)](https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/ex1b-pacman.ipynb)
-  - [Example 4.3 (Ghost)](https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/ex1c-ghost.ipynb)
+  - [Example 4.1 (Punctured Square)](https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/ex1.1-square-hole.ipynb)
+  - [Example 4.2 (Pac-Man)](https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/ex1.2-pacman.ipynb)
+  - [Example 4.3 (Ghost)](https://github.com/samreynoldsmath/PuncturedFEM/tree/main/examples/ex1.3-ghost.ipynb)
 
 ### References
 - **[1]** [L. Beiriao da Veiga, F. Brezzi, A. Cangiani, G. Manzini, L. D. Marini, and A. Russo. Basic principles of virtual element methods. *Mathematical Models and Methods in Applied Sciences*, 23(1):199–214, 2013.](http://dx.doi.org/10.1142/S0218202512500492)
@@ -52,6 +52,7 @@ pip install puncturedfem
 
 ### Dependencies
 This project requires Python 3.9 or higher and uses the following packages:
+- [Deprecated](https://github.com/tantale/deprecated) (deprecation warnings)
 - [matplotlib](https://matplotlib.org/) (plotting)
 - [numba](https://numba.pydata.org/) (just-in-time compilation)
 - [numpy](https://numpy.org/) (arrays, FFT)
@@ -68,7 +69,7 @@ Furthermore, this repo contains examples presented with [Jupyter notebooks](http
 - [Jeffrey S. Ovall](https://sites.google.com/pdx.edu/jeffovall) (1):
 principal investigator
 - [Samuel E. Reynolds](https://sites.google.com/view/samreynolds) (1):
-lead developer
+maintainer, lead developer
 - [Zack Kenyon](https://github.com/zackkenyon) (1):
 junior developer
 
@@ -83,10 +84,11 @@ Funding for this project was provided by the National Science Foundation through
 - **NSF RTG grant DMS-2136228**
 
 ## Disclaimers
-- This code is intended to serve as a prototype, and has not necessarily been optimized for performance.
-- This project is under heavy development, which may result to changes in to the API. Consult the examples for the latest suggested usage.
+This package is an experimental prototype.
+- It is unlikely to be suitable for production use.
+- It is under heavy development, which may sometimes result in breaking changes.
 
-## License
+## License (GPLv3)
 Copyright (C) 2022 - 2024, Jeffrey S. Ovall and Samuel E. Reynolds.
 
 This program is free software: you can redistribute it and/or modify it

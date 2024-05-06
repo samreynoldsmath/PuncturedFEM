@@ -78,12 +78,11 @@ def test_edge_space_dim_ellipse() -> None:
     (p + 2 choose 2) - (p choose 2) = 2p + 1.
     """
     m = 2
-    p_max = 5
     anchor = pf.Vert(1.0, 0.0)
     edge = pf.Edge(anchor, anchor, idx=0, curve_type="ellipse", a=1.23, b=0.456)
     quad_dict = pf.get_quad_dict(n=32)
     edge.parameterize(quad_dict)
-    for p in range(1, p_max + 1):
+    for p in range(1, MAX_DEG + 1):
         check_dim(p, m, edge)
 
 

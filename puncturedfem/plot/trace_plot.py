@@ -1,9 +1,15 @@
 """
-trace_plot.py
-=============
+Plotting traces of functions on the boundary of a MeshCell.
 
-Module containing the TracePlot class for plotting traces of functions on the
-boundary of a MeshCell.
+Types
+-----
+TraceLike
+    Type hint for a DirichletTrace or a numpy.ndarray.
+
+Classes
+-------
+TracePlot
+    Class for plotting traces of functions on the boundary of a MeshCell.
 """
 
 from typing import Union
@@ -23,7 +29,32 @@ TraceLike = Union[np.ndarray, DirichletTrace]
 
 class TracePlot:
     """
-    Class for plotting traces of functions on the boundary of a MeshCell.
+    Plot traces of functions on the boundary of a MeshCell.
+
+    Attributes
+    ----------
+    fig_handle : plt.Figure
+        The handle to the figure.
+    t : np.ndarray
+        The parameter values for the traces.
+    traces : list[np.ndarray]
+        The traces to be plotted.
+    x_ticks : np.ndarray
+        The ticks for the x-axis.
+    x_labels : list[str]
+        The labels for the x-axis.
+    num_pts : int
+        The number of sampled boundary points of the MeshCell.
+    fmt : Union[str, list[str]]
+        The format string(s) used to plot the traces.
+    legend : tuple
+        The legend for the plot.
+    title : str
+        The title for the plot.
+    log_scale : bool
+        Whether or not to use a log scale on the vertical axis.
+    show_grid : bool
+        Whether or not to display a grid on the plot.
     """
 
     fig_handle: plt.Figure
@@ -51,7 +82,7 @@ class TracePlot:
         max_num_ticks: int = 9,
     ) -> None:
         """
-        Constructor for TracePlot class.
+        Initialize a TracePlot object.
 
         Parameters
         ----------
@@ -98,7 +129,7 @@ class TracePlot:
 
     def draw(self, show_plot: bool = True, filename: str = "") -> None:
         """
-        Creates the plot.
+        Draw the plot.
 
         Parameters
         ----------
@@ -122,7 +153,14 @@ class TracePlot:
 
     def set_traces(self, traces: Union[TraceLike, list[TraceLike]]) -> None:
         """
-        Sets the traces to be plotted.
+        Set the traces to be plotted.
+
+        Parameters
+        ----------
+        traces : Union[TraceLike, list[TraceLike]]
+            The traces to be plotted. Each trace must be a DirichletTrace or a
+            numpy.ndarray of the same length as the number of sampled boundary
+            points of the MeshCell.
         """
         if not isinstance(traces, list):
             traces = [traces]
@@ -144,21 +182,40 @@ class TracePlot:
 
     def set_format(self, fmt: Union[str, list[str]]) -> None:
         """
-        Sets the format string(s) used to plot the traces.
+        Set the format string(s) used to plot the traces.
+
+        Parameters
+        ----------
+        fmt : str or list of str
+            The format string(s) used to plot the traces. If a single string is
+            given, it is used for all traces. If a list of strings is given that
+            is the same length as traces, each string is used for the
+            corresponding trace.
         """
         self._validate_format(fmt)
         self.fmt = fmt
 
     def set_legend(self, legend: tuple) -> None:
         """
-        Sets the legend for the plot.
+        Set the legend for the plot.
+
+        Parameters
+        ----------
+        legend : tuple of str
+            The legend for the plot. Must be a tuple of strings of the same
+            length as traces.
         """
         self._validate_legend(legend)
         self.legend = legend
 
     def set_title(self, title: str) -> None:
         """
-        Sets the title for the plot.
+        Set the title for the plot.
+
+        Parameters
+        ----------
+        title : str
+            The title for the plot.
         """
         if not isinstance(title, str):
             raise TypeError("title must be a string")
@@ -166,7 +223,12 @@ class TracePlot:
 
     def set_grid(self, show_grid: bool) -> None:
         """
-        Sets whether or not to display a grid on the plot.
+        Set whether or not to display a grid on the plot.
+
+        Parameters
+        ----------
+        show_grid : bool
+            Whether or not to display a grid on the plot.
         """
         if not isinstance(show_grid, bool):
             raise TypeError("show_grid must be a boolean")
@@ -174,7 +236,12 @@ class TracePlot:
 
     def set_log_scale(self, log_scale: bool) -> None:
         """
-        Sets whether or not to use a log scale on the vertical axis.
+        Set whether or not to use a log scale on the vertical axis.
+
+        Parameters
+        ----------
+        log_scale : bool
+            Whether or not to use a log scale on the vertical axis.
         """
         if not isinstance(log_scale, bool):
             raise TypeError("log_scale must be a boolean")

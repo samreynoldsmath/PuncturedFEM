@@ -9,7 +9,7 @@ packages = [{include = "puncturedfem"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-deprecated = "^1.2.14"
+Deprecated = "^1.2.14"
 matplotlib = "^3.8.0"
 numba = "^0.59.1"
 numpy = "^1.26.0"
@@ -40,7 +40,6 @@ filterwarnings = ["error"]
 [tool.pylint."messages control"]
 max-line-length = 80
 disable = [
-    "fixme", # reenable to find TODO comments
     "duplicate-code", # mesh/edge libraries have similar code
     "invalid-name", # use good-names
     "too-many-branches", # split up functions
