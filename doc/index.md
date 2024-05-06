@@ -1,6 +1,15 @@
 # Punctured FEM
 
->**Note**: This documentation is a work in progress. Check back soon for updates!
+The PuncturedFEM package is a Python package for solving partial differential equations with nonstandard meshes.
 
-## Welcome!
-This is the documentation for the Punctured FEM project, a finite element method on meshes with curvilinear and multiply connected cells.
+## Quickstart
+Install the package with pip:
+```bash
+pip install puncturedfem
+```
+Check out some of the tutorials, such as the [Pac-Man mesh](src/examples/ex2.1-pacman-fem.ipynb).
+
+## Links
+- [Documentation](https://puncturedfem.readthedocs.io)
+- [Source code](https://github.com/samreynoldsmath/PuncturedFEM)
+- [PyPI package](https://pypi.org/project/puncturedfem/)

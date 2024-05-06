@@ -27,7 +27,6 @@ These are features that are planned for the future, but are not yet implemented.
 ### Maintenance
 - [ ] fix disabled pylint messages
 - [ ] `LocalFunction` improvements:
-  - [ ] interior value interpolation for points close to the boundary
   - [ ] replace the default handling of traces in `LocalFunction` class with `DirichletTrace` improvements:
   - [ ] reduce redundant/duplicate code in computation of logarithmic terms,
   especially anti-Laplacians of logarithmic functions

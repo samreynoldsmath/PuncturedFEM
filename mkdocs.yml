@@ -32,7 +32,9 @@ plugins:
   - search
   - mkdocs-jupyter:
       execute: false
+      # include_source: True
       include: ["*.ipynb"]
+      ignore: ["examples/Spacefilling.ipynb"]
   - mkdocstrings:
       handlers:
         # See: https://mkdocstrings.github.io/python/usage/
@@ -71,14 +73,15 @@ nav:
     - 'Changelog': CHANGELOG.md
     - 'Contributing': CONTRIBUTING.md
   - 'Tutorials':
-      - src/examples/ex0a-mesh-building.ipynb
-      - src/examples/ex0b-trace.ipynb
-      - src/examples/ex1a-square-hole.ipynb
-      - src/examples/ex1b-pacman.ipynb
-      - src/examples/ex1c-ghost.ipynb
-      - src/examples/ex1d-hat-tile.ipynb
-      - src/examples/ex1e-heavy-sampling.ipynb
-      - src/examples/ex2-pacman-fem.ipynb
+      - src/examples/ex0.1-mesh-building.ipynb
+      - src/examples/ex0.2-trace.ipynb
+  - 'Examples':
+      - src/examples/ex1.1-square-hole.ipynb
+      - src/examples/ex1.2-pacman.ipynb
+      - src/examples/ex1.3-ghost.ipynb
+      - src/examples/ex1.4-hat-tile.ipynb
+      - src/examples/ex1.5-heavy-sampling.ipynb
+      - src/examples/ex2.1-pacman-fem.ipynb
   - 'Mesh':
     - 'ClosedContour': src/mesh/closed_contour.md
     - 'Edge': src/mesh/edge.md

@@ -2,6 +2,8 @@
 
 
 ## [Unreleased]
+### Features
+- [ ] interior value interpolation for points close to the boundary
 ### Examples
 - [x] remove import management boilerplate from examples
 ### Documentation
@@ -16,6 +18,7 @@
     - [x] `util`
 - [x] change: MkDocs theme to `material`
 - [x] add: site logo
+- [ ] update `doc/logo/pacman.svg`
 
 
 ## [v0.4.5] - 2024 Apr 24

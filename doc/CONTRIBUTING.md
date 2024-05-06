@@ -149,7 +149,6 @@ This step ensures that users will be able to find information about how to use t
 - Add the new file to the `nav` section of `mkdocs.yml`
 - If you are contributing to the documentation, you can use [MkDocs](https://www.mkdocs.org/) to preview your changes:
   ```bash
-  mkdocs build
   mkdocs serve
   ```
 - Open a web browser and navigate to `http://127.0.0.1:8000/` to preview the documentation
