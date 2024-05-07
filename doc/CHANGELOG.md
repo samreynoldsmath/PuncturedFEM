@@ -4,6 +4,11 @@
 ## [Unreleased]
 ### Features
 - [ ] interior value interpolation for points close to the boundary
+    - [ ] change: `LocalFunctionPlot`
+    - [ ] change: `GlobalFunctionPlot`
+- [ ] `MeshPlot` improvements:
+    - [ ] add: plot interior points with `draw_interior_points()` method
+    - [ ] add: plot interior point triangulation with `draw_interior_triangulation()` method
 ### Examples
 - [x] remove import management boilerplate from examples
 - [x] change example naming convention
