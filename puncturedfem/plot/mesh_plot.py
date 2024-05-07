@@ -155,7 +155,7 @@ class MeshPlot:
             self._plot_edge(edge, self.show_orientation)
 
     def _plot_edge(self, edge: Edge, show_orientation: bool) -> None:
-        x, y = edge.get_sampled_points()
+        x, y = edge.get_sampled_points(ignore_endpoint=False)
         if show_orientation:
             self._plot_oriented_edge_points(x, y)
         else:
