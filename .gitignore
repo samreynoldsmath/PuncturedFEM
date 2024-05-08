@@ -18,10 +18,9 @@ pyvenv.cfg
 
 # FILE TYPES
 *.html
-*.pdf
-*.png
-*.eps
-*DEP.py
+
+# Output from examples
+examples/out/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
