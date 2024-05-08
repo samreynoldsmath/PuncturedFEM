@@ -6,10 +6,8 @@ edit_uri: edit/main/doc
 theme:
   name: material
   logo: logo/ghost.png
-  favicon: logo/ghost.png
+  favicon: logo/ghost_180x180.png
   highlightjs: true
-  features:
-    - content.action.view
   features:
     - content.code.copy
   palette:
