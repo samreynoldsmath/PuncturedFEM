@@ -2,19 +2,14 @@
 
 
 ## [Unreleased]
-### Features
-- [ ] interior value interpolation for points close to the boundary
-    - [ ] change: `LocalFunctionPlot`
-    - [ ] change: `GlobalFunctionPlot`
-- [ ] `MeshPlot` improvements:
-    - [ ] add: plot interior points with `draw_interior_points()` method
-    - [ ] add: plot interior point triangulation with `draw_interior_triangulation()` method
 ### Examples
 - [x] remove import management boilerplate from examples
 - [x] change example naming convention
+- [ ] partition examples into tutorials and examples
+    - [ ] tutorials belong to the user guide in `doc/tutorials/`: describe basic functionality
+    - [ ] examples belong to the `examples/` directory: examples used (or will be used) in papers, advanced functionality, applications
 ### Documentation
 - [x] change: installation instructions for developers to build the package locally with `pip install -e .`
-- [ ] add: table of contents
 - [x] add: tutorials
 - [x] change: update docstrings to use NumPy documentation format
     - [x] `locfun`
@@ -25,6 +20,31 @@
 - [x] change: MkDocs theme to `material`
 - [x] add: site logo
 - [ ] update `doc/logo/pacman.svg`
+- [ ] tutorials
+    - [ ] Guide to tutorials
+    - [ ] Meshes
+        - [ ] 1.1 Vertices and edges (taken from Example 0.1)
+        - [ ] 1.2 Mesh cells and planar meshes (taken from Example 0.1)
+    - [ ] Local function spaces
+        - [ ] 2.2 Traces (taken from Example 0.2)
+        - [ ] 2.5 Heavy sampling of edges (taken from Example 1.5)
+- [ ] run tutorial notebooks when building documentation
+- [ ] link to notebook source on tutorial pages
+- [ ] link to tutorial pages from README
+### Maintenance
+- [ ] `MeshPlot` improvements:
+    - [ ] add: plot interior points with `draw_interior_points()` method
+    - [ ] add: plot interior point triangulation with `draw_interior_triangulation()` method
+- [ ] `LocalFunctionPlot` improvements:
+    - [ ] treat plot of local function as a special case of global function with a single cell
+- [ ] `GlobalFunctionPlot` improvements:
+    - [ ] interior value interpolation for points close to the boundary
+    - [ ] consolidate the multiple draw methods into one, optional argument to specify what to draw (values, gradient, etc.)
+### Bug Fixes
+- [x] fix: missing logo and favicon in MkDocs build
+- [ ] fix: broken links in examples
+- [ ] fix: broken links in tutorials
+- [ ] fix: `align*` blocks not rendering in tutorials when building documentation
 
 
 ## [v0.4.5] - 2024 Apr 24
