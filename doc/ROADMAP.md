@@ -1,12 +1,45 @@
 # Roadmap
 
-
-## Planned Features and Improvements
+## [v0.5.0] - coming soon
 
 ### Features
+- [ ] `PlanarMesh` file I/O
+  - [ ] save and load `PlanarMesh` objects to/from file
+  - [ ] convert `svg` files to meshes
 - [ ] new system for defining `Edge` objects
   - [ ] each edge is one of three types: line, spline, or symbolic (using `sympy`)
   - [ ] update examples to reflect new edge system
+- [ ] `Quad` improvements:
+  - [ ] deprecate `QuadDict` class and `get_quad_dict()` function
+  - [ ] use `Quad` class to store all three types of quadrature rules
+
+### Documentation
+- [ ] tutorials
+    - [ ] Local function spaces
+        - [ ] 2.1 Polynomials
+        - [ ] 2.3 Local functions (simpler version of Example 1.1)
+        - [ ] 2.4 Local function spaces
+    - [ ] FEM solver
+        - [ ] 3.1 Global function spaces (simpler version of Example 2.1)
+        - [ ] 3.2 Global boundary conditions
+
+### Maintenance
+- [ ] `PlanarMesh` improvements:
+  - [ ] deprecate mesh builder functions
+  - [ ] automatic identification of repeated cells in a mesh (up to scaling
+    and rigid motion)
+- [ ] `GlobalFunctionSpace` improvements:
+  - [ ] compute quantities of interest only on reference cells
+- [ ] `LocalFunction` improvements:
+  - [ ] move weighted normal and tangential derivatives into `DirichletTrace`
+  class, simplify the `LocalFunction` class
+  - [ ] replace the default handling of traces in `LocalFunction` class with `DirichletTrace`
+  - [ ] handle logarithmic functions as instances of `DirichletTrace` class
+  - [ ] move `jacobi_preconditioner()` static method of `NystromSolver` class to a separate module
+
+## Other Planned Features and Improvements
+
+### Features
 - [ ] global boundary conditions
     - [ ] define trace of a global function with `DirichletTrace` class
     - [ ] mixed Dirichlet/Neumann boundary conditions
@@ -25,23 +58,9 @@
 
 ### Documentation
 - [ ] add: mathematical background
-- [ ] tutorials
-    - [ ] Local function spaces
-        - [ ] 2.1 Polynomials
-        - [ ] 2.3 Local functions (simpler version of Example 1.1)
-        - [ ] 2.4 Local function spaces
-    - [ ] FEM solver
-        - [ ] 3.1 Global function spaces (simpler version of Example 2.1)
-        - [ ] 3.2 Global boundary conditions
 
 ### Maintenance
 - [ ] fix disabled pylint messages
-- [ ] `LocalFunction` improvements:
-  - [ ] move weighted normal and tangential derivatives into `DirichletTrace`
-  class, simplify the `LocalFunction` class
-  - [ ] replace the default handling of traces in `LocalFunction` class with `DirichletTrace`
-  - [ ] handle logarithmic functions as instances of `DirichletTrace` class
-  - [ ] move `jacobi_preconditioner()` static method of `NystromSolver` class to a separate module
 - [ ] `Polynomial` improvements:
   - [ ] deprecate `PiecewisePolynomial` class
   - [ ] deprecate `eval()` method, use `__call__()` method instead
@@ -57,11 +76,6 @@
   - [ ] deprecate `is_zero()` method
 - [ ] `MultiIndex` improvements:
   - [ ] use `Tuple` instead of `List` to set multi-index
-- [ ] `PlanarMesh` improvements:
-  - [ ] save and load `PlanarMesh` objects to/from file
-  - [ ] deprecate mesh builder functions
-  - [ ] automatic identification of repeated cells in a mesh (up to scaling
-    and rigid motion)
   - [ ] set vertex and edge indices automatically
   - [ ] rename vertex and edge indices to something more descriptive (global mesh
   properties, not local to a cell)
@@ -69,9 +83,6 @@
   class
   - [ ] eliminate redundant calls to parameterize in `ClosedContour.parameterize()`
   separate module
-- [ ] `Quad` improvements:
-  - [ ] deprecate `QuadDict` class and `get_quad_dict()` function
-  - [ ] use `Quad` class to store all three types of quadrature rules
 
 ### Project Management
 - [ ] add: `.github/workflows/` directory for CI/CD
