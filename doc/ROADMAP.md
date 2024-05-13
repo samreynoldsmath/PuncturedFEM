@@ -25,17 +25,19 @@
 
 ### Maintenance
 - [ ] `PlanarMesh` improvements:
-  - [ ] deprecate mesh builder functions
+  - [ ] deprecate mesh builder functions in favor of file I/O system
+  - [ ] automatic identification of repeated edges
   - [ ] automatic identification of repeated cells in a mesh (up to scaling
     and rigid motion)
-- [ ] `GlobalFunctionSpace` improvements:
-  - [ ] compute quantities of interest only on reference cells
-- [ ] `LocalFunction` improvements:
-  - [ ] move weighted normal and tangential derivatives into `DirichletTrace`
-  class, simplify the `LocalFunction` class
-  - [ ] replace the default handling of traces in `LocalFunction` class with `DirichletTrace`
-  - [ ] handle logarithmic functions as instances of `DirichletTrace` class
-  - [ ] move `jacobi_preconditioner()` static method of `NystromSolver` class to a separate module
+- [ ] `LocalFunctionPlot` improvements:
+    - [ ] treat plot of local function as a special case of global function with a single cell
+- [ ] `GlobalFunctionPlot` improvements:
+    - [ ] interior value interpolation for points close to the boundary
+    - [ ] consolidate the multiple draw methods into one, optional argument to specify what to draw (values, gradient, etc.)
+- [ ] `MeshPlot` improvements:
+    - [ ] change: initialize with either a list of `Edge` objects, a `MeshCell`, or a `PlanarMesh`
+    - [ ] add: plot interior points with `draw_interior_points()` method
+    - [ ] add: plot interior point triangulation with `draw_interior_triangulation()` method
 
 ## Other Planned Features and Improvements
 
@@ -125,6 +127,7 @@
 - [ ] shape optimization
 
 ### Maintenance
+- [ ] automatic identification of cells (user does not need to specify cell indices when creating an `Edge` object)
 - [ ] allow sampling parameter `n` to have different values for different edges
 - [ ] type validation with `pydantic`
 - [ ] add logging with `logging` module
