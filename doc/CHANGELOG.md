@@ -32,9 +32,9 @@
 - [ ] link to notebook source on tutorial pages
 - [ ] link to tutorial pages from README
 ### Maintenance
-- [ ] `DirichletTrace` improvements:
-    - [ ] add: weighted normal derivative
-    - [ ] add: weighted tangential derivative
+- [x] `DirichletTrace` improvements:
+    - [x] add: weighted normal derivative
+    - [x] add: weighted tangential derivative
 - [ ] `LocalFunction` improvements:
   - [ ] replace the handling of traces with `DirichletTrace`
 - [ ] `NystromSolver` improvements:
