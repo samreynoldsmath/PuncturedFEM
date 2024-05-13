@@ -35,8 +35,8 @@
 - [x] `DirichletTrace` improvements:
     - [x] add: weighted normal derivative
     - [x] add: weighted tangential derivative
-- [ ] `LocalFunction` improvements:
-  - [ ] replace the handling of traces with `DirichletTrace`
+- [x] `LocalFunction` improvements:
+  - [x] replace the handling of traces with `DirichletTrace`
 - [ ] `NystromSolver` improvements:
   - [ ] move `jacobi_preconditioner()` static method to a separate module
   - [ ] handle logarithmic functions as instances of `DirichletTrace` class
