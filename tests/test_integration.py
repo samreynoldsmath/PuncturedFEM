@@ -12,7 +12,7 @@ import numpy as np
 
 import puncturedfem as pf
 
-from .build_cell import build_circle, build_square, build_punctured_square
+from .build_cell import build_circle, build_punctured_square, build_square
 
 TOL = 1e-10
 

@@ -6,8 +6,8 @@ Test the solver class.
 """
 
 import numpy as np
-import puncturedfem as pf
 
+import puncturedfem as pf
 
 TOL = 1e-12
 
