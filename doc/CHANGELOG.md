@@ -39,8 +39,8 @@
 - [x] `LocalFunction` improvements:
   - [x] BREAKING CHANGE: replace the handling of traces with `DirichletTrace`
 - [ ] `NystromSolver` improvements:
+  - [x] BREAKING CHANGE: handle logarithmic functions as instances of `DirichletTrace` class
   - [ ] move `jacobi_preconditioner()` static method to a separate module
-  - [ ] handle logarithmic functions as instances of `DirichletTrace` class
 - [ ] refactor `GlobalFunctionSpace`:
   - [ ] build from a collection of `GlobalFunction` objects, just like `LocalFunctionSpace` is built from a collection of `LocalFunction` objects
   - [ ] precompute `LocalFunctionSpace` objects
