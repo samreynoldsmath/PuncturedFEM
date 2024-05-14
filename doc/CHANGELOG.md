@@ -37,14 +37,22 @@
     - [x] add: weighted normal derivative
     - [x] add: weighted tangential derivative
 - [x] `LocalFunction` improvements:
-  - [x] replace the handling of traces with `DirichletTrace`
+  - [x] BREAKING CHANGE: replace the handling of traces with `DirichletTrace`
 - [ ] `NystromSolver` improvements:
   - [ ] move `jacobi_preconditioner()` static method to a separate module
   - [ ] handle logarithmic functions as instances of `DirichletTrace` class
 - [ ] refactor `GlobalFunctionSpace`:
   - [ ] build from a collection of `GlobalFunction` objects, just like `LocalFunctionSpace` is built from a collection of `LocalFunction` objects
-  - [ ] compute `EdgeSpace` object only on reference edges
-  - [ ] compute quantities of interest only on reference cells
+  - [ ] precompute `LocalFunctionSpace` objects
+- [ ] `MeshPlot` improvements:
+    - [ ] change: initialize with either a list of `Edge` objects, a `MeshCell`, or a `PlanarMesh`
+    - [ ] add: plot interior points with `draw_interior_points()` method
+    - [ ] add: plot interior point triangulation with `draw_interior_triangulation()` method
+- [ ] `LocalFunctionPlot` improvements:
+    - [ ] treat plot of local function as a special case of global function with a single cell
+- [ ] `GlobalFunctionPlot` improvements:
+    - [ ] interior value interpolation for points close to the boundary
+    - [ ] consolidate the multiple draw methods into one, optional argument to specify what to draw (values, gradient, etc.)
 ### Bug Fixes
 - [x] fix: missing logo and favicon in MkDocs build
 - [ ] fix: broken links in examples

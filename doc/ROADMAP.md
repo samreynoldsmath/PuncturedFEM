@@ -1,19 +1,20 @@
 # Roadmap
 
-## [v0.5.0] - coming soon
+## [v0.6.0] - coming soon
 
 ### Features
 - [ ] `PlanarMesh` file I/O
   - [ ] save and load `PlanarMesh` objects to/from file
   - [ ] convert `svg` files to meshes
 - [ ] new system for defining `Edge` objects
-  - [ ] each edge is one of three types: line, spline, or symbolic (using `sympy`)
-  - [ ] update examples to reflect new edge system
-- [ ] `Quad` improvements:
-  - [ ] deprecate `QuadDict` class and `get_quad_dict()` function
-  - [ ] use `Quad` class to store all three types of quadrature rules
+  - [ ] curve type: line
+  - [ ] curve type: spline
+  - [ ] curve type: quadratic Bézier
+  - [ ] curve type: cubic Bézier
+  - [ ] curve type: symbolic (using `sympy`)
 
 ### Documentation
+- [ ] update examples and tutorials to reflect new edge system
 - [ ] tutorials
     - [ ] Local function spaces
         - [ ] 2.1 Polynomials
@@ -24,20 +25,22 @@
         - [ ] 3.2 Global boundary conditions
 
 ### Maintenance
+- [ ] `GlobalFunctionSpace` improvements:
+  - [ ] compute `EdgeSpace` objects only on reference edges
+  - [ ] compute quantities of interest only on reference cells
 - [ ] `PlanarMesh` improvements:
   - [ ] deprecate mesh builder functions in favor of file I/O system
   - [ ] automatic identification of repeated edges
   - [ ] automatic identification of repeated cells in a mesh (up to scaling
     and rigid motion)
-- [ ] `LocalFunctionPlot` improvements:
-    - [ ] treat plot of local function as a special case of global function with a single cell
-- [ ] `GlobalFunctionPlot` improvements:
-    - [ ] interior value interpolation for points close to the boundary
-    - [ ] consolidate the multiple draw methods into one, optional argument to specify what to draw (values, gradient, etc.)
-- [ ] `MeshPlot` improvements:
-    - [ ] change: initialize with either a list of `Edge` objects, a `MeshCell`, or a `PlanarMesh`
-    - [ ] add: plot interior points with `draw_interior_points()` method
-    - [ ] add: plot interior point triangulation with `draw_interior_triangulation()` method
+- [ ] refactor `Quad`:
+  - [ ] should be named `Quadrature` with sensible names for attributes
+  - [ ] use `Quadrature` class to store all three types of quadrature rules
+  - [ ] deprecate `QuadDict` class and `get_quad_dict()` function
+  - [ ] the casual user should not need to touch `Quadrature` objects directly
+
+### Project Management
+- [ ] add `sympy` to dependencies
 
 ## Other Planned Features and Improvements
 
