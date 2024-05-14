@@ -8,8 +8,8 @@ BilinearForm
 """
 
 from ..locfun.locfun import LocalFunction
-from ..locfun.poly.piecewise_poly import PiecewisePolynomial
 from ..locfun.poly.poly import Polynomial
+from ..locfun.trace import DirichletTrace
 
 
 class BilinearForm:
@@ -165,15 +165,11 @@ class BilinearForm:
         v : LocalFunction
             The LocalFunction object to evaluate f on
         """
-        m = len(v.poly_trace.polys)
-        poly_trace = PiecewisePolynomial(
-            num_polys=m,
-            polys=[self.rhs_poly for _ in range(len(v.poly_trace.polys))],
-        )
         f = LocalFunction(
             nyst=v.nyst,
-            lap_poly=self.rhs_poly.laplacian(),
-            poly_trace=poly_trace,
+            laplacian=self.rhs_poly.laplacian(),
+            trace=DirichletTrace(
+                edges=v.nyst.K.get_edges(), funcs=self.rhs_poly
+            ),
         )
-        f.compute_all()
         return f.get_l2_inner_prod(v)

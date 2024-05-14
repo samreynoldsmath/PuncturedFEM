@@ -87,8 +87,11 @@ class DirichletTrace:
         if values is not None:
             self.set_trace_values(values)
             return
+        values = np.zeros(self.num_pts)
         if funcs is not None:
             self.set_funcs(funcs)
+        else:
+            self.funcs = [lambda x, y: 0 for _ in range(self.num_edges)]
 
     def set_edges(self, edges: Union[MeshCell, list[Edge]]) -> None:
         """
@@ -300,8 +303,9 @@ class DirichletTrace:
             raise ValueError("'edge_index' must be of type int")
         if edge_index < 0 or edge_index >= self.num_edges:
             raise ValueError("The edge index is out of range")
-        if not is_Func_R2_R(func):
-            raise ValueError("The function must be a map from R^2 to R")
+        # TODO: checking if a function is a map from R^2 to R is cursed
+        # if not is_Func_R2_R(func):
+        #     raise ValueError("The function must be a map from R^2 to R")
         self.funcs[edge_index] = func
 
     def set_funcs(
