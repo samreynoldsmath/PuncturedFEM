@@ -258,7 +258,8 @@ class LocalFunctionPlot:
             interior_values=self.v.int_vals,
             show_plot=show_plot,
             filename=filename,
-            boundary_values=self.v.get_trace_values(),
+            boundary_values=self.v.harm_part_trace.values
+            + self.v.poly_part_trace.values,
             **kwargs
         )
 
