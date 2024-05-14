@@ -15,7 +15,7 @@ Notes
 
 import numpy as np
 
-from ...mesh.cell import MeshCell
+from ..mesh.cell import MeshCell
 from . import fft_deriv
 
 

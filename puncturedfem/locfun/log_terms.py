@@ -22,8 +22,8 @@ from functools import partial
 
 import numpy as np
 
-from ...mesh.cell import MeshCell
-from ...mesh.vert import Vert
+from ..mesh.cell import MeshCell
+from ..mesh.vert import Vert
 
 
 def shifted_coordinates(

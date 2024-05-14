@@ -15,7 +15,7 @@ from ..mesh.closed_contour import ClosedContour
 from ..mesh.edge import Edge
 from ..mesh.quad import Quad
 from . import precond
-from .d2n.trace2tangential import get_weighted_tangential_derivative_from_trace
+from .trace2tangential import get_weighted_tangential_derivative_from_trace
 from .trace import DirichletTrace
 
 

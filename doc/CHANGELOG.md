@@ -43,7 +43,7 @@
   - [x] move `jacobi_preconditioner()` static method to a separate module
 - [ ] `locfun` module improvements:
   - [ ] use `DirichletTrace` objects for traces in `antilap` module
-  - [ ] move contents of `antilap` and `d2n` subpackages to `locfun` root
+  - [x] move contents of `antilap` and `d2n` subpackages to `locfun` root
   - [ ] remove `log_terms` and `log_antilap` modules
 - [ ] refactor `GlobalFunctionSpace`:
   - [ ] build from a collection of `GlobalFunction` objects, just like `LocalFunctionSpace` is built from a collection of `LocalFunction` objects

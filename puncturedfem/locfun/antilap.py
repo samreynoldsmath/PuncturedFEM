@@ -10,10 +10,10 @@ _antilap_multiply_connected(K, psi, psi_hat, a)
 
 import numpy as np
 
-from ..d2n.fft_deriv import fft_antiderivative
-from ..d2n.log_terms import get_log_grad
-from ..nystrom import NystromSolver
 from . import log_antilap
+from .fft_deriv import fft_antiderivative
+from .log_terms import get_log_grad
+from .nystrom import NystromSolver
 
 
 def get_anti_laplacian_harmonic(

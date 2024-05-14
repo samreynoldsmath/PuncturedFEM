@@ -15,9 +15,9 @@ from functools import partial
 
 import numpy as np
 
-from ...mesh.cell import MeshCell
-from ...mesh.vert import Vert
-from .. import d2n
+from ..mesh.cell import MeshCell
+from ..mesh.vert import Vert
+from . import log_terms
 
 
 def get_log_antilap(K: MeshCell) -> np.ndarray:
@@ -91,7 +91,7 @@ def _log_antilap(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     np.ndarray
         Values of an anti-Laplacian of the logarithmic term.
     """
-    _, _, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x1, x2, xi)
+    _, _, x_xi_norm_sq = log_terms.shifted_coordinates(x1, x2, xi)
     return 0.125 * x_xi_norm_sq * (np.log(x_xi_norm_sq) - 2)
 
 
@@ -113,7 +113,7 @@ def _log_antilap_x1(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     np.ndarray
         x1 derivative of an anti-Laplacian of the logarithmic term.
     """
-    x1_xi, _, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x1, x2, xi)
+    x1_xi, _, x_xi_norm_sq = log_terms.shifted_coordinates(x1, x2, xi)
     return 0.25 * (np.log(x_xi_norm_sq) - 1) * x1_xi
 
 
@@ -135,5 +135,5 @@ def _log_antilap_x2(x1: np.ndarray, x2: np.ndarray, xi: Vert) -> np.ndarray:
     np.ndarray
         x2 derivative of an anti-Laplacian of the logarithmic term.
     """
-    _, x2_xi, x_xi_norm_sq = d2n.log_terms.shifted_coordinates(x1, x2, xi)
+    _, x2_xi, x_xi_norm_sq = log_terms.shifted_coordinates(x1, x2, xi)
     return 0.25 * (np.log(x_xi_norm_sq) - 1) * x2_xi

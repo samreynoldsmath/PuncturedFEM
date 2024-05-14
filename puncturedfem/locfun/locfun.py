@@ -14,7 +14,7 @@ import numpy as np
 
 from ..solver.globkey import GlobalKey
 from ..util.types import FloatLike
-from . import antilap, d2n
+from . import antilap, log_terms, trace2tangential
 from .nystrom import NystromSolver
 from .poly.integrate_poly import integrate_poly_over_mesh
 from .poly.poly import Polynomial
@@ -272,17 +272,17 @@ class LocalFunction:
 
     def _compute_harmonic_weighted_normal_derivative(self) -> None:
         harm_part_wnd = (
-            d2n.trace2tangential.get_weighted_tangential_derivative_from_trace(
+            trace2tangential.get_weighted_tangential_derivative_from_trace(
                 self.nyst.K, self.harm_conj_trace.values
             )
         )
-        lam_x1, lam_x2 = d2n.log_terms.get_log_grad(self.nyst.K)
-        lam_wnd = d2n.log_terms.get_dlam_dn_wgt(self.nyst.K, lam_x1, lam_x2)
+        lam_x1, lam_x2 = log_terms.get_log_grad(self.nyst.K)
+        lam_wnd = log_terms.get_dlam_dn_wgt(self.nyst.K, lam_x1, lam_x2)
         harm_part_wnd += lam_wnd @ self.log_coef
         self.harm_part_trace.set_weighted_normal_derivative(harm_part_wnd)
 
     def _get_conjugable_part(self) -> np.ndarray:
-        lam = d2n.log_terms.get_log_trace(self.nyst.K)
+        lam = log_terms.get_log_trace(self.nyst.K)
         phi = self.harm_part_trace.values
         return phi - lam @ self.log_coef
 
@@ -292,7 +292,7 @@ class LocalFunction:
         (
             big_phi,
             big_phi_wnd,
-        ) = antilap.antilap.get_anti_laplacian_harmonic(
+        ) = antilap.get_anti_laplacian_harmonic(
             self.nyst, psi, psi_hat, a=np.array(self.log_coef)
         )
         self.biharmonic_trace = DirichletTrace(
