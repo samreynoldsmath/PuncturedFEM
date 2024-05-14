@@ -14,7 +14,7 @@ import numpy as np
 
 from ..solver.globkey import GlobalKey
 from ..util.types import FloatLike
-from . import antilap, log_terms, trace2tangential
+from . import antilap, trace2tangential
 from .nystrom import NystromSolver
 from .poly.integrate_poly import integrate_poly_over_mesh
 from .poly.poly import Polynomial
@@ -276,15 +276,15 @@ class LocalFunction:
                 self.nyst.K, self.harm_conj_trace.values
             )
         )
-        lam_x1, lam_x2 = log_terms.get_log_grad(self.nyst.K)
-        lam_wnd = log_terms.get_dlam_dn_wgt(self.nyst.K, lam_x1, lam_x2)
-        harm_part_wnd += lam_wnd @ self.log_coef
+        for j in range(self.nyst.K.num_holes):
+            harm_part_wnd += self.log_coef[j] * self.nyst.lam_trace[j].w_norm_deriv
         self.harm_part_trace.set_weighted_normal_derivative(harm_part_wnd)
 
     def _get_conjugable_part(self) -> np.ndarray:
-        lam = log_terms.get_log_trace(self.nyst.K)
-        phi = self.harm_part_trace.values
-        return phi - lam @ self.log_coef
+        lam = np.zeros((self.nyst.K.num_pts,))
+        for j in range(self.nyst.K.num_holes):
+            lam += self.log_coef[j] * self.nyst.lam_trace[j].values
+        return self.harm_part_trace.values - lam
 
     def _compute_biharmonic(self) -> None:
         psi = self._get_conjugable_part()

@@ -10,9 +10,7 @@ _antilap_multiply_connected(K, psi, psi_hat, a)
 
 import numpy as np
 
-from . import log_antilap
 from .fft_deriv import fft_antiderivative
-from .log_terms import get_log_grad
 from .nystrom import NystromSolver
 
 
@@ -105,9 +103,19 @@ def _antilap_multiply_connected(
     b /= -2 * np.pi
     c /= 2 * np.pi
 
+    # boundary points
+    x1, x2 = K.get_boundary_points()
+
     # compute mu_j and hat_mu_j
-    mu, mu_hat = get_log_grad(K)
-    mu_hat *= -1
+    mu = np.zeros((K.num_pts, K.num_holes))
+    mu_hat = np.zeros((K.num_pts, K.num_holes))
+    for j in range(K.num_holes):
+        xi = K.components[j + 1].interior_point
+        y1 = x1 - xi.x
+        y2 = x2 - xi.y
+        y_norm_sq = y1**2 + y2**2
+        mu[:, j] = y1 / y_norm_sq
+        mu_hat[:, j] = -y2 / y_norm_sq
 
     # compute psi_0 and hat_psi_0
     psi_0 = psi - (mu @ b - mu_hat @ c)
@@ -124,35 +132,40 @@ def _antilap_multiply_connected(
     rho_hat_0 = nyst.solve_neumann_zero_average(rho_hat_wnd_0)
 
     # compute anti-Laplacian of psi_0
-    x1, x2 = K.get_boundary_points()
-
     PHI = 0.25 * (x1 * rho_0 + x2 * rho_hat_0)
     PHI_x1 = 0.25 * (rho_0 + x1 * psi_0 + x2 * psi_hat_0)
     PHI_x2 = 0.25 * (rho_hat_0 + x2 * psi_0 - x1 * psi_hat_0)
     PHI_nd = K.dot_with_normal(PHI_x1, PHI_x2)
     PHI_wnd = K.multiply_by_dx_norm(PHI_nd)
 
-    # compute M = sum_j M_j
+    # anti-Laplacians of rational and logarithmic terms
     for j in range(K.num_holes):
+
+        # shift coordinates
         xi = K.components[j + 1].interior_point
-        x_xi_1 = np.array(x1 - xi.x)
-        x_xi_2 = np.array(x2 - xi.y)
-        x_xi_norm_sq = x_xi_1**2 + x_xi_2**2
-        log_x_xi_norm = 0.5 * np.log(x_xi_norm_sq)
-        PHI += 0.5 * (b[j] * x_xi_1 + c[j] * x_xi_2) * log_x_xi_norm
+        y1 = np.array(x1 - xi.x)
+        y2 = np.array(x2 - xi.y)
+        y_norm_sq = y1**2 + y2**2
+        log_y_norm_sq = 0.5 * np.log(y_norm_sq)
+
+        # anti-Laplacian of rational terms
+        PHI += 0.5 * (b[j] * y1 + c[j] * y2) * log_y_norm_sq
         M_x1 = (
-            0.5 * (b[j] * mu[:, j] - c[j] * mu_hat[:, j]) * x_xi_1
-            + 0.5 * b[j] * log_x_xi_norm
+            0.5 * (b[j] * mu[:, j] - c[j] * mu_hat[:, j]) * y1
+            + 0.5 * b[j] * log_y_norm_sq
         )
         M_x2 = (
-            0.5 * (b[j] * mu[:, j] - c[j] * mu_hat[:, j]) * x_xi_2
-            + 0.5 * c[j] * log_x_xi_norm
+            0.5 * (b[j] * mu[:, j] - c[j] * mu_hat[:, j]) * y2
+            + 0.5 * c[j] * log_y_norm_sq
         )
         M_nd = K.dot_with_normal(M_x1, M_x2)
         PHI_wnd += K.multiply_by_dx_norm(M_nd)
 
-    # compute Lambda_j
-    PHI += log_antilap.get_log_antilap(K) @ a
-    PHI_wnd += log_antilap.get_log_antilap_weighted_normal_derivative(K) @ a
+        # anti-Laplacian of log terms
+        PHI += 0.125 * a[j] * y_norm_sq * (log_y_norm_sq - 2)
+        LAM_x1 = 0.25 * (log_y_norm_sq - 1) * y1
+        LAM_x2 = 0.25 * (log_y_norm_sq - 1) * y2
+        normal_deriv = K.dot_with_normal(LAM_x1, LAM_x2)
+        PHI_wnd += K.multiply_by_dx_norm(normal_deriv)
 
     return PHI, PHI_wnd
