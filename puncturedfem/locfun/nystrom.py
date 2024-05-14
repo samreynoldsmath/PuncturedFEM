@@ -6,8 +6,6 @@ Classes
 NystromSolver
 """
 
-from typing import Optional
-
 import numba
 import numpy as np
 from scipy.sparse.linalg import LinearOperator, gmres
@@ -16,6 +14,7 @@ from ..mesh.cell import MeshCell
 from ..mesh.closed_contour import ClosedContour
 from ..mesh.edge import Edge
 from ..mesh.quad import Quad
+from . import precond
 from .d2n.trace2tangential import get_weighted_tangential_derivative_from_trace
 from .trace import DirichletTrace
 
@@ -75,7 +74,7 @@ class NystromSolver:
     def __init__(
         self,
         K: MeshCell,
-        precond_type: Optional[str] = "jacobi",
+        precond_type: str = "jacobi",
         verbose: bool = False,
         debug: bool = False,
     ) -> None:
@@ -89,6 +88,8 @@ class NystromSolver:
         ----------
         K : MeshCell
             Mesh MeshCell
+        precond_type : str, optional
+            Preconditioner type, by default "jacobi"
         verbose : bool, optional
             Whether to print information about the Nyström Solver, by default
             False
@@ -300,7 +301,7 @@ class NystromSolver:
 
     # PRECONDITIONERS ########################################################
 
-    def build_preconditioners(self, precond_type: Optional[str]) -> None:
+    def build_preconditioners(self, precond_type: str = "jacobi") -> None:
         """
         Build a preconditioner for the Neumann problem.
 
@@ -315,45 +316,13 @@ class NystromSolver:
         - "jacobi": Jacobi preconditioner
         """
         if precond_type == "jacobi":
-            self.precond_simple = NystromSolver.jacobi_preconditioner(
-                self.A_simple
-            )
+            self.precond_simple = precond.jacobi_preconditioner(self.A_simple)
             if self.K.num_holes > 0:
-                self.precond_augment = NystromSolver.jacobi_preconditioner(
+                self.precond_augment = precond.jacobi_preconditioner(
                     self.A_augment
                 )
         else:
             raise ValueError("Invalid preconditioner type")
-
-    @staticmethod
-    def jacobi_preconditioner(A: LinearOperator) -> LinearOperator:
-        """
-        Get the Jacobi preconditioner for a linear operator A.
-
-        Parameters
-        ----------
-        A : LinearOperator
-            Linear operator A
-
-        Returns
-        -------
-        LinearOperator
-            Jacobi preconditioner for A
-        """
-        # Jacobi preconditioner
-        diagonals = np.zeros((A.shape[0],))
-        ei = np.zeros((A.shape[0],))
-        for i in range(A.shape[0]):
-            ei[i] = 1
-            diagonals[i] = np.dot(ei, A @ ei)
-            ei[i] = 0
-
-        # build preconditioner object
-        return LinearOperator(
-            dtype=float,
-            shape=A.shape,
-            matvec=lambda x: x / diagonals,
-        )
 
     # LOGARITHMIC TERMS #####################################################
     def compute_log_terms(self) -> None:
