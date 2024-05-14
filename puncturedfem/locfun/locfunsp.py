@@ -15,6 +15,7 @@ from ..solver.globkey import GlobalKey
 from .edge_space import EdgeSpace
 from .locfun import LocalFunction, Polynomial
 from .nystrom import NystromSolver
+from .trace import DirichletTrace
 
 
 class LocalFunctionSpace:
@@ -175,13 +176,14 @@ class LocalFunctionSpace:
             raise ValueError("processes must be a positive integer")
 
     def _compute_all_sequential(self, verbose: bool = True) -> None:
-        if verbose:
-            print("Computing function metadata...")
-            for v in tqdm(self.get_basis()):
-                v.compute_all()
-        else:
-            for v in self.get_basis():
-                v.compute_all()
+        # if verbose:
+        #     print("Computing function metadata...")
+        #     for v in tqdm(self.get_basis()):
+        #         v.compute_all()
+        # else:
+        #     for v in self.get_basis():
+        #         v.compute_all()
+        pass
 
     def _compute_all_parallel(
         self, verbose: bool = True, processes: int = 1
@@ -203,11 +205,11 @@ class LocalFunctionSpace:
         self.bubb_funs = []
         for k in range(num_bubb):
             v_key = GlobalKey(fun_type="bubb", bubb_space_idx=k)
-            v = LocalFunction(nyst=self.nyst, key=v_key)
             p = Polynomial()
             p.add_monomial_with_idx(coef=-1.0, idx=k)
-            v.set_laplacian_polynomial(p)
-            self.bubb_funs.append(v)
+            self.bubb_funs.append(
+                LocalFunction(nyst=self.nyst, laplacian=p, key=v_key)
+            )
 
     def build_vert_funs(self, edge_spaces: list[EdgeSpace]) -> None:
         """
@@ -241,11 +243,16 @@ class LocalFunctionSpace:
         # initialize list of vertex functions and set traces
         self.vert_funs = []
         for vert_key in vert_keys:
-            v = LocalFunction(nyst=self.nyst, key=vert_key)
+            polys = [Polynomial() for _ in range(self.nyst.K.num_edges)]
             for j, b in enumerate(edge_spaces):
                 for k in range(b.num_vert_funs):
                     if b.vert_fun_global_keys[k].vert_idx == vert_key.vert_idx:
-                        v.poly_trace.polys[j] = b.vert_fun_traces[k]
+                        polys[j] = b.vert_fun_traces[k]
+            v_trace = DirichletTrace(
+                edges=self.nyst.K.get_edges(),
+                funcs=polys,
+            )
+            v = LocalFunction(nyst=self.nyst, trace=v_trace, key=vert_key)
             self.vert_funs.append(v)
 
     def build_edge_funs(self, edge_spaces: list[EdgeSpace]) -> None:
@@ -271,15 +278,15 @@ class LocalFunctionSpace:
 
             # loop over Edge functions
             for k in range(b.num_edge_funs):
-                v_trace = b.edge_fun_traces[k]
-
-                # create harmonicLocalFunction
-                v = LocalFunction(nyst=self.nyst, key=b.edge_fun_global_keys[k])
-
-                # set Dirichlet data
-                v.poly_trace.polys[edge_idx] = v_trace
-
-                # add to list of Edge functions
+                polys = [Polynomial() for _ in range(self.nyst.K.num_edges)]
+                polys[edge_idx] = b.edge_fun_traces[k]
+                v_trace = DirichletTrace(
+                    edges=self.nyst.K.get_edges(),
+                    funcs=polys,
+                )
+                v = LocalFunction(
+                    nyst=self.nyst, trace=v_trace, key=b.edge_fun_global_keys[k]
+                )
                 self.edge_funs.append(v)
 
     def get_basis(self) -> list[LocalFunction]:

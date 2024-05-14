@@ -45,14 +45,7 @@ def test_int_val_ghost() -> None:
     v_laplacian = pf.Polynomial([(6.0, 1, 1), (2.0, 0, 0)])
 
     # store v as a local function object
-    v = pf.LocalFunction(nyst=nyst, lap_poly=v_laplacian, has_poly_trace=False)
-    v.set_trace_values(v_trace)
-
-    # compute quantities needed for integration
-    v.compute_all()
-
-    # interior values
-    v.compute_interior_values()
+    v = pf.LocalFunction(nyst, v_laplacian, v_trace, compute_int_grad=True)
 
     # computed values
     v_computed = v.int_vals

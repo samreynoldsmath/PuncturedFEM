@@ -38,8 +38,8 @@ def get_l2_and_h1_errors(
     """
     K.parameterize(quad_dict)
 
-    # set up solver
-    solver = pf.NystromSolver(K)
+    # set up Nystrom solver
+    nyst = pf.NystromSolver(K)
 
     # get the coordinates of sampled boundary points
     x1, x2 = K.get_boundary_points()
@@ -62,11 +62,7 @@ def get_l2_and_h1_errors(
     v_laplacian = pf.Polynomial([(12.0, 1, 1)])
 
     # create local function object
-    v = pf.LocalFunction(
-        nyst=solver, lap_poly=v_laplacian, has_poly_trace=False
-    )
-    v.set_trace_values(v_trace)
-    v.compute_all()
+    v = pf.LocalFunction(nyst, v_laplacian, v_trace)
 
     # trace of w
     w_trace = (
@@ -79,11 +75,7 @@ def get_l2_and_h1_errors(
     w_laplacian = pf.Polynomial([(8.0, 1, 0)])
 
     # declare w as local function object
-    w = pf.LocalFunction(
-        nyst=solver, lap_poly=w_laplacian, has_poly_trace=False
-    )
-    w.set_trace_values(w_trace)
-    w.compute_all()
+    w = pf.LocalFunction(nyst, w_laplacian, w_trace)
 
     # compute L^2 inner product
     l2_vw_exact = 1.39484950156676

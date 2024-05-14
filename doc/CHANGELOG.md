@@ -8,6 +8,7 @@
 - [ ] partition examples into tutorials and examples
     - [ ] tutorials belong to the user guide in `doc/tutorials/`: describe basic functionality
     - [ ] examples belong to the `examples/` directory: examples used (or will be used) in papers, advanced functionality, applications
+- [x] update examples to use new initialization method for `LocalFunction` objects
 ### Documentation
 - [x] change: installation instructions for developers to build the package locally with `pip install -e .`
 - [x] add: tutorials
@@ -32,23 +33,32 @@
 - [ ] link to notebook source on tutorial pages
 - [ ] link to tutorial pages from README
 ### Maintenance
-- [ ] `DirichletTrace` improvements:
-    - [ ] add: weighted normal derivative
-    - [ ] add: weighted tangential derivative
-- [ ] `LocalFunction` improvements:
-  - [ ] replace the handling of traces with `DirichletTrace`
+- [x] `DirichletTrace` improvements:
+    - [x] add: weighted normal derivative
+    - [x] add: weighted tangential derivative
+- [x] `LocalFunction` improvements:
+  - [x] BREAKING CHANGE: replace the handling of traces with `DirichletTrace`
 - [ ] `NystromSolver` improvements:
   - [ ] move `jacobi_preconditioner()` static method to a separate module
   - [ ] handle logarithmic functions as instances of `DirichletTrace` class
 - [ ] refactor `GlobalFunctionSpace`:
   - [ ] build from a collection of `GlobalFunction` objects, just like `LocalFunctionSpace` is built from a collection of `LocalFunction` objects
-  - [ ] compute `EdgeSpace` object only on reference edges
-  - [ ] compute quantities of interest only on reference cells
+  - [ ] precompute `LocalFunctionSpace` objects
+- [ ] `MeshPlot` improvements:
+    - [ ] change: initialize with either a list of `Edge` objects, a `MeshCell`, or a `PlanarMesh`
+    - [ ] add: plot interior points with `draw_interior_points()` method
+    - [ ] add: plot interior point triangulation with `draw_interior_triangulation()` method
+- [ ] `LocalFunctionPlot` improvements:
+    - [ ] treat plot of local function as a special case of global function with a single cell
+- [ ] `GlobalFunctionPlot` improvements:
+    - [ ] interior value interpolation for points close to the boundary
+    - [ ] consolidate the multiple draw methods into one, optional argument to specify what to draw (values, gradient, etc.)
 ### Bug Fixes
 - [x] fix: missing logo and favicon in MkDocs build
 - [ ] fix: broken links in examples
 - [ ] fix: broken links in tutorials
 - [ ] fix: `align*` blocks not rendering in tutorials when building documentation
+- [ ] `DirichletTrace` does not recompute traces when function changes
 
 ## [v0.4.5] - 2024 Apr 24
 ### Maintenance

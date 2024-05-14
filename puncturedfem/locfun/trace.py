@@ -20,11 +20,12 @@ class DirichletTrace:
     """
     Dirichlet trace.
 
-    This class is used to represent the trace of a LocalFunction on the
-    boundary of a MeshCell. The trace is represented as a list of edges, and
-    the values of the trace on the edges are stored in an array. The class also
-    contains methods to set the values of the trace and to evaluate the trace
-    on the edges.
+    This class is used to represent the trace of a LocalFunction on the boundary
+    of a MeshCell. The trace is represented as a list of edges, and the values
+    of the trace on the edges are stored in an array. The class also contains
+    methods to set the values of the trace and to evaluate the trace on the
+    edges. The weighted normal and tangential derivatives can also be set, but
+    must be computed separately.
 
     Attributes
     ----------
@@ -34,6 +35,10 @@ class DirichletTrace:
         The number of points on the edges.
     values : np.ndarray
         The values of the trace on the edges.
+    w_norm_deriv : Optional[np.ndarray]
+        The weighted normal derivatives of the trace on the edges.
+    w_tang_deriv : Optional[np.ndarray]
+        The weighted tangential derivatives of the trace on the edges.
     funcs : list[Func_R2_R]
         The functions used to define the trace.
     edge_sampled_indices : list[tuple[int, int]]
@@ -44,6 +49,8 @@ class DirichletTrace:
     num_edges: int
     num_pts: int
     values: np.ndarray
+    w_norm_deriv: Optional[np.ndarray]
+    w_tang_deriv: Optional[np.ndarray]
     funcs: list[Func_R2_R]
     edge_sampled_indices: list[tuple[int, int]]
 
@@ -80,8 +87,11 @@ class DirichletTrace:
         if values is not None:
             self.set_trace_values(values)
             return
+        values = np.zeros(self.num_pts)
         if funcs is not None:
             self.set_funcs(funcs)
+        else:
+            self.funcs = [lambda x, y: 0 for _ in range(self.num_edges)]
 
     def set_edges(self, edges: Union[MeshCell, list[Edge]]) -> None:
         """
@@ -135,21 +145,20 @@ class DirichletTrace:
         """
         if edge_index < 0 or edge_index >= self.num_edges:
             raise ValueError("The edge index is out of range")
-        edge = self.edges[edge_index]
-        if isinstance(values, (int, float)):
-            start, end = self.edge_sampled_indices[edge_index]
-            self.values[start:end] = values
-            return
-        if not isinstance(values, np.ndarray):
-            raise ValueError(
-                "'values' must be of type int, float, or np.ndarray"
-            )
-        if values.shape[0] != edge.num_pts - 1:
-            raise ValueError(
-                "The number of values must match the number of points"
-            )
+        num_edge_pts = self.edges[edge_index].num_pts
+        self._validate_values_on_edge(values, num_edge_pts - 1)
         start, end = self.edge_sampled_indices[edge_index]
         self.values[start:end] = values
+
+    def _validate_values_on_edge(self, values: FloatLike, num_pts: int) -> None:
+        if isinstance(values, (int, float)):
+            return
+        if not isinstance(values, np.ndarray):
+            raise ValueError("'values' to be set on edge must be FloatLike")
+        if values.shape[0] != num_pts:
+            raise ValueError(
+                "The number of values must match the number of points on edge"
+            )
 
     def set_trace_values(
         self, values: Union[FloatLike, list[FloatLike]]
@@ -159,21 +168,30 @@ class DirichletTrace:
 
         Parameters
         ----------
-        values : FloatLike
+        values : FloatLike or list[FloatLike]
             The values of the trace on the edges. If a scalar, the same value
             is set on all edges. If a list, the length must be equal to the
             number of edges. If an np.ndarray, the shape must be equal to the
             number of points on the edges.
         """
+        values = self._convert_values_to_list_floatlike(values)
+        self.values = np.zeros(self.num_pts)
+        for k in range(self.num_edges):
+            self.set_trace_values_on_edge(k, values[k])
+
+    def _convert_values_to_list_floatlike(
+        self, values: Union[FloatLike, list[FloatLike]]
+    ) -> list[FloatLike]:
         if isinstance(values, (int, float)):
-            values = np.zeros(self.num_pts) + values
+            return [values for _ in range(self.num_edges)]
         if isinstance(values, np.ndarray):
             if values.shape[0] != self.num_pts:
                 raise ValueError(
                     "The number of values must match the number of points"
                 )
-            self.values = values
-            return
+            return [
+                values[start:end] for start, end in self.edge_sampled_indices
+            ]
         if not isinstance(values, list):
             raise ValueError(
                 "'values' must be of type int, float, or np.ndarray or a list "
@@ -184,9 +202,91 @@ class DirichletTrace:
                 "'values' must be a scalar or a list of values of length "
                 "equal to the number of edges"
             )
-        self.values = np.zeros(self.num_pts)
+        raise ValueError("values must be FloatLike or list[FloatLike]")
+
+    def set_weighted_normal_derivative_on_edge(
+        self, edge_index: int, wnd: FloatLike
+    ) -> None:
+        """
+        Set the weighted normal derivative of the trace on a specific edge.
+
+        Parameters
+        ----------
+        edge_index : int
+            The index of the edge on which the weighted normal derivative is
+            set.
+        wnd : FloatLike
+            The weighted normal derivative of the trace on the edge.
+        """
+        if edge_index < 0 or edge_index >= self.num_edges:
+            raise ValueError("The edge index is out of range")
+        num_edge_pts = self.edges[edge_index].num_pts
+        self._validate_values_on_edge(wnd, num_edge_pts - 1)
+        start, end = self.edge_sampled_indices[edge_index]
+        if self.w_norm_deriv is None:
+            self.w_norm_deriv = np.zeros(self.num_pts)
+        self.w_norm_deriv[start:end] = wnd
+
+    def set_weighted_normal_derivative(
+        self, wnd: Union[FloatLike, list[FloatLike]]
+    ) -> None:
+        """
+        Set the weighted normal derivatives of the trace on all edges.
+
+        Parameters
+        ----------
+        wnd : FloatLike or list[FloatLike]
+            The weighted normal derivatives of the trace on the edges. If a
+            scalar, the same value is set on all edges. If a list, the length
+            must be equal to the number of edges. If an np.ndarray, the shape
+            must be equal to the number of points on the edges.
+        """
+        wnd = self._convert_values_to_list_floatlike(wnd)
+        self.w_norm_deriv = np.zeros(self.num_pts)
         for k in range(self.num_edges):
-            self.set_trace_values_on_edge(k, values[k])
+            self.set_weighted_normal_derivative_on_edge(k, wnd[k])
+
+    def set_weighted_tangential_derivative_on_edge(
+        self, edge_index: int, wtd: FloatLike
+    ) -> None:
+        """
+        Set the weighted tangential derivative of the trace on a specific edge.
+
+        Parameters
+        ----------
+        edge_index : int
+            The index of the edge on which the weighted tangential derivative is
+            set.
+        wtd : FloatLike
+            The weighted tangential derivative of the trace on the edge.
+        """
+        if edge_index < 0 or edge_index >= self.num_edges:
+            raise ValueError("The edge index is out of range")
+        num_edge_pts = self.edges[edge_index].num_pts
+        self._validate_values_on_edge(wtd, num_edge_pts - 1)
+        start, end = self.edge_sampled_indices[edge_index]
+        if self.w_tang_deriv is None:
+            self.w_tang_deriv = np.zeros(self.num_pts)
+        self.w_tang_deriv[start:end] = wtd
+
+    def set_weighted_tangential_derivative(
+        self, wtd: Union[FloatLike, list[FloatLike]]
+    ) -> None:
+        """
+        Set the weighted tangential derivatives of the trace on all edges.
+
+        Parameters
+        ----------
+        wtd : FloatLike or list[FloatLike]
+            The weighted tangential derivatives of the trace on the edges. If a
+            scalar, the same value is set on all edges. If a list, the length
+            must be equal to the number of edges. If an np.ndarray, the shape
+            must be equal to the number of points on the edges.
+        """
+        wtd = self._convert_values_to_list_floatlike(wtd)
+        self.w_tang_deriv = np.zeros(self.num_pts)
+        for k in range(self.num_edges):
+            self.set_weighted_tangential_derivative_on_edge(k, wtd[k])
 
     def set_func_on_edge(self, edge_index: int, func: Func_R2_R) -> None:
         """
@@ -203,8 +303,9 @@ class DirichletTrace:
             raise ValueError("'edge_index' must be of type int")
         if edge_index < 0 or edge_index >= self.num_edges:
             raise ValueError("The edge index is out of range")
-        if not is_Func_R2_R(func):
-            raise ValueError("The function must be a map from R^2 to R")
+        # TODO: checking if a function is a map from R^2 to R is cursed
+        # if not is_Func_R2_R(func):
+        #     raise ValueError("The function must be a map from R^2 to R")
         self.funcs[edge_index] = func
 
     def set_funcs(

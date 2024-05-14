@@ -7,7 +7,6 @@ Tests for the edge_space module.
 
 import puncturedfem as pf
 
-
 MAX_DEG = 3
 
 
