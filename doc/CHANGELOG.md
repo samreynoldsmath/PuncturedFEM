@@ -39,7 +39,7 @@
 - [x] `LocalFunction` improvements:
   - [x] BREAKING CHANGE: replace the handling of traces with `DirichletTrace`
 - [x] `NystromSolver` improvements:
-  - [x] BREAKING CHANGE: handle logarithmic functions as instances of `DirichletTrace` class
+  - [x] handle logarithmic functions as instances of `DirichletTrace` class
   - [x] move `jacobi_preconditioner()` static method to a separate module
 - [x] `locfun` module improvements:
   - [x] use `DirichletTrace` objects for traces in `antilap` module
