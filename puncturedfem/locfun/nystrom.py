@@ -6,8 +6,6 @@ Classes
 NystromSolver
 """
 
-from typing import Optional
-
 import numba
 import numpy as np
 from scipy.sparse.linalg import LinearOperator, gmres
@@ -16,8 +14,9 @@ from ..mesh.cell import MeshCell
 from ..mesh.closed_contour import ClosedContour
 from ..mesh.edge import Edge
 from ..mesh.quad import Quad
-from .d2n import log_terms
-from .d2n.trace2tangential import get_weighted_tangential_derivative_from_trace
+from . import precond
+from .trace2tangential import get_weighted_tangential_derivative_from_trace
+from .trace import DirichletTrace
 
 
 class NystromSolver:
@@ -41,16 +40,8 @@ class NystromSolver:
         Double layer operator
     double_layer_sum : np.ndarray
         Sum of the double layer operator matrix
-    lam_trace : np.ndarray
-        Trace of the logarithmic terms
-    lam_x1_trace : np.ndarray
-        Gradient of the logarithmic terms in the x1 direction
-    lam_x2_trace : np.ndarray
-        Gradient of the logarithmic terms in the x2 direction
-    dlam_dt_wgt : np.ndarray
-        Weighted tangential derivatives of the logarithmic terms
-    dlam_dn_wgt : np.ndarray
-        Weighted normal derivatives of the logarithmic terms
+    lam_trace : list[DirichletTrace]
+        Traces of the logarithmic terms
     T1_dlam_dt : np.ndarray
         Single layer operator applied to the tangential derivatives of the
         logarithmic terms
@@ -72,11 +63,7 @@ class NystromSolver:
     single_layer_op: LinearOperator
     double_layer_op: LinearOperator
     double_layer_sum: np.ndarray
-    lam_trace: np.ndarray
-    lam_x1_trace: np.ndarray
-    lam_x2_trace: np.ndarray
-    dlam_dt_wgt: np.ndarray
-    dlam_dn_wgt: np.ndarray
+    lam_trace: list[DirichletTrace]
     T1_dlam_dt: np.ndarray
     Sn_lam: np.ndarray
     A_simple: LinearOperator
@@ -87,7 +74,7 @@ class NystromSolver:
     def __init__(
         self,
         K: MeshCell,
-        precond_type: Optional[str] = "jacobi",
+        precond_type: str = "jacobi",
         verbose: bool = False,
         debug: bool = False,
     ) -> None:
@@ -101,6 +88,8 @@ class NystromSolver:
         ----------
         K : MeshCell
             Mesh MeshCell
+        precond_type : str, optional
+            Preconditioner type, by default "jacobi"
         verbose : bool, optional
             Whether to print information about the Nyström Solver, by default
             False
@@ -312,7 +301,7 @@ class NystromSolver:
 
     # PRECONDITIONERS ########################################################
 
-    def build_preconditioners(self, precond_type: Optional[str]) -> None:
+    def build_preconditioners(self, precond_type: str = "jacobi") -> None:
         """
         Build a preconditioner for the Neumann problem.
 
@@ -327,107 +316,60 @@ class NystromSolver:
         - "jacobi": Jacobi preconditioner
         """
         if precond_type == "jacobi":
-            self.precond_simple = NystromSolver.jacobi_preconditioner(
-                self.A_simple
-            )
+            self.precond_simple = precond.jacobi_preconditioner(self.A_simple)
             if self.K.num_holes > 0:
-                self.precond_augment = NystromSolver.jacobi_preconditioner(
+                self.precond_augment = precond.jacobi_preconditioner(
                     self.A_augment
                 )
         else:
             raise ValueError("Invalid preconditioner type")
 
-    @staticmethod
-    def jacobi_preconditioner(A: LinearOperator) -> LinearOperator:
-        """
-        Get the Jacobi preconditioner for a linear operator A.
-
-        Parameters
-        ----------
-        A : LinearOperator
-            Linear operator A
-
-        Returns
-        -------
-        LinearOperator
-            Jacobi preconditioner for A
-        """
-        # Jacobi preconditioner
-        diagonals = np.zeros((A.shape[0],))
-        ei = np.zeros((A.shape[0],))
-        for i in range(A.shape[0]):
-            ei[i] = 1
-            diagonals[i] = np.dot(ei, A @ ei)
-            ei[i] = 0
-
-        # build preconditioner object
-        return LinearOperator(
-            dtype=float,
-            shape=A.shape,
-            matvec=lambda x: x / diagonals,
-        )
-
     # LOGARITHMIC TERMS #####################################################
     def compute_log_terms(self) -> None:
         """
         Compute and store logarithmic terms for multiply connected domains.
-
-        Notes
-        -----
-        The following attributes are computed and stored:
-        - lam_trace: Trace of the logarithmic terms
-        - lam_x1_trace: Gradient of the logarithmic terms in the x1 direction
-        - lam_x2_trace: Gradient of the logarithmic terms in the x2 direction
-        - dlam_dt_wgt: Weighted tangential derivatives of the logarithmic terms
-        - dlam_dn_wgt: Weighted normal derivatives of the logarithmic terms
-        - T1_dlam_dt: Single layer operator applied to the tangential
-          derivatives of the logarithmic terms
-        - Sn_lam: H1 seminorms of the logarithmic terms
         """
-        # traces and gradients of logarithmic corrections
-        self.lam_trace = log_terms.get_log_trace(self.K)
-        self.lam_x1_trace, self.lam_x2_trace = log_terms.get_log_grad(self.K)
+        x1, x2 = self.K.get_boundary_points()
+        self.lam_trace = []
+        self.T1_dlam_dt = np.zeros((self.K.num_pts, self.K.num_holes))
+        self.Sn_lam = np.zeros((self.K.num_holes, self.K.num_holes))
 
-        # tangential and normal derivatives of logarithmic terms
-        self.dlam_dt_wgt = log_terms.get_dlam_dt_wgt(
-            self.K, self.lam_x1_trace, self.lam_x2_trace
-        )
-        self.dlam_dn_wgt = log_terms.get_dlam_dn_wgt(
-            self.K, self.lam_x1_trace, self.lam_x2_trace
-        )
+        for j in range(self.K.num_holes):
+            xi = self.K.components[j + 1].interior_point
+            x1_xi = x1 - xi.x
+            x2_xi = x2 - xi.y
+            x_xi_square_norm = x1_xi**2 + x2_xi**2
+
+            # trace of logarithmic term
+            lam_j = DirichletTrace(
+                edges=self.K.get_edges(), values=0.5 * np.log(x_xi_square_norm)
+            )
+
+            # gradient of logarithmic term
+            lam_j_xi = x1_xi / x_xi_square_norm
+            lam_j_x2 = x2_xi / x_xi_square_norm
+
+            # weighted normal derivative
+            wnd = self.K.dot_with_normal(lam_j_xi, lam_j_x2)
+            wnd = self.K.multiply_by_dx_norm(wnd)
+            lam_j.set_weighted_normal_derivative(wnd)
+
+            # weighted tangential derivative
+            wtd = self.K.dot_with_tangent(lam_j_xi, lam_j_x2)
+            wtd = self.K.multiply_by_dx_norm(wtd)
+            lam_j.set_weighted_tangential_derivative(wtd)
+
+            self.lam_trace.append(lam_j)
 
         # single layer operator applied to tangential derivatives of log terms
-        self.T1_dlam_dt = np.zeros((self.K.num_pts, self.K.num_holes))
-        for i in range(self.K.num_holes):
-            self.T1_dlam_dt[:, i] = self.single_layer_op(self.dlam_dt_wgt[:, i])
+        for j in range(self.K.num_holes):
+            lam_j_wtd = self.lam_trace[j].w_tang_deriv
+            self.T1_dlam_dt[:, j] = self.single_layer_op(lam_j_wtd)
 
         # H1 seminorms of logarithmic terms
-        self.Sn_lam = np.zeros((self.K.num_holes, self.K.num_holes))
-        for i in range(self.K.num_holes):
-            self.Sn_lam[:, i] = self.Sn(self.lam_trace[:, i])
-
-    def Su(self, vals: np.ndarray, dlam_du_wgt: np.ndarray) -> np.ndarray:
-        """
-        Apply the operator S_u(vals) = int_{dK} vals * d_lambda/du ds.
-
-        Parameters
-        ----------
-        vals : np.ndarray
-            Vector vals
-        dlam_du_wgt : np.ndarray
-            Weighted tangential/normal derivatives of log terms.
-
-        Returns
-        -------
-        np.ndarray
-            Result of the operator S_u applied to vals.
-        """
-        out = np.zeros((self.K.num_holes,))
-        for i in range(self.K.num_holes):
-            out[i] = self.K.integrate_over_boundary_preweighted(
-                vals * dlam_du_wgt[:, i]
-            )
-        return out
+        for j in range(self.K.num_holes):
+            vals = self.lam_trace[j].values
+            self.Sn_lam[:, j] = self.Sn(vals)
 
     def Sn(self, vals: np.ndarray) -> np.ndarray:
         """
@@ -443,7 +385,12 @@ class NystromSolver:
         np.ndarray
             Result of the operator S_n applied to vals.
         """
-        return self.Su(vals, self.dlam_dn_wgt)
+        res = np.zeros((self.K.num_holes,))
+        for j in range(self.K.num_holes):
+            res[j] = self.K.integrate_over_boundary_preweighted(
+                vals * self.lam_trace[j].w_norm_deriv
+            )
+        return res
 
     def St(self, vals: np.ndarray) -> np.ndarray:
         """
@@ -459,7 +406,12 @@ class NystromSolver:
         np.ndarray
             Result of the operator S_t applied to vals.
         """
-        return self.Su(vals, self.dlam_dt_wgt)
+        res = np.zeros((self.K.num_holes,))
+        for j in range(self.K.num_holes):
+            res[j] = self.K.integrate_over_boundary_preweighted(
+                vals * self.lam_trace[j].w_tang_deriv
+            )
+        return res
 
     # SINGLE LAYER OPERATOR ###################################################
 

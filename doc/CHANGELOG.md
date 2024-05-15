@@ -38,9 +38,13 @@
     - [x] add: weighted tangential derivative
 - [x] `LocalFunction` improvements:
   - [x] BREAKING CHANGE: replace the handling of traces with `DirichletTrace`
-- [ ] `NystromSolver` improvements:
-  - [ ] move `jacobi_preconditioner()` static method to a separate module
-  - [ ] handle logarithmic functions as instances of `DirichletTrace` class
+- [x] `NystromSolver` improvements:
+  - [x] handle logarithmic functions as instances of `DirichletTrace` class
+  - [x] move `jacobi_preconditioner()` static method to a separate module
+- [x] `locfun` module improvements:
+  - [x] use `DirichletTrace` objects for traces in `antilap` module
+  - [x] move contents of `antilap` and `d2n` subpackages to `locfun` root
+  - [x] remove `log_terms` and `log_antilap` modules
 - [ ] refactor `GlobalFunctionSpace`:
   - [ ] build from a collection of `GlobalFunction` objects, just like `LocalFunctionSpace` is built from a collection of `LocalFunction` objects
   - [ ] precompute `LocalFunctionSpace` objects

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from puncturedfem.locfun.d2n.fft_deriv import fft_antiderivative, fft_derivative
+from puncturedfem.locfun.fft_deriv import fft_antiderivative, fft_derivative
 
 TOL = 1e-6
 
