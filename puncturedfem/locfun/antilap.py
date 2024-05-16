@@ -140,7 +140,6 @@ def _antilap_multiply_connected(
 
     # anti-Laplacians of rational and logarithmic terms
     for j in range(K.num_holes):
-
         # shift coordinates
         xi = K.components[j + 1].interior_point
         y1 = np.array(x1 - xi.x)

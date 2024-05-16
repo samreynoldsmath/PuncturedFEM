@@ -277,7 +277,9 @@ class LocalFunction:
             )
         )
         for j in range(self.nyst.K.num_holes):
-            harm_part_wnd += self.log_coef[j] * self.nyst.lam_trace[j].w_norm_deriv
+            harm_part_wnd += (
+                self.log_coef[j] * self.nyst.lam_trace[j].w_norm_deriv
+            )
         self.harm_part_trace.set_weighted_normal_derivative(harm_part_wnd)
 
     def _get_conjugable_part(self) -> np.ndarray:
