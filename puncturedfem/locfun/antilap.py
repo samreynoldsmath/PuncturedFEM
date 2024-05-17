@@ -3,19 +3,23 @@ Anti-Laplacian of a harmonic function.
 
 Routines in this module
 -----------------------
-get_anti_laplacian_harmonic(K, psi, psi_hat, a)
+get_anti_laplacian_harmonic(K, psi, psi_hat, log_coef)
 _antilap_simply_connected(K, phi, phi_hat)
-_antilap_multiply_connected(K, psi, psi_hat, a)
+_antilap_multiply_connected(K, psi, psi_hat, log_coef)
 """
 
 import numpy as np
 
 from .fft_deriv import fft_antiderivative
 from .nystrom import NystromSolver
+from ..mesh.cell import MeshCell
 
 
 def get_anti_laplacian_harmonic(
-    nyst: NystromSolver, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
+    nyst: NystromSolver,
+    psi: np.ndarray,
+    psi_hat: np.ndarray,
+    log_coef: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Get the trace and weighted normal derivative of an anti-Laplacian.
@@ -39,18 +43,16 @@ def get_anti_laplacian_harmonic(
         Weighted normal derivative of the anti-Laplacian.
     """
     if nyst.K.num_holes == 0:
-        PHI, PHI_wnd = _antilap_simply_connected(nyst, psi, psi_hat)
+        PHI, PHI_wnd = _antilap_simply_connected(nyst.K, psi, psi_hat)
     else:
-        PHI, PHI_wnd = _antilap_multiply_connected(nyst, psi, psi_hat, a)
+        PHI, PHI_wnd = _antilap_multiply_connected(nyst, psi, psi_hat, log_coef)
 
     return PHI, PHI_wnd
 
 
 def _antilap_simply_connected(
-    nyst: NystromSolver, phi: np.ndarray, phi_hat: np.ndarray
+    K: MeshCell, phi: np.ndarray, phi_hat: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-    K = nyst.K
-
     # length of interval of integration in parameter space
     interval_length = 2 * np.pi * K.num_edges
 
@@ -64,6 +66,16 @@ def _antilap_simply_connected(
     rho_hat_wtd = K.multiply_by_dx_norm(rho_hat_td)
     rho_hat = fft_antiderivative(rho_hat_wtd, interval_length)
 
+    return _antilap_from_components(K, rho, rho_hat, phi, phi_hat)
+
+
+def _antilap_from_components(
+    K: MeshCell,
+    rho: np.ndarray,
+    rho_hat: np.ndarray,
+    phi: np.ndarray,
+    phi_hat: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
     # coordinates of boundary points
     x1, x2 = K.get_boundary_points()
 
@@ -82,7 +94,10 @@ def _antilap_simply_connected(
 
 
 def _antilap_multiply_connected(
-    nyst: NystromSolver, psi: np.ndarray, psi_hat: np.ndarray, a: np.ndarray
+    nyst: NystromSolver,
+    psi: np.ndarray,
+    psi_hat: np.ndarray,
+    log_coef: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
     K = nyst.K
 
@@ -132,15 +147,12 @@ def _antilap_multiply_connected(
     rho_hat_0 = nyst.solve_neumann_zero_average(rho_hat_wnd_0)
 
     # compute anti-Laplacian of psi_0
-    PHI = 0.25 * (x1 * rho_0 + x2 * rho_hat_0)
-    PHI_x1 = 0.25 * (rho_0 + x1 * psi_0 + x2 * psi_hat_0)
-    PHI_x2 = 0.25 * (rho_hat_0 + x2 * psi_0 - x1 * psi_hat_0)
-    PHI_nd = K.dot_with_normal(PHI_x1, PHI_x2)
-    PHI_wnd = K.multiply_by_dx_norm(PHI_nd)
+    PHI, PHI_wnd = _antilap_from_components(
+        K, rho_0, rho_hat_0, psi_0, psi_hat_0
+    )
 
     # anti-Laplacians of rational and logarithmic terms
     for j in range(K.num_holes):
-
         # shift coordinates
         xi = K.components[j + 1].interior_point
         y1 = np.array(x1 - xi.x)
@@ -162,7 +174,7 @@ def _antilap_multiply_connected(
         PHI_wnd += K.multiply_by_dx_norm(M_nd)
 
         # anti-Laplacian of log terms
-        PHI += 0.125 * a[j] * y_norm_sq * (log_y_norm_sq - 2)
+        PHI += 0.125 * log_coef[j] * y_norm_sq * (log_y_norm_sq - 2)
         LAM_x1 = 0.25 * (log_y_norm_sq - 1) * y1
         LAM_x2 = 0.25 * (log_y_norm_sq - 1) * y2
         normal_deriv = K.dot_with_normal(LAM_x1, LAM_x2)
