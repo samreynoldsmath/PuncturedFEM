@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
+from deprecated import deprecated
 import numpy as np
 
 from ..solver.globkey import GlobalKey
@@ -21,6 +22,10 @@ from .poly.poly import Polynomial
 from .trace import DirichletTrace
 
 
+@deprecated(
+    version="0.5.0",
+    reason="LocalFunction is being deprecated in favor of the LocalPoissonFunction class.",
+)
 class LocalFunction:
     """
     Function with a polynomial Laplacian and continuous trace on the boundary.
@@ -277,7 +282,9 @@ class LocalFunction:
             )
         )
         for j in range(self.nyst.K.num_holes):
-            harm_part_wnd += self.log_coef[j] * self.nyst.lam_trace[j].w_norm_deriv
+            harm_part_wnd += (
+                self.log_coef[j] * self.nyst.lam_trace[j].w_norm_deriv
+            )
         self.harm_part_trace.set_weighted_normal_derivative(harm_part_wnd)
 
     def _get_conjugable_part(self) -> np.ndarray:
@@ -293,7 +300,7 @@ class LocalFunction:
             big_phi,
             big_phi_wnd,
         ) = antilap.get_anti_laplacian_harmonic(
-            self.nyst, psi, psi_hat, a=np.array(self.log_coef)
+            self.nyst, psi, psi_hat, np.array(self.log_coef)
         )
         self.biharmonic_trace = DirichletTrace(
             edges=self.nyst.K.get_edges(), values=big_phi
