@@ -38,6 +38,8 @@
     - [x] add: weighted tangential derivative
 - [x] `LocalFunction` improvements:
   - [x] BREAKING CHANGE: replace the handling of traces with `DirichletTrace`
+  - [x] DEPRECATED: use `LocalPoissonFunction` instead
+- [x] add: `LocalPoissonFunction` class, built from `LocalHarmonic` and `LocalPolynomial` objects
 - [x] `NystromSolver` improvements:
   - [x] handle logarithmic functions as instances of `DirichletTrace` class
   - [x] move `jacobi_preconditioner()` static method to a separate module

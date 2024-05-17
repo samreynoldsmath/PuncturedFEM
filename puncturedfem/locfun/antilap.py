@@ -32,7 +32,7 @@ def get_anti_laplacian_harmonic(
         Trace of a harmonic function.
     psi_hat : np.ndarray
         Trace of its harmonic conjugate.
-    a : np.ndarray
+    log_coef : np.ndarray
         Logarithmic weights.
 
     Returns
@@ -136,6 +136,26 @@ def _antilap_multiply_connected(
     psi_0 = psi - (mu @ b - mu_hat @ c)
     psi_hat_0 = psi_hat - (mu @ c + mu_hat @ b)
 
+
+
+    ############################################################
+    # TODO: depending on which strategy is chosen:
+    # 1. classic strategy
+    #   a. compute weighted normal derivatives of rho and rho_hat
+    #   b. solve for rho_0 and rho_hat_0 using nyst.solve_neumann_zero_average
+    # 2. new strategy
+    #   a. compute weighted tangential derivatives of rho and rho_hat
+    #   b. compute trace of omega, a harmonic function whose tangential
+    #      derivative is that of rho and whose average on each component of the
+    #      boundary is zero, using FFT
+    #   c. on the jth component of the boundary (j > 0) let eta_j be a harmonic
+    #      function having a normal derivative equal to one, and zero
+    #      elsewhere, with a zero average on the entire boundary; compute its
+    #      trace using a Nystrom solver
+    #   d. on the jth component of the boundary (j > 0) compute the constants
+    #      of integration for the harmonic function omega using
+    #      d_j = (1 / |partial K_j|) * int_{partial K} eta_j * (d rho / dn) ds
+
     # compute weighted normal derivatives of rho and rho_hat
     rho_nd_0 = K.dot_with_normal(psi_0, -psi_hat_0)
     rho_wnd_0 = K.multiply_by_dx_norm(rho_nd_0)
@@ -145,6 +165,10 @@ def _antilap_multiply_connected(
     # solve for rho_0 and rho_hat_0
     rho_0 = nyst.solve_neumann_zero_average(rho_wnd_0)
     rho_hat_0 = nyst.solve_neumann_zero_average(rho_hat_wnd_0)
+
+    ############################################################
+
+
 
     # compute anti-Laplacian of psi_0
     PHI, PHI_wnd = _antilap_from_components(
