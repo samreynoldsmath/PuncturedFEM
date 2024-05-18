@@ -51,6 +51,7 @@ this program. If not, see https://www.gnu.org/licenses/.
 from . import plot
 from .locfun.edge_space import EdgeSpace
 from .locfun.locfun import LocalFunction
+from .locfun.local_poisson import LocalPoissonFunction
 from .locfun.locfunsp import LocalFunctionSpace
 from .locfun.nystrom import NystromSolver
 from .locfun.poly.barycentric import (
@@ -73,7 +74,6 @@ from .solver.globfunsp import GlobalFunctionSpace
 from .solver.solver import Solver
 
 __all__ = [
-    # mesh
     "Edge",
     "MeshCell",
     "PlanarMesh",
@@ -84,20 +84,24 @@ __all__ = [
     "meshlib",
     "mesh_builder",
     "split_edge",
-    # locfun
+]
+__all__ += [
     "DirichletTrace",
     "EdgeSpace",
     "LocalFunction",
+    "LocalPoissonFunction",
     "LocalFunctionSpace",
     "NystromSolver",
     "Polynomial",
     "PiecewisePolynomial",
     "barycentric_coordinates",
     "barycentric_coordinates_edge",
-    # solver
+]
+__all__ += [
     "GlobalFunctionSpace",
     "BilinearForm",
     "Solver",
-    # plot
+]
+__all__ += [
     "plot",
 ]
