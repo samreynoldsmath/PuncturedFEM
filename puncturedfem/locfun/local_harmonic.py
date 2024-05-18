@@ -2,7 +2,7 @@ from typing import Optional
 
 import numpy as np
 
-from . import antilap, trace2tangential
+from . import antilap, fft_deriv
 from .nystrom import NystromSolver
 from .trace import DirichletTrace
 
@@ -43,7 +43,7 @@ class LocalHarmonic:
         self, nyst: NystromSolver
     ) -> None:
         harm_part_wnd = (
-            trace2tangential.get_weighted_tangential_derivative_from_trace(
+            fft_deriv.get_weighted_tangential_derivative_from_trace(
                 nyst.K, self.conj_trace.values
             )
         )
