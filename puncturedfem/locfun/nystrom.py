@@ -6,6 +6,8 @@ Classes
 NystromSolver
 """
 
+from typing import Optional
+
 import numba
 import numpy as np
 from scipy.sparse.linalg import LinearOperator, gmres
@@ -15,7 +17,7 @@ from ..mesh.closed_contour import ClosedContour
 from ..mesh.edge import Edge
 from ..mesh.quad import Quad
 from . import precond
-from .trace2tangential import get_weighted_tangential_derivative_from_trace
+from .fft_deriv import get_weighted_tangential_derivative_from_trace
 from .trace import DirichletTrace
 
 
@@ -55,6 +57,8 @@ class NystromSolver:
         Preconditioner for the Neumann problem
     precond_augment : LinearOperator
         Preconditioner for the multiply connected case
+    antilap_strategty : str
+        Strategy for computing the anti-Laplacian: "direct" or "fft"
     """
 
     K: MeshCell
@@ -70,10 +74,13 @@ class NystromSolver:
     A_augment: LinearOperator
     precond_simple: LinearOperator
     precond_augment: LinearOperator
+    antilap_strategy: str
+    eta: Optional[list[DirichletTrace]] = None
 
     def __init__(
         self,
         K: MeshCell,
+        antilap_strategy: str = "direct",
         precond_type: str = "jacobi",
         verbose: bool = False,
         debug: bool = False,
@@ -88,6 +95,8 @@ class NystromSolver:
         ----------
         K : MeshCell
             Mesh MeshCell
+        antilap_strategy : str, optional
+            Strategy for computing the anti-Laplacian, by default "direct"
         precond_type : str, optional
             Preconditioner type, by default "jacobi"
         verbose : bool, optional
@@ -102,6 +111,9 @@ class NystromSolver:
         # print setup message
         if verbose or debug:
             print(self._setup_message())
+
+        # set antilap strategy
+        self._set_antilap_strategy(antilap_strategy)
 
         # build single and double layer operators
         self.build_single_layer_mat()
@@ -118,6 +130,10 @@ class NystromSolver:
 
         # build preconditioners
         self.build_preconditioners(precond_type)
+
+        # compute harmonic normal indicators
+        if self.K.num_holes > 0 and self.antilap_strategy == "fft":
+            self._compute_harmonic_normal_indicators()
 
         # print condition number
         if debug:
@@ -143,6 +159,14 @@ class NystromSolver:
         if self.K.num_edges > 1:
             msg += "s"
         return msg
+
+    def _set_antilap_strategy(self, antilap_strategy: str) -> None:
+        if antilap_strategy not in ["direct", "fft"]:
+            raise ValueError(
+                f"'{antilap_strategy}'"
+                + " is not a valid strategy, must be 'direct' or 'fft'"
+            )
+        self.antilap_strategy = antilap_strategy
 
     def set_K(self, K: MeshCell) -> None:
         """
@@ -412,6 +436,23 @@ class NystromSolver:
                 vals * self.lam_trace[j].w_tang_deriv
             )
         return res
+
+    # HARMONIC NORMAL INDICATORS #############################################
+    def _compute_harmonic_normal_indicators(self) -> None:
+        self.eta = []
+        edge_idx = 0
+        for c in self.K.components[1:]:
+            chi_trace_j = DirichletTrace(edges=self.K.get_edges(), values=0.0)
+            for k in range(c.num_edges):
+                chi_trace_j.set_trace_values_on_edge(
+                    edge_index=edge_idx + k, values=1.0
+                )
+            edge_idx += c.num_edges
+            eta_wnd_j = self.K.multiply_by_dx_norm(chi_trace_j.values)
+            eta_j = self.solve_neumann_zero_average(eta_wnd_j)
+            self.eta.append(
+                DirichletTrace(edges=self.K.get_edges(), values=eta_j)
+            )
 
     # SINGLE LAYER OPERATOR ###################################################
 
