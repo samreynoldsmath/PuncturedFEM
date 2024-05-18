@@ -14,7 +14,7 @@ import numpy as np
 
 from ..solver.globkey import GlobalKey
 from ..util.types import FloatLike
-from . import antilap, trace2tangential
+from . import antilap, fft_deriv
 from .nystrom import NystromSolver
 from .poly.poly import Polynomial
 from .trace import DirichletTrace
@@ -101,11 +101,13 @@ class LocalPoissonFunction:
         self._set_key(key)
         P = laplacian.anti_laplacian()
         self.poly = LocalPolynomial(P, nyst.K)
-        self._compute_harmonic_part_trace(trace, nyst, compute_for_l2)
-        self._compute_harmonic_conjugate(nyst)
-        self._compute_harmonic_weighted_normal_derivative(nyst)
-        if compute_for_l2:
-            self._compute_biharmonic(nyst)
+        if isinstance(trace, (float, int, np.ndarray)):
+            trace = DirichletTrace(edges=nyst.K.get_edges(), values=trace)
+        harm_trace_vals = DirichletTrace(
+            edges=nyst.K.get_edges(),
+            values=trace.values - self.poly.trace.values,
+        )
+        self.harm = LocalHarmonic(harm_trace_vals, nyst, compute_for_l2)
 
     def get_h1_semi_inner_prod(
         self,
@@ -150,9 +152,9 @@ class LocalPoissonFunction:
         """
         if isinstance(other, LocalPoissonFunction):
             val = l2_inner_prod(self.harm, other.harm, K)
-            val += l2_inner_prod(self.poly, other.poly, K)
             val += l2_inner_prod(self.harm, other.poly, K)
             val += l2_inner_prod(self.poly, other.harm, K)
+            val += l2_inner_prod(self.poly, other.poly, K)
             return val
         if isinstance(other, (LocalHarmonic, LocalPolynomial)):
             val = l2_inner_prod(self.harm, other, K)
@@ -165,58 +167,3 @@ class LocalPoissonFunction:
         if not isinstance(key, GlobalKey):
             raise TypeError("key must be a GlobalKey")
         self.key = key
-
-    def _compute_harmonic_part_trace(
-        self,
-        trace: Union[DirichletTrace, FloatLike],
-        nyst: NystromSolver,
-        compute_biharmonic: bool,
-    ) -> None:
-        if isinstance(trace, (float, int, np.ndarray)):
-            trace = DirichletTrace(edges=nyst.K.get_edges(), values=trace)
-        harm_trace_vals = DirichletTrace(
-            edges=nyst.K.get_edges(),
-            values=trace.values - self.poly.trace.values,
-        )
-        self.harm = LocalHarmonic(harm_trace_vals, nyst, compute_biharmonic)
-
-    def _compute_harmonic_conjugate(self, nyst: NystromSolver) -> None:
-        harm_conj_trace_values, log_coef = nyst.get_harmonic_conjugate(
-            phi=self.harm.trace.values
-        )
-        self.harm_conj_trace = DirichletTrace(
-            edges=nyst.K.get_edges(), values=harm_conj_trace_values
-        )
-        self.log_coef = list(log_coef)
-
-    def _compute_harmonic_weighted_normal_derivative(
-        self, nyst: NystromSolver
-    ) -> None:
-        harm_part_wnd = (
-            trace2tangential.get_weighted_tangential_derivative_from_trace(
-                nyst.K, self.harm_conj_trace.values
-            )
-        )
-        for j in range(nyst.K.num_holes):
-            harm_part_wnd += self.log_coef[j] * nyst.lam_trace[j].w_norm_deriv
-        self.harm.trace.set_weighted_normal_derivative(harm_part_wnd)
-
-    def _get_conjugable_part(self, nyst: NystromSolver) -> np.ndarray:
-        lam = np.zeros((nyst.K.num_pts,))
-        for j in range(nyst.K.num_holes):
-            lam += self.log_coef[j] * nyst.lam_trace[j].values
-        return self.harm.trace.values - lam
-
-    def _compute_biharmonic(self, nyst: NystromSolver) -> None:
-        psi = self._get_conjugable_part(nyst)
-        psi_hat = self.harm_conj_trace.values
-        (
-            big_phi,
-            big_phi_wnd,
-        ) = antilap.get_anti_laplacian_harmonic(
-            nyst, psi, psi_hat, np.array(self.log_coef)
-        )
-        self.biharmonic_trace = DirichletTrace(
-            edges=nyst.K.get_edges(), values=big_phi
-        )
-        self.biharmonic_trace.set_weighted_normal_derivative(big_phi_wnd)
