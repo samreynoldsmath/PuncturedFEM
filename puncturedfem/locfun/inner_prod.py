@@ -101,8 +101,9 @@ def _l2_inner_prod_harmonic_harmonic(
         raise ValueError("Both harmonics must have biharmonic traces")
     val = K.integrate_over_boundary_preweighted(
         phi.biharmonic_trace.w_norm_deriv * psi.trace.values
-    ) - K.integrate_over_boundary_preweighted(
-        psi.biharmonic_trace.values * phi.trace.w_norm_deriv
+    )
+    val -= K.integrate_over_boundary_preweighted(
+        phi.biharmonic_trace.values * psi.trace.w_norm_deriv
     )
     return val
 
