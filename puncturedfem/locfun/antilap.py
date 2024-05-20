@@ -141,7 +141,7 @@ def _antilap_multiply_connected(
     rho_0 = DirichletTrace(edges=K.get_edges(), values=0)
     rho_hat_0 = DirichletTrace(edges=K.get_edges(), values=0)
 
-    # compute weighted normal derivatives of psi_0 and psi_hat_0
+    # compute weighted normal derivatives of rho_0 and rho_hat_0
     rho_0 = _compute_wnd_from_gradient(rho_0, psi_0, -psi_hat_0, K)
     rho_hat_0 = _compute_wnd_from_gradient(rho_hat_0, psi_hat_0, psi_0, K)
 
@@ -151,8 +151,10 @@ def _antilap_multiply_connected(
             nyst, rho_0, rho_hat_0
         )
     elif nyst.antilap_strategy == "fft":
+        # comptue weighted tangential derivatives of rho_0 and rho_hat_0
         rho_0 = _compute_wtd_from_gradient(rho_0, psi_0, -psi_hat_0, K)
         rho_hat_0 = _compute_wtd_from_gradient(rho_hat_0, psi_hat_0, psi_0, K)
+        # compute rho_0 and rho_hat_0
         rho_0, rho_hat_0 = _get_rho_and_rho_hat_with_fft(nyst, rho_0, rho_hat_0)
 
     # compute anti-Laplacian of psi_0
@@ -196,7 +198,7 @@ def _antilap_multiply_connected(
 
 
 def _compute_wnd_from_gradient(
-    trace: DirichletTrace, grad1: np.array, grad2: np.array, K: MeshCell
+    trace: DirichletTrace, grad1: np.ndarray, grad2: np.ndarray, K: MeshCell
 ) -> DirichletTrace:
     nd = K.dot_with_normal(grad1, grad2)
     trace.set_weighted_normal_derivative(K.multiply_by_dx_norm(nd))
@@ -204,7 +206,7 @@ def _compute_wnd_from_gradient(
 
 
 def _compute_wtd_from_gradient(
-    trace: DirichletTrace, grad1: np.array, grad2: np.array, K: MeshCell
+    trace: DirichletTrace, grad1: np.ndarray, grad2: np.ndarray, K: MeshCell
 ) -> DirichletTrace:
     td = K.dot_with_tangent(grad1, grad2)
     trace.set_weighted_tangential_derivative(K.multiply_by_dx_norm(td))
@@ -233,17 +235,18 @@ def _get_rho_and_rho_hat_with_fft(
 ) -> tuple[DirichletTrace, DirichletTrace]:
     # 2. new strategy
     #   a. compute weighted normal and tangential derivatives of rho
-    #   b. compute trace of omega, a harmonic function whose tangential
+    #   b. assume rho has an average value of zero on the outer boundary
+    #   c. compute trace of omega, a harmonic function whose tangential
     #      derivative is that of rho and whose average on each component of the
     #      boundary is zero, using FFT
-    #   c. on the jth component of the boundary (j > 0) let eta_j be a harmonic
-    #      function having a normal derivative equal to one, and zero
-    #      elsewhere, with a zero average on the entire boundary; compute its
-    #      trace using a Nystrom solver
-    #   d. on the jth component of the boundary (j > 0) compute the constants
+    #   d. on the jth component of the boundary (j > 0) let eta_j be a harmonic
+    #      function having a normal derivative equal to one on the jth
+    #      component, - |partial K_j| / |partial K_)| on the outer boundary, and
+    #      zero everywhere else
+    #   e. on the jth component of the boundary (j > 0) compute the constants
     #      of integration for the harmonic function omega using
     #      d_j = (1 / |partial K_j|) * int_{partial K} eta_j * (d rho / dn) ds
-    #   e. repeat steps a-d for rho_hat
+    #   f. repeat steps a-e for rho_hat
     msg = "Weighted normal and tangential derivatives are not set."
     if rho.w_norm_deriv is None or rho.w_tang_deriv is None:
         raise ValueError(msg)
@@ -271,28 +274,31 @@ def _recover_trace_from_tangential_and_normal_derivatives(
     if rho.w_tang_deriv is None:
         raise ValueError("Weighted tangential derivative is not set.")
 
-    rho_vals = fft_antiderivative_on_each_component(
-        nyst.K, rho.w_tang_deriv
-    )
+    rho_vals = fft_antiderivative_on_each_component(nyst.K, rho.w_tang_deriv)
     rho.set_trace_values(values=rho_vals)
 
     # set integration constants on each component of the boundary
-    for j, c in enumerate(nyst.K.components[1:]):
-        # compute H^1 semi-inner product of rho with eta_j
-        integrand = nyst.eta[j].values * rho.w_norm_deriv
-        d_j = nyst.K.integrate_over_boundary_preweighted(integrand)
-
+    for j, c in enumerate(nyst.K.components):
         # compute the arc length of the jth component
         arc_length = c.integrate_over_closed_contour(np.ones((c.num_pts,)))
-        d_j /= arc_length
 
         # determine the average value of rho on the jth component
-        start = nyst.K.component_start_idx[j + 1]
+        start = nyst.K.component_start_idx[j]
         pt_idx = slice(start, start + c.num_pts)
         int_c_rho = c.integrate_over_closed_contour(rho.values[pt_idx])
 
         # set average value of rho on this component to zero
         rho.values[pt_idx] -= int_c_rho / arc_length
+
+        if j == 0:
+            continue
+
+        # compute H^1 semi-inner product of rho with eta_j
+        integrand = nyst.eta[j - 1].values * rho.w_norm_deriv
+        d_j = nyst.K.integrate_over_boundary_preweighted(integrand)
+
+        # normalize the constant of integration
+        d_j /= arc_length
 
         # set integration constant
         rho.values[pt_idx] += d_j
