@@ -49,8 +49,8 @@ class DirichletTrace:
     num_edges: int
     num_pts: int
     values: np.ndarray
-    w_norm_deriv: Optional[np.ndarray]
-    w_tang_deriv: Optional[np.ndarray]
+    w_norm_deriv: np.ndarray
+    w_tang_deriv: np.ndarray
     funcs: list[Func_R2_R]
     edge_sampled_indices: list[tuple[int, int]]
 
