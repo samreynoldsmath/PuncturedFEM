@@ -152,10 +152,10 @@ class LocalPoissonSpace:
     def _build_bubb_funs(self) -> None:
         # Bubble functions are zero on the boundary and have a polynomial
         # Laplacian.
+        self.bubb_funs = []
         if self.deg < 2:
             return
         num_bubb = (self.deg * (self.deg - 1)) // 2
-        self.bubb_funs = []
         for k in range(num_bubb):
             v_key = GlobalKey(fun_type="bubb", bubb_space_idx=k)
             p = Polynomial()
