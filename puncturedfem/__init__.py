@@ -88,13 +88,13 @@ __all__ = [
 __all__ += [
     "DirichletTrace",
     "EdgeSpace",
-    "LocalFunction", # deprecated
-    "LocalFunctionSpace", # deprecated
+    "LocalFunction",  # deprecated as of 0.5.0
+    "LocalFunctionSpace",  # deprecated as of 0.5.0
     "LocalPoissonFunction",
     "LocalPoissonSpace",
     "NystromSolver",
     "Polynomial",
-    "PiecewisePolynomial",
+    "PiecewisePolynomial", # deprecated as of 0.5.0
     "barycentric_coordinates",
     "barycentric_coordinates_edge",
 ]
