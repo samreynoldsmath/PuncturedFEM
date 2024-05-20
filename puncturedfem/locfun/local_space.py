@@ -225,5 +225,5 @@ class LocalFunctionSpace(LocalPoissonSpace):
     Use LocalPoissonSpace. Deprecated in version 0.5.0.
     """
 
-    def __init__(self, *args, **kwargs): # type: ignore
+    def __init__(self, *args, **kwargs):  # type: ignore
         super().__init__(*args, **kwargs)
