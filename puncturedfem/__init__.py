@@ -50,8 +50,8 @@ this program. If not, see https://www.gnu.org/licenses/.
 
 from . import plot
 from .locfun.edge_space import EdgeSpace
-from .locfun.locfun import LocalFunction
 from .locfun.local_poisson import LocalPoissonFunction
+from .locfun.locfun import LocalFunction
 from .locfun.locfunsp import LocalFunctionSpace
 from .locfun.nystrom import NystromSolver
 from .locfun.poly.barycentric import (

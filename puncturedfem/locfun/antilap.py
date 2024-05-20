@@ -10,9 +10,9 @@ _antilap_multiply_connected(K, psi, psi_hat, log_coef)
 
 import numpy as np
 
+from ..mesh.cell import MeshCell
 from .fft_deriv import fft_antiderivative, fft_antiderivative_on_each_component
 from .nystrom import NystromSolver
-from ..mesh.cell import MeshCell
 from .trace import DirichletTrace
 
 

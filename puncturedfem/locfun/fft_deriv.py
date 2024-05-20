@@ -18,6 +18,7 @@ Uses the fast Fourier transform (FFT) from numpy.fft.
 """
 
 import numpy as np
+
 from ..mesh.cell import MeshCell
 
 
