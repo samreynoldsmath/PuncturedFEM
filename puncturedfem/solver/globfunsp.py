@@ -10,7 +10,7 @@ GlobalFunctionSpace
 from tqdm import tqdm
 
 from ..locfun.edge_space import EdgeSpace
-from ..locfun.locfunsp import LocalFunctionSpace
+from ..locfun.local_space import LocalPoissonSpace
 from ..mesh.planar_mesh import PlanarMesh
 from ..mesh.quad import QuadDict
 from .globkey import GlobalKey
@@ -158,7 +158,7 @@ class GlobalFunctionSpace:
         cell_idx: int,
         verbose: bool = True,
         compute_interior_values: bool = True,
-    ) -> LocalFunctionSpace:
+    ) -> LocalPoissonSpace:
         """
         Build the local function space V_p(K) for a MeshCell K.
 
@@ -178,12 +178,13 @@ class GlobalFunctionSpace:
         for e in K.get_edges():
             b = self.edge_spaces[e.idx]
             edge_spaces.append(b)
-        V_K = LocalFunctionSpace(
+        V_K = LocalPoissonSpace(
             K,
             edge_spaces,
             self.deg,
             verbose=verbose,
-            compute_interior_values=compute_interior_values,
+            compute_interior_values=False, # TODO: implement
+            compute_interior_gradient=False, # TODO: implement
         )
         for v in V_K.get_basis():
             glob_idx = self.get_global_idx(v.key, abs_cell_idx)

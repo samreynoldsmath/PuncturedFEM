@@ -286,7 +286,10 @@ class Solver:
 
                 # store interior values
                 if compute_interior_values:
-                    self.interior_values[abs_cell_idx][i] = v.int_vals
+                    # self.interior_values[abs_cell_idx][i] = v.int_vals
+                    raise NotImplementedError(
+                        "Interior values are not yet implemented"
+                    )
 
                 # evaluate local right-hand side
                 f_i = self.a.eval_rhs(v)
