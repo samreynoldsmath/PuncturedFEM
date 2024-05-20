@@ -8,6 +8,8 @@ LocalFunctionSpace
 
 from typing import Optional
 
+from deprecated import deprecated
+
 from ..mesh.cell import MeshCell
 from ..solver.globkey import GlobalKey
 from .edge_space import EdgeSpace
@@ -17,7 +19,7 @@ from .poly.poly import Polynomial
 from .trace import DirichletTrace
 
 
-class LocalFunctionSpace:
+class LocalPoissonSpace:
     """
     A basis of the local Poisson space V_p(K).
 
@@ -214,3 +216,11 @@ class LocalFunctionSpace:
                     nyst=self.nyst, trace=v_trace, key=b.edge_fun_global_keys[k]
                 )
                 self.edge_funs.append(v)
+
+@deprecated(version="0.5.0", reason="Use LocalPoissonSpace instead")
+class LocalFunctionSpace(LocalPoissonSpace):
+    """
+    Use LocalPoissonSpace. Deprecated in version 0.5.0.
+    """
+    def __init__(self, *args, **kwargs): # mypy: ignore
+        super().__init__(*args, **kwargs)
