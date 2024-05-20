@@ -172,8 +172,5 @@ class BilinearForm:
         v : LocalPoissonFunction
             The LocalPoissonFunction object against which to integrate f.
         """
-        f = LocalPolynomial(
-            exact_form=self.rhs_poly,
-            K=v.mesh_cell
-        )
+        f = LocalPolynomial(exact_form=self.rhs_poly, K=v.mesh_cell)
         return v.get_l2_inner_prod(f)

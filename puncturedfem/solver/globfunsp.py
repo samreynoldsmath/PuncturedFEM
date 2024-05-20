@@ -183,8 +183,8 @@ class GlobalFunctionSpace:
             edge_spaces,
             self.deg,
             verbose=verbose,
-            compute_interior_values=False, # TODO: implement
-            compute_interior_gradient=False, # TODO: implement
+            compute_interior_values=False,  # TODO: implement
+            compute_interior_gradient=False,  # TODO: implement
         )
         for v in V_K.get_basis():
             glob_idx = self.get_global_idx(v.key, abs_cell_idx)
