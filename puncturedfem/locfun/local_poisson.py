@@ -14,7 +14,6 @@ import numpy as np
 
 from ..solver.globkey import GlobalKey
 from ..util.types import FloatLike
-from . import antilap, fft_deriv
 from .nystrom import NystromSolver
 from .poly.poly import Polynomial
 from .trace import DirichletTrace
