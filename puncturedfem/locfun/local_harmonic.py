@@ -11,7 +11,8 @@ from typing import Optional
 
 import numpy as np
 
-from . import antilap, fft_deriv
+from .antilap import get_anti_laplacian_harmonic
+from .fft_deriv import get_weighted_tangential_derivative_from_trace
 from .nystrom import NystromSolver
 from .trace import DirichletTrace
 
@@ -53,12 +54,7 @@ class LocalHarmonic:
     log_coef: list[float]
     biharmonic_trace: Optional[DirichletTrace]
 
-    def __init__(
-        self,
-        trace: DirichletTrace,
-        nyst: NystromSolver,
-        compute_biharmonic: bool = True,
-    ) -> None:
+    def __init__(self, trace: DirichletTrace, nyst: NystromSolver) -> None:
         """
         Initialize the local harmonic function.
 
@@ -75,8 +71,7 @@ class LocalHarmonic:
         self.set_trace(trace)
         self._compute_harmonic_conjugate(nyst)
         self._compute_harmonic_weighted_normal_derivative(nyst)
-        if compute_biharmonic:
-            self._compute_biharmonic(nyst)
+        self._compute_biharmonic(nyst)
 
     def set_trace(self, trace: DirichletTrace) -> None:
         """
@@ -98,7 +93,7 @@ class LocalHarmonic:
     def _compute_harmonic_weighted_normal_derivative(
         self, nyst: NystromSolver
     ) -> None:
-        harm_part_wnd = fft_deriv.get_weighted_tangential_derivative_from_trace(
+        harm_part_wnd = get_weighted_tangential_derivative_from_trace(
             nyst.K, self.conj_trace.values
         )
         for j in range(nyst.K.num_holes):
@@ -117,7 +112,7 @@ class LocalHarmonic:
         (
             big_phi,
             big_phi_wnd,
-        ) = antilap.get_anti_laplacian_harmonic(
+        ) = get_anti_laplacian_harmonic(
             nyst, psi, psi_hat, np.array(self.log_coef)
         )
         self.biharmonic_trace = DirichletTrace(
