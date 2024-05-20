@@ -20,6 +20,7 @@ Uses the fast Fourier transform (FFT) from numpy.fft.
 import numpy as np
 from ..mesh.cell import MeshCell
 
+
 def fft_derivative(f: np.ndarray, interval_length: float) -> np.ndarray:
     """
     First derivative of a periodic function.
@@ -122,6 +123,23 @@ def get_weighted_tangential_derivative_from_trace(
 def fft_antiderivative_on_each_component(
     K: MeshCell, f_prime: np.ndarray
 ) -> np.ndarray:
+    """
+    Compute the antiderivative on each component.
+
+    Parameters
+    ----------
+    K : MeshCell
+        The mesh cell over whose boundary we are integrating.
+    f_prime : np.ndarray
+        The derivative of the function to integrate. The length of f_prime
+        should be equal to the number of points on the boundary, and sampled
+        values should represent the trace of a continuous function.
+
+    Returns
+    -------
+    f : np.ndarray
+        The antiderivative of the function on each component.
+    """
     f = np.zeros((K.num_pts,))
     for j in range(K.num_holes + 1):
         pt_idx = slice(K.component_start_idx[j], K.component_start_idx[j + 1])
