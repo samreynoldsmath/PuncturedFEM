@@ -373,7 +373,7 @@ class DirichletTrace:
             raise ValueError("The edge index is out of range")
         if not isinstance(poly, Polynomial):
             raise ValueError("'poly' must be of type Polynomial")
-        self.funcs[edge_index] = poly.eval  # type: ignore
+        self.funcs[edge_index] = poly  # type: ignore
         if compute_vals and self.edges_are_parametrized():
             self.find_values()
 
