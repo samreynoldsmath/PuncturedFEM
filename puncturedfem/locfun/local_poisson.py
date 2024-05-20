@@ -62,6 +62,11 @@ class LocalPoissonFunction:
         The harmonic part, phi.
     poly : LocalPolynomial
         The polynomial part, P.
+    mesh_cell : MeshCell
+        The mesh cell on which the local function is defined.
+    int_vals : np.ndarray
+        Interior values of the local function, evaluated on the interior mesh
+        defined by the mesh cell.
     key : GlobalKey
         A unique tag that identifies the local function in the global space.
     """
@@ -69,6 +74,7 @@ class LocalPoissonFunction:
     harm: LocalHarmonic
     poly: LocalPolynomial
     mesh_cell: MeshCell
+    int_vals: np.ndarray
     key: GlobalKey
 
     def __init__(
@@ -76,6 +82,8 @@ class LocalPoissonFunction:
         nyst: NystromSolver,
         laplacian: Polynomial = Polynomial(),
         trace: Union[DirichletTrace, FloatLike] = 0,
+        evaluate_interior: bool = False,
+        evaluate_gradient: bool = False,
         key: Optional[GlobalKey] = None,
     ) -> None:
         """
@@ -91,9 +99,11 @@ class LocalPoissonFunction:
             Dirichlet trace of the local function, by default 0. If a numpy
             array, must be the same length as the number of sampled points on
             the boundary.
-        compute_for_l2 : bool, optional
-            Whether to compute the biharmonic part, by default True. Disabling
-            is useful when only the H^1 semi-inner product is needed.
+        evaluate_interior : bool, optional
+            Whether or not to compute the interior values, by default False.
+        evaluate_grad : bool, optional
+            Whether or not to compute the gradient, by default False. Takes
+            precedence over evaluate_interior.
         key : Optional[GlobalKey], optional
             A unique tag that identifies the local function in the global space.
         """
@@ -108,6 +118,8 @@ class LocalPoissonFunction:
             values=trace.values - self.poly.trace.values,
         )
         self.harm = LocalHarmonic(harm_trace_vals, nyst)
+        if evaluate_interior or evaluate_gradient:
+            self.compute_interior_values(evaluate_gradient)
 
     def get_h1_semi_inner_prod(
         self, other: Union[LocalPoissonFunction, LocalHarmonic, LocalPolynomial]
@@ -178,3 +190,104 @@ class LocalPoissonFunction:
         if not isinstance(mesh_cell, MeshCell):
             raise TypeError("mesh_cell must be a MeshCell")
         self.mesh_cell = mesh_cell
+
+    def compute_interior_values(self, compute_int_grad: bool = True) -> None:
+        """
+        Compute the interior values.
+
+        Also compute the components of the gradient if compute_int_grad is True.
+        The interior values are stored in self.int_vals, and the gradient
+        components are stored in self.int_grad1 and self.int_grad2.
+
+        Parameters
+        ----------
+        compute_int_grad : bool, optional
+            Whether or not to compute the gradient, by default True.
+        """
+        # points for evaluation
+        y1 = self.mesh_cell.int_x1[self.mesh_cell.is_inside]
+        y2 = self.mesh_cell.int_x2[self.mesh_cell.is_inside]
+
+        # initialize temporary arrays
+        N = len(y1)
+        vals = np.zeros((N,))
+        grad1 = np.zeros((N,))
+        grad2 = np.zeros((N,))
+
+        # polynomial part
+        # TODO: fix type ignore
+        vals = self.poly.exact_form(y1, y2)  # type: ignore
+
+        # gradient Polynomial part
+        if compute_int_grad:
+            grad1 = self.poly.grad1(y1, y2)  # type: ignore
+            grad2 = self.poly.grad2(y1, y2)  # type: ignore
+
+        # logarithmic part
+        for k in range(self.mesh_cell.num_holes):
+            xi = self.mesh_cell.components[k + 1].interior_point
+            y_xi_1 = y1 - xi.x
+            y_xi_2 = y2 - xi.y
+            y_xi_norm_sq = y_xi_1**2 + y_xi_2**2
+            vals += 0.5 * self.harm.log_coef[k] * np.log(y_xi_norm_sq)
+            if compute_int_grad:
+                grad1 += self.harm.log_coef[k] * y_xi_1 / y_xi_norm_sq
+                grad2 += self.harm.log_coef[k] * y_xi_2 / y_xi_norm_sq
+
+        # conjugable part
+        psi = self.harm.psi.values
+        psi_hat = self.harm.conj_trace.values
+
+        # boundary points
+        bdy_x1, bdy_x2 = self.mesh_cell.get_boundary_points()
+
+        # shifted coordinates
+        M = self.mesh_cell.num_pts
+        xy1 = np.reshape(bdy_x1, (1, M)) - np.reshape(y1, (N, 1))
+        xy2 = np.reshape(bdy_x2, (1, M)) - np.reshape(y2, (N, 1))
+        xy_norm_sq = xy1**2 + xy2**2
+
+        # components of unit tangent vector
+        t1, t2 = self.mesh_cell.get_unit_tangent()
+
+        # integrand for interior values
+        eta = (xy1 * psi + xy2 * psi_hat) / xy_norm_sq
+        eta_hat = (xy1 * psi_hat - xy2 * psi) / xy_norm_sq
+        f = t1 * eta_hat + t2 * eta
+
+        # integrands for gradient
+        if compute_int_grad:
+            omega = (xy1 * eta + xy2 * eta_hat) / xy_norm_sq
+            omega_hat = (xy1 * eta_hat - xy2 * eta) / xy_norm_sq
+            g1 = t1 * omega_hat + t2 * omega
+            g2 = t1 * omega - t2 * omega_hat
+
+        # Jacobian and trapezoid weights
+        dx_norm = self.mesh_cell.get_dx_norm()
+        h = 2 * np.pi * self.mesh_cell.num_edges / self.mesh_cell.num_pts
+        dx_norm *= h
+
+        # interior values and gradient of conjugable part via Cauchy's
+        # integral formula
+        vals += np.sum(dx_norm * f, axis=1) * 0.5 / np.pi
+        if compute_int_grad:
+            grad1 += np.sum(dx_norm * g1, axis=1) * 0.5 / np.pi
+            grad2 += np.sum(dx_norm * g2, axis=1) * 0.5 / np.pi
+
+        # size of grid of evaluation points
+        rows, cols = self.mesh_cell.int_mesh_size
+
+        # initialize arrays with proper size
+        self.int_vals = np.empty((rows, cols))
+        self.int_grad1 = np.empty((rows, cols))
+        self.int_grad2 = np.empty((rows, cols))
+
+        # default to not-a-number
+        self.int_vals[:] = np.nan
+        self.int_grad1[:] = np.nan
+        self.int_grad2[:] = np.nan
+
+        # set values within cell interior
+        self.int_vals[self.mesh_cell.is_inside] = vals
+        self.int_grad1[self.mesh_cell.is_inside] = grad1
+        self.int_grad2[self.mesh_cell.is_inside] = grad2

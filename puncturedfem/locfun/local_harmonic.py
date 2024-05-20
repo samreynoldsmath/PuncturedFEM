@@ -40,6 +40,8 @@ class LocalHarmonic:
     ----------
     trace : DirichletTrace
         Dirichlet trace of the local harmonic function.
+    psi : DirichletTrace
+        Dirichlet trace of the conjugable part of the local harmonic function.
     conj_trace : DirichletTrace
         Dirichlet trace of the harmonic conjugate of the local harmonic
         function.
@@ -50,6 +52,7 @@ class LocalHarmonic:
     """
 
     trace: DirichletTrace
+    psi: DirichletTrace
     conj_trace: DirichletTrace
     log_coef: list[float]
     biharmonic_trace: Optional[DirichletTrace]
@@ -70,6 +73,7 @@ class LocalHarmonic:
         """
         self.set_trace(trace)
         self._compute_harmonic_conjugate(nyst)
+        self._compute_conjugable_part(nyst)
         self._compute_harmonic_weighted_normal_derivative(nyst)
         self._compute_biharmonic(nyst)
 
@@ -100,14 +104,16 @@ class LocalHarmonic:
             harm_part_wnd += self.log_coef[j] * nyst.lam_trace[j].w_norm_deriv
         self.trace.set_weighted_normal_derivative(harm_part_wnd)
 
-    def _get_conjugable_part(self, nyst: NystromSolver) -> np.ndarray:
+    def _compute_conjugable_part(self, nyst: NystromSolver) -> None:
         lam = np.zeros((nyst.K.num_pts,))
         for j in range(nyst.K.num_holes):
             lam += self.log_coef[j] * nyst.lam_trace[j].values
-        return self.trace.values - lam
+        self.psi = DirichletTrace(
+            edges=nyst.K.get_edges(), values=self.trace.values - lam
+        )
 
     def _compute_biharmonic(self, nyst: NystromSolver) -> None:
-        psi = self._get_conjugable_part(nyst)
+        psi = self.psi.values
         psi_hat = self.conj_trace.values
         (
             big_phi,

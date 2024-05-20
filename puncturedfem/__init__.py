@@ -51,8 +51,8 @@ this program. If not, see https://www.gnu.org/licenses/.
 from . import plot
 from .locfun.edge_space import EdgeSpace
 from .locfun.local_poisson import LocalPoissonFunction
+from .locfun.local_space import LocalFunctionSpace, LocalPoissonSpace
 from .locfun.locfun import LocalFunction
-from .locfun.local_space import LocalPoissonSpace, LocalFunctionSpace
 from .locfun.nystrom import NystromSolver
 from .locfun.poly.barycentric import (
     barycentric_coordinates,
@@ -94,7 +94,7 @@ __all__ += [
     "LocalPoissonSpace",
     "NystromSolver",
     "Polynomial",
-    "PiecewisePolynomial", # deprecated as of 0.5.0
+    "PiecewisePolynomial",  # deprecated as of 0.5.0
     "barycentric_coordinates",
     "barycentric_coordinates_edge",
 ]

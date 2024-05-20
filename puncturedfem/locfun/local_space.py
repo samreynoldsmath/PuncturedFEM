@@ -65,6 +65,8 @@ class LocalPoissonSpace:
     edge_funs: list[LocalPoissonFunction]
     bubb_funs: list[LocalPoissonFunction]
     nyst: NystromSolver
+    compute_interior_values: bool
+    compute_interior_gradient: bool
 
     def __init__(
         self,
@@ -94,6 +96,9 @@ class LocalPoissonSpace:
         # set degree of Polynomial space
         self.set_deg(deg)
 
+        self.compute_interior_values = compute_interior_values
+        self.compute_interior_gradient = compute_interior_gradient
+
         # construct edge spaces, if not provided
         if edge_spaces is None:
             edge_spaces = []
@@ -104,16 +109,7 @@ class LocalPoissonSpace:
         self.nyst = NystromSolver(K, verbose=verbose)
 
         # build each type of function
-        self._build_bubb_funs()
-        self._build_vert_funs(edge_spaces)
-        self._build_edge_funs(edge_spaces)
-        self._compute_num_funs()
-
-        # find interior values
-        if compute_interior_values or compute_interior_gradient:
-            raise NotImplementedError(
-                "Interior values and gradients are not yet implemented"
-            )
+        self._build_basis(edge_spaces)
 
     def set_deg(self, deg: int) -> None:
         """
@@ -149,6 +145,15 @@ class LocalPoissonSpace:
             self.num_vert_funs + self.num_edge_funs + self.num_bubb_funs
         )
 
+    def _build_basis(
+        self,
+        edge_spaces: list[EdgeSpace],
+    ) -> None:
+        self._build_bubb_funs()
+        self._build_vert_funs(edge_spaces)
+        self._build_edge_funs(edge_spaces)
+        self._compute_num_funs()
+
     def _build_bubb_funs(self) -> None:
         # Bubble functions are zero on the boundary and have a polynomial
         # Laplacian.
@@ -161,7 +166,13 @@ class LocalPoissonSpace:
             p = Polynomial()
             p.add_monomial_with_idx(coef=-1.0, idx=k)
             self.bubb_funs.append(
-                LocalPoissonFunction(nyst=self.nyst, laplacian=p, key=v_key)
+                LocalPoissonFunction(
+                    nyst=self.nyst,
+                    laplacian=p,
+                    key=v_key,
+                    evaluate_interior=self.compute_interior_values,
+                    evaluate_gradient=self.compute_interior_gradient,
+                )
             )
 
     def _build_vert_funs(self, edge_spaces: list[EdgeSpace]) -> None:
@@ -191,7 +202,11 @@ class LocalPoissonSpace:
                             edge_index=j, poly=b.vert_fun_traces[k]
                         )
             v = LocalPoissonFunction(
-                nyst=self.nyst, trace=v_trace, key=vert_key
+                nyst=self.nyst,
+                trace=v_trace,
+                key=vert_key,
+                evaluate_interior=self.compute_interior_values,
+                evaluate_gradient=self.compute_interior_gradient,
             )
             self.vert_funs.append(v)
 
@@ -214,7 +229,11 @@ class LocalPoissonSpace:
                     edge_index=edge_idx, poly=b.edge_fun_traces[k]
                 )
                 v = LocalPoissonFunction(
-                    nyst=self.nyst, trace=v_trace, key=b.edge_fun_global_keys[k]
+                    nyst=self.nyst,
+                    trace=v_trace,
+                    key=b.edge_fun_global_keys[k],
+                    evaluate_interior=self.compute_interior_values,
+                    evaluate_gradient=self.compute_interior_gradient,
                 )
                 self.edge_funs.append(v)
 

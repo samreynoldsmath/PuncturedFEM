@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from typing import Optional
 
-from deprecated import deprecated
 import numpy as np
+from deprecated import deprecated
 
 from ...mesh.cell import MeshCell
 from ...util.types import FloatLike

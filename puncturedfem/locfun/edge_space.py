@@ -196,7 +196,7 @@ class EdgeSpace:
                 self.edge_fun_traces[j] -= a0 * ell[0] + a1 * ell[1]
 
                 # flip sign if necessary
-                avg_val = self.e.integrate_over_edge( # TODO: fix types
+                avg_val = self.e.integrate_over_edge(  # TODO: fix types
                     self.edge_fun_traces[j](x=self.e.x[0, :], y=self.e.x[1, :])
                 )
                 if avg_val < 0:
