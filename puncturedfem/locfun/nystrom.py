@@ -440,9 +440,22 @@ class NystromSolver:
     # HARMONIC NORMAL INDICATORS #############################################
     def _compute_harmonic_normal_indicators(self) -> None:
         self.eta = []
-        edge_idx = 0
+        c0 = self.K.components[0]
+        outer_arc_length = c0.integrate_over_closed_contour(
+            np.ones((c0.num_pts,))
+        )
+        num_outer_edges = c0.num_edges
+        edge_idx = num_outer_edges
         for c in self.K.components[1:]:
             chi_trace_j = DirichletTrace(edges=self.K.get_edges(), values=0.0)
+            inner_arc_length = c.integrate_over_closed_contour(
+                np.ones((c.num_pts,))
+            )
+            for k in range(num_outer_edges):
+                chi_trace_j.set_trace_values_on_edge(
+                    edge_index=k,
+                    values=-inner_arc_length / outer_arc_length,
+                )
             for k in range(c.num_edges):
                 chi_trace_j.set_trace_values_on_edge(
                     edge_index=edge_idx + k, values=1.0
