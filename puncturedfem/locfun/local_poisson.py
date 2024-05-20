@@ -12,15 +12,15 @@ from typing import Optional, Union
 
 import numpy as np
 
+from ..mesh.cell import MeshCell
 from ..solver.globkey import GlobalKey
 from ..util.types import FloatLike
+from .inner_prod import h1_semi_inner_prod, l2_inner_prod
+from .local_harmonic import LocalHarmonic
+from .local_polynomial import LocalPolynomial
 from .nystrom import NystromSolver
 from .poly.poly import Polynomial
 from .trace import DirichletTrace
-from .local_harmonic import LocalHarmonic
-from .local_polynomial import LocalPolynomial
-from .inner_prod import h1_semi_inner_prod, l2_inner_prod
-from ..mesh.cell import MeshCell
 
 
 class LocalPoissonFunction:
@@ -123,16 +123,23 @@ class LocalPoissonFunction:
         K : MeshCell
             The mesh cell on which the functions are defined.
         """
+        if not isinstance(
+            other, (LocalPoissonFunction, LocalHarmonic, LocalPolynomial)
+        ):
+            raise TypeError(
+                "other must be a LocalPoissonFunction, LocalHarmonic, or "
+                + "LocalPolynomial"
+            )
         if isinstance(other, LocalPoissonFunction):
             val = h1_semi_inner_prod(self.harm, other.harm, K)
             val += h1_semi_inner_prod(self.poly, other.poly, K)
             val += h1_semi_inner_prod(self.harm, other.poly, K)
             val += h1_semi_inner_prod(self.poly, other.harm, K)
             return val
-        if isinstance(other, (LocalHarmonic, LocalPolynomial)):
-            val = h1_semi_inner_prod(self.harm, other, K)
-            val += h1_semi_inner_prod(self.poly, other, K)
-            return val
+        # other is a LocalHarmonic or LocalPolynomial
+        val = h1_semi_inner_prod(self.harm, other, K)
+        val += h1_semi_inner_prod(self.poly, other, K)
+        return val
 
     def get_l2_inner_prod(
         self,
@@ -149,16 +156,23 @@ class LocalPoissonFunction:
         K : MeshCell
             The mesh cell on which the functions are defined.
         """
+        if not isinstance(
+            other, (LocalPoissonFunction, LocalHarmonic, LocalPolynomial)
+        ):
+            raise TypeError(
+                "other must be a LocalPoissonFunction, LocalHarmonic, or "
+                + "LocalPolynomial"
+            )
         if isinstance(other, LocalPoissonFunction):
             val = l2_inner_prod(self.harm, other.harm, K)
             val += l2_inner_prod(self.harm, other.poly, K)
             val += l2_inner_prod(self.poly, other.harm, K)
             val += l2_inner_prod(self.poly, other.poly, K)
             return val
-        if isinstance(other, (LocalHarmonic, LocalPolynomial)):
-            val = l2_inner_prod(self.harm, other, K)
-            val += l2_inner_prod(self.poly, other, K)
-            return val
+        # other is a LocalHarmonic or LocalPolynomial
+        val = l2_inner_prod(self.harm, other, K)
+        val += l2_inner_prod(self.poly, other, K)
+        return val
 
     def _set_key(self, key: Optional[GlobalKey]) -> None:
         if key is None:

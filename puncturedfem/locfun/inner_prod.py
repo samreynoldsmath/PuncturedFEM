@@ -1,9 +1,20 @@
-from .local_harmonic import LocalHarmonic
-from .local_polynomial import LocalPolynomial
-from ..mesh.cell import MeshCell
-from .poly.integrate_poly import integrate_poly_over_mesh_cell
+"""
+Inner products, including H^1 semi-inner products and L^2 inner products.
+
+Functions
+---------
+h1_semi_inner_prod(v, w, K)
+    Return the H^1 semi-inner product int_K grad(v) * grad(w) dx.
+l2_inner_prod(v, w, K)
+    Return the L^2 inner product int_K (v) * (w) dx.
+"""
 
 from typing import Union
+
+from ..mesh.cell import MeshCell
+from .local_harmonic import LocalHarmonic
+from .local_polynomial import LocalPolynomial
+from .poly.integrate_poly import integrate_poly_over_mesh_cell
 
 LocalGeneric = Union[LocalHarmonic, LocalPolynomial]
 
@@ -26,17 +37,19 @@ def h1_semi_inner_prod(v: LocalGeneric, w: LocalGeneric, K: MeshCell) -> float:
     float
         The H^1 semi-inner product int_K grad(v) * grad(w) dx.
     """
+    if not isinstance(v, (LocalHarmonic, LocalPolynomial)):
+        raise TypeError("v must be a LocalHarmonic or LocalPolynomial")
+    if not isinstance(w, (LocalHarmonic, LocalPolynomial)):
+        raise TypeError("w must be a LocalHarmonic or LocalPolynomial")
+    if not isinstance(K, MeshCell):
+        raise TypeError("K must be a MeshCell")
     if isinstance(v, LocalHarmonic):
         if isinstance(w, LocalHarmonic):
             return _h1_semi_inner_prod_harmonic_harmonic(v, w, K)
-        elif isinstance(w, LocalPolynomial):
-            return _h1_semi_inner_prod_harmonic_polynomial(v, w, K)
-    elif isinstance(v, LocalPolynomial):
-        if isinstance(w, LocalHarmonic):
-            return _h1_semi_inner_prod_harmonic_polynomial(w, v, K)
-        elif isinstance(w, LocalPolynomial):
-            return _h1_semi_inner_prod_polynomial_polynomial(v, w, K)
-    raise TypeError("v and w must be LocalHarmonic or LocalPolynomial")
+        return _h1_semi_inner_prod_harmonic_polynomial(v, w, K)
+    if isinstance(w, LocalHarmonic):
+        return _h1_semi_inner_prod_harmonic_polynomial(w, v, K)
+    return _h1_semi_inner_prod_polynomial_polynomial(v, w, K)
 
 
 def l2_inner_prod(v: LocalGeneric, w: LocalGeneric, K: MeshCell) -> float:
@@ -57,17 +70,19 @@ def l2_inner_prod(v: LocalGeneric, w: LocalGeneric, K: MeshCell) -> float:
     float
         The L^2 inner product int_K (v) * (w) dx.
     """
+    if not isinstance(v, (LocalHarmonic, LocalPolynomial)):
+        raise TypeError("v must be a LocalHarmonic or LocalPolynomial")
+    if not isinstance(w, (LocalHarmonic, LocalPolynomial)):
+        raise TypeError("w must be a LocalHarmonic or LocalPolynomial")
+    if not isinstance(K, MeshCell):
+        raise TypeError("K must be a MeshCell")
     if isinstance(v, LocalHarmonic):
         if isinstance(w, LocalHarmonic):
             return _l2_inner_prod_harmonic_harmonic(v, w, K)
-        elif isinstance(w, LocalPolynomial):
-            return _l2_inner_prod_harmonic_polynomial(v, w, K)
-    elif isinstance(v, LocalPolynomial):
-        if isinstance(w, LocalHarmonic):
-            return _l2_inner_prod_harmonic_polynomial(w, v, K)
-        elif isinstance(w, LocalPolynomial):
-            return _l2_inner_prod_polynomial_polynomial(v, w, K)
-    raise TypeError("v and w must be LocalHarmonic or LocalPolynomial")
+        return _l2_inner_prod_harmonic_polynomial(v, w, K)
+    if isinstance(w, LocalHarmonic):
+        return _l2_inner_prod_harmonic_polynomial(w, v, K)
+    return _l2_inner_prod_polynomial_polynomial(v, w, K)
 
 
 def _h1_semi_inner_prod_harmonic_harmonic(
