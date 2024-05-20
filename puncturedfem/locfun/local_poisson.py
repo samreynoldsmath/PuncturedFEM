@@ -44,7 +44,7 @@ class LocalPoissonFunction:
     harmonic function with a harmonic conjugate psi_hat. We refer to psi as the
     "conjugable part". Given a parametrization x(tau) of the boundary of K, we
     refer to
-        (d / dtau) v(x(tau)) = nabla v(x(tau)) * x'(tau)
+        (d / d tau) v(x(tau)) = nabla v(x(tau)) * x'(tau)
     as the "weighted normal derivative" of v, which we commonly abbreviate in
     code with "wnd". Similarly, the "weighted tangential derivative" is
     abbreviated "wtd". An "anti-Laplacian" of u is any function U such that
@@ -68,6 +68,7 @@ class LocalPoissonFunction:
 
     harm: LocalHarmonic
     poly: LocalPolynomial
+    mesh_cell: MeshCell
     key: GlobalKey
 
     def __init__(
@@ -75,7 +76,6 @@ class LocalPoissonFunction:
         nyst: NystromSolver,
         laplacian: Polynomial = Polynomial(),
         trace: Union[DirichletTrace, FloatLike] = 0,
-        compute_for_l2: bool = True,
         key: Optional[GlobalKey] = None,
     ) -> None:
         """
@@ -98,6 +98,7 @@ class LocalPoissonFunction:
             A unique tag that identifies the local function in the global space.
         """
         self._set_key(key)
+        self._set_mesh_cell(nyst.K)
         P = laplacian.anti_laplacian()
         self.poly = LocalPolynomial(P, nyst.K)
         if isinstance(trace, (float, int, np.ndarray)):
@@ -106,12 +107,10 @@ class LocalPoissonFunction:
             edges=nyst.K.get_edges(),
             values=trace.values - self.poly.trace.values,
         )
-        self.harm = LocalHarmonic(harm_trace_vals, nyst, compute_for_l2)
+        self.harm = LocalHarmonic(harm_trace_vals, nyst)
 
     def get_h1_semi_inner_prod(
-        self,
-        other: Union[LocalPoissonFunction, LocalHarmonic, LocalPolynomial],
-        K: MeshCell,
+        self, other: Union[LocalPoissonFunction, LocalHarmonic, LocalPolynomial]
     ) -> float:
         """
         Return the H^1 semi-inner product int_K grad(self) * grad(other) dx.
@@ -120,8 +119,6 @@ class LocalPoissonFunction:
         ----------
         other : LocalPoissonFunction, LocalHarmonic, or LocalPolynomial
             Another local function on the same mesh cell.
-        K : MeshCell
-            The mesh cell on which the functions are defined.
         """
         if not isinstance(
             other, (LocalPoissonFunction, LocalHarmonic, LocalPolynomial)
@@ -131,20 +128,18 @@ class LocalPoissonFunction:
                 + "LocalPolynomial"
             )
         if isinstance(other, LocalPoissonFunction):
-            val = h1_semi_inner_prod(self.harm, other.harm, K)
-            val += h1_semi_inner_prod(self.poly, other.poly, K)
-            val += h1_semi_inner_prod(self.harm, other.poly, K)
-            val += h1_semi_inner_prod(self.poly, other.harm, K)
+            val = h1_semi_inner_prod(self.harm, other.harm, self.mesh_cell)
+            val += h1_semi_inner_prod(self.poly, other.poly, self.mesh_cell)
+            val += h1_semi_inner_prod(self.harm, other.poly, self.mesh_cell)
+            val += h1_semi_inner_prod(self.poly, other.harm, self.mesh_cell)
             return val
         # other is a LocalHarmonic or LocalPolynomial
-        val = h1_semi_inner_prod(self.harm, other, K)
-        val += h1_semi_inner_prod(self.poly, other, K)
+        val = h1_semi_inner_prod(self.harm, other, self.mesh_cell)
+        val += h1_semi_inner_prod(self.poly, other, self.mesh_cell)
         return val
 
     def get_l2_inner_prod(
-        self,
-        other: Union[LocalPoissonFunction, LocalHarmonic, LocalPolynomial],
-        K: MeshCell,
+        self, other: Union[LocalPoissonFunction, LocalHarmonic, LocalPolynomial]
     ) -> float:
         """
         Return the L^2 inner product int_K self * other dx.
@@ -153,8 +148,6 @@ class LocalPoissonFunction:
         ----------
         other : LocalPoissonFunction, LocalHarmonic, or LocalPolynomial
             Another local function on the same mesh cell.
-        K : MeshCell
-            The mesh cell on which the functions are defined.
         """
         if not isinstance(
             other, (LocalPoissonFunction, LocalHarmonic, LocalPolynomial)
@@ -164,14 +157,14 @@ class LocalPoissonFunction:
                 + "LocalPolynomial"
             )
         if isinstance(other, LocalPoissonFunction):
-            val = l2_inner_prod(self.harm, other.harm, K)
-            val += l2_inner_prod(self.harm, other.poly, K)
-            val += l2_inner_prod(self.poly, other.harm, K)
-            val += l2_inner_prod(self.poly, other.poly, K)
+            val = l2_inner_prod(self.harm, other.harm, self.mesh_cell)
+            val += l2_inner_prod(self.harm, other.poly, self.mesh_cell)
+            val += l2_inner_prod(self.poly, other.harm, self.mesh_cell)
+            val += l2_inner_prod(self.poly, other.poly, self.mesh_cell)
             return val
         # other is a LocalHarmonic or LocalPolynomial
-        val = l2_inner_prod(self.harm, other, K)
-        val += l2_inner_prod(self.poly, other, K)
+        val = l2_inner_prod(self.harm, other, self.mesh_cell)
+        val += l2_inner_prod(self.poly, other, self.mesh_cell)
         return val
 
     def _set_key(self, key: Optional[GlobalKey]) -> None:
@@ -180,3 +173,8 @@ class LocalPoissonFunction:
         if not isinstance(key, GlobalKey):
             raise TypeError("key must be a GlobalKey")
         self.key = key
+
+    def _set_mesh_cell(self, mesh_cell: MeshCell) -> None:
+        if not isinstance(mesh_cell, MeshCell):
+            raise TypeError("mesh_cell must be a MeshCell")
+        self.mesh_cell = mesh_cell
