@@ -3,7 +3,8 @@ Representation of a basis of the local Poisson space V_p(K).
 
 Classes
 -------
-LocalFunctionSpace
+LocalPoissonSpace
+    A basis of the local Poisson space V_p(K).
 """
 
 from typing import Optional
@@ -25,9 +26,9 @@ class LocalPoissonSpace:
 
     A collection of LocalPoissonFunction objects that form a basis of the local
     Poisson space V_p(K). The functions are partitioned into three types:
-            vert_funs: vertex functions (harmonic, trace supported on two edges)
-            edge_funs: Edge functions (harmonic, trace supported on one Edge)
-            bubb_funs: bubble functions (Polynomial Laplacian, zero trace)
+        vert_funs: vertex functions (harmonic, trace supported on two edges)
+        edge_funs: Edge functions (harmonic, trace supported on one Edge)
+        bubb_funs: bubble functions (Polynomial Laplacian, zero trace)
     In the case where the mesh cell K has a vertex-free edge (that is, the edge
     is a simple closed contour, e.g. a circle), no vertex functions are
     associated with that edge. In this case, the edge functions are the only
@@ -165,8 +166,8 @@ class LocalPoissonSpace:
 
     def _build_vert_funs(self, edge_spaces: list[EdgeSpace]) -> None:
         # Vertex functions are harmonic and have trace supported on two edges,
-        # with the common vertex having a value of 1 and all other vertices having
-        # a value of 0.
+        # with the common vertex having a value of 1 and all other vertices
+        # having a value of 0.
         vert_idx_set = set()
         for c in self.nyst.K.components:
             for e in c.edges:
@@ -217,10 +218,12 @@ class LocalPoissonSpace:
                 )
                 self.edge_funs.append(v)
 
+
 @deprecated(version="0.5.0", reason="Use LocalPoissonSpace instead")
 class LocalFunctionSpace(LocalPoissonSpace):
     """
     Use LocalPoissonSpace. Deprecated in version 0.5.0.
     """
-    def __init__(self, *args, **kwargs): # mypy: ignore
+
+    def __init__(self, *args, **kwargs): # type: ignore
         super().__init__(*args, **kwargs)
