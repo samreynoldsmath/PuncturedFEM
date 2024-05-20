@@ -80,7 +80,7 @@ class NystromSolver:
     def __init__(
         self,
         K: MeshCell,
-        antilap_strategy: str = "direct",
+        antilap_strategy: str = "fft",
         precond_type: str = "jacobi",
         verbose: bool = False,
         debug: bool = False,
