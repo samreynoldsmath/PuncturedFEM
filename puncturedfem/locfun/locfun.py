@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from deprecated import deprecated
 import numpy as np
+from deprecated import deprecated
 
 from ..solver.globkey import GlobalKey
 from ..util.types import FloatLike
@@ -24,7 +24,8 @@ from .trace import DirichletTrace
 
 @deprecated(
     version="0.5.0",
-    reason="LocalFunction is being deprecated in favor of the LocalPoissonFunction class.",
+    reason="LocalFunction is being deprecated in favor of the "
+    + "LocalPoissonFunction class.",
 )
 class LocalFunction:
     """
@@ -276,10 +277,8 @@ class LocalFunction:
         self.log_coef = list(log_coef)
 
     def _compute_harmonic_weighted_normal_derivative(self) -> None:
-        harm_part_wnd = (
-            fft_deriv.get_weighted_tangential_derivative_from_trace(
-                self.nyst.K, self.harm_conj_trace.values
-            )
+        harm_part_wnd = fft_deriv.get_weighted_tangential_derivative_from_trace(
+            self.nyst.K, self.harm_conj_trace.values
         )
         for j in range(self.nyst.K.num_holes):
             harm_part_wnd += (
