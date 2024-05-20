@@ -52,7 +52,7 @@ from . import plot
 from .locfun.edge_space import EdgeSpace
 from .locfun.local_poisson import LocalPoissonFunction
 from .locfun.locfun import LocalFunction
-from .locfun.locfunsp import LocalFunctionSpace
+from .locfun.local_space import LocalPoissonSpace, LocalFunctionSpace
 from .locfun.nystrom import NystromSolver
 from .locfun.poly.barycentric import (
     barycentric_coordinates,
@@ -88,9 +88,10 @@ __all__ = [
 __all__ += [
     "DirichletTrace",
     "EdgeSpace",
-    "LocalFunction",
+    "LocalFunction", # deprecated
+    "LocalFunctionSpace", # deprecated
     "LocalPoissonFunction",
-    "LocalFunctionSpace",
+    "LocalPoissonSpace",
     "NystromSolver",
     "Polynomial",
     "PiecewisePolynomial",
