@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from deprecated import deprecated
 import numpy as np
 
 from ...mesh.cell import MeshCell
@@ -219,7 +220,11 @@ class Polynomial:
         """
         self.monos = []
 
-    def _eval(self, x: FloatLike, y: FloatLike) -> np.ndarray:
+    @deprecated(
+        version="0.5.0",
+        reason="Call the object directly (see __call__ method)",
+    )
+    def _eval(self, x: FloatLike, y: FloatLike) -> FloatLike:
         """
         Evaluate the Polynomial at the point (x, y).
 
@@ -235,10 +240,7 @@ class Polynomial:
         np.ndarray
             Value of the Polynomial at the point (x, y).
         """
-        val = np.zeros(np.shape(x))
-        for m in self.monos:
-            val += m.eval(x, y)
-        return val
+        return self(x, y)
 
     def pow(self, exponent: int) -> Polynomial:
         """
@@ -395,7 +397,7 @@ class Polynomial:
         gx, gy = self.grad()
         gx_trace = gx(x1, x2)
         gy_trace = gy(x1, x2)
-        nd = K.dot_with_normal(gx_trace, gy_trace)
+        nd = K.dot_with_normal(gx_trace, gy_trace)  # type: ignore
         return K.multiply_by_dx_norm(nd)
 
     def __repr__(self) -> str:
@@ -426,7 +428,7 @@ class Polynomial:
         """
         return self.__repr__()
 
-    def __call__(self, x: FloatLike, y: FloatLike) -> np.ndarray:
+    def __call__(self, x: FloatLike, y: FloatLike) -> FloatLike:
         """
         Evaluate the Polynomial at the point (x, y).
 
@@ -439,10 +441,14 @@ class Polynomial:
 
         Returns
         -------
-        np.ndarray
-            Value of the Polynomial at the point (x, y).
+        FloatLike
+            Value(s) of the Polynomial at the point(s) (x, y). If x and y are
+            arrays, returns an array of values of the same shape.
         """
-        return self._eval(x, y)
+        val = np.zeros(np.shape(x))
+        for m in self.monos:
+            val += m.eval(x, y)
+        return val
 
     def __eq__(self, other: object) -> bool:
         """
