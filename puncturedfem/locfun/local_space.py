@@ -7,9 +7,10 @@ LocalPoissonSpace
     A basis of the local Poisson space V_p(K).
 """
 
-from typing import Optional
+from typing import Optional, Union
 
 from deprecated import deprecated
+from tqdm import tqdm
 
 from ..mesh.cell import MeshCell
 from ..solver.globkey import GlobalKey
@@ -109,7 +110,7 @@ class LocalPoissonSpace:
         self.nyst = NystromSolver(K, verbose=verbose)
 
         # build each type of function
-        self._build_basis(edge_spaces)
+        self._build_basis(edge_spaces, verbose=verbose)
 
     def set_deg(self, deg: int) -> None:
         """
@@ -148,20 +149,28 @@ class LocalPoissonSpace:
     def _build_basis(
         self,
         edge_spaces: list[EdgeSpace],
+        verbose: bool,
     ) -> None:
-        self._build_bubb_funs()
-        self._build_vert_funs(edge_spaces)
-        self._build_edge_funs(edge_spaces)
+        self._build_bubb_funs(verbose)
+        self._build_vert_funs(edge_spaces, verbose)
+        self._build_edge_funs(edge_spaces, verbose)
         self._compute_num_funs()
 
-    def _build_bubb_funs(self) -> None:
+    def _build_bubb_funs(self, verbose: bool) -> None:
         # Bubble functions are zero on the boundary and have a polynomial
         # Laplacian.
         self.bubb_funs = []
         if self.deg < 2:
             return
         num_bubb = (self.deg * (self.deg - 1)) // 2
-        for k in range(num_bubb):
+        range_num_bubb: Union[tqdm, range]
+        if verbose:
+            range_num_bubb = tqdm(
+                range(num_bubb), desc="Building bubble functions"
+            )
+        else:
+            range_num_bubb = range(num_bubb)
+        for k in range_num_bubb:
             v_key = GlobalKey(fun_type="bubb", bubb_space_idx=k)
             p = Polynomial()
             p.add_monomial_with_idx(coef=-1.0, idx=k)
@@ -175,7 +184,9 @@ class LocalPoissonSpace:
                 )
             )
 
-    def _build_vert_funs(self, edge_spaces: list[EdgeSpace]) -> None:
+    def _build_vert_funs(
+        self, edge_spaces: list[EdgeSpace], verbose: bool
+    ) -> None:
         # Vertex functions are harmonic and have trace supported on two edges,
         # with the common vertex having a value of 1 and all other vertices
         # having a value of 0.
@@ -189,9 +200,18 @@ class LocalPoissonSpace:
         for vert_idx in vert_idx_set:
             vert_keys.append(GlobalKey(fun_type="vert", vert_idx=vert_idx))
 
-        # initialize list of vertex functions and set traces
         self.vert_funs = []
-        for vert_key in vert_keys:
+
+        if not vert_keys:
+            return
+
+        # initialize list of vertex functions and set traces
+        vert_keys_iter: Union[tqdm, list[GlobalKey]]
+        if verbose:
+            vert_keys_iter = tqdm(vert_keys, desc="Building vertex functions")
+        else:
+            vert_keys_iter = vert_keys
+        for vert_key in vert_keys_iter:
             v_trace = DirichletTrace(
                 edges=self.nyst.K.get_edges(), funcs=lambda x, y: 0
             )
@@ -210,10 +230,20 @@ class LocalPoissonSpace:
             )
             self.vert_funs.append(v)
 
-    def _build_edge_funs(self, edge_spaces: list[EdgeSpace]) -> None:
+    def _build_edge_funs(
+        self, edge_spaces: list[EdgeSpace], verbose: bool
+    ) -> None:
         # Edge functions are harmonic and have trace supported on one edge.
+        edge_spaces_iter: Union[tqdm, list[EdgeSpace]]
+        if verbose:
+            edge_spaces_iter = tqdm(
+                edge_spaces, desc="Building edge functions  "
+            )
+        else:
+            edge_spaces_iter = edge_spaces
+
         self.edge_funs = []
-        for b in edge_spaces:
+        for b in edge_spaces_iter:
             # locate Edge within MeshCell
             glob_edge_idx = b.e.idx
             glob_edge_idx_list = [e.idx for e in self.nyst.K.get_edges()]

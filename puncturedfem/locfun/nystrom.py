@@ -112,10 +112,9 @@ class NystromSolver:
         if verbose or debug:
             print(self._setup_message())
 
-        # set antilap strategy
-        self._set_antilap_strategy(antilap_strategy)
-
         # build single and double layer operators
+        if verbose:
+            print("\tBuilding single and double layer operators...")
         self.build_single_layer_mat()
         self.build_double_layer_mat()
         self.build_single_and_double_layer_ops()
@@ -125,36 +124,46 @@ class NystromSolver:
 
         # set up operator for multiply connected case
         if self.K.num_holes > 0:
+            if verbose:
+                print("\tComputing logarithmic terms...")
             self.compute_log_terms()
             self.A_augment = self._multiply_connected_operator()
 
         # build preconditioners
+        if verbose:
+            print(f"\tUsing preconditioner: {precond_type}")
         self.build_preconditioners(precond_type)
 
         # compute harmonic normal indicators
+        if verbose:
+            print(f"\tUsing biharmonic strategy: {antilap_strategy}")
+        self._set_antilap_strategy(antilap_strategy)
         if self.K.num_holes > 0 and self.antilap_strategy == "fft":
             self._compute_harmonic_normal_indicators()
 
         # print condition number
         if debug:
-            print("debug-NystromSolver: Computing condition number...")
+            print("\tdebug-NystromSolver: Computing condition number...")
             kappa = self._get_operator_condition_number(
                 self.precond_simple @ self.A_simple
             )
-            print(f"debug-NystromSolver: Condition number = {kappa:.2e}")
+            print(f"\tdebug-NystromSolver: Condition number = {kappa:.2e}")
             if self.K.num_holes > 0:
                 kappa = self._get_operator_condition_number(
                     self.precond_augment @ self.A_augment
                 )
                 print(
-                    "debug-NystromSolver: "
+                    "\tdebug-NystromSolver: "
                     + f"Augmented condition number = {kappa:.2e}"
                 )
 
+        if verbose:
+            print("\tNyström solver setup complete")
+
     def _setup_message(self) -> str:
         msg = (
-            "Setting up Nyström Solver... "
-            + f"{self.K.num_pts} sampled points on {self.K.num_edges} Edge"
+            "Setting up Nyström solver... "
+            + f"{self.K.num_pts} sampled points on {self.K.num_edges} edge"
         )
         if self.K.num_edges > 1:
             msg += "s"
@@ -494,9 +503,9 @@ class NystromSolver:
             for j in range(self.K.num_holes + 1):
                 jj1 = self.K.component_start_idx[j]
                 jj2 = self.K.component_start_idx[j + 1]
-                self.single_layer_mat[
-                    ii1:ii2, jj1:jj2
-                ] = self.single_layer_component_block(i, j)
+                self.single_layer_mat[ii1:ii2, jj1:jj2] = (
+                    self.single_layer_component_block(i, j)
+                )
 
     def single_layer_component_block(self, i: int, j: int) -> np.ndarray:
         """
@@ -618,10 +627,10 @@ class NystromSolver:
             for j in range(self.K.num_holes + 1):
                 jj1 = self.K.component_start_idx[j]
                 jj2 = self.K.component_start_idx[j + 1]
-                self.double_layer_mat[
-                    ii1:ii2, jj1:jj2
-                ] = self.double_layer_component_block(
-                    self.K.components[i], self.K.components[j]
+                self.double_layer_mat[ii1:ii2, jj1:jj2] = (
+                    self.double_layer_component_block(
+                        self.K.components[i], self.K.components[j]
+                    )
                 )
 
     def double_layer_component_block(
@@ -723,7 +732,7 @@ class NystromSolver:
         return np.linalg.cond(A_mat)
 
 
-@numba.jit
+@numba.njit
 def _single_layer_same_edge_block(
     num_pts: int,
     j_start: int,
@@ -751,7 +760,7 @@ def _single_layer_same_edge_block(
     return B_edge
 
 
-@numba.jit
+@numba.njit
 def _single_layer_distinct_edge_block(
     e_num_pts: int,
     f_num_pts: int,
@@ -769,7 +778,7 @@ def _single_layer_distinct_edge_block(
     return B_edge
 
 
-@numba.jit
+@numba.njit
 def _double_layer_same_edge_block(
     num_pts: int,
     h: float,
@@ -793,7 +802,7 @@ def _double_layer_same_edge_block(
     return B_edge
 
 
-@numba.jit
+@numba.njit
 def _double_layer_distinct_edge_block(
     e_num_pts: int,
     f_num_pts: int,
