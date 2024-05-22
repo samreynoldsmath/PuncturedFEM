@@ -182,7 +182,7 @@ class Solver:
         self.build_stiffness_matrix()
         self.build_mass_matrix()
 
-    def build_values_and_indexes(
+    def _build_values_and_indexes(
         self,
         verbose: bool = True,
         compute_interior_values: bool = True,
