@@ -1,8 +1,5 @@
 """
-test_int_val.py
-===============
-
-Tests to verify that the interior value computations are accurate.
+Verify that the interior value computations are accurate.
 """
 
 import numpy as np
@@ -15,7 +12,11 @@ TOL = 1e-10
 
 
 def test_int_val_ghost() -> None:
-    """Verify correct interior values from Example 1.C"""
+    """
+    Interior value computations for a harmonic function on a ghost cell.
+
+    See also Example 1.3.
+    """
     # build mesh cell
     K = build_ghost()
 
@@ -45,7 +46,9 @@ def test_int_val_ghost() -> None:
     v_laplacian = pf.Polynomial([(6.0, 1, 1), (2.0, 0, 0)])
 
     # store v as a local function object
-    v = pf.LocalFunction(nyst, v_laplacian, v_trace, compute_int_grad=True)
+    v = pf.LocalPoissonFunction(
+        nyst, v_laplacian, v_trace, evaluate_gradient=True
+    )
 
     # computed values
     v_computed = v.int_vals

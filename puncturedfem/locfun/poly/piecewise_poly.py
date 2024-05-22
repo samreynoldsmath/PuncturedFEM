@@ -8,7 +8,7 @@ PiecewisePolynomial
 
 from typing import Optional
 
-# from deprecated import deprecated
+from deprecated import deprecated
 from numpy import ndarray, zeros
 
 from ...mesh.cell import MeshCell
@@ -17,7 +17,7 @@ from .poly import Polynomial
 from .poly_exceptions import PolynomialError
 
 
-# @deprecated(version="0.5.0", reason="Use DirichletTrace instead")
+@deprecated(version="0.5.0", reason="Use DirichletTrace instead")
 class PiecewisePolynomial:
     """
     List of Polynomials used to represent traces of vertex and Edge functions.

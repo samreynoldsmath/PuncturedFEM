@@ -142,8 +142,8 @@ class Solver:
     def assemble(
         self,
         verbose: bool = True,
-        processes: int = 1,
         compute_interior_values: bool = True,
+        compute_interior_gradient: bool = False,
     ) -> None:
         """
         Assemble the global system matrix and right-hand side vector.
@@ -159,8 +159,8 @@ class Solver:
         """
         self.build_values_and_indexes(
             verbose=verbose,
-            processes=processes,
             compute_interior_values=compute_interior_values,
+            compute_interior_gradient=compute_interior_gradient,
         )
         self.find_num_funs()
         self.build_matrix_and_rhs()
@@ -170,64 +170,11 @@ class Solver:
     def build_values_and_indexes(
         self,
         verbose: bool = True,
-        processes: int = 1,
         compute_interior_values: bool = True,
+        compute_interior_gradient: bool = False,
     ) -> None:
         """
         Build values and indexes.
-
-        Parameters
-        ----------
-        verbose : bool, optional
-            Print progress, by default True
-        processes : int, optional
-            Number of processes to use, by default 1
-        compute_interior_values : bool, optional
-            Compute interior values, by default True
-        """
-        if processes == 1:
-            self.build_values_and_indexes_sequential(
-                verbose=verbose, compute_interior_values=compute_interior_values
-            )
-        elif processes > 1:
-            self.build_values_and_indexes_parallel(
-                verbose=verbose,
-                processes=processes,
-                compute_interior_values=compute_interior_values,
-            )
-        else:
-            raise ValueError("processes must be a positive integer")
-
-    def build_values_and_indexes_parallel(
-        self,
-        verbose: bool = True,
-        processes: int = 1,
-        compute_interior_values: bool = True,
-    ) -> None:
-        """
-        Build values and indexes in parallel.
-
-        Parameters
-        ----------
-        verbose : bool, optional
-            Print progress, by default True
-        processes : int, optional
-            Number of processes to use, by default 1
-        compute_interior_values : bool, optional
-            Compute interior values, by default True
-
-        Raises
-        ------
-        NotImplementedError
-            Parallel assembly not yet implemented
-        """
-        raise NotImplementedError("Parallel assembly not yet implemented")
-
-    def build_values_and_indexes_sequential(
-        self, verbose: bool = True, compute_interior_values: bool = True
-    ) -> None:
-        """
-        Build values and indexes sequentially.
 
         Parameters
         ----------
@@ -261,6 +208,7 @@ class Solver:
                 cell_idx,
                 verbose=verbose,
                 compute_interior_values=compute_interior_values,
+                compute_interior_gradient=compute_interior_gradient,
             )
 
             # initialize interior values
@@ -275,7 +223,7 @@ class Solver:
             # loop over local functions
             loc_basis = V_K.get_basis()
 
-            range_num_funs: Union[range, tqdm[int]]
+            range_num_funs: Union[range, tqdm]
             if verbose:
                 range_num_funs = tqdm(range(V_K.num_funs))
             else:

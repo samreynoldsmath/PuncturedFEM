@@ -124,7 +124,7 @@ class Monomial:
         alpha.set_from_idx(idx)
         self.set_multidx(alpha)
 
-    def eval(self, x: FloatLike, y: FloatLike) -> np.ndarray:
+    def eval(self, x: FloatLike, y: FloatLike) -> FloatLike:
         """
         Evaluate the Monomial at the point (x, y).
 
@@ -137,10 +137,18 @@ class Monomial:
 
         Returns
         -------
-        np.ndarray
-            Value of the Monomial at the point (x, y).
+        FloatLike
+            Value(s) of the Monomial at the point (x, y). If x and y are
+            arrays, the result is an array of the same shape.
         """
-        val = self.coef * np.ones(np.shape(x))
+        ones: FloatLike
+        if isinstance(x, np.ndarray):
+            ones = np.ones_like(x)
+        elif isinstance(y, np.ndarray):
+            ones = np.ones_like(y)
+        else:
+            ones = 1.0
+        val = self.coef * ones
         if self.alpha.x > 0:
             val *= x**self.alpha.x
         if self.alpha.y > 0:

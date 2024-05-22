@@ -1,8 +1,13 @@
 """
-test_locfun.py
-==============
+Test the LocalPoissonFunction class.
 
-Tests the LocalFunction class.
+Functions
+---------
+test_punctured_square
+    Sets up the mesh cell K and functions functions v,w as in
+    examples/ex1a-square-hole.ipynb
+get_l2_and_h1_errors
+    Gets the L^2 and H^1 errors for the punctured square
 """
 
 import numpy as np
@@ -62,7 +67,7 @@ def get_l2_and_h1_errors(
     v_laplacian = pf.Polynomial([(12.0, 1, 1)])
 
     # create local function object
-    v = pf.LocalFunction(nyst, v_laplacian, v_trace)
+    v = pf.LocalPoissonFunction(nyst, v_laplacian, v_trace)
 
     # trace of w
     w_trace = (
@@ -75,11 +80,17 @@ def get_l2_and_h1_errors(
     w_laplacian = pf.Polynomial([(8.0, 1, 0)])
 
     # declare w as local function object
-    w = pf.LocalFunction(nyst, w_laplacian, w_trace)
+    w = pf.LocalPoissonFunction(nyst, w_laplacian, w_trace)
 
     # compute L^2 inner product
     l2_vw_exact = 1.39484950156676
     l2_vw_computed = v.get_l2_inner_prod(w)
+
+    # compute L^2 inner product in a different way
+    l2_wv_computed = w.get_l2_inner_prod(v)
+    assert abs(l2_vw_computed - l2_wv_computed) < 1e-10
+
+    # compare to exact values
     l2_error = abs(l2_vw_computed - l2_vw_exact)
 
     # compare to exact values

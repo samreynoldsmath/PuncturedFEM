@@ -49,8 +49,8 @@ class DirichletTrace:
     num_edges: int
     num_pts: int
     values: np.ndarray
-    w_norm_deriv: Optional[np.ndarray]
-    w_tang_deriv: Optional[np.ndarray]
+    w_norm_deriv: np.ndarray
+    w_tang_deriv: np.ndarray
     funcs: list[Func_R2_R]
     edge_sampled_indices: list[tuple[int, int]]
 
@@ -373,7 +373,7 @@ class DirichletTrace:
             raise ValueError("The edge index is out of range")
         if not isinstance(poly, Polynomial):
             raise ValueError("'poly' must be of type Polynomial")
-        self.funcs[edge_index] = poly.eval  # type: ignore
+        self.funcs[edge_index] = poly  # type: ignore
         if compute_vals and self.edges_are_parametrized():
             self.find_values()
 

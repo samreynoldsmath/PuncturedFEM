@@ -19,6 +19,8 @@ Uses the fast Fourier transform (FFT) from numpy.fft.
 
 import numpy as np
 
+from ..mesh.cell import MeshCell
+
 
 def fft_derivative(f: np.ndarray, interval_length: float) -> np.ndarray:
     """
@@ -79,3 +81,69 @@ def fft_antiderivative(df: np.ndarray, interval_length: float) -> np.ndarray:
     omega *= 0.5 * interval_length / np.pi
     omega[0] = 0
     return np.real(np.fft.ifft(omega))
+
+
+def get_weighted_tangential_derivative_from_trace(
+    K: MeshCell, f_vals: np.ndarray
+) -> np.ndarray:
+    """
+    Compute the weighted tangential derivative from the trace.
+
+    Parameters
+    ----------
+    K : MeshCell
+        Mesh cell.
+    f_vals : np.ndarray
+        Values of the function on the boundary.
+
+    Returns
+    -------
+    wtd : np.ndarray
+        Weighted tangential derivative.
+    """
+    wtd = np.zeros((K.num_pts,))
+
+    for i in range(K.num_holes + 1):
+        # get indices of this contour
+        j = K.component_start_idx[i]
+        jp1 = K.component_start_idx[i + 1]
+
+        # get values on this contour
+        f_vals_c = f_vals[j:jp1]
+
+        # compute weighted tangential derivative on this contour
+        interval_length = 2 * np.pi * K.components[i].num_edges
+        dfc_dt_wgt = fft_derivative(f_vals_c, interval_length)
+
+        # add to weighted tangential derivative on the whole boundary
+        wtd[j:jp1] = dfc_dt_wgt
+
+    return wtd
+
+
+def fft_antiderivative_on_each_component(
+    K: MeshCell, f_prime: np.ndarray
+) -> np.ndarray:
+    """
+    Compute the antiderivative on each component.
+
+    Parameters
+    ----------
+    K : MeshCell
+        The mesh cell over whose boundary we are integrating.
+    f_prime : np.ndarray
+        The derivative of the function to integrate. The length of f_prime
+        should be equal to the number of points on the boundary, and sampled
+        values should represent the trace of a continuous function.
+
+    Returns
+    -------
+    f : np.ndarray
+        The antiderivative of the function on each component.
+    """
+    f = np.zeros((K.num_pts,))
+    for j in range(K.num_holes + 1):
+        pt_idx = slice(K.component_start_idx[j], K.component_start_idx[j + 1])
+        interval_length = 2 * np.pi * K.components[j].num_edges
+        f[pt_idx] = fft_antiderivative(f_prime[pt_idx], interval_length)
+    return f
