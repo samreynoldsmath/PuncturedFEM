@@ -9,6 +9,7 @@
     - [ ] tutorials belong to the user guide in `doc/tutorials/`: describe basic functionality
     - [ ] examples belong to the `examples/` directory: examples used (or will be used) in papers, advanced functionality, applications
 - [x] update examples to use new initialization method for `LocalFunction` objects
+- [ ] eigenvalue problem
 ### Documentation
 - [x] change: installation instructions for developers to build the package locally with `pip install -e .`
 - [x] add: tutorials
@@ -32,6 +33,7 @@
 - [ ] run tutorial notebooks when building documentation
 - [ ] link to notebook source on tutorial pages
 - [ ] link to tutorial pages from README
+- [ ] move installation instructions using `git` from CONTRIBUTING to INSTALLATION
 ### Maintenance
 - [x] `DirichletTrace` improvements:
     - [x] add: weighted normal derivative
@@ -62,7 +64,7 @@
 - [ ] fix: broken links in examples
 - [ ] fix: broken links in tutorials
 - [ ] fix: `align*` blocks not rendering in tutorials when building documentation
-- [ ] `DirichletTrace` does not recompute traces when function changes
+- [ ]fix: `DirichletTrace` does not recompute traces when function changes
 
 ## [v0.4.5] - 2024 Apr 24
 ### Maintenance
