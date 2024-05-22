@@ -11,16 +11,22 @@ from __future__ import annotations
 from typing import Optional, Union
 
 import numpy as np
+from deprecated import deprecated
 
 from ..solver.globkey import GlobalKey
 from ..util.types import FloatLike
-from . import antilap, trace2tangential
+from . import antilap, fft_deriv
 from .nystrom import NystromSolver
-from .poly.integrate_poly import integrate_poly_over_mesh
+from .poly.integrate_poly import integrate_poly_over_mesh_cell
 from .poly.poly import Polynomial
 from .trace import DirichletTrace
 
 
+@deprecated(
+    version="0.5.0",
+    reason="LocalFunction is being deprecated in favor of the "
+    + "LocalPoissonFunction class.",
+)
 class LocalFunction:
     """
     Function with a polynomial Laplacian and continuous trace on the boundary.
@@ -154,7 +160,7 @@ class LocalFunction:
         Px, Py = self.poly_part.grad()
         Qx, Qy = other.poly_part.grad()
         gradP_gradQ = Px * Qx + Py * Qy
-        val = integrate_poly_over_mesh(gradP_gradQ, self.nyst.K)
+        val = integrate_poly_over_mesh_cell(gradP_gradQ, self.nyst.K)
 
         # grad phi * grad Q
         val += self.nyst.K.integrate_over_boundary_preweighted(
@@ -192,7 +198,7 @@ class LocalFunction:
 
         # P * Q
         PQ = self.poly_part * other.poly_part
-        val = integrate_poly_over_mesh(PQ, self.nyst.K)
+        val = integrate_poly_over_mesh_cell(PQ, self.nyst.K)
 
         # phi * Q
         R = other.poly_part.anti_laplacian()
@@ -271,10 +277,8 @@ class LocalFunction:
         self.log_coef = list(log_coef)
 
     def _compute_harmonic_weighted_normal_derivative(self) -> None:
-        harm_part_wnd = (
-            trace2tangential.get_weighted_tangential_derivative_from_trace(
-                self.nyst.K, self.harm_conj_trace.values
-            )
+        harm_part_wnd = fft_deriv.get_weighted_tangential_derivative_from_trace(
+            self.nyst.K, self.harm_conj_trace.values
         )
         for j in range(self.nyst.K.num_holes):
             harm_part_wnd += (
@@ -295,7 +299,7 @@ class LocalFunction:
             big_phi,
             big_phi_wnd,
         ) = antilap.get_anti_laplacian_harmonic(
-            self.nyst, psi, psi_hat, a=np.array(self.log_coef)
+            self.nyst, psi, psi_hat, np.array(self.log_coef)
         )
         self.biharmonic_trace = DirichletTrace(
             edges=self.nyst.K.get_edges(), values=big_phi

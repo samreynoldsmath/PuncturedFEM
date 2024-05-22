@@ -10,7 +10,7 @@ from ...mesh.cell import MeshCell
 from .poly import Polynomial
 
 
-def integrate_poly_over_mesh(p: Polynomial, K: MeshCell) -> float:
+def integrate_poly_over_mesh_cell(p: Polynomial, K: MeshCell) -> float:
     """
     Get the integral of a Polynomial over a MeshCell.
 

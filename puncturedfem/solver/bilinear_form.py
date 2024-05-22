@@ -7,9 +7,9 @@ BilinearForm
     Represents a bilinear form arising from a diffusion-reaction equation.
 """
 
-from ..locfun.locfun import LocalFunction
+from ..locfun.local_poisson import LocalPoissonFunction
+from ..locfun.local_polynomial import LocalPolynomial
 from ..locfun.poly.poly import Polynomial
-from ..locfun.trace import DirichletTrace
 
 
 class BilinearForm:
@@ -102,29 +102,35 @@ class BilinearForm:
 
     # EVALUATION ##############################################################
 
-    def eval_h1(self, u: LocalFunction, v: LocalFunction) -> float:
+    def eval_h1(
+        self, u: LocalPoissonFunction, v: LocalPoissonFunction
+    ) -> float:
         """
-        Return the H^1 semi-inner product of two LocalFunction objects u and v.
+        Return the H^1 semi-inner product of two LocalPoissonFunction objects u
+        and v.
 
         Parameters
         ----------
-        u : LocalFunction
-            The first LocalFunction object
-        v : LocalFunction
-            The second LocalFunction object
+        u : LocalPoissonFunction
+            The first LocalPoissonFunction object
+        v : LocalPoissonFunction
+            The second LocalPoissonFunction object
         """
         return u.get_h1_semi_inner_prod(v)
 
-    def eval_l2(self, u: LocalFunction, v: LocalFunction) -> float:
+    def eval_l2(
+        self, u: LocalPoissonFunction, v: LocalPoissonFunction
+    ) -> float:
         """
-        Return the L^2 inner product of two LocalFunction objects u and v.
+        Return the L^2 inner product of two LocalPoissonFunction objects u and
+        v.
 
         Parameters
         ----------
-        u : LocalFunction
-            The first LocalFunction object
-        v : LocalFunction
-            The second LocalFunction object
+        u : LocalPoissonFunction
+            The first LocalPoissonFunction object
+        v : LocalPoissonFunction
+            The second LocalPoissonFunction object
         """
         return u.get_l2_inner_prod(v)
 
@@ -141,35 +147,30 @@ class BilinearForm:
         """
         return self.diffusion_constant * h1 + self.reaction_constant * l2
 
-    def eval(self, u: LocalFunction, v: LocalFunction) -> float:
+    def eval(self, u: LocalPoissonFunction, v: LocalPoissonFunction) -> float:
         """
-        Evaluate the bilinear form on two LocalFunction objects u and v.
+        Evaluate the bilinear form on two LocalPoissonFunction objects u and v.
 
         Parameters
         ----------
-        u : LocalFunction
-            The first LocalFunction object
-        v : LocalFunction
-            The second LocalFunction object
+        u : LocalPoissonFunction
+            The first LocalPoissonFunction object
+        v : LocalPoissonFunction
+            The second LocalPoissonFunction object
         """
         h1 = u.get_h1_semi_inner_prod(v)
         l2 = u.get_l2_inner_prod(v)
         return self.eval_with_h1_and_l2(h1, l2)
 
-    def eval_rhs(self, v: LocalFunction) -> float:
+    def eval_rhs(self, v: LocalPoissonFunction) -> float:
         """
-        Evaluate the right-hand side Polynomial f on a LocalFunction object v.
+        Evaluate the right-hand side polynomial f on a LocalPoissonFunction
+        object v.
 
         Parameters
         ----------
-        v : LocalFunction
-            The LocalFunction object to evaluate f on
+        v : LocalPoissonFunction
+            The LocalPoissonFunction object against which to integrate f.
         """
-        f = LocalFunction(
-            nyst=v.nyst,
-            laplacian=self.rhs_poly.laplacian(),
-            trace=DirichletTrace(
-                edges=v.nyst.K.get_edges(), funcs=self.rhs_poly
-            ),
-        )
-        return f.get_l2_inner_prod(v)
+        f = LocalPolynomial(exact_form=self.rhs_poly, K=v.mesh_cell)
+        return v.get_l2_inner_prod(f)

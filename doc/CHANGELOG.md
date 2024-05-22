@@ -39,17 +39,24 @@
     - [x] add: weighted normal derivative
     - [x] add: weighted tangential derivative
 - [x] `LocalFunction` improvements:
-  - [x] BREAKING CHANGE: replace the handling of traces with `DirichletTrace`
+    - [x] BREAKING CHANGE: replace the handling of traces with `DirichletTrace`
+    - [x] DEPRECATED: use `LocalPoissonFunction` instead
+- [x] add: `LocalPoissonFunction` class, built from `LocalHarmonic` and `LocalPolynomial` objects
 - [x] `NystromSolver` improvements:
-  - [x] handle logarithmic functions as instances of `DirichletTrace` class
-  - [x] move `jacobi_preconditioner()` static method to a separate module
+    - [x] handle logarithmic functions as instances of `DirichletTrace` class
+    - [x] move `jacobi_preconditioner()` static method to a separate module
+    - [x] `antilap_strategy` option to precompute "normal indicator functions" biharmonic function computation speedup
 - [x] `locfun` module improvements:
-  - [x] use `DirichletTrace` objects for traces in `antilap` module
-  - [x] move contents of `antilap` and `d2n` subpackages to `locfun` root
-  - [x] remove `log_terms` and `log_antilap` modules
-- [ ] refactor `GlobalFunctionSpace`:
-  - [ ] build from a collection of `GlobalFunction` objects, just like `LocalFunctionSpace` is built from a collection of `LocalFunction` objects
-  - [ ] precompute `LocalFunctionSpace` objects
+    - [x] use `DirichletTrace` objects for traces in `antilap` module
+    - [x] move contents of `antilap` and `d2n` subpackages to `locfun` root
+    - [x] remove `log_terms` and `log_antilap` modules
+    - [x] deprecate `PiecewisePolynomial` class
+- [x] `Polynomial` improvements:
+  - [x] deprecate `eval()` method, use `__call__()` method instead
+- [ ] replace `GlobalFunctionSpace` with `GlobalPoissionSpace`:
+    - [ ] deprecate `GlobalFunctionSpace`
+    - [ ] build from a collection of `GlobalFunction` objects, just like `LocalFunctionSpace` is built from a collection of `LocalFunction` objects
+    - [ ] precompute `LocalFunctionSpace` objects
 - [ ] `MeshPlot` improvements:
     - [ ] change: initialize with either a list of `Edge` objects, a `MeshCell`, or a `PlanarMesh`
     - [ ] add: plot interior points with `draw_interior_points()` method

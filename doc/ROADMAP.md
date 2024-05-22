@@ -67,8 +67,6 @@
 ### Maintenance
 - [ ] fix disabled pylint messages
 - [ ] `Polynomial` improvements:
-  - [ ] deprecate `PiecewisePolynomial` class
-  - [ ] deprecate `eval()` method, use `__call__()` method instead
   - [ ] allow for `Floatlike` output from `eval()` method
   - [ ] use sets instead of lists of `Monomial` objects in `Polynomial` class
   - [ ] deprecate `barycentric_products()` function

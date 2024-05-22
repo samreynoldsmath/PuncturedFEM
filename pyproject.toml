@@ -48,7 +48,8 @@ disable = [
     "too-many-locals",
     "too-many-instance-attributes", # use dataclasses?
     "too-many-public-methods", # make more private?
-    "too-many-statements"
+    "too-many-statements",
+    "too-few-public-methods"
     ]
 good-names = [
     "a","b","c","d","e","f","g","h","i","j","k","l","m",

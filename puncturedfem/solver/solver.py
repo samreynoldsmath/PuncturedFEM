@@ -158,6 +158,7 @@ class Solver:
         self,
         verbose: bool = True,
         compute_interior_values: bool = True,
+        compute_interior_gradient: bool = False,
     ) -> None:
         """
         Assemble the global system matrix and right-hand side vector.
@@ -174,17 +175,29 @@ class Solver:
         self._build_values_and_indexes(
             verbose=verbose,
             compute_interior_values=compute_interior_values,
+            compute_interior_gradient=compute_interior_gradient,
         )
         self._find_num_funs()
         self._build_matrix_and_rhs()
         self.build_stiffness_matrix()
         self.build_mass_matrix()
 
-    def _build_values_and_indexes(
+    def build_values_and_indexes(
         self,
         verbose: bool = True,
         compute_interior_values: bool = True,
+        compute_interior_gradient: bool = False,
     ) -> None:
+        """
+        Build values and indexes.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Print progress, by default True
+        compute_interior_values : bool, optional
+            Compute interior values, by default True
+        """
         self.rhs_idx = []
         self.rhs_vals = []
         self.row_idx = []
@@ -214,6 +227,7 @@ class Solver:
                 cell_idx,
                 verbose=verbose,
                 compute_interior_values=compute_interior_values,
+                compute_interior_gradient=compute_interior_gradient,
             )
 
             # initialize interior values
@@ -228,7 +242,7 @@ class Solver:
             # loop over local functions
             loc_basis = loc_fun_sp.get_basis()
 
-            range_num_funs: Union[range, tqdm[int]]
+            range_num_funs: Union[range, tqdm]
             if verbose:
                 range_num_funs = tqdm(range(loc_fun_sp.num_funs))
             else:
