@@ -25,9 +25,9 @@ class Solver:
 
     Attributes
     ----------
-    V : GlobalFunctionSpace
+    glob_fun_sp : GlobalFunctionSpace
         Global function space
-    a : BilinearForm
+    bilinear_form : BilinearForm
         Bilinear form
     glob_mat : csr_matrix
         Global system matrix
@@ -51,7 +51,7 @@ class Solver:
         Solution vector
     """
 
-    V: GlobalFunctionSpace
+    glob_fun_sp: GlobalFunctionSpace
     a: BilinearForm
     stiff_mat: csr_matrix
     mass_mat: csr_matrix
@@ -68,44 +68,59 @@ class Solver:
     interior_values: list[list[ndarray]]
     soln: ndarray
 
-    def __init__(self, V: GlobalFunctionSpace, a: BilinearForm) -> None:
+    def __init__(
+        self,
+        glob_fun_sp: GlobalFunctionSpace,
+        bilinear_form: BilinearForm,
+        verbose: bool = True,
+        compute_interior_values: bool = True,
+    ) -> None:
         """
         Initialize the Solver.
 
         Parameters
         ----------
-        V : GlobalFunctionSpace
+        glob_fun_sp : GlobalFunctionSpace
             Global function space
-        a : BilinearForm
+        bilinear_form : BilinearForm
             Bilinear form
+        verbose : bool, optional
+            Print progress, by default True
+        compute_interior_values : bool, optional
+            Compute interior values, by default True
         """
-        self.set_global_function_space(V)
-        self.set_bilinear_form(a)
+        self.set_global_function_space(glob_fun_sp)
+        self.set_bilinear_form(bilinear_form)
+        self.assemble(
+            verbose=verbose, compute_interior_values=compute_interior_values
+        )
 
     def __str__(self) -> str:
         """Get string representation."""
         s = "Solver:\n"
-        s += f"\tV: {self.V}\n"
-        s += f"\ta: {self.a}\n"
+        s += f"\tglob_fun_sp: {self.glob_fun_sp}\n"
+        s += f"\ta: {self.bilinear_form}\n"
         s += f"\tnum_funs: {self.num_funs}\n"
         return s
 
     # SETTERS ################################################################
 
-    def set_global_function_space(self, V: GlobalFunctionSpace) -> None:
+    def set_global_function_space(
+        self, glob_fun_sp: GlobalFunctionSpace
+    ) -> None:
         """
         Set the global function space.
 
         Parameters
         ----------
-        V : GlobalFunctionSpace
+        glob_fun_sp : GlobalFunctionSpace
             Global function space
         """
-        if not isinstance(V, GlobalFunctionSpace):
-            raise TypeError("V must be a GlobalFunctionSpace")
-        self.V = V
+        if not isinstance(glob_fun_sp, GlobalFunctionSpace):
+            raise TypeError("glob_fun_sp must be a GlobalFunctionSpace")
+        self.glob_fun_sp = glob_fun_sp
 
-    def set_bilinear_form(self, a: BilinearForm) -> None:
+    def set_bilinear_form(self, bilinear_form: BilinearForm) -> None:
         """
         Set the bilinear form.
 
@@ -114,9 +129,9 @@ class Solver:
         a : BilinearForm
             Bilinear form
         """
-        if not isinstance(a, BilinearForm):
-            raise TypeError("a must be a BilinearForm")
-        self.a = a
+        if not isinstance(bilinear_form, BilinearForm):
+            raise TypeError("bilinear_form must be a BilinearForm")
+        self.bilinear_form = bilinear_form
 
     # SOLVE LINEAR SYSTEM ####################################################
 
@@ -157,17 +172,17 @@ class Solver:
         compute_interior_values : bool, optional
             Compute interior values, by default True
         """
-        self.build_values_and_indexes(
+        self._build_values_and_indexes(
             verbose=verbose,
             compute_interior_values=compute_interior_values,
             compute_interior_gradient=compute_interior_gradient,
         )
-        self.find_num_funs()
-        self.build_matrix_and_rhs()
+        self._find_num_funs()
+        self._build_matrix_and_rhs()
         self.build_stiffness_matrix()
         self.build_mass_matrix()
 
-    def build_values_and_indexes(
+    def _build_values_and_indexes(
         self,
         verbose: bool = True,
         compute_interior_values: bool = True,
@@ -191,20 +206,24 @@ class Solver:
         self.stiff_vals = []
         self.mass_vals = []
 
-        self.interior_values = [[] for _ in range(self.V.T.num_cells)]
+        self.interior_values = [
+            [] for _ in range(self.glob_fun_sp.mesh.num_cells)
+        ]
 
         # loop over MeshCells
-        for abs_cell_idx in range(self.V.T.num_cells):
-            cell_idx = self.V.T.cell_idx_list[abs_cell_idx]
+        for abs_cell_idx in range(self.glob_fun_sp.mesh.num_cells):
+            cell_idx = self.glob_fun_sp.mesh.cell_idx_list[abs_cell_idx]
 
             if verbose:
                 print_color(
-                    f"Cell {abs_cell_idx + 1:6} / {self.V.T.num_cells:6}",
+                    "Cell "
+                    + f"{abs_cell_idx + 1:6}"
+                    + f" / {self.glob_fun_sp.mesh.num_cells:6}",
                     Color.GREEN,
                 )
 
             # build local function space
-            V_K = self.V.build_local_function_space(
+            loc_fun_sp = self.glob_fun_sp.build_local_function_space(
                 cell_idx,
                 verbose=verbose,
                 compute_interior_values=compute_interior_values,
@@ -214,20 +233,20 @@ class Solver:
             # initialize interior values
             if compute_interior_values:
                 self.interior_values[abs_cell_idx] = [
-                    zeros((0,)) for _ in range(V_K.num_funs)
+                    zeros((0,)) for _ in range(loc_fun_sp.num_funs)
                 ]
 
             if verbose:
                 print("Evaluating bilinear form and right-hand side...")
 
             # loop over local functions
-            loc_basis = V_K.get_basis()
+            loc_basis = loc_fun_sp.get_basis()
 
             range_num_funs: Union[range, tqdm]
             if verbose:
-                range_num_funs = tqdm(range(V_K.num_funs))
+                range_num_funs = tqdm(range(loc_fun_sp.num_funs))
             else:
-                range_num_funs = range(V_K.num_funs)
+                range_num_funs = range(loc_fun_sp.num_funs)
 
             for i in range_num_funs:
                 v = loc_basis[i]
@@ -237,19 +256,19 @@ class Solver:
                     self.interior_values[abs_cell_idx][i] = v.int_vals
 
                 # evaluate local right-hand side
-                f_i = self.a.eval_rhs(v)
+                f_i = self.bilinear_form.eval_rhs(v)
 
                 # add to global right-hand side vector
                 self.rhs_idx.append(v.key.glob_idx)
                 self.rhs_vals.append(f_i)
 
-                for j in range(i, V_K.num_funs):
+                for j in range(i, loc_fun_sp.num_funs):
                     w = loc_basis[j]
 
                     # evaluate local bilinear form
-                    h1_ij = self.a.eval_h1(v, w)
-                    l2_ij = self.a.eval_l2(v, w)
-                    a_ij = self.a.eval_with_h1_and_l2(h1_ij, l2_ij)
+                    h1_ij = self.bilinear_form.eval_h1(v, w)
+                    l2_ij = self.bilinear_form.eval_l2(v, w)
+                    a_ij = self.bilinear_form.eval_with_h1_and_l2(h1_ij, l2_ij)
 
                     # add to matrices
                     self.row_idx.append(v.key.glob_idx)
@@ -267,10 +286,10 @@ class Solver:
                         self.mass_vals.append(l2_ij)
 
         # impose boundary conditions
-        for abs_cell_idx in range(self.V.T.num_cells):
-            cell_idx = self.V.T.cell_idx_list[abs_cell_idx]
+        for abs_cell_idx in range(self.glob_fun_sp.mesh.num_cells):
+            cell_idx = self.glob_fun_sp.mesh.cell_idx_list[abs_cell_idx]
 
-            for key in self.V.cell_dofs[abs_cell_idx]:
+            for key in self.glob_fun_sp.cell_dofs[abs_cell_idx]:
                 if key.is_on_boundary:
                     # zero rhs entry
                     for k, idx in enumerate(self.rhs_idx):
@@ -284,28 +303,30 @@ class Solver:
                             else:
                                 self.mat_vals[k] = 0.0
 
-    def find_num_funs(self) -> None:
-        """Find the number of global functions and run size checks."""
-        self.num_funs = self.V.num_funs
-        self.check_sizes()
+    def _find_num_funs(self) -> None:
+        self.num_funs = self.glob_fun_sp.num_funs
+        self._check_sizes()
 
-    def check_sizes(self) -> None:
-        """Check that the sizes of linear system components are consistent."""
-        # rhs
-        L = 1 + max(self.rhs_idx)
-        if L > self.num_funs:
-            raise ValueError(f"L > self.num_funs ({L} > {self.num_funs})")
-        # rows
-        M = 1 + max(self.row_idx)
-        if M > self.num_funs:
-            raise ValueError(f"M > self.num_funs ({M} > {self.num_funs})")
-        # cols
-        N = 1 + max(self.col_idx)
-        if N > self.num_funs:
-            raise ValueError(f"N > self.num_funs ({N} > {self.num_funs})")
+    def _check_sizes(self) -> None:
+        rhs_size = 1 + max(self.rhs_idx)
+        if rhs_size > self.num_funs:
+            raise ValueError(
+                f"rhs_size > self.num_funs ({rhs_size} > {self.num_funs})"
+            )
 
-    def build_matrix_and_rhs(self) -> None:
-        """Build the global matrix and right-hand side vector."""
+        num_rows = 1 + max(self.row_idx)
+        if num_rows > self.num_funs:
+            raise ValueError(
+                f"num_rows > self.num_funs ({num_rows} > {self.num_funs})"
+            )
+
+        num_cols = 1 + max(self.col_idx)
+        if num_cols > self.num_funs:
+            raise ValueError(
+                f"num_cols > self.num_funs ({num_cols} > {self.num_funs})"
+            )
+
+    def _build_matrix_and_rhs(self) -> None:
         self.glob_mat = csr_matrix(
             (self.mat_vals, (self.row_idx, self.col_idx)),
             shape=(self.num_funs, self.num_funs),
@@ -352,7 +373,7 @@ class Solver:
         coef : ndarray
             Coefficients
         """
-        abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
+        abs_cell_idx = self.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
         int_vals = self.interior_values[abs_cell_idx]
         vals = zeros(shape(int_vals[0]))
         for i, val in enumerate(int_vals):
@@ -370,8 +391,8 @@ class Solver:
         u : ndarray
             Solution vector
         """
-        abs_cell_idx = self.V.T.get_abs_cell_idx(cell_idx)
-        keys = self.V.cell_dofs[abs_cell_idx]
+        abs_cell_idx = self.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
+        keys = self.glob_fun_sp.cell_dofs[abs_cell_idx]
         coef = zeros((len(keys),))
         for i, key in enumerate(keys):
             coef[i] = u[key.glob_idx]

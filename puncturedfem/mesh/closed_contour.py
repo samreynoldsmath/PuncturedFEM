@@ -265,9 +265,9 @@ class ClosedContour:
         # is the starting point of the next Edge
         self.closest_vert_idx = np.zeros((self.num_pts,), dtype=int)
         for i in range(self.num_edges):
-            self.closest_vert_idx[
-                self.vert_idx[i] : mid_idx[i]
-            ] = self.vert_idx[i]
+            self.closest_vert_idx[self.vert_idx[i] : mid_idx[i]] = (
+                self.vert_idx[i]
+            )
             self.closest_vert_idx[mid_idx[i] : self.vert_idx[i + 1]] = (
                 self.vert_idx[i + 1] % self.num_pts
             )

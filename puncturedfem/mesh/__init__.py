@@ -31,6 +31,7 @@ edgelib
 meshlib
     A library of modules for creating meshes.
 """
+
 from .cell import MeshCell
 from .edge import Edge
 from .planar_mesh import PlanarMesh

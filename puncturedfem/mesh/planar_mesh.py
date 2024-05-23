@@ -95,9 +95,9 @@ class PlanarMesh:
         self.edges = []
         self.num_edges = 0
         self.add_edges(edges)
-        self.set_edge_ids()
-        self.build_cell_idx_list()
-        self.build_vert_idx_list()
+        self._find_edge_global_index()
+        self._build_cell_idx_list()
+        self._build_vert_idx_list()
         # self.find_repeats()
         if verbose:
             print(self)
@@ -109,17 +109,6 @@ class PlanarMesh:
         s += f"\n\tnum_edges: {self.num_edges}"
         s += f"\n\tnum_cells: {self.num_cells}"
         return s
-
-    # EDGES ##################################################################
-    def compute_num_edges(self) -> None:
-        """
-        Compute and store the number of edges in the mesh to self.num_edges.
-
-        The following attributes are set:
-        - num_edges : int
-            Number of edges in the mesh.
-        """
-        self.num_edges = len(self.edges)
 
     def add_edge(self, e: Edge) -> None:
         """
@@ -154,37 +143,12 @@ class PlanarMesh:
         for e in edges:
             self.add_edge(e)
 
-    def set_edge_ids(self) -> None:
-        """
-        Set the id of each Edge in the mesh.
-
-        The following attributes are set:
-        - Edge.idx : int
-            Index of the Edge in the mesh.
-        """
+    def _find_edge_global_index(self) -> None:
         for k, e in enumerate(self.edges):
             e.set_idx(k)
 
-    # VERTICES ###############################################################
-
-    def compute_num_verts(self) -> None:
-        """
-        Compute and store the number of vertices in the mesh.
-
-        The following attributes are set:
-        - num_verts : int
-            Number of vertices in the mesh.
-        """
-        self.num_verts = len(self.vert_idx_list)
-
-    def build_vert_idx_list(self) -> None:
-        """
-        Build and store the list of vertex indices (excluding loops).
-
-        The following attributes are set:
-        - vert_idx_list : list[int]
-            List of vertex indices in the mesh, excluding vertices of loops.
-        """
+    def _build_vert_idx_list(self) -> None:
+        # Build and store the list of vertex indices (excluding loops).
         self.vert_idx_list = []
         for e in self.edges:
             if not e.is_loop:
@@ -192,35 +156,17 @@ class PlanarMesh:
                     if vert_idx >= 0 and vert_idx not in self.vert_idx_list:
                         self.vert_idx_list.append(vert_idx)
         self.vert_idx_list.sort()
-        self.compute_num_verts()
+        self.num_verts = len(self.vert_idx_list)
 
-    # CELLS ##################################################################
-
-    def compute_num_cells(self) -> None:
-        """
-        Compute and store the number of MeshCells in the mesh.
-
-        The following attributes are set:
-        - num_cells : int
-            Number of MeshCells in the mesh.
-        """
-        self.num_cells = len(self.cell_idx_list)
-
-    def build_cell_idx_list(self) -> None:
-        """
-        Build and store the list of MeshCell indices in the mesh.
-
-        The following attributes are set:
-        - cell_idx_list : list[int]
-            List of MeshCell indices in the mesh.
-        """
+    def _build_cell_idx_list(self) -> None:
+        # Build and store the list of MeshCell indices in the mesh.
         self.cell_idx_list = []
         for e in self.edges:
             for cell_idx in [e.pos_cell_idx, e.neg_cell_idx]:
                 if cell_idx >= 0 and cell_idx not in self.cell_idx_list:
                     self.cell_idx_list.append(cell_idx)
         self.cell_idx_list.sort()
-        self.compute_num_cells()
+        self.num_cells = len(self.cell_idx_list)
 
     def get_cells(self, cell_idx: int) -> MeshCell:
         """
@@ -260,8 +206,6 @@ class PlanarMesh:
         """
         return self.cell_idx_list.index(cell_idx)
 
-    # BOUNDARY IDENTIFICATION ################################################
-
     def vert_is_on_boundary(self, vert_idx: int) -> bool:
         """
         Return True if the vertex with index vert_idx is on the boundary.
@@ -298,16 +242,3 @@ class PlanarMesh:
         """
         e = self.edges[edge_idx]
         return e.pos_cell_idx < 0 or e.neg_cell_idx < 0
-
-    # REPEAT DETECTION #######################################################
-
-    def find_repeats(self) -> None:
-        """
-        Find edges and MeshCells that are repeated.
-
-        Raises
-        ------
-        NotImplementedError
-            If the method is not implemented.
-        """
-        raise NotImplementedError("find_repeats not implemented")
