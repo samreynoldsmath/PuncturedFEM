@@ -93,8 +93,8 @@ class GlobalFunctionPlot:
             coef = self.solver.soln
         if not isinstance(coef, ndarray):
             raise TypeError("u must be of type ndarray")
-        if coef.shape != (self.solver.V.num_funs,):
-            raise ValueError("u must have shape (solver.V.N,)")
+        if coef.shape != (self.solver.glob_fun_sp.num_funs,):
+            raise ValueError("u must have shape (solver.glob_fun_sp.num_funs,)")
         self.coef = coef
 
     def _unpack_kwargs(self, kwargs: dict) -> None:
@@ -162,7 +162,7 @@ def _plot_linear_combo(
     vals_arr = []
     v_min = inf
     v_max = -inf
-    for cell_idx in solver.V.T.cell_idx_list:
+    for cell_idx in solver.glob_fun_sp.mesh.cell_idx_list:
         coef = solver.get_coef_on_mesh(cell_idx, u)
         vals = solver.compute_linear_combo_on_mesh(cell_idx, coef)
         vals_arr.append(vals)
@@ -170,23 +170,23 @@ def _plot_linear_combo(
         v_max = max(v_max, nanmax(vals))
 
     # determine axes and figure size
-    min_x, max_x, min_y, max_y = get_axis_limits(solver.V.T.edges)
+    min_x, max_x, min_y, max_y = get_axis_limits(solver.glob_fun_sp.mesh.edges)
     w, h = get_figure_size(min_x, max_x, min_y, max_y)
 
     # get figure object
     fig = plt.figure(figsize=(w, h))
 
     # plot mesh edges
-    for e in solver.V.T.edges:
+    for e in solver.glob_fun_sp.mesh.edges:
         plt.plot(e.x[0, :], e.x[1, :], "k")
 
     # plot interior values on each MeshCell
-    for cell_idx in solver.V.T.cell_idx_list:
+    for cell_idx in solver.glob_fun_sp.mesh.cell_idx_list:
         vals = vals_arr[cell_idx]
         if v_max - v_min > 1e-6:
-            K = solver.V.T.get_cells(cell_idx)
-            abs_cell_idx = solver.V.T.get_abs_cell_idx(cell_idx)
-            K.parameterize(solver.V.quad_dict)
+            K = solver.glob_fun_sp.mesh.get_cells(cell_idx)
+            abs_cell_idx = solver.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
+            K.parameterize(solver.glob_fun_sp.quad_dict)
             if fill:
                 plt.contourf(
                     K.int_x1,
