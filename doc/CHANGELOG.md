@@ -71,7 +71,7 @@
 - [ ] fix: broken links in examples
 - [ ] fix: broken links in tutorials
 - [ ] fix: `align*` blocks not rendering in tutorials when building documentation
-- [ ]fix: `DirichletTrace` does not recompute traces when function changes
+- [ ] fix: `DirichletTrace` does not recompute traces when function changes
 
 ## [v0.4.5] - 2024 Apr 24
 ### Maintenance

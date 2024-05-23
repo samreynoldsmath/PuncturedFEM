@@ -259,7 +259,7 @@ class GlobalFunctionSpace:
             idx += self.edge_fun_cumsum[key.edge_idx]
             idx += key.edge_space_idx
             if not self._is_in_range(idx, edge_start_idx, self.num_funs):
-                raise IndexError("Edge function index out of range")
+                raise IndexError("edge function index out of range")
         return idx
 
     def _is_in_range(self, idx: int, lo: int, hi: int) -> bool:
