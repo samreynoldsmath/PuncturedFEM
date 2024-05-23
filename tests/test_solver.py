@@ -1,8 +1,9 @@
 """
-test_solver.py
-==============
-
 Test the solver class.
+
+Functions
+---------
+test_solver_deg1
 """
 
 import numpy as np
@@ -12,9 +13,8 @@ import puncturedfem as pf
 TOL = 1e-12
 
 
-def _build_solver(deg: int) -> pf.Solver:
+def _build_solver(deg: int, n: int) -> pf.Solver:
     # set test parameters
-    n = 16
     a = 1.0
     c = 1.0
     f = pf.Polynomial([(1.0, 0, 0)])
@@ -33,30 +33,87 @@ def _build_solver(deg: int) -> pf.Solver:
     quad_dict = pf.get_quad_dict(n)
 
     # build global function space
-    glob_fun_sp = pf.GlobalFunctionSpace(mesh, deg, quad_dict, verbose=False)
+    glob_fun_sp = pf.GlobalFunctionSpace(mesh, deg, quad_dict, verbose=True)
 
     # return solver object
     return pf.Solver(
-        glob_fun_sp, bilinear_form, verbose=False, compute_interior_values=False
+        glob_fun_sp, bilinear_form, verbose=True, compute_interior_values=False
     )
 
 
-def test_solver_deg1() -> None:
+def test_solver_deg_1() -> None:
     """
-    Test the Solver class with degree 1.
+    Test the Solver class on the Pac-Man-Ghost mesh with degree 1.
 
     See Also
     --------
     examples/ex2.1-pacman-fem.ipynb
     """
-    solver = _build_solver(deg=1)
+    deg = 1
+    n = 16
+    filename = f"tests/data/pac_man_ghost_n{n}_deg{deg}.txt"
+    x_exact = np.loadtxt(filename)
+
+    solver = _build_solver(deg, n)
     solver.solve()
-
     x_computed = solver.soln
-    x_exact = np.loadtxt("tests/data/glob_soln_n16.txt")
-    x_error = x_exact - x_computed
 
+    x_error = x_exact - x_computed
     h1_error = np.dot(solver.stiff_mat @ x_error, x_error)
     l2_error = np.dot(solver.mass_mat @ x_error, x_error)
 
+    assert h1_error >= 0.0
+    assert l2_error >= 0.0
+    assert h1_error + l2_error < TOL
+
+
+def test_solver_deg_2() -> None:
+    """
+    Test the Solver class on the Pac-Man-Ghost mesh with degree 1.
+
+    See Also
+    --------
+    examples/ex2.1-pacman-fem.ipynb
+    """
+    deg = 2
+    n = 16
+    filename = f"tests/data/pac_man_ghost_n{n}_deg{deg}.txt"
+    x_exact = np.loadtxt(filename)
+
+    solver = _build_solver(deg, n)
+    solver.solve()
+    x_computed = solver.soln
+
+    x_error = x_exact - x_computed
+    h1_error = np.dot(solver.stiff_mat @ x_error, x_error)
+    l2_error = np.dot(solver.mass_mat @ x_error, x_error)
+
+    assert h1_error >= 0.0
+    assert l2_error >= 0.0
+    assert h1_error + l2_error < TOL
+
+
+def test_solver_deg_3() -> None:
+    """
+    Test the Solver class on the Pac-Man-Ghost mesh with degree 1.
+
+    See Also
+    --------
+    examples/ex2.1-pacman-fem.ipynb
+    """
+    deg = 3
+    n = 16
+    filename = f"tests/data/pac_man_ghost_n{n}_deg{deg}.txt"
+    x_exact = np.loadtxt(filename)
+
+    solver = _build_solver(deg, n)
+    solver.solve()
+    x_computed = solver.soln
+
+    x_error = x_exact - x_computed
+    h1_error = np.dot(solver.stiff_mat @ x_error, x_error)
+    l2_error = np.dot(solver.mass_mat @ x_error, x_error)
+
+    assert h1_error >= 0.0
+    assert l2_error >= 0.0
     assert h1_error + l2_error < TOL
