@@ -21,7 +21,7 @@ from matplotlib.colors import Colormap
 from matplotlib.path import Path
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from ..locfun.locfun import LocalFunction
+from ..locfun.local_poisson import LocalPoissonFunction
 from .mesh_plot import MeshPlot
 from .plot_util import save_figure
 
@@ -32,7 +32,7 @@ class LocalFunctionPlot:
 
     Attributes
     ----------
-    v : LocalFunction
+    v : LocalPoissonFunction
         The local function to be plotted.
     fill : bool
         If True, a heatmap is plotted. If False, a contour plot is plotted.
@@ -50,7 +50,7 @@ class LocalFunctionPlot:
         The colormap used for the plot.
     """
 
-    v: LocalFunction
+    v: LocalPoissonFunction
     fill: bool
     title: str
     levels: int
@@ -59,28 +59,28 @@ class LocalFunctionPlot:
     use_interp: bool
     colormap: Optional[Colormap]
 
-    def __init__(self, v: LocalFunction) -> None:
+    def __init__(self, v: LocalPoissonFunction) -> None:
         """
-        Initialize a LocalFunctionPlot object.
+        Initialize a LocalPoissonFunctionPlot object.
 
         Parameters
         ----------
-        v : LocalFunction
+        v : LocalPoissonFunction
             The local function to be plotted.
         """
         self.set_local_function(v)
 
-    def set_local_function(self, v: LocalFunction) -> None:
+    def set_local_function(self, v: LocalPoissonFunction) -> None:
         """
         Set the local function to be plotted.
 
         Parameters
         ----------
-        v : LocalFunction
+        v : LocalPoissonFunction
             The local function to be plotted.
         """
-        if not isinstance(v, LocalFunction):
-            raise TypeError("v must be a LocalFunction")
+        if not isinstance(v, LocalPoissonFunction):
+            raise TypeError("v must be a LocalPoissonFunction")
         self.v = v
 
     def _unpack_kwargs(self, kwargs: dict) -> None:
@@ -101,77 +101,57 @@ class LocalFunctionPlot:
         **kwargs: Any
     ) -> None:
         self._unpack_kwargs(kwargs)
-        edges = self.v.nyst.K.get_edges()
+        edges = self.v.mesh_cell.get_edges()
         MeshPlot(edges).draw(show_plot=False, keep_open=True)
-        if self.use_interp:
-            if boundary_values is None:
-                raise ValueError("boundary_values must be provided")
-            self._draw_interp(interior_values, boundary_values)
-        else:
-            self._draw_classic(interior_values)
+        # if self.use_interp:
+        if boundary_values is None:
+            raise ValueError("boundary_values must be provided")
+        self._draw_interp(interior_values, boundary_values)
+        # else:
+        #     self._draw_classic(interior_values)
         if self.title:
             plt.title(self.title)
         if not self.show_axis:
             plt.axis("off")
-        if filename:
-            save_figure(filename)
-        if show_plot:
-            plt.show()
-        plt.close()
-
-    def _draw_classic(self, interior_values: np.ndarray) -> None:
-        x1 = self.v.nyst.K.int_x1
-        x2 = self.v.nyst.K.int_x2
-        if self.fill:
-            plt.contourf(
-                x1, x2, interior_values, levels=self.levels, cmap=self.colormap
-            )
-        else:
-            plt.contour(
-                x1, x2, interior_values, levels=self.levels, cmap=self.colormap
-            )
         if self.show_colorbar:
-            divider = make_axes_locatable(plt.gca())
-            colorbar_axes = divider.append_axes("right", size="5%", pad=0.05)
-            plt.colorbar(cax=colorbar_axes, mappable=plt.gci())
+            self._make_colorbar()
+        if filename or show_plot:
+            if filename:
+                save_figure(filename)
+            if show_plot:
+                plt.show()
+            plt.close()
+
+    def _make_colorbar(self) -> None:
+        divider = make_axes_locatable(plt.gca())
+        colorbar_axes = divider.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(cax=colorbar_axes, mappable=plt.gci())
 
     def _draw_interp(
-        self, interior_values: np.ndarray, boundary_values: np.ndarray
+        self, interior_values: np.ndarray, boundary_values: Optional[np.ndarray]=None
     ) -> None:
         # interior points and values
-        x1 = list(self.v.nyst.K.int_x1.flatten())
-        x2 = list(self.v.nyst.K.int_x2.flatten())
-        vals = list(interior_values.flatten())
+        x1 = self.v.mesh_cell.int_x1
+        x2 = self.v.mesh_cell.int_x2
 
-        # delete nan values
-        nan_indices = np.isnan(vals)
-        for i in reversed(range(len(vals))):
-            if nan_indices[i]:
-                del x1[i]
-                del x2[i]
-                del vals[i]
+        if self.use_interp and boundary_values is not None:
 
-        # boundary points
-        y1, y2 = self.v.nyst.K.get_boundary_points()
+            # boundary points
+            y1, y2 = self.v.mesh_cell.get_boundary_points()
 
-        # concatenate all points and values
-        x1.extend(list(y1))
-        x2.extend(list(y2))
-        vals.extend(list(boundary_values))
-
-        # cast to numpy arrays
-        X1 = np.array(x1)
-        X2 = np.array(x2)
-        V = np.array(vals)
+            # concatenate all points and values
+            x1 = np.concatenate((x1, y1))
+            x2 = np.concatenate((x2, y2))
+            interior_values = np.concatenate((interior_values, boundary_values))
 
         # triangulate
-        triangulation = tri.Triangulation(X1, X2)
+        triangulation = tri.Triangulation(x1, x2)
 
         # partition boundary into outer and hole edges
-        outer_x, outer_y = self.v.nyst.K.components[0].get_sampled_points()
+        outer_x, outer_y = self.v.mesh_cell.components[0].get_sampled_points()
         hole_x = []
         hole_y = []
-        for component in self.v.nyst.K.components[1:]:
+        for component in self.v.mesh_cell.components[1:]:
             x, y = component.get_sampled_points()
             hole_x.append(x)
             hole_y.append(y)
@@ -183,10 +163,10 @@ class LocalFunctionPlot:
 
         # plot
         if self.fill:
-            plt.tricontourf(triangulation, V)
+            plt.tricontourf(triangulation, interior_values)
             # plt.triplot(triangulation, "-k")
         else:
-            plt.tricontour(triangulation, V)
+            plt.tricontour(triangulation, interior_values)
 
     def draw(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
@@ -258,8 +238,8 @@ class LocalFunctionPlot:
             interior_values=self.v.int_vals,
             show_plot=show_plot,
             filename=filename,
-            boundary_values=self.v.harm_part_trace.values
-            + self.v.poly_part_trace.values,
+            boundary_values=self.v.harm.trace.values
+            + self.v.poly.trace.values,
             **kwargs
         )
 

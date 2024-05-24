@@ -63,7 +63,6 @@ class MeshCell:
     int_mesh_size: tuple[int, int]
     int_x1: np.ndarray
     int_x2: np.ndarray
-    is_inside: np.ndarray
 
     def __init__(
         self,
@@ -356,7 +355,6 @@ class MeshCell:
             self.closest_vert_idx[j:jp1] = self.components[i].closest_vert_idx
 
     # INTERIOR POINTS ########################################################
-
     def get_bounding_box(self) -> tuple[float, float, float, float]:
         """
         Return the bounding box of the cell.
@@ -490,7 +488,7 @@ class MeshCell:
         self.int_x1, self.int_x2 = np.meshgrid(x_coord, y_coord)
 
         # determine which points are inside K
-        self.is_inside = self.is_in_interior(self.int_x1, self.int_x2)
+        is_inside = self.is_in_interior(self.int_x1, self.int_x2)
 
         # set minimum desired distance to the boundary
         h = min([xmax - xmin, ymax - ymin])
@@ -499,12 +497,16 @@ class MeshCell:
         # ignore points too close to the boundary
         for i in range(rows):
             for j in range(cols):
-                if self.is_inside[i, j]:
+                if is_inside[i, j]:
                     d = self.get_distance_to_boundary(
                         self.int_x1[i, j], self.int_x2[i, j]
                     )
                     if d < min_dist_to_bdy:
-                        self.is_inside[i, j] = False
+                        is_inside[i, j] = False
+
+        # delete points outside K
+        self.int_x1 = self.int_x1[is_inside]
+        self.int_x2 = self.int_x2[is_inside]
 
     # FUNCTION EVALUATION ####################################################
     def evaluate_function_on_boundary(self, fun: Func_R2_R) -> np.ndarray:

@@ -205,23 +205,22 @@ class LocalPoissonFunction:
             Whether or not to compute the gradient, by default True.
         """
         # points for evaluation
-        y1 = self.mesh_cell.int_x1[self.mesh_cell.is_inside]
-        y2 = self.mesh_cell.int_x2[self.mesh_cell.is_inside]
+        y1 = self.mesh_cell.int_x1
+        y2 = self.mesh_cell.int_x2
 
         # initialize temporary arrays
         N = len(y1)
-        vals = np.zeros((N,))
-        grad1 = np.zeros((N,))
-        grad2 = np.zeros((N,))
+        self.int_vals = np.zeros((N,))
+        self.int_grad1 = np.zeros((N,))
+        self.int_grad2 = np.zeros((N,))
 
         # polynomial part
-        # TODO: fix type ignore
-        vals = self.poly.exact_form(y1, y2)  # type: ignore
+        self.int_vals = self.poly.exact_form(y1, y2)
 
         # gradient Polynomial part
         if compute_int_grad:
-            grad1 = self.poly.grad1(y1, y2)  # type: ignore
-            grad2 = self.poly.grad2(y1, y2)  # type: ignore
+            self.int_grad1 = self.poly.grad1(y1, y2)
+            self.int_grad2 = self.poly.grad2(y1, y2)
 
         # logarithmic part
         for k in range(self.mesh_cell.num_holes):
@@ -229,10 +228,10 @@ class LocalPoissonFunction:
             y_xi_1 = y1 - xi.x
             y_xi_2 = y2 - xi.y
             y_xi_norm_sq = y_xi_1**2 + y_xi_2**2
-            vals += 0.5 * self.harm.log_coef[k] * np.log(y_xi_norm_sq)
+            self.int_vals += 0.5 * self.harm.log_coef[k] * np.log(y_xi_norm_sq)
             if compute_int_grad:
-                grad1 += self.harm.log_coef[k] * y_xi_1 / y_xi_norm_sq
-                grad2 += self.harm.log_coef[k] * y_xi_2 / y_xi_norm_sq
+                self.int_grad1 += self.harm.log_coef[k] * y_xi_1 / y_xi_norm_sq
+                self.int_grad2 += self.harm.log_coef[k] * y_xi_2 / y_xi_norm_sq
 
         # conjugable part
         psi = self.harm.psi.values
@@ -269,25 +268,7 @@ class LocalPoissonFunction:
 
         # interior values and gradient of conjugable part via Cauchy's
         # integral formula
-        vals += np.sum(dx_norm * f, axis=1) * 0.5 / np.pi
+        self.int_vals += np.sum(dx_norm * f, axis=1) * 0.5 / np.pi
         if compute_int_grad:
-            grad1 += np.sum(dx_norm * g1, axis=1) * 0.5 / np.pi
-            grad2 += np.sum(dx_norm * g2, axis=1) * 0.5 / np.pi
-
-        # size of grid of evaluation points
-        rows, cols = self.mesh_cell.int_mesh_size
-
-        # initialize arrays with proper size
-        self.int_vals = np.empty((rows, cols))
-        self.int_grad1 = np.empty((rows, cols))
-        self.int_grad2 = np.empty((rows, cols))
-
-        # default to not-a-number
-        self.int_vals[:] = np.nan
-        self.int_grad1[:] = np.nan
-        self.int_grad2[:] = np.nan
-
-        # set values within cell interior
-        self.int_vals[self.mesh_cell.is_inside] = vals
-        self.int_grad1[self.mesh_cell.is_inside] = grad1
-        self.int_grad2[self.mesh_cell.is_inside] = grad2
+            self.int_grad1 += np.sum(dx_norm * g1, axis=1) * 0.5 / np.pi
+            self.int_grad2 += np.sum(dx_norm * g2, axis=1) * 0.5 / np.pi
