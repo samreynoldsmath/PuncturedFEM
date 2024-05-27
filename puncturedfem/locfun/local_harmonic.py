@@ -72,6 +72,9 @@ class LocalHarmonic:
             function, by default True.
         """
         self.set_trace(trace)
+        self.trace.set_weighted_tangential_derivative(
+            get_weighted_tangential_derivative_from_trace(nyst.K, trace.values)
+        )
         self._compute_harmonic_conjugate(nyst)
         self._compute_conjugable_part(nyst)
         self._compute_harmonic_weighted_normal_derivative(nyst)
