@@ -103,12 +103,9 @@ class LocalFunctionPlot:
         self._unpack_kwargs(kwargs)
         edges = self.v.mesh_cell.get_edges()
         MeshPlot(edges).draw(show_plot=False, keep_open=True)
-        # if self.use_interp:
         if boundary_values is None:
             raise ValueError("boundary_values must be provided")
         self._draw_interp(interior_values, boundary_values)
-        # else:
-        #     self._draw_classic(interior_values)
         if self.title:
             plt.title(self.title)
         if not self.show_axis:
@@ -128,7 +125,9 @@ class LocalFunctionPlot:
         plt.colorbar(cax=colorbar_axes, mappable=plt.gci())
 
     def _draw_interp(
-        self, interior_values: np.ndarray, boundary_values: Optional[np.ndarray]=None
+        self,
+        interior_values: np.ndarray,
+        boundary_values: Optional[np.ndarray] = None,
     ) -> None:
         # interior points and values
         x1 = self.v.mesh_cell.int_x1
@@ -143,6 +142,12 @@ class LocalFunctionPlot:
             x1 = np.concatenate((x1, y1))
             x2 = np.concatenate((x2, y2))
             interior_values = np.concatenate((interior_values, boundary_values))
+
+        # remove inf and nan values
+        mask = np.isfinite(interior_values)
+        x1 = x1[mask]
+        x2 = x2[mask]
+        interior_values = interior_values[mask]
 
         # triangulate
         triangulation = tri.Triangulation(x1, x2)
@@ -234,12 +239,12 @@ class LocalFunctionPlot:
         colormap : Optional[Colormap]
             The colormap used for the plot. Default is None.
         """
+        bdry_vals = self.v.harm.trace.values + self.v.poly.trace.values
         self._draw_generic(
             interior_values=self.v.int_vals,
             show_plot=show_plot,
             filename=filename,
-            boundary_values=self.v.harm.trace.values
-            + self.v.poly.trace.values,
+            boundary_values=bdry_vals,
             **kwargs
         )
 
@@ -275,14 +280,12 @@ class LocalFunctionPlot:
         colormap : Optional[Colormap]
             The colormap used for the plot. Default is None.
         """
-        if self.use_interp:
-            raise NotImplementedError(
-                "Interpolation not implemented for gradients"
-            )
+        grad_x1 = self._construct_gradient_on_boundary_x1()
         self._draw_generic(
-            vals=self.v.int_grad1,
+            interior_values=self.v.int_grad1,
             show_plot=show_plot,
             filename=filename,
+            boundary_values=grad_x1,
             **kwargs
         )
 
@@ -318,14 +321,12 @@ class LocalFunctionPlot:
         colormap : Optional[Colormap]
             The colormap used for the plot. Default is None.
         """
-        if self.use_interp:
-            raise NotImplementedError(
-                "Interpolation not implemented for gradients"
-            )
+        grad_x2 = self._construct_gradient_on_boundary_x2()
         self._draw_generic(
-            vals=self.v.int_grad2,
+            interior_values=self.v.int_grad2,
             show_plot=show_plot,
             filename=filename,
+            boundary_values=grad_x2,
             **kwargs
         )
 
@@ -361,16 +362,46 @@ class LocalFunctionPlot:
         colormap : Optional[Colormap]
             The colormap used for the plot. Default is None.
         """
-        if self.use_interp:
-            raise NotImplementedError(
-                "Interpolation not implemented for gradients"
-            )
+        grad_x1 = self._construct_gradient_on_boundary_x1()
+        grad_x2 = self._construct_gradient_on_boundary_x2()
+        grad_norm = np.sqrt(grad_x1**2 + grad_x2**2)
+        grad_norm_interior = np.sqrt(self.v.int_grad1**2 + self.v.int_grad2**2)
         self._draw_generic(
-            vals=np.sqrt(self.v.int_grad1**2 + self.v.int_grad2**2),
+            interior_values=grad_norm_interior,
             show_plot=show_plot,
             filename=filename,
+            boundary_values=grad_norm,
             **kwargs
         )
+
+    def _construct_gradient_on_boundary_x1(self) -> np.ndarray:
+        return self._construct_gradient_component_on_boundary(1)
+
+    def _construct_gradient_on_boundary_x2(self) -> np.ndarray:
+        return self._construct_gradient_component_on_boundary(2)
+
+    def _construct_gradient_component_on_boundary(
+        self, component: int
+    ) -> np.ndarray:
+        num_pts = self.v.mesh_cell.num_pts
+        if component == 1:
+            b1 = np.ones((num_pts,))
+            b2 = np.zeros((num_pts,))
+        elif component == 2:
+            b1 = np.zeros((num_pts,))
+            b2 = np.ones((num_pts,))
+        else:
+            raise ValueError("component must be 1 or 2")
+        norm_comp = self.v.mesh_cell.dot_with_normal(b1, b2)
+        tang_comp = self.v.mesh_cell.dot_with_tangent(b1, b2)
+        wnd = self.v.harm.trace.w_norm_deriv + self.v.poly.trace.w_norm_deriv
+        wtd = self.v.harm.trace.w_tang_deriv + self.v.poly.trace.w_tang_deriv
+        weighted_grad = norm_comp * wnd + tang_comp * wtd
+        wgt = self.v.mesh_cell.get_dx_norm()
+        error_settings = np.seterr(divide="ignore")
+        grad_xj = weighted_grad / wgt
+        np.seterr(**error_settings)
+        return grad_xj
 
 
 def _remove_holes(
