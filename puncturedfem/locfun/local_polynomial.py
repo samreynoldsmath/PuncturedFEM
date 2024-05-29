@@ -65,6 +65,9 @@ class LocalPolynomial:
         self.trace.set_weighted_normal_derivative(
             exact_form.get_weighted_normal_derivative(K)
         )
+        self.trace.set_weighted_tangential_derivative(
+            exact_form.get_weighted_tangential_derivative(K)
+        )
         self.antilap = exact_form.anti_laplacian()
         self.antilap_trace = DirichletTrace(
             edges=K.get_edges(), values=self.antilap(*K.get_boundary_points())

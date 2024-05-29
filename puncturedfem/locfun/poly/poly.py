@@ -400,6 +400,27 @@ class Polynomial:
         nd = K.dot_with_normal(gx_trace, gy_trace)  # type: ignore
         return K.multiply_by_dx_norm(nd)
 
+    def get_weighted_tangential_derivative(self, K: MeshCell) -> np.ndarray:
+        """
+        Compute the weighted normal derivative of the Polynomial.
+
+        Parameters
+        ----------
+        K : MeshCell
+            MeshCell on whose boundary to compute the tangential derivative.
+
+        Returns
+        -------
+        np.ndarray
+            Values of the weighted tangential derivative of the Polynomial.
+        """
+        x1, x2 = K.get_boundary_points()
+        gx, gy = self.grad()
+        gx_trace = gx(x1, x2)
+        gy_trace = gy(x1, x2)
+        nd = K.dot_with_tangent(gx_trace, gy_trace)  # type: ignore
+        return K.multiply_by_dx_norm(nd)
+
     def __repr__(self) -> str:
         """
         Get a string representation of the Polynomial.
