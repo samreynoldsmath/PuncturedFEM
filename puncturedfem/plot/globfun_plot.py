@@ -9,12 +9,16 @@ GlobalFunctionPlot
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import tri
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Colormap
 from numpy import inf, nanmax, nanmin, ndarray
 
 from ..solver.solver import Solver
 from .plot_util import get_axis_limits, get_figure_size, save_figure
+
+# from .locfun_plot import LocalFunctionPlot
 
 
 class GlobalFunctionPlot:
@@ -180,33 +184,19 @@ def _plot_linear_combo(
     for e in solver.glob_fun_sp.mesh.edges:
         plt.plot(e.x[0, :], e.x[1, :], "k")
 
-    # plot interior values on each MeshCell
-    for cell_idx in solver.glob_fun_sp.mesh.cell_idx_list:
-        vals = vals_arr[cell_idx]
-        if v_max - v_min > 1e-6:
-            K = solver.glob_fun_sp.mesh.get_cells(cell_idx)
-            abs_cell_idx = solver.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
-            K.parameterize(solver.glob_fun_sp.quad_dict)
-            if fill:
-                plt.contourf(
-                    K.int_x1,
-                    K.int_x2,
-                    vals_arr[abs_cell_idx],
-                    vmin=v_min,
-                    vmax=v_max,
-                    levels=32,
-                    cmap=colormap,
-                )
-            else:
-                plt.contour(
-                    K.int_x1,
-                    K.int_x2,
-                    vals_arr[abs_cell_idx],
-                    vmin=v_min,
-                    vmax=v_max,
-                    levels=32,
-                    cmap=colormap,
-                )
+    vals = np.concatenate(vals_arr)
+    x1 = np.concatenate(solver.interior_x1)
+    x2 = np.concatenate(solver.interior_x2)
+
+    triang = tri.Triangulation(x1, x2)
+    plt.tricontourf(
+        triang,
+        vals,
+        vmin=v_min,
+        vmax=v_max,
+        levels=32,
+        cmap=colormap,
+    )
     if fill and show_colorbar:
         sm = ScalarMappable(
             norm=plt.Normalize(vmin=v_min, vmax=v_max), cmap=colormap

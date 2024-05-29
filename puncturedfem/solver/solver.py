@@ -9,7 +9,7 @@ Solver
 
 from typing import Union
 
-from numpy import ndarray, shape, zeros
+import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
 from tqdm import tqdm
@@ -45,9 +45,9 @@ class Solver:
         List of right-hand side values
     num_funs : int
         Number of global functions
-    interior_values : list[list[ndarray]]
+    interior_values : list[list[np.ndarray]]
         List of interior values on each MeshCell
-    soln : ndarray
+    soln : np.ndarray
         Solution vector
     """
 
@@ -65,8 +65,10 @@ class Solver:
     rhs_idx: list[int]
     rhs_vals: list[float]
     num_funs: int
-    interior_values: list[list[ndarray]]
-    soln: ndarray
+    interior_values: list[list[np.ndarray]]
+    interior_x1: list[np.ndarray]
+    interior_x2: list[np.ndarray]
+    soln: np.ndarray
 
     def __init__(
         self,
@@ -139,13 +141,13 @@ class Solver:
         """Solve the linear system."""
         self.soln = spsolve(self.glob_mat, self.glob_rhs)
 
-    def get_solution(self) -> ndarray:
+    def get_solution(self) -> np.ndarray:
         """
         Get the solution vector.
 
         Returns
         -------
-        ndarray
+        np.ndarray
             Solution vector
         """
         if self.soln is None:
@@ -184,9 +186,9 @@ class Solver:
 
     def _build_values_and_indexes(
         self,
-        verbose: bool = True,
-        compute_interior_values: bool = True,
-        compute_interior_gradient: bool = False,
+        verbose: bool,
+        compute_interior_values: bool,
+        compute_interior_gradient: bool,
     ) -> None:
         """
         Build values and indexes.
@@ -209,6 +211,8 @@ class Solver:
         self.interior_values = [
             [] for _ in range(self.glob_fun_sp.mesh.num_cells)
         ]
+        self.interior_x1 = []
+        self.interior_x2 = []
 
         # loop over MeshCells
         for abs_cell_idx in range(self.glob_fun_sp.mesh.num_cells):
@@ -233,7 +237,7 @@ class Solver:
             # initialize interior values
             if compute_interior_values:
                 self.interior_values[abs_cell_idx] = [
-                    zeros((0,)) for _ in range(loc_fun_sp.num_funs)
+                    np.zeros((0,)) for _ in range(loc_fun_sp.num_funs)
                 ]
 
             if verbose:
@@ -247,6 +251,11 @@ class Solver:
                 range_num_funs = tqdm(range(loc_fun_sp.num_funs))
             else:
                 range_num_funs = range(loc_fun_sp.num_funs)
+
+            # TODO: also get edges with positive index (or on boundary)
+            if compute_interior_values:
+                self.interior_x1.append(loc_fun_sp.nyst.K.int_x1)
+                self.interior_x2.append(loc_fun_sp.nyst.K.int_x2)
 
             for i in range_num_funs:
                 v = loc_basis[i]
@@ -361,8 +370,8 @@ class Solver:
     # COMPUTE LINEAR COMBINATION #############################################
 
     def compute_linear_combo_on_mesh(
-        self, cell_idx: int, coef: ndarray
-    ) -> ndarray:
+        self, cell_idx: int, coef: np.ndarray
+    ) -> np.ndarray:
         """
         Compute a linear combination of the basis functions on a MeshCell.
 
@@ -370,17 +379,17 @@ class Solver:
         ----------
         cell_idx : int
             MeshCell index
-        coef : ndarray
+        coef : np.ndarray
             Coefficients
         """
         abs_cell_idx = self.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
         int_vals = self.interior_values[abs_cell_idx]
-        vals = zeros(shape(int_vals[0]))
+        vals = np.zeros(np.shape(int_vals[0]))
         for i, val in enumerate(int_vals):
             vals += val * coef[i]
         return vals
 
-    def get_coef_on_mesh(self, cell_idx: int, u: ndarray) -> ndarray:
+    def get_coef_on_mesh(self, cell_idx: int, u: np.ndarray) -> np.ndarray:
         """
         Get the coefficients of the basis functions on a MeshCell.
 
@@ -388,12 +397,12 @@ class Solver:
         ----------
         cell_idx : int
             MeshCell index
-        u : ndarray
+        u : np.ndarray
             Solution vector
         """
         abs_cell_idx = self.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
         keys = self.glob_fun_sp.cell_dofs[abs_cell_idx]
-        coef = zeros((len(keys),))
+        coef = np.zeros((len(keys),))
         for i, key in enumerate(keys):
             coef[i] = u[key.glob_idx]
         return coef
