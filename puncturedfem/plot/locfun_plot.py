@@ -7,7 +7,8 @@ LocalFunctionPlot
 
 Functions
 ---------
-_remove_holes
+_construct_gradient_component_on_boundary
+_get_hole_mask
 _point_is_inside
 _point_is_inside_simple
 """
@@ -17,13 +18,14 @@ from typing import Any, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import tri
-from matplotlib.colors import Colormap
 from matplotlib.path import Path
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from ..locfun.local_poisson import LocalPoissonFunction
 from .mesh_plot import MeshPlot
 from .plot_util import save_figure
+
+TOL = 1e-8
 
 
 class LocalFunctionPlot:
@@ -34,34 +36,25 @@ class LocalFunctionPlot:
     ----------
     v : LocalPoissonFunction
         The local function to be plotted.
-    fill : bool
-        If True, a heatmap is plotted. If False, a contour plot is plotted.
-    title : str
-        The title of the plot.
-    levels : int
-        The number of levels in the contour plot.
-    show_colorbar : bool
-        If True, a colorbar is shown.
-    show_axis : bool
-        If True, the axis is shown.
+    triangulation : tri.Triangulation
+        A triangulation of the interior points together with the boundary
+        points.
+    hole_mask : np.ndarray
+        A mask that removes triangles that lie in a hole.
     use_interp : bool
-        If True, values near the boundary are interpolated.
-    colormap : Optional[Colormap]
-        The colormap used for the plot.
+        If True, the triangulation includes boundary points.
     """
 
     v: LocalPoissonFunction
-    fill: bool
-    title: str
-    levels: int
-    show_colorbar: bool
-    show_axis: bool
+    triangulation: tri.Triangulation
+    hole_mask: np.ndarray
     use_interp: bool
-    colormap: Optional[Colormap]
 
-    def __init__(self, v: LocalPoissonFunction) -> None:
+    def __init__(
+        self, v: LocalPoissonFunction, use_interp: bool = True
+    ) -> None:
         """
-        Initialize a LocalPoissonFunctionPlot object.
+        Initialize a LocalFunctionPlot object.
 
         Parameters
         ----------
@@ -69,6 +62,8 @@ class LocalFunctionPlot:
             The local function to be plotted.
         """
         self.set_local_function(v)
+        self._set_use_interp(use_interp)
+        self._build_triangulation()
 
     def set_local_function(self, v: LocalPoissonFunction) -> None:
         """
@@ -83,74 +78,24 @@ class LocalFunctionPlot:
             raise TypeError("v must be a LocalPoissonFunction")
         self.v = v
 
-    def _unpack_kwargs(self, kwargs: dict) -> None:
-        self.fill = kwargs.get("fill", True)
-        self.title = kwargs.get("title", "")
-        self.levels = kwargs.get("levels", 32)
-        self.show_colorbar = kwargs.get("show_colorbar", True)
-        self.show_axis = kwargs.get("show_axis", True)
-        self.use_interp = kwargs.get("use_interp", True)
-        self.colormap = kwargs.get("colormap", None)
+    def _set_use_interp(self, use_interp: bool) -> None:
+        if not isinstance(use_interp, bool):
+            raise TypeError("use_interp must be a boolean")
+        self.use_interp = use_interp
 
-    def _draw_generic(
-        self,
-        interior_values: np.ndarray,
-        show_plot: bool = True,
-        filename: str = "",
-        boundary_values: Optional[np.ndarray] = None,
-        **kwargs: Any
-    ) -> None:
-        self._unpack_kwargs(kwargs)
-        edges = self.v.mesh_cell.get_edges()
-        MeshPlot(edges).draw(show_plot=False, keep_open=True)
-        if boundary_values is None:
-            raise ValueError("boundary_values must be provided")
-        self._draw_interp(interior_values, boundary_values)
-        if self.title:
-            plt.title(self.title)
-        if not self.show_axis:
-            plt.axis("off")
-        if self.show_colorbar:
-            self._make_colorbar()
-        if filename or show_plot:
-            if filename:
-                save_figure(filename)
-            if show_plot:
-                plt.show()
-            plt.close()
-
-    def _make_colorbar(self) -> None:
-        divider = make_axes_locatable(plt.gca())
-        colorbar_axes = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(cax=colorbar_axes, mappable=plt.gci())
-
-    def _draw_interp(
-        self,
-        interior_values: np.ndarray,
-        boundary_values: Optional[np.ndarray] = None,
-    ) -> None:
-        # interior points and values
+    def _build_triangulation(self) -> None:
+        # interior points
         x1 = self.v.mesh_cell.int_x1
         x2 = self.v.mesh_cell.int_x2
 
-        if self.use_interp and boundary_values is not None:
-
-            # boundary points
+        # concatenate interior points with boundary points
+        if self.use_interp:
             y1, y2 = self.v.mesh_cell.get_boundary_points()
-
-            # concatenate all points and values
             x1 = np.concatenate((x1, y1))
             x2 = np.concatenate((x2, y2))
-            interior_values = np.concatenate((interior_values, boundary_values))
-
-        # remove inf and nan values
-        mask = np.isfinite(interior_values)
-        x1 = x1[mask]
-        x2 = x2[mask]
-        interior_values = interior_values[mask]
 
         # triangulate
-        triangulation = tri.Triangulation(x1, x2)
+        crude_triangulation = tri.Triangulation(x1, x2)
 
         # partition boundary into outer and hole edges
         outer_x, outer_y = self.v.mesh_cell.components[0].get_sampled_points()
@@ -162,25 +107,30 @@ class LocalFunctionPlot:
             hole_y.append(y)
 
         # remove triangles with all three vertices on a hole edge
-        triangulation = _remove_holes(
-            triangulation, outer_x, outer_y, hole_x, hole_y
+        self.hole_mask = _get_hole_mask(
+            crude_triangulation, outer_x, outer_y, hole_x, hole_y
         )
 
-        # plot
-        if self.fill:
-            plt.tricontourf(triangulation, interior_values)
-            # plt.triplot(triangulation, "-k")
-        else:
-            plt.tricontour(triangulation, interior_values)
+        # set triangulation
+        self.triangulation = tri.Triangulation(
+            x1, x2, triangles=crude_triangulation.triangles, mask=self.hole_mask
+        )
 
     def draw(
-        self, show_plot: bool = True, filename: str = "", **kwargs: Any
+        self,
+        plot_type: str = "values",
+        show_plot: bool = True,
+        filename: str = "",
+        **kwargs: Any
     ) -> None:
         """
         Draw the plot of the internal values.
 
         Parameters
         ----------
+        plot_type : str
+            The type of plot. Must be one of "values", "grad_x1", "grad_x2",
+            or "grad_norm".
         show_plot : bool
             If True, the plot is shown.
         filename : str
@@ -195,227 +145,220 @@ class LocalFunctionPlot:
             The title of the plot. Default is "", i.e. no title.
         levels : int
             The number of levels in the contour plot. Default is 32.
+        colormap : Optional[Colormap]
+            The colormap used for the plot. Default is None.
         show_colorbar : bool
             If True, a colorbar is shown. Default is True.
         show_axis : bool
             If True, the axis is shown. Default is True.
-        use_interp : bool
-            If True, values near the boundary are interpolated. Default is
-            False.
-        colormap : Optional[Colormap]
-            The colormap used for the plot. Default is None.
+        show_boundary : bool
+            If True, the boundary is shown. Default is True.
+        show_triangulation : bool
+            If True, the triangulation is shown. Default is False.
         """
-        self.draw_vals(show_plot=show_plot, filename=filename, **kwargs)
+        if plot_type == "values":
+            self._draw_vals(show_plot=show_plot, filename=filename, **kwargs)
+        elif plot_type == "grad_x1":
+            self._draw_grad_x1(show_plot=show_plot, filename=filename, **kwargs)
+        elif plot_type == "grad_x2":
+            self._draw_grad_x2(show_plot=show_plot, filename=filename, **kwargs)
+        elif plot_type == "grad_norm":
+            self._draw_grad_norm(
+                show_plot=show_plot, filename=filename, **kwargs
+            )
+        else:
+            raise ValueError(
+                "type must be 'values', 'grad_x1', 'grad_x2', or 'grad_norm'"
+            )
 
-    def draw_vals(
+    def _draw_vals(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
-        """
-        Draw the plot of the internal values.
-
-        Parameters
-        ----------
-        show_plot : bool
-            If True, the plot is shown.
-        filename : str
-            If not empty, the plot is saved to this file.
-
-        Other Parameters
-        ----------------
-        fill : bool
-            If True, a heatmap is plotted. If False, a contour plot is plotted.
-            Default is True.
-        title : str
-            The title of the plot. Default is "", i.e. no title.
-        levels : int
-            The number of levels in the contour plot. Default is 32.
-        show_colorbar : bool
-            If True, a colorbar is shown. Default is True.
-        show_axis : bool
-            If True, the axis is shown. Default is True.
-        use_interp : bool
-            If True, values near the boundary are interpolated. Default is
-            False.
-        colormap : Optional[Colormap]
-            The colormap used for the plot. Default is None.
-        """
         bdry_vals = self.v.harm.trace.values + self.v.poly.trace.values
         self._draw_generic(
             interior_values=self.v.int_vals,
+            boundary_values=bdry_vals,
             show_plot=show_plot,
             filename=filename,
-            boundary_values=bdry_vals,
             **kwargs
         )
 
-    def draw_grad_x1(
+    def _draw_grad_x1(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
-        """
-        Draw the plot of the x1 component of the gradient.
-
-        Parameters
-        ----------
-        show_plot : bool
-            If True, the plot is shown.
-        filename : str
-            If not empty, the plot is saved to this file.
-
-        Other Parameters
-        ----------------
-        fill : bool
-            If True, a heatmap is plotted. If False, a contour plot is plotted.
-            Default is True.
-        title : str
-            The title of the plot. Default is "", i.e. no title.
-        levels : int
-            The number of levels in the contour plot. Default is 32.
-        show_colorbar : bool
-            If True, a colorbar is shown. Default is True.
-        show_axis : bool
-            If True, the axis is shown. Default is True.
-        use_interp : bool
-            If True, values near the boundary are interpolated. Default is
-            False.
-        colormap : Optional[Colormap]
-            The colormap used for the plot. Default is None.
-        """
-        grad_x1 = self._construct_gradient_on_boundary_x1()
+        grad_x1 = _construct_gradient_on_boundary_x1(self.v)
         self._draw_generic(
             interior_values=self.v.int_grad1,
+            boundary_values=grad_x1,
             show_plot=show_plot,
             filename=filename,
-            boundary_values=grad_x1,
             **kwargs
         )
 
-    def draw_grad_x2(
+    def _draw_grad_x2(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
-        """
-        Draw the plot of the x2 component of the gradient.
-
-        Parameters
-        ----------
-        show_plot : bool
-            If True, the plot is shown.
-        filename : str
-            If not empty, the plot is saved to this file.
-
-        Other Parameters
-        ----------------
-        fill : bool
-            If True, a heatmap is plotted. If False, a contour plot is plotted.
-            Default is True.
-        title : str
-            The title of the plot. Default is "", i.e. no title.
-        levels : int
-            The number of levels in the contour plot. Default is 32.
-        show_colorbar : bool
-            If True, a colorbar is shown. Default is True.
-        show_axis : bool
-            If True, the axis is shown. Default is True.
-        use_interp : bool
-            If True, values near the boundary are interpolated. Default is
-            False.
-        colormap : Optional[Colormap]
-            The colormap used for the plot. Default is None.
-        """
-        grad_x2 = self._construct_gradient_on_boundary_x2()
+        grad_x2 = _construct_gradient_on_boundary_x2(self.v)
         self._draw_generic(
             interior_values=self.v.int_grad2,
+            boundary_values=grad_x2,
             show_plot=show_plot,
             filename=filename,
-            boundary_values=grad_x2,
             **kwargs
         )
 
-    def draw_grad_norm(
+    def _draw_grad_norm(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
-        """
-        Draw the plot of the norm of the gradient.
-
-        Parameters
-        ----------
-        show_plot : bool
-            If True, the plot is shown.
-        filename : str
-            If not empty, the plot is saved to this file.
-
-        Other Parameters
-        ----------------
-        fill : bool
-            If True, a heatmap is plotted. If False, a contour plot is plotted.
-            Default is True.
-        title : str
-            The title of the plot. Default is "", i.e. no title.
-        levels : int
-            The number of levels in the contour plot. Default is 32.
-        show_colorbar : bool
-            If True, a colorbar is shown. Default is True.
-        show_axis : bool
-            If True, the axis is shown. Default is True.
-        use_interp : bool
-            If True, values near the boundary are interpolated. Default is
-            False.
-        colormap : Optional[Colormap]
-            The colormap used for the plot. Default is None.
-        """
-        grad_x1 = self._construct_gradient_on_boundary_x1()
-        grad_x2 = self._construct_gradient_on_boundary_x2()
+        grad_x1 = _construct_gradient_on_boundary_x1(self.v)
+        grad_x2 = _construct_gradient_on_boundary_x2(self.v)
         grad_norm = np.sqrt(grad_x1**2 + grad_x2**2)
         grad_norm_interior = np.sqrt(self.v.int_grad1**2 + self.v.int_grad2**2)
         self._draw_generic(
             interior_values=grad_norm_interior,
+            boundary_values=grad_norm,
             show_plot=show_plot,
             filename=filename,
-            boundary_values=grad_norm,
             **kwargs
         )
 
-    def _construct_gradient_on_boundary_x1(self) -> np.ndarray:
-        return self._construct_gradient_component_on_boundary(1)
+    def _draw_generic(
+        self,
+        interior_values: np.ndarray,
+        boundary_values: Optional[np.ndarray],
+        show_plot: bool = True,
+        filename: str = "",
+        **kwargs: Any
+    ) -> None:
+        # unpack kwargs
+        fill = kwargs.get("fill", True)
+        title = kwargs.get("title", "")
+        levels = kwargs.get("levels", 32)
+        colormap = kwargs.get("colormap", None)
+        show_colorbar = kwargs.get("show_colorbar", True)
+        show_axis = kwargs.get("show_axis", True)
+        show_boundary = kwargs.get("show_boundary", True)
+        show_triangulation = kwargs.get("show_triangulation", False)
 
-    def _construct_gradient_on_boundary_x2(self) -> np.ndarray:
-        return self._construct_gradient_component_on_boundary(2)
+        # plot boundary
+        if show_boundary:
+            edges = self.v.mesh_cell.get_edges()
+            MeshPlot(edges).draw(show_plot=False, keep_open=True)
 
-    def _construct_gradient_component_on_boundary(
-        self, component: int
-    ) -> np.ndarray:
-        num_pts = self.v.mesh_cell.num_pts
-        if component == 1:
-            b1 = np.ones((num_pts,))
-            b2 = np.zeros((num_pts,))
-        elif component == 2:
-            b1 = np.zeros((num_pts,))
-            b2 = np.ones((num_pts,))
+        # concatenate interior and boundary values
+        if self.use_interp and boundary_values is not None:
+            vals = np.concatenate((interior_values, boundary_values))
         else:
-            raise ValueError("component must be 1 or 2")
-        norm_comp = self.v.mesh_cell.dot_with_normal(b1, b2)
-        tang_comp = self.v.mesh_cell.dot_with_tangent(b1, b2)
-        wnd = self.v.harm.trace.w_norm_deriv + self.v.poly.trace.w_norm_deriv
-        wtd = self.v.harm.trace.w_tang_deriv + self.v.poly.trace.w_tang_deriv
-        weighted_grad = norm_comp * wnd + tang_comp * wtd
-        wgt = self.v.mesh_cell.get_dx_norm()
-        error_settings = np.seterr(divide="ignore")
-        grad_xj = weighted_grad / wgt
-        np.seterr(**error_settings)
-        return grad_xj
+            vals = interior_values
+
+        # plot values
+        self._apply_masks_and_draw(vals, fill, levels)
+
+        # plot mesh
+        if show_triangulation:
+            plt.triplot(self.triangulation, "-k")
+
+        # set title
+        if title:
+            plt.title(title)
+
+        # set colormap
+        if colormap is not None:
+            plt.set_cmap(colormap)
+
+        # set colorbar
+        if show_colorbar:
+            self._make_colorbar()
+
+        # set axis
+        if not show_axis:
+            plt.axis("off")
+
+        # save or show plot
+        self._output_plot(show_plot, filename)
+
+    def _apply_masks_and_draw(
+        self, vals: np.ndarray, fill: bool, levels: int
+    ) -> None:
+
+        # find inf and nan values
+        pointwise_mask = np.logical_not(np.isfinite(vals))
+
+        # get only the triangles that have no bad points
+        inf_mask = np.any(pointwise_mask[self.triangulation.triangles], axis=1)
+
+        # remove triangles from holes and with bad points
+        mask = np.logical_or(self.hole_mask, inf_mask)
+
+        # apply mask
+        self.triangulation.set_mask(mask)
+
+        # plot interior values
+        if fill:
+            plt.tricontourf(self.triangulation, vals, levels=levels)
+        else:
+            plt.tricontour(self.triangulation, vals, levels=levels)
+
+    def _make_colorbar(self) -> None:
+        divider = make_axes_locatable(plt.gca())
+        colorbar_axes = divider.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(cax=colorbar_axes, mappable=plt.gci())
+
+    def _output_plot(self, show_plot: bool, filename: str) -> None:
+        if show_plot:
+            plt.show()
+        if filename:
+            save_figure(filename)
+        plt.close()
 
 
-def _remove_holes(
+def _construct_gradient_on_boundary_x1(
+    v: LocalPoissonFunction,
+) -> np.ndarray:
+    return _construct_gradient_component_on_boundary(v, 1)
+
+
+def _construct_gradient_on_boundary_x2(
+    v: LocalPoissonFunction,
+) -> np.ndarray:
+    return _construct_gradient_component_on_boundary(v, 2)
+
+
+def _construct_gradient_component_on_boundary(
+    v: LocalPoissonFunction, component: int
+) -> np.ndarray:
+    num_pts = v.mesh_cell.num_pts
+    if component == 1:
+        b1 = np.ones((num_pts,))
+        b2 = np.zeros((num_pts,))
+    elif component == 2:
+        b1 = np.zeros((num_pts,))
+        b2 = np.ones((num_pts,))
+    else:
+        raise ValueError("component must be 1 or 2")
+    norm_comp = v.mesh_cell.dot_with_normal(b1, b2)
+    tang_comp = v.mesh_cell.dot_with_tangent(b1, b2)
+    wnd = v.harm.trace.w_norm_deriv + v.poly.trace.w_norm_deriv
+    wtd = v.harm.trace.w_tang_deriv + v.poly.trace.w_tang_deriv
+    weighted_grad = norm_comp * wnd + tang_comp * wtd
+    wgt = v.mesh_cell.get_dx_norm()
+    error_settings = np.seterr(divide="ignore")
+    grad_xj = weighted_grad / wgt
+    np.seterr(**error_settings)
+    grad_xj[wgt < TOL] = np.nan
+    return grad_xj
+
+
+def _get_hole_mask(
     triangulation: tri.Triangulation,
     outer_x: np.ndarray,
     outer_y: np.ndarray,
     holes_x: list[np.ndarray],
     holes_y: list[np.ndarray],
     radius: float = 1e-8,
-) -> tri.Triangulation:
-    """
-    The midpoint of each edge is tested to see if it lies inside the domain.
-    If it lies outside the domain, the edge is removed.
-    """
+) -> np.ndarray:
+    # Test if the midpoint of each edge lies inside the domain. If it lies
+    # outside the domain, the edge is removed.
     mask = np.zeros(triangulation.triangles.shape[0], dtype=bool)
     for t in range(triangulation.triangles.shape[0]):
         for i in range(3):
@@ -428,8 +371,7 @@ def _remove_holes(
             mask[t] = not _point_is_inside(
                 mid_x, mid_y, outer_x, outer_y, holes_x, holes_y, radius
             )
-    triangulation.set_mask(mask)
-    return triangulation
+    return mask
 
 
 def _point_is_inside(
