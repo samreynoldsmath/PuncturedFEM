@@ -22,7 +22,6 @@ from matplotlib.path import Path
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from ..locfun.local_poisson import LocalPoissonFunction
-from .mesh_plot import MeshPlot
 from .plot_util import save_figure
 
 TOL = 1e-8
@@ -240,11 +239,6 @@ class LocalFunctionPlot:
         show_boundary = kwargs.get("show_boundary", True)
         show_triangulation = kwargs.get("show_triangulation", False)
 
-        # plot boundary
-        if show_boundary:
-            edges = self.v.mesh_cell.get_edges()
-            MeshPlot(edges).draw(show_plot=False, keep_open=True)
-
         # concatenate interior and boundary values
         if self.use_interp and boundary_values is not None:
             vals = np.concatenate((interior_values, boundary_values))
@@ -258,21 +252,17 @@ class LocalFunctionPlot:
         if show_triangulation:
             plt.triplot(self.triangulation, "-k")
 
-        # set title
-        if title:
-            plt.title(title)
-
-        # set colormap
-        if colormap is not None:
-            plt.set_cmap(colormap)
-
-        # set colorbar
-        if show_colorbar:
-            self._make_colorbar()
-
-        # set axis
+        # axis and shape
+        plt.axis("equal")
         if not show_axis:
             plt.axis("off")
+
+        # plot boundary
+        if show_boundary:
+            self._plot_edges()
+
+        # title, colormap, colorbar, axis
+        self._make_plot_extras(title, colormap, show_colorbar)
 
         # save or show plot
         self._output_plot(show_plot, filename)
@@ -299,16 +289,33 @@ class LocalFunctionPlot:
         else:
             plt.tricontour(self.triangulation, vals, levels=levels)
 
-    def _make_colorbar(self) -> None:
-        divider = make_axes_locatable(plt.gca())
-        colorbar_axes = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(cax=colorbar_axes, mappable=plt.gci())
+    def _plot_edges(self) -> None:
+        for edge in self.v.mesh_cell.get_edges():
+            plt.plot(*edge.get_sampled_points(), "-k")
+
+    def _make_plot_extras(
+        self, title: str, colormap: Optional[str], show_colorbar: bool
+    ) -> None:
+
+        # set title
+        if title:
+            plt.title(title)
+
+        # set colormap
+        if colormap is not None:
+            plt.set_cmap(colormap)
+
+        # set colorbar
+        if show_colorbar:
+            divider = make_axes_locatable(plt.gca())
+            colorbar_axes = divider.append_axes("right", size="5%", pad=0.05)
+            plt.colorbar(cax=colorbar_axes, mappable=plt.gci())
 
     def _output_plot(self, show_plot: bool, filename: str) -> None:
-        if show_plot:
-            plt.show()
         if filename:
             save_figure(filename)
+        if show_plot:
+            plt.show()
         plt.close()
 
 
