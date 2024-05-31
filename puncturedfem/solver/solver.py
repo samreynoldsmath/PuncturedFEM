@@ -14,9 +14,11 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
 from tqdm import tqdm
 
+from ..locfun.local_space import LocalPoissonFunction
 from ..util.print_color import Color, print_color
 from .bilinear_form import BilinearForm
 from .globfunsp import GlobalFunctionSpace
+from .globkey import GlobalKey
 
 
 class Solver:
@@ -200,35 +202,19 @@ class Solver:
         compute_interior_values : bool, optional
             Compute interior values, by default True
         """
-        self.rhs_idx = []
-        self.rhs_vals = []
-        self.row_idx = []
-        self.col_idx = []
-        self.mat_vals = []
-        self.stiff_vals = []
-        self.mass_vals = []
-
-        self.interior_values = [
-            [] for _ in range(self.glob_fun_sp.mesh.num_cells)
-        ]
-        self.interior_x1 = []
-        self.interior_x2 = []
+        self._initialize_linear_system_arrays()
+        if compute_interior_values:
+            self._initialize_interior_values()
 
         # loop over MeshCells
         for abs_cell_idx in range(self.glob_fun_sp.mesh.num_cells):
-            cell_idx = self.glob_fun_sp.mesh.cell_idx_list[abs_cell_idx]
 
             if verbose:
-                print_color(
-                    "Cell "
-                    + f"{abs_cell_idx + 1:6}"
-                    + f" / {self.glob_fun_sp.mesh.num_cells:6}",
-                    Color.GREEN,
-                )
+                self._print_cell_progress(abs_cell_idx)
 
             # build local function space
             loc_fun_sp = self.glob_fun_sp.build_local_function_space(
-                cell_idx,
+                cell_idx=self.glob_fun_sp.mesh.cell_idx_list[abs_cell_idx],
                 verbose=verbose,
                 compute_interior_values=compute_interior_values,
                 compute_interior_gradient=compute_interior_gradient,
@@ -243,96 +229,129 @@ class Solver:
             if verbose:
                 print("Evaluating bilinear form and right-hand side...")
 
-            # loop over local functions
+            # get local basis functions
             loc_basis = loc_fun_sp.get_basis()
-
-            range_num_funs: Union[range, tqdm]
-            if verbose:
-                range_num_funs = tqdm(range(loc_fun_sp.num_funs))
-            else:
-                range_num_funs = range(loc_fun_sp.num_funs)
 
             # TODO: also get edges with positive index (or on boundary)
             if compute_interior_values:
                 self.interior_x1.append(loc_fun_sp.nyst.K.int_x1)
                 self.interior_x2.append(loc_fun_sp.nyst.K.int_x2)
 
-            for i in range_num_funs:
+            for i in self._get_range_num_funs(verbose, loc_fun_sp.num_funs):
                 v = loc_basis[i]
-
-                # store interior values
+                self._set_rhs_values(v)
                 if compute_interior_values:
                     self.interior_values[abs_cell_idx][i] = v.int_vals
-
-                # evaluate local right-hand side
-                f_i = self.bilinear_form.eval_rhs(v)
-
-                # add to global right-hand side vector
-                self.rhs_idx.append(v.key.glob_idx)
-                self.rhs_vals.append(f_i)
-
                 for j in range(i, loc_fun_sp.num_funs):
                     w = loc_basis[j]
+                    self._compute_and_set_matrix_values(v, w, j > i)
 
-                    # evaluate local bilinear form
-                    h1_ij = self.bilinear_form.eval_h1(v, w)
-                    l2_ij = self.bilinear_form.eval_l2(v, w)
-                    a_ij = self.bilinear_form.eval_with_h1_and_l2(h1_ij, l2_ij)
+        self._impose_zero_dirichlet_bc()
 
-                    # add to matrices
-                    self.row_idx.append(v.key.glob_idx)
-                    self.col_idx.append(w.key.glob_idx)
-                    self.mat_vals.append(a_ij)
-                    self.stiff_vals.append(h1_ij)
-                    self.mass_vals.append(l2_ij)
+    def _initialize_linear_system_arrays(self) -> None:
+        self.rhs_idx = []
+        self.rhs_vals = []
+        self.row_idx = []
+        self.col_idx = []
+        self.mat_vals = []
+        self.stiff_vals = []
+        self.mass_vals = []
 
-                    # symmetry
-                    if j > i:
-                        self.row_idx.append(w.key.glob_idx)
-                        self.col_idx.append(v.key.glob_idx)
-                        self.mat_vals.append(a_ij)
-                        self.stiff_vals.append(h1_ij)
-                        self.mass_vals.append(l2_ij)
+    def _initialize_interior_values(self) -> None:
+        self.interior_values = [
+            [] for _ in range(self.glob_fun_sp.mesh.num_cells)
+        ]
+        self.interior_x1 = []
+        self.interior_x2 = []
 
-        # impose boundary conditions
+    def _print_cell_progress(self, abs_cell_idx: int) -> None:
+        print_color(
+            "Cell "
+            + f"{abs_cell_idx + 1:6}"
+            + f" / {self.glob_fun_sp.mesh.num_cells:6}",
+            Color.GREEN,
+        )
+
+    def _get_range_num_funs(
+        self, verbose: bool, num_funs: int
+    ) -> Union[range, tqdm]:
+        if verbose:
+            return tqdm(range(num_funs))
+        return range(num_funs)
+
+    def _set_rhs_values(self, v: LocalPoissonFunction) -> None:
+        f_i = self.bilinear_form.eval_rhs(v)
+        self.rhs_idx.append(v.key.glob_idx)
+        self.rhs_vals.append(f_i)
+
+    def _compute_and_set_matrix_values(
+        self,
+        v: LocalPoissonFunction,
+        w: LocalPoissonFunction,
+        apply_symmetry: bool,
+    ) -> None:
+        # TODO: storing stiffness and mass matrices separately is inefficient
+
+        # evaluate local bilinear form
+        h1_ij = self.bilinear_form.eval_h1(v, w)
+        l2_ij = self.bilinear_form.eval_l2(v, w)
+        a_ij = self.bilinear_form.eval_with_h1_and_l2(h1_ij, l2_ij)
+
+        # add to matrices
+        i = v.key.glob_idx
+        j = w.key.glob_idx
+        self._set_matrix_values(i, j, a_ij, h1_ij, l2_ij)
+        if apply_symmetry:
+            self._set_matrix_values(
+                i=j, j=i, a_ij=a_ij, h1_ij=h1_ij, l2_ij=l2_ij
+            )
+
+    def _set_matrix_values(
+        self, i: int, j: int, a_ij: float, h1_ij: float, l2_ij: float
+    ) -> None:
+        self.row_idx.append(i)
+        self.col_idx.append(j)
+        self.mat_vals.append(a_ij)
+        self.stiff_vals.append(h1_ij)
+        self.mass_vals.append(l2_ij)
+
+    def _impose_zero_dirichlet_bc(self) -> None:
         for abs_cell_idx in range(self.glob_fun_sp.mesh.num_cells):
-            cell_idx = self.glob_fun_sp.mesh.cell_idx_list[abs_cell_idx]
-
             for key in self.glob_fun_sp.cell_dofs[abs_cell_idx]:
                 if key.is_on_boundary:
-                    # zero rhs entry
-                    for k, idx in enumerate(self.rhs_idx):
-                        if idx == key.glob_idx:
-                            self.rhs_vals[k] = 0.0
-                    # zero mat row, except diagonal
-                    for k, idx in enumerate(self.row_idx):
-                        if idx == key.glob_idx:
-                            if self.col_idx[k] == key.glob_idx:
-                                self.mat_vals[k] = 1.0
-                            else:
-                                self.mat_vals[k] = 0.0
+                    self._set_rhs_from_key(key, 0.0)
+                    self._zero_mat_row(key)
+
+    def _set_rhs_from_key(self, key: GlobalKey, val: float) -> None:
+        for k, idx in enumerate(self.rhs_idx):
+            if idx == key.glob_idx:
+                self.rhs_vals[k] = val
+
+    def _zero_mat_row(self, key: GlobalKey) -> None:
+        # zero mat row, except diagonal
+        for k, idx in enumerate(self.row_idx):
+            if idx == key.glob_idx:
+                if self.col_idx[k] == key.glob_idx:
+                    self.mat_vals[k] = 1.0
+                else:
+                    self.mat_vals[k] = 0.0
 
     def _find_num_funs(self) -> None:
         self.num_funs = self.glob_fun_sp.num_funs
         self._check_sizes()
 
     def _check_sizes(self) -> None:
-        rhs_size = 1 + max(self.rhs_idx)
-        if rhs_size > self.num_funs:
-            raise ValueError(
-                f"rhs_size > self.num_funs ({rhs_size} > {self.num_funs})"
-            )
+        self._check_indices_do_not_exceed_num_funs(self.rhs_idx, "rhs_idx")
+        self._check_indices_do_not_exceed_num_funs(self.row_idx, "row_idx")
+        self._check_indices_do_not_exceed_num_funs(self.col_idx, "col_idx")
 
-        num_rows = 1 + max(self.row_idx)
-        if num_rows > self.num_funs:
+    def _check_indices_do_not_exceed_num_funs(
+        self, indices: list[int], list_name: str
+    ) -> None:
+        size = max(indices)
+        if size >= self.num_funs:
             raise ValueError(
-                f"num_rows > self.num_funs ({num_rows} > {self.num_funs})"
-            )
-
-        num_cols = 1 + max(self.col_idx)
-        if num_cols > self.num_funs:
-            raise ValueError(
-                f"num_cols > self.num_funs ({num_cols} > {self.num_funs})"
+                f"{list_name} >= self.num_funs ({size} >= {self.num_funs})"
             )
 
     def _build_matrix_and_rhs(self) -> None:
