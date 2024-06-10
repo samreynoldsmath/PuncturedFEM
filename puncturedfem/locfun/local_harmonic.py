@@ -7,7 +7,8 @@ LocalHarmonic
     Harmonic function on a mesh cell.
 """
 
-from typing import Optional
+from __future__ import annotations
+from typing import Optional, Union
 
 import numpy as np
 
@@ -57,7 +58,9 @@ class LocalHarmonic:
     log_coef: list[float]
     biharmonic_trace: Optional[DirichletTrace]
 
-    def __init__(self, trace: DirichletTrace, nyst: NystromSolver) -> None:
+    def __init__(
+        self, trace: DirichletTrace, nyst: Optional[NystromSolver]
+    ) -> None:
         """
         Initialize the local harmonic function.
 
@@ -65,13 +68,12 @@ class LocalHarmonic:
         ----------
         trace : DirichletTrace
             Dirichlet trace of the local harmonic function.
-        nyst : NystromSolver
-            Nystrom solver object for solving integral equations.
-        compute_biharmonic : bool, optional
-            Whether to compute the biharmonic part of the local harmonic
-            function, by default True.
+        nyst : Optional[NystromSolver]
+            Nystrom solver for the mesh cell.
         """
         self.set_trace(trace)
+        if nyst is None:
+            return
         self.trace.set_weighted_tangential_derivative(
             get_weighted_tangential_derivative_from_trace(nyst.K, trace.values)
         )
@@ -79,6 +81,108 @@ class LocalHarmonic:
         self._compute_conjugable_part(nyst)
         self._compute_harmonic_weighted_normal_derivative(nyst)
         self._compute_biharmonic(nyst)
+
+    def __add__(self, other: LocalHarmonic) -> LocalHarmonic:
+        """
+        Add two local harmonic functions.
+
+        Parameters
+        ----------
+        other : LocalHarmonic
+            The other local harmonic function.
+
+        Returns
+        -------
+        LocalHarmonic
+            The sum of the two local harmonic functions.
+        """
+        new = LocalHarmonic(trace=self.trace + other.trace, nyst=None)
+        new.psi = self.psi + other.psi
+        new.conj_trace = self.conj_trace + other.conj_trace
+        new.log_coef = [a + b for a, b in zip(self.log_coef, other.log_coef)]
+        if self.biharmonic_trace is not None and other.biharmonic_trace is not None:
+            new.biharmonic_trace = self.biharmonic_trace + other.biharmonic_trace
+        return new
+
+    def __mul__(self, other: Union[int, float]) -> LocalHarmonic:
+        """
+        Multiply the local harmonic function by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalHarmonic
+            The product of the local harmonic function and the scalar.
+        """
+        new = LocalHarmonic(trace=self.trace * other, nyst=None)
+        new.psi = self.psi * other
+        new.conj_trace = self.conj_trace * other
+        new.log_coef = [a * other for a in self.log_coef]
+        if self.biharmonic_trace is not None:
+            new.biharmonic_trace = self.biharmonic_trace * other
+        return new
+
+    def __rmul__(self, other: Union[int, float]) -> LocalHarmonic:
+        """
+        Multiply the local harmonic function by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalHarmonic
+            The product of the local harmonic function and the scalar.
+        """
+        return self.__mul__(other)
+
+    def __sub__(self, other: LocalHarmonic) -> LocalHarmonic:
+        """
+        Subtract two local harmonic functions.
+
+        Parameters
+        ----------
+        other : LocalHarmonic
+            The other local harmonic function.
+
+        Returns
+        -------
+        LocalHarmonic
+            The difference of the two local harmonic functions.
+        """
+        return self + other * -1
+
+    def __truediv__(self, other: Union[int, float]) -> LocalHarmonic:
+        """
+        Divide the local harmonic function by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalHarmonic
+            The division of the local harmonic function by the scalar.
+        """
+        if not isinstance(other, (int, float)):
+            raise TypeError("The divisor must be a scalar.")
+        if other == 0:
+            raise ValueError("Division by zero.")
+        new = LocalHarmonic(trace=self.trace / other, nyst=None)
+        new.psi = self.psi / other
+        new.conj_trace = self.conj_trace / other
+        new.log_coef = [a / other for a in self.log_coef]
+        if self.biharmonic_trace is not None:
+            new.biharmonic_trace = self.biharmonic_trace / other
+        return new
 
     def set_trace(self, trace: DirichletTrace) -> None:
         """

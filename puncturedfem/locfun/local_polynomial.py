@@ -7,6 +7,9 @@ LocalPolynomial
     Polynomial on a mesh cell.
 """
 
+from __future__ import annotations
+from typing import Optional, Union
+
 from ..mesh.cell import MeshCell
 from .poly.poly import Polynomial
 from .trace import DirichletTrace
@@ -46,7 +49,9 @@ class LocalPolynomial:
     antilap: Polynomial
     antilap_trace: DirichletTrace
 
-    def __init__(self, exact_form: Polynomial, K: MeshCell) -> None:
+    def __init__(
+        self, exact_form: Polynomial, mesh_cell: Optional[MeshCell]
+    ) -> None:
         """
         Initialize the polynomial.
 
@@ -54,12 +59,15 @@ class LocalPolynomial:
         ----------
         exact_form : Polynomial
             Exact form of the polynomial.
-        K : MeshCell
+        mesh_cell : MeshCell
             The mesh cell on which the polynomial is defined.
         """
         self.exact_form = exact_form
+        if K is None:
+            return
         self.trace = DirichletTrace(
-            edges=K.get_edges(), values=exact_form(*K.get_boundary_points())
+            edges=mesh_cell.get_edges(),
+            values=exact_form(*mesh_cell.get_boundary_points()),
         )
         self.grad1, self.grad2 = exact_form.grad()
         self.trace.set_weighted_normal_derivative(
@@ -70,8 +78,131 @@ class LocalPolynomial:
         )
         self.antilap = exact_form.anti_laplacian()
         self.antilap_trace = DirichletTrace(
-            edges=K.get_edges(), values=self.antilap(*K.get_boundary_points())
+            edges=mesh_cell.get_edges(),
+            values=self.antilap(*mesh_cell.get_boundary_points()),
         )
         self.antilap_trace.set_weighted_normal_derivative(
-            self.antilap.get_weighted_normal_derivative(K)
+            self.antilap.get_weighted_normal_derivative(mesh_cell)
         )
+
+    def __add__(self, other: LocalPolynomial) -> LocalPolynomial:
+        """
+        Add two local polynomials.
+
+        Parameters
+        ----------
+        other : LocalPolynomial
+            The other local polynomial.
+
+        Returns
+        -------
+        LocalPolynomial
+            The sum of the two local polynomials.
+        """
+        if not isinstance(other, LocalPolynomial):
+            raise TypeError("The other term must be a LocalPolynomial.")
+        new = LocalPolynomial(
+            exact_form=self.exact_form + other.exact_form, mesh_cell=None
+        )
+        new.trace = self.trace + other.trace
+        new.grad1 = self.grad1 + other.grad1
+        new.grad2 = self.grad2 + other.grad2
+        new.antilap = self.antilap + other.antilap
+        new.antilap_trace = self.antilap_trace + other.antilap_trace
+        return new
+
+    def __mul__(self, other: Union[int, float]) -> LocalPolynomial:
+        """
+        Multiply a local polynomial by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalPolynomial
+            The product of the local polynomial and the scalar.
+        """
+        if not isinstance(other, (int, float)):
+            raise TypeError("The multiplier must be a scalar.")
+        new = LocalPolynomial(
+            exact_form=self.exact_form * other, mesh_cell=None
+        )
+        new.trace = self.trace * other
+        new.grad1 = self.grad1 * other
+        new.grad2 = self.grad2 * other
+        new.antilap = self.antilap * other
+        new.antilap_trace = self.antilap_trace * other
+        return new
+
+    def __rmul__(self, other: Union[int, float]) -> LocalPolynomial:
+        """
+        Multiply a local polynomial by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalPolynomial
+            The product of the local polynomial and the scalar.
+        """
+        return self.__mul__(other)
+
+    def __truediv__(self, other: Union[int, float]) -> LocalPolynomial:
+        """
+        Divide a local polynomial by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalPolynomial
+            The division of the local polynomial by the scalar.
+        """
+        if not isinstance(other, (int, float)):
+            raise TypeError("The divisor must be a scalar.")
+        if other == 0:
+            raise ValueError("Division by zero.")
+        new = LocalPolynomial(
+            exact_form=self.exact_form / other, mesh_cell=None
+        )
+        new.trace = self.trace / other
+        new.grad1 = self.grad1 / other
+        new.grad2 = self.grad2 / other
+        new.antilap = self.antilap / other
+        new.antilap_trace = self.antilap_trace / other
+        return new
+
+    def __sub__(self, other: LocalPolynomial) -> LocalPolynomial:
+        """
+        Subtract two local polynomials.
+
+        Parameters
+        ----------
+        other : LocalPolynomial
+            The other local polynomial.
+
+        Returns
+        -------
+        LocalPolynomial
+            The difference of the two local polynomials.
+        """
+        if not isinstance(other, LocalPolynomial):
+            raise TypeError("The other term must be a LocalPolynomial.")
+        new = LocalPolynomial(
+            exact_form=self.exact_form - other.exact_form, mesh_cell=None
+        )
+        new.trace = self.trace - other.trace
+        new.grad1 = self.grad1 - other.grad1
+        new.grad2 = self.grad2 - other.grad2
+        new.antilap = self.antilap - other.antilap
+        new.antilap_trace = self.antilap_trace - other.antilap_trace
+        return new

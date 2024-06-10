@@ -67,6 +67,12 @@ class LocalPoissonFunction:
     int_vals : np.ndarray
         Interior values of the local function, evaluated on the interior mesh
         defined by the mesh cell.
+    int_grad1 : np.ndarray
+        First component of the gradient of the local function, evaluated on the
+        interior mesh defined by the mesh cell.
+    int_grad2 : np.ndarray
+        Second component of the gradient of the local function, evaluated on the
+        interior mesh defined by the mesh cell.
     key : GlobalKey
         A unique tag that identifies the local function in the global space.
     """
@@ -79,7 +85,7 @@ class LocalPoissonFunction:
 
     def __init__(
         self,
-        nyst: NystromSolver,
+        nyst: Optional[NystromSolver],
         laplacian: Polynomial = Polynomial(),
         trace: Union[DirichletTrace, FloatLike] = 0,
         evaluate_interior: bool = False,
@@ -107,6 +113,8 @@ class LocalPoissonFunction:
         key : Optional[GlobalKey], optional
             A unique tag that identifies the local function in the global space.
         """
+        if nyst is None:
+            return
         self._set_key(key)
         self._set_mesh_cell(nyst.K)
         P = laplacian.anti_laplacian()
@@ -120,6 +128,112 @@ class LocalPoissonFunction:
         self.harm = LocalHarmonic(harm_trace_vals, nyst)
         if evaluate_interior or evaluate_gradient:
             self.compute_interior_values(evaluate_gradient)
+
+    def __add__(self, other: LocalPoissonFunction) -> LocalPoissonFunction:
+        """
+        Add two local Poisson functions.
+
+        Parameters
+        ----------
+        other : LocalPoissonFunction
+            The other local Poisson function.
+
+        Returns
+        -------
+        LocalPoissonFunction
+            The sum of the two local Poisson functions.
+        """
+        if not isinstance(other, LocalPoissonFunction):
+            raise TypeError("other must be a LocalPoissonFunction")
+        new = LocalPoissonFunction(nyst=None)
+        new._set_mesh_cell(self.mesh_cell)
+        new.poly = self.poly + other.poly
+        new.harm = self.harm + other.harm
+        return new
+
+    def __mul__(self, other: Union[int, float]) -> LocalPoissonFunction:
+        """
+        Multiply the local Poisson function by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalPoissonFunction
+            The product of the local Poisson function and the scalar.
+        """
+        if not isinstance(other, (int, float)):
+            raise TypeError("other must be an int or a float")
+        new = LocalPoissonFunction(nyst=None)
+        new._set_mesh_cell(self.mesh_cell)
+        new.poly = self.poly * other
+        new.harm = self.harm * other
+        return new
+
+    def __rmul__(self, other: Union[int, float]) -> LocalPoissonFunction:
+        """
+        Multiply the local Poisson function by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalPoissonFunction
+            The product of the local Poisson function and the scalar.
+        """
+        return self.__mul__(other)
+
+    def __sub__(self, other: LocalPoissonFunction) -> LocalPoissonFunction:
+        """
+        Subtract two local Poisson functions.
+
+        Parameters
+        ----------
+        other : LocalPoissonFunction
+            The other local Poisson function.
+
+        Returns
+        -------
+        LocalPoissonFunction
+            The difference of the two local Poisson functions.
+        """
+        if not isinstance(other, LocalPoissonFunction):
+            raise TypeError("other must be a LocalPoissonFunction")
+        new = LocalPoissonFunction(nyst=None)
+        new._set_mesh_cell(self.mesh_cell)
+        new.poly = self.poly - other.poly
+        new.harm = self.harm - other.harm
+        return new
+
+    def __truediv__(self, other: Union[int, float]) -> LocalPoissonFunction:
+        """
+        Divide the local Poisson function by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalPoissonFunction
+            The division of the local Poisson function by the scalar.
+        """
+        if not isinstance(other, (int, float)):
+            raise TypeError("other must be an int or a float")
+        if other == 0:
+            raise ValueError("Division by zero")
+        new = LocalPoissonFunction(nyst=None)
+        new._set_mesh_cell(self.mesh_cell)
+        new.poly = self.poly / other
+        new.harm = self.harm / other
+        return new
 
     def get_h1_semi_inner_prod(
         self, other: Union[LocalPoissonFunction, LocalHarmonic, LocalPolynomial]
