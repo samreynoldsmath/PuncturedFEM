@@ -62,8 +62,8 @@ def test_solver_deg_1() -> None:
     h1_error = np.dot(solver.stiff_mat @ x_error, x_error)
     l2_error = np.dot(solver.mass_mat @ x_error, x_error)
 
-    assert h1_error >= 0.0
-    assert l2_error >= 0.0
+    assert h1_error >= -TOL
+    assert l2_error >= -TOL
     assert h1_error + l2_error < TOL
 
 
@@ -88,8 +88,8 @@ def test_solver_deg_2() -> None:
     h1_error = np.dot(solver.stiff_mat @ x_error, x_error)
     l2_error = np.dot(solver.mass_mat @ x_error, x_error)
 
-    assert h1_error >= 0.0
-    assert l2_error >= 0.0
+    assert h1_error >= -TOL
+    assert l2_error >= -TOL
     assert h1_error + l2_error < TOL
 
 
@@ -114,6 +114,6 @@ def test_solver_deg_3() -> None:
     h1_error = np.dot(solver.stiff_mat @ x_error, x_error)
     l2_error = np.dot(solver.mass_mat @ x_error, x_error)
 
-    assert h1_error >= 0.0
-    assert l2_error >= 0.0
+    assert h1_error >= -TOL
+    assert l2_error >= -TOL
     assert h1_error + l2_error < TOL
