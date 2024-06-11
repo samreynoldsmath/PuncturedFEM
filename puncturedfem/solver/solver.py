@@ -373,7 +373,7 @@ class Solver:
     # COMPUTE LINEAR COMBINATION #############################################
 
     def compute_linear_combo_on_mesh_cell(
-        self, cell_idx: int, coef: np.ndarray
+        self, cell_idx: int, global_coef: np.ndarray
     ) -> LocalPoissonFunction:
         """
         Compute a linear combination of the basis functions on a MeshCell.
@@ -387,12 +387,13 @@ class Solver:
         """
         abs_cell_idx = self.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
         loc_fun_sp = self.local_function_spaces[abs_cell_idx]
+        local_coef = self.get_coef_on_mesh_cell(cell_idx, global_coef)
         w = LocalPoissonFunction(nyst=loc_fun_sp.nyst, evaluate_gradient=True)
         for i, v in enumerate(loc_fun_sp.get_basis()):
-            w += v * coef[i]
+            w += v * local_coef[i]
         return w
 
-    def get_coef_on_mesh_cell(self, cell_idx: int, u: np.ndarray) -> np.ndarray:
+    def get_coef_on_mesh_cell(self, cell_idx: int, global_coef: np.ndarray) -> np.ndarray:
         """
         Get the coefficients of the basis functions on a MeshCell.
 
@@ -400,12 +401,12 @@ class Solver:
         ----------
         cell_idx : int
             MeshCell index
-        u : np.ndarray
+        global_coef : np.ndarray
             Solution vector
         """
         abs_cell_idx = self.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
         keys = self.glob_fun_sp.cell_dofs[abs_cell_idx]
-        coef = np.zeros((len(keys),))
+        local_coef = np.zeros((len(keys),))
         for i, key in enumerate(keys):
-            coef[i] = u[key.glob_idx]
-        return coef
+            local_coef[i] = global_coef[key.glob_idx]
+        return local_coef
