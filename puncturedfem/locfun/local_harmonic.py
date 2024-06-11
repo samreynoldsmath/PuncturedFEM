@@ -100,8 +100,13 @@ class LocalHarmonic:
         new.psi = self.psi + other.psi
         new.conj_trace = self.conj_trace + other.conj_trace
         new.log_coef = [a + b for a, b in zip(self.log_coef, other.log_coef)]
-        if self.biharmonic_trace is not None and other.biharmonic_trace is not None:
-            new.biharmonic_trace = self.biharmonic_trace + other.biharmonic_trace
+        if (
+            self.biharmonic_trace is not None
+            and other.biharmonic_trace is not None
+        ):
+            new.biharmonic_trace = (
+                self.biharmonic_trace + other.biharmonic_trace
+            )
         return new
 
     def __mul__(self, other: Union[int, float]) -> LocalHarmonic:

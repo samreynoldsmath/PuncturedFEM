@@ -51,8 +51,8 @@ class DirichletTrace:
     num_edges: int
     num_pts: int
     values: np.ndarray
-    w_norm_deriv: np.ndarray
-    w_tang_deriv: np.ndarray
+    w_norm_deriv: Optional[np.ndarray]
+    w_tang_deriv: Optional[np.ndarray]
     funcs: list[Func_R2_R]
     edge_sampled_indices: list[tuple[int, int]]
 
@@ -84,6 +84,8 @@ class DirichletTrace:
         if self.edges_are_parametrized():
             self.find_num_pts()
             self.find_edge_sampled_indices()
+        self.w_norm_deriv = None
+        self.w_tang_deriv = None
         if custom:
             return
         if values is not None:

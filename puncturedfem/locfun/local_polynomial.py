@@ -63,7 +63,7 @@ class LocalPolynomial:
             The mesh cell on which the polynomial is defined.
         """
         self.exact_form = exact_form
-        if K is None:
+        if mesh_cell is None:
             return
         self.trace = DirichletTrace(
             edges=mesh_cell.get_edges(),
@@ -71,10 +71,10 @@ class LocalPolynomial:
         )
         self.grad1, self.grad2 = exact_form.grad()
         self.trace.set_weighted_normal_derivative(
-            exact_form.get_weighted_normal_derivative(K)
+            exact_form.get_weighted_normal_derivative(mesh_cell)
         )
         self.trace.set_weighted_tangential_derivative(
-            exact_form.get_weighted_tangential_derivative(K)
+            exact_form.get_weighted_tangential_derivative(mesh_cell)
         )
         self.antilap = exact_form.anti_laplacian()
         self.antilap_trace = DirichletTrace(

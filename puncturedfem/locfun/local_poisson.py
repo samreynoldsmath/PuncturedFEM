@@ -80,7 +80,9 @@ class LocalPoissonFunction:
     harm: LocalHarmonic
     poly: LocalPolynomial
     mesh_cell: MeshCell
-    int_vals: np.ndarray
+    int_vals: Optional[np.ndarray]
+    int_grad1: Optional[np.ndarray]
+    int_grad2: Optional[np.ndarray]
     key: GlobalKey
 
     def __init__(
@@ -113,6 +115,9 @@ class LocalPoissonFunction:
         key : Optional[GlobalKey], optional
             A unique tag that identifies the local function in the global space.
         """
+        self.int_vals = None
+        self.int_grad1 = None
+        self.int_grad2 = None
         if nyst is None:
             return
         self._set_key(key)
@@ -149,6 +154,12 @@ class LocalPoissonFunction:
         new._set_mesh_cell(self.mesh_cell)
         new.poly = self.poly + other.poly
         new.harm = self.harm + other.harm
+        if self.int_vals is not None and other.int_vals is not None:
+            new.int_vals = self.int_vals + other.int_vals
+        if self.int_grad1 is not None and other.int_grad1 is not None:
+            new.int_grad1 = self.int_grad1 + other.int_grad1
+        if self.int_grad2 is not None and other.int_grad2 is not None:
+            new.int_grad2 = self.int_grad2 + other.int_grad2
         return new
 
     def __mul__(self, other: Union[int, float]) -> LocalPoissonFunction:
@@ -171,6 +182,12 @@ class LocalPoissonFunction:
         new._set_mesh_cell(self.mesh_cell)
         new.poly = self.poly * other
         new.harm = self.harm * other
+        if self.int_vals is not None:
+            new.int_vals = self.int_vals * other
+        if self.int_grad1 is not None:
+            new.int_grad1 = self.int_grad1 * other
+        if self.int_grad2 is not None:
+            new.int_grad2 = self.int_grad2 * other
         return new
 
     def __rmul__(self, other: Union[int, float]) -> LocalPoissonFunction:
@@ -203,13 +220,7 @@ class LocalPoissonFunction:
         LocalPoissonFunction
             The difference of the two local Poisson functions.
         """
-        if not isinstance(other, LocalPoissonFunction):
-            raise TypeError("other must be a LocalPoissonFunction")
-        new = LocalPoissonFunction(nyst=None)
-        new._set_mesh_cell(self.mesh_cell)
-        new.poly = self.poly - other.poly
-        new.harm = self.harm - other.harm
-        return new
+        return self + other * -1
 
     def __truediv__(self, other: Union[int, float]) -> LocalPoissonFunction:
         """
@@ -229,11 +240,7 @@ class LocalPoissonFunction:
             raise TypeError("other must be an int or a float")
         if other == 0:
             raise ValueError("Division by zero")
-        new = LocalPoissonFunction(nyst=None)
-        new._set_mesh_cell(self.mesh_cell)
-        new.poly = self.poly / other
-        new.harm = self.harm / other
-        return new
+        return self * (1 / other)
 
     def get_h1_semi_inner_prod(
         self, other: Union[LocalPoissonFunction, LocalHarmonic, LocalPolynomial]
