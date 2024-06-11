@@ -168,7 +168,7 @@ class PlanarMesh:
         self.cell_idx_list.sort()
         self.num_cells = len(self.cell_idx_list)
 
-    def get_cells(self, cell_idx: int) -> MeshCell:
+    def get_cell(self, cell_idx: int) -> MeshCell:
         """
         Return the MeshCell with index cell_idx.
 
