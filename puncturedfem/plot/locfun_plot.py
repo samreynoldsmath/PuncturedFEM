@@ -107,7 +107,7 @@ class LocalFunctionPlot:
 
         # remove triangles with all three vertices on a hole edge
         self.hole_mask = _get_hole_mask(
-            crude_triangulation, outer_x, outer_y, hole_x, hole_y
+            crude_triangulation, outer_x, outer_y, hole_x, hole_y, radius=1e-6
         )
 
         # set triangulation
@@ -238,6 +238,17 @@ class LocalFunctionPlot:
         show_axis = kwargs.get("show_axis", True)
         show_boundary = kwargs.get("show_boundary", True)
         show_triangulation = kwargs.get("show_triangulation", False)
+        close_plot = kwargs.get("close_plot", True)
+        new_figure = kwargs.get("new_figure", True)
+        fig_handle = kwargs.get("fig_handle", None)
+
+        # create new figure if necessary
+        if new_figure and fig_handle is None:
+            fig_handle = plt.figure()
+
+        # use the provided figure handle
+        if fig_handle is not None:
+            plt.figure(fig_handle.number)
 
         # concatenate interior and boundary values
         if self.use_interp and boundary_values is not None:
@@ -266,6 +277,10 @@ class LocalFunctionPlot:
 
         # save or show plot
         self._output_plot(show_plot, filename)
+
+        # close plot
+        if close_plot:
+            plt.close()
 
     def _apply_masks_and_draw(
         self, vals: np.ndarray, fill: bool, levels: int
@@ -316,7 +331,6 @@ class LocalFunctionPlot:
             save_figure(filename)
         if show_plot:
             plt.show()
-        plt.close()
 
 
 def _construct_gradient_on_boundary_x1(
@@ -362,7 +376,7 @@ def _get_hole_mask(
     outer_y: np.ndarray,
     holes_x: list[np.ndarray],
     holes_y: list[np.ndarray],
-    radius: float = 1e-8,
+    radius: float,
 ) -> np.ndarray:
     # Test if the midpoint of each edge lies inside the domain. If it lies
     # outside the domain, the edge is removed.
@@ -373,13 +387,75 @@ def _get_hole_mask(
                 continue
             a = triangulation.triangles[t, i]
             b = triangulation.triangles[t, (i + 1) % 3]
-            mid_x = 0.5 * (triangulation.x[a] + triangulation.x[b])
-            mid_y = 0.5 * (triangulation.y[a] + triangulation.y[b])
-            mask[t] = not _point_is_inside(
-                mid_x, mid_y, outer_x, outer_y, holes_x, holes_y, radius
-            )
+
+            # if both points lie consecutively on the boundary, the edge is kept
+            if not _edge_is_on_boundary(
+                [triangulation.x[a], triangulation.x[b]],
+                [triangulation.y[a], triangulation.y[b]],
+                outer_x,
+                outer_y,
+                holes_x,
+                holes_y,
+                radius,
+            ):
+                mid_x = 0.5 * (triangulation.x[a] + triangulation.x[b])
+                mid_y = 0.5 * (triangulation.y[a] + triangulation.y[b])
+                mask[t] = not _point_is_inside(
+                    mid_x, mid_y, outer_x, outer_y, holes_x, holes_y, radius
+                )
     return mask
 
+def _edge_is_on_boundary(
+    edge_x: np.ndarray,
+    edge_y: np.ndarray,
+    outer_x: np.ndarray,
+    outer_y: np.ndarray,
+    holes_x: list[np.ndarray],
+    holes_y: list[np.ndarray],
+    radius: float,
+) -> bool:
+    # test if the edge is any of the boundary edges
+    if _edge_is_on_boundary_simple(edge_x, edge_y, outer_x, outer_y, radius):
+        return True
+    for hole_x, hole_y in zip(holes_x, holes_y):
+        if _edge_is_on_boundary_simple(edge_x, edge_y, hole_x, hole_y, radius):
+            return True
+    return False
+
+def _edge_is_on_boundary_simple(
+    edge_x: np.ndarray,
+    edge_y: np.ndarray,
+    path_x: np.ndarray,
+    path_y: np.ndarray,
+    radius: float,
+) -> bool:
+    # return true if the edge is on the boundary
+    # there are two cases: when the edge is parallel to the boundary and when
+    # the edge is oppositely oriented to the boundary
+    n = len(path_x)
+    for i in range(n):
+        x1, y1 = path_x[i], path_y[i]
+        x2, y2 = path_x[(i + 1) % n], path_y[(i + 1) % n]
+        if _edge_is_on_boundary_segment(edge_x, edge_y, x1, y1, x2, y2, radius):
+            return True
+    return False
+
+def _edge_is_on_boundary_segment(
+    edge_x: np.ndarray,
+    edge_y: np.ndarray,
+    x1: float,
+    y1: float,
+    x2: float,
+    y2: float,
+    radius: float,
+) -> bool:
+    a = np.array([x2 - x1, y2 - y1])
+    b = np.array([edge_x[1] - edge_x[0], edge_y[1] - edge_y[0]])
+    if np.linalg.norm(a - b) < radius:
+        return True
+    if np.linalg.norm(a + b) < radius:
+        return True
+    return False
 
 def _point_is_inside(
     point_x: float,
