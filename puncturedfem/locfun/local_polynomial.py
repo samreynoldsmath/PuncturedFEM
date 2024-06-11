@@ -8,6 +8,7 @@ LocalPolynomial
 """
 
 from __future__ import annotations
+
 from typing import Optional, Union
 
 from ..mesh.cell import MeshCell
