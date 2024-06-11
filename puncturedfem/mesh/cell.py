@@ -68,7 +68,7 @@ class MeshCell:
         self,
         idx: int,
         edges: list[Edge],
-        int_mesh_size: tuple[int, int] = (101, 101),
+        int_mesh_size: tuple[int, int] = (17, 17),
         rtol: float = 0.02,
         atol: float = 0.02,
     ) -> None:
