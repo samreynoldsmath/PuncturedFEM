@@ -7,7 +7,7 @@ Solver
     Solve the global linear system.
 """
 
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -47,8 +47,8 @@ class Solver:
         List of right-hand side values
     num_funs : int
         Number of global functions
-    interior_values : list[list[np.ndarray]]
-        List of interior values on each MeshCell
+    # interior_values : list[list[np.ndarray]]
+    #     List of interior values on each MeshCell
     soln : np.ndarray
         Solution vector
     """
@@ -67,9 +67,7 @@ class Solver:
     rhs_idx: list[int]
     rhs_vals: list[float]
     num_funs: int
-    interior_values: list[list[np.ndarray]]
-    interior_x1: list[np.ndarray]
-    interior_x2: list[np.ndarray]
+    local_function_spaces: list[Optional[LocalPoissonFunction]]
     soln: np.ndarray
 
     def __init__(
@@ -203,8 +201,6 @@ class Solver:
             Compute interior values, by default True
         """
         self._initialize_linear_system_arrays()
-        if compute_interior_values:
-            self._initialize_interior_values()
 
         # loop over MeshCells
         for abs_cell_idx in range(self.glob_fun_sp.mesh.num_cells):
@@ -220,11 +216,8 @@ class Solver:
                 compute_interior_gradient=compute_interior_gradient,
             )
 
-            # initialize interior values
             if compute_interior_values:
-                self.interior_values[abs_cell_idx] = [
-                    np.zeros((0,)) for _ in range(loc_fun_sp.num_funs)
-                ]
+                self.local_function_spaces[abs_cell_idx] = loc_fun_sp
 
             if verbose:
                 print("Evaluating bilinear form and right-hand side...")
@@ -232,20 +225,15 @@ class Solver:
             # get local basis functions
             loc_basis = loc_fun_sp.get_basis()
 
-            # TODO: also get edges with positive index (or on boundary)
-            if compute_interior_values:
-                self.interior_x1.append(loc_fun_sp.nyst.K.int_x1)
-                self.interior_x2.append(loc_fun_sp.nyst.K.int_x2)
-
+            # double loop over local basis functions
             for i in self._get_range_num_funs(verbose, loc_fun_sp.num_funs):
                 v = loc_basis[i]
                 self._set_rhs_values(v)
-                if compute_interior_values:
-                    self.interior_values[abs_cell_idx][i] = v.int_vals
                 for j in range(i, loc_fun_sp.num_funs):
                     w = loc_basis[j]
                     self._compute_and_set_matrix_values(v, w, j > i)
 
+        # impose zero Dirichlet boundary conditions
         self._impose_zero_dirichlet_bc()
 
     def _initialize_linear_system_arrays(self) -> None:
@@ -256,13 +244,9 @@ class Solver:
         self.mat_vals = []
         self.stiff_vals = []
         self.mass_vals = []
-
-    def _initialize_interior_values(self) -> None:
-        self.interior_values = [
-            [] for _ in range(self.glob_fun_sp.mesh.num_cells)
+        self.local_function_spaces = [
+            None for _ in range(self.glob_fun_sp.mesh.num_cells)
         ]
-        self.interior_x1 = []
-        self.interior_x2 = []
 
     def _print_cell_progress(self, abs_cell_idx: int) -> None:
         print_color(
@@ -388,9 +372,9 @@ class Solver:
 
     # COMPUTE LINEAR COMBINATION #############################################
 
-    def compute_linear_combo_on_mesh(
+    def compute_linear_combo_on_mesh_cell(
         self, cell_idx: int, coef: np.ndarray
-    ) -> np.ndarray:
+    ) -> LocalPoissonFunction:
         """
         Compute a linear combination of the basis functions on a MeshCell.
 
@@ -402,13 +386,13 @@ class Solver:
             Coefficients
         """
         abs_cell_idx = self.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
-        int_vals = self.interior_values[abs_cell_idx]
-        vals = np.zeros(np.shape(int_vals[0]))
-        for i, val in enumerate(int_vals):
-            vals += val * coef[i]
-        return vals
+        loc_fun_sp = self.local_function_spaces[abs_cell_idx]
+        w = LocalPoissonFunction(nyst=loc_fun_sp.nyst, evaluate_gradient=True)
+        for i, v in enumerate(loc_fun_sp.get_basis()):
+            w += v * coef[i]
+        return w
 
-    def get_coef_on_mesh(self, cell_idx: int, u: np.ndarray) -> np.ndarray:
+    def get_coef_on_mesh_cell(self, cell_idx: int, u: np.ndarray) -> np.ndarray:
         """
         Get the coefficients of the basis functions on a MeshCell.
 

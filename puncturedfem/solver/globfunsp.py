@@ -171,7 +171,7 @@ class GlobalFunctionSpace:
             If True, compute the values of interior functions, by default True
         """
         abs_cell_idx = self.mesh.get_abs_cell_idx(cell_idx)
-        mesh_cell = self.mesh.get_cells(cell_idx)
+        mesh_cell = self.mesh.get_cell(cell_idx)
         mesh_cell.parameterize(quad_dict=self.quad_dict)
         edge_spaces = []
         for e in mesh_cell.get_edges():
