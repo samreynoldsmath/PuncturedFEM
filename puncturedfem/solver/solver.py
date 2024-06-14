@@ -76,6 +76,7 @@ class Solver:
         bilinear_form: BilinearForm,
         verbose: bool = True,
         compute_interior_values: bool = True,
+        compute_interior_gradient: bool = False,
     ) -> None:
         """
         Initialize the Solver.
@@ -94,7 +95,7 @@ class Solver:
         self.set_global_function_space(glob_fun_sp)
         self.set_bilinear_form(bilinear_form)
         self.assemble(
-            verbose=verbose, compute_interior_values=compute_interior_values
+            verbose, compute_interior_values, compute_interior_gradient
         )
 
     def __str__(self) -> str:
@@ -390,10 +391,14 @@ class Solver:
         local_coef = self.get_coef_on_mesh_cell(cell_idx, global_coef)
         w = LocalPoissonFunction(nyst=loc_fun_sp.nyst, evaluate_gradient=True)
         for i, v in enumerate(loc_fun_sp.get_basis()):
+            if abs(local_coef[i]) < 1e-4:  # only needs to look good
+                continue
             w += v * local_coef[i]
         return w
 
-    def get_coef_on_mesh_cell(self, cell_idx: int, global_coef: np.ndarray) -> np.ndarray:
+    def get_coef_on_mesh_cell(
+        self, cell_idx: int, global_coef: np.ndarray
+    ) -> np.ndarray:
         """
         Get the coefficients of the basis functions on a MeshCell.
 
