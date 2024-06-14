@@ -22,9 +22,10 @@ from matplotlib.path import Path
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from ..locfun.local_poisson import LocalPoissonFunction
-from .plot_util import save_figure
+from .plot_util import get_axis_limits, get_figure_size, save_figure
 
 TOL = 1e-8
+MAX_GRAD = 1e3
 
 
 class LocalFunctionPlot:
@@ -60,9 +61,11 @@ class LocalFunctionPlot:
         v : LocalPoissonFunction
             The local function to be plotted.
         """
+        v.mesh_cell.deparameterize()
+        v.mesh_cell.parameterize(v.mesh_cell.quad_dict)
         self.set_local_function(v)
         self._set_use_interp(use_interp)
-        self._build_triangulation()
+        self._build_triangulation()  # TODO: this should done in MeshCell
 
     def set_local_function(self, v: LocalPoissonFunction) -> None:
         """
@@ -173,7 +176,10 @@ class LocalFunctionPlot:
     def _draw_vals(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
-        bdry_vals = self.v.harm.trace.values + self.v.poly.trace.values
+        if self.use_interp:
+            bdry_vals = self.v.harm.trace.values + self.v.poly.trace.values
+        else:
+            bdry_vals = None
         self._draw_generic(
             interior_values=self.v.int_vals,
             boundary_values=bdry_vals,
@@ -185,7 +191,10 @@ class LocalFunctionPlot:
     def _draw_grad_x1(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
-        grad_x1 = _construct_gradient_on_boundary_x1(self.v)
+        if self.use_interp:
+            grad_x1 = _construct_gradient_on_boundary_x1(self.v)
+        else:
+            grad_x1 = None
         self._draw_generic(
             interior_values=self.v.int_grad1,
             boundary_values=grad_x1,
@@ -197,7 +206,10 @@ class LocalFunctionPlot:
     def _draw_grad_x2(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
-        grad_x2 = _construct_gradient_on_boundary_x2(self.v)
+        if self.use_interp:
+            grad_x2 = _construct_gradient_on_boundary_x2(self.v)
+        else:
+            grad_x2 = None
         self._draw_generic(
             interior_values=self.v.int_grad2,
             boundary_values=grad_x2,
@@ -209,9 +221,12 @@ class LocalFunctionPlot:
     def _draw_grad_norm(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
-        grad_x1 = _construct_gradient_on_boundary_x1(self.v)
-        grad_x2 = _construct_gradient_on_boundary_x2(self.v)
-        grad_norm = np.sqrt(grad_x1**2 + grad_x2**2)
+        if self.use_interp:
+            grad_x1 = _construct_gradient_on_boundary_x1(self.v)
+            grad_x2 = _construct_gradient_on_boundary_x2(self.v)
+            grad_norm = np.sqrt(grad_x1**2 + grad_x2**2)
+        else:
+            grad_norm = None
         grad_norm_interior = np.sqrt(self.v.int_grad1**2 + self.v.int_grad2**2)
         self._draw_generic(
             interior_values=grad_norm_interior,
@@ -241,10 +256,15 @@ class LocalFunctionPlot:
         close_plot = kwargs.get("close_plot", True)
         new_figure = kwargs.get("new_figure", True)
         fig_handle = kwargs.get("fig_handle", None)
+        clim = kwargs.get("clim", None)
 
         # create new figure if necessary
         if new_figure and fig_handle is None:
-            fig_handle = plt.figure()
+            min_x, max_x, min_y, max_y = get_axis_limits(
+                self.v.mesh_cell.get_edges()
+            )
+            w, h = get_figure_size(min_x, max_x, min_y, max_y)
+            fig_handle = plt.figure(figsize=(w, h))
 
         # use the provided figure handle
         if fig_handle is not None:
@@ -257,7 +277,7 @@ class LocalFunctionPlot:
             vals = interior_values
 
         # plot values
-        self._apply_masks_and_draw(vals, fill, levels)
+        self._apply_masks_and_draw(vals, fill, levels, clim)
 
         # plot mesh
         if show_triangulation:
@@ -265,6 +285,10 @@ class LocalFunctionPlot:
 
         # axis and shape
         plt.axis("equal")
+        plt.gca().set_aspect("equal")
+        plt.subplots_adjust(
+            left=0.0, right=1.0, bottom=0.0, top=1.0, wspace=0.0, hspace=0.0
+        )
         if not show_axis:
             plt.axis("off")
 
@@ -283,7 +307,11 @@ class LocalFunctionPlot:
             plt.close()
 
     def _apply_masks_and_draw(
-        self, vals: np.ndarray, fill: bool, levels: int
+        self,
+        vals: np.ndarray,
+        fill: bool,
+        levels: int,
+        clim: Optional[tuple[float, float]],
     ) -> None:
 
         # find inf and nan values
@@ -300,13 +328,17 @@ class LocalFunctionPlot:
 
         # plot interior values
         if fill:
-            plt.tricontourf(self.triangulation, vals, levels=levels)
+            contour = plt.tricontourf(self.triangulation, vals, levels=levels)
         else:
-            plt.tricontour(self.triangulation, vals, levels=levels)
+            contour = plt.tricontour(self.triangulation, vals, levels=levels)
+
+        # set color limits
+        if clim is not None:
+            contour.set_clim(clim)
 
     def _plot_edges(self) -> None:
         for edge in self.v.mesh_cell.get_edges():
-            plt.plot(*edge.get_sampled_points(), "-k")
+            plt.plot(*edge.get_sampled_points(ignore_endpoint=False), "-k")
 
     def _make_plot_extras(
         self, title: str, colormap: Optional[str], show_colorbar: bool
@@ -367,6 +399,7 @@ def _construct_gradient_component_on_boundary(
     grad_xj = weighted_grad / wgt
     np.seterr(**error_settings)
     grad_xj[wgt < TOL] = np.nan
+    grad_xj[grad_xj > MAX_GRAD] = np.nan
     return grad_xj
 
 
@@ -405,6 +438,7 @@ def _get_hole_mask(
                 )
     return mask
 
+
 def _edge_is_on_boundary(
     edge_x: np.ndarray,
     edge_y: np.ndarray,
@@ -421,6 +455,7 @@ def _edge_is_on_boundary(
         if _edge_is_on_boundary_simple(edge_x, edge_y, hole_x, hole_y, radius):
             return True
     return False
+
 
 def _edge_is_on_boundary_simple(
     edge_x: np.ndarray,
@@ -440,6 +475,7 @@ def _edge_is_on_boundary_simple(
             return True
     return False
 
+
 def _edge_is_on_boundary_segment(
     edge_x: np.ndarray,
     edge_y: np.ndarray,
@@ -456,6 +492,7 @@ def _edge_is_on_boundary_segment(
     if np.linalg.norm(a + b) < radius:
         return True
     return False
+
 
 def _point_is_inside(
     point_x: float,
