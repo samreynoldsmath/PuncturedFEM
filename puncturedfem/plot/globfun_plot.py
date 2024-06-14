@@ -196,7 +196,8 @@ class GlobalFunctionPlot:
             global_min, global_max = self.global_grad_norm_range
         else:
             raise ValueError(
-                f"plot_type must be 'values', 'grad_x1', 'grad_x2', or 'grad_norm', not '{plot_type}'"
+                "plot_type must be 'values', 'grad_x1', 'grad_x2', or "
+                + f"grad_norm', not '{plot_type}'"
             )
 
         # plot linear combination on each MeshCell
@@ -259,9 +260,7 @@ def _range_on_cell(
     vals: np.ndarray, current_min: float, current_max: float
 ) -> tuple[float, float]:
     local_min = np.min(vals)
+    current_min = np.min(current_min, local_min)
     local_max = np.max(vals)
-    if local_min < current_min:
-        current_min = local_min
-    if local_max > current_max:
-        current_max = local_max
+    current_max = np.max(current_max, local_max)
     return current_min, current_max

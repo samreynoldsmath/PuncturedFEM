@@ -221,6 +221,8 @@ class LocalFunctionPlot:
     def _draw_grad_norm(
         self, show_plot: bool = True, filename: str = "", **kwargs: Any
     ) -> None:
+        if self.v.int_grad1 is None or self.v.int_grad2 is None:
+            raise ValueError("int_grad1 and int_grad2 must be set")
         if self.use_interp:
             grad_x1 = _construct_gradient_on_boundary_x1(self.v)
             grad_x2 = _construct_gradient_on_boundary_x2(self.v)
@@ -238,7 +240,7 @@ class LocalFunctionPlot:
 
     def _draw_generic(
         self,
-        interior_values: np.ndarray,
+        interior_values: Optional[np.ndarray],
         boundary_values: Optional[np.ndarray],
         show_plot: bool = True,
         filename: str = "",
@@ -271,6 +273,10 @@ class LocalFunctionPlot:
             plt.figure(fig_handle.number)
 
         # concatenate interior and boundary values
+        if interior_values is None:
+            raise NotImplementedError(
+                "Skeleton plotting is not yet implemented."
+            )
         if self.use_interp and boundary_values is not None:
             vals = np.concatenate((interior_values, boundary_values))
         else:
@@ -380,6 +386,14 @@ def _construct_gradient_on_boundary_x2(
 def _construct_gradient_component_on_boundary(
     v: LocalPoissonFunction, component: int
 ) -> np.ndarray:
+    if v.harm.trace.w_norm_deriv is None:
+        raise ValueError("harm.w_norm_deriv must be set")
+    if v.harm.trace.w_tang_deriv is None:
+        raise ValueError("harm.w_tang_deriv must be set")
+    if v.poly.trace.w_norm_deriv is None:
+        raise ValueError("poly.w_norm_deriv must be set")
+    if v.poly.trace.w_tang_deriv is None:
+        raise ValueError("poly.w_tang_deriv must be set")
     num_pts = v.mesh_cell.num_pts
     if component == 1:
         b1 = np.ones((num_pts,))
@@ -423,8 +437,8 @@ def _get_hole_mask(
 
             # if both points lie consecutively on the boundary, the edge is kept
             if not _edge_is_on_boundary(
-                [triangulation.x[a], triangulation.x[b]],
-                [triangulation.y[a], triangulation.y[b]],
+                (triangulation.x[a], triangulation.x[b]),
+                (triangulation.y[a], triangulation.y[b]),
                 outer_x,
                 outer_y,
                 holes_x,
@@ -440,8 +454,8 @@ def _get_hole_mask(
 
 
 def _edge_is_on_boundary(
-    edge_x: np.ndarray,
-    edge_y: np.ndarray,
+    edge_x: tuple[float, float],
+    edge_y: tuple[float, float],
     outer_x: np.ndarray,
     outer_y: np.ndarray,
     holes_x: list[np.ndarray],
@@ -458,8 +472,8 @@ def _edge_is_on_boundary(
 
 
 def _edge_is_on_boundary_simple(
-    edge_x: np.ndarray,
-    edge_y: np.ndarray,
+    edge_x: tuple[float, float],
+    edge_y: tuple[float, float],
     path_x: np.ndarray,
     path_y: np.ndarray,
     radius: float,
@@ -477,8 +491,8 @@ def _edge_is_on_boundary_simple(
 
 
 def _edge_is_on_boundary_segment(
-    edge_x: np.ndarray,
-    edge_y: np.ndarray,
+    edge_x: tuple[float, float],
+    edge_y: tuple[float, float],
     x1: float,
     y1: float,
     x2: float,
