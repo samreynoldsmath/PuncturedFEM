@@ -90,7 +90,7 @@ class LocalPoissonFunction:
         nyst: Optional[NystromSolver],
         laplacian: Polynomial = Polynomial(),
         trace: Union[DirichletTrace, FloatLike] = 0,
-        evaluate_interior: bool = False,
+        evaluate_interior: bool = True,
         evaluate_gradient: bool = False,
         key: Optional[GlobalKey] = None,
     ) -> None:
