@@ -127,6 +127,8 @@ class GlobalFunctionPlot:
                 self.global_grad2_range[0],
                 self.global_grad2_range[1],
             )
+            if local_fun.int_grad1 is None or local_fun.int_grad2 is None:
+                raise ValueError("int_grad1 and int_grad2 must both be set")
             grad_norm = np.sqrt(local_fun.int_grad1**2 + local_fun.int_grad2**2)
             self.global_grad_norm_range = _range_on_cell(
                 grad_norm,
@@ -257,8 +259,10 @@ class GlobalFunctionPlot:
 
 
 def _range_on_cell(
-    vals: np.ndarray, current_min: float, current_max: float
+    vals: Optional[np.ndarray], current_min: float, current_max: float
 ) -> tuple[float, float]:
+    if vals is None:
+        raise ValueError("vals not set")
     local_min = np.min(vals)
     current_min = np.min(current_min, local_min)
     local_max = np.max(vals)

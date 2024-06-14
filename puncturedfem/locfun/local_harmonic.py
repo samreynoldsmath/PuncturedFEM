@@ -214,6 +214,11 @@ class LocalHarmonic:
             nyst.K, self.conj_trace.values
         )
         for j in range(nyst.K.num_holes):
+            if nyst.lam_trace[j].w_norm_deriv is None:
+                raise ValueError(
+                    "The weighted normal derivative of logarithmic terms "
+                    + "has not been set"
+                )
             harm_part_wnd += self.log_coef[j] * nyst.lam_trace[j].w_norm_deriv
         self.trace.set_weighted_normal_derivative(harm_part_wnd)
 

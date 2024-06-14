@@ -15,6 +15,7 @@ from scipy.sparse.linalg import spsolve
 from tqdm import tqdm
 
 from ..locfun.local_space import LocalPoissonFunction
+from ..locfun.local_space import LocalFunctionSpace
 from ..util.print_color import Color, print_color
 from .bilinear_form import BilinearForm
 from .globfunsp import GlobalFunctionSpace
@@ -67,7 +68,7 @@ class Solver:
     rhs_idx: list[int]
     rhs_vals: list[float]
     num_funs: int
-    local_function_spaces: list[Optional[LocalPoissonFunction]]
+    local_function_spaces: list[Optional[LocalFunctionSpace]]
     soln: np.ndarray
 
     def __init__(
@@ -218,7 +219,9 @@ class Solver:
             )
 
             if compute_interior_values:
-                self.local_function_spaces[abs_cell_idx] = loc_fun_sp
+                self.local_function_spaces[abs_cell_idx] = (  # type: ignore
+                    loc_fun_sp
+                )
 
             if verbose:
                 print("Evaluating bilinear form and right-hand side...")
@@ -388,6 +391,8 @@ class Solver:
         """
         abs_cell_idx = self.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
         loc_fun_sp = self.local_function_spaces[abs_cell_idx]
+        if loc_fun_sp is None:
+            raise ValueError("Local function space not computed for this cell")
         local_coef = self.get_coef_on_mesh_cell(cell_idx, global_coef)
         w = LocalPoissonFunction(nyst=loc_fun_sp.nyst, evaluate_gradient=True)
         for i, v in enumerate(loc_fun_sp.get_basis()):
