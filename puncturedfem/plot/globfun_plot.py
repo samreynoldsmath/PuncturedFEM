@@ -10,15 +10,14 @@ from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import tri
 from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Colormap
-from numpy import inf, nanmax, nanmin, ndarray
 
+from ..locfun.local_poisson import LocalPoissonFunction
 from ..solver.solver import Solver
+from .locfun_plot import LocalFunctionPlot
 from .plot_util import get_axis_limits, get_figure_size, save_figure
 
-# from .locfun_plot import LocalFunctionPlot
+# from matplotlib.colors import Colormap
 
 
 class GlobalFunctionPlot:
@@ -29,7 +28,7 @@ class GlobalFunctionPlot:
     ----------
     solver : Solver
         A Solver object, which contains the Mesh and the basis functions.
-    coef : ndarray
+    coef : np.ndarray
         The coefficients of the linear combination of basis functions.
     fill : bool
         If True, a heatmap is plotted. If False, a contour plot is plotted.
@@ -44,14 +43,16 @@ class GlobalFunctionPlot:
     """
 
     solver: Solver
-    coef: ndarray
-    fill: bool
-    title: str
-    show_colorbar: bool
-    show_axis: bool
-    colormap: Optional[Colormap]
+    coef: np.ndarray
+    global_function: list[LocalPoissonFunction]
+    global_range: tuple[float, float]
+    global_grad1_range: tuple[float, float]
+    global_grad2_range: tuple[float, float]
+    global_grad_norm_range: tuple[float, float]
 
-    def __init__(self, solver: Solver, coef: Optional[ndarray] = None) -> None:
+    def __init__(
+        self, solver: Solver, coef: Optional[np.ndarray] = None
+    ) -> None:
         """
         Initialize a GlobalFunctionPlot object.
 
@@ -59,11 +60,12 @@ class GlobalFunctionPlot:
         ----------
         solver : Solver
             A Solver object, which contains the Mesh and the basis functions.
-        coef : ndarray
+        coef : np.ndarray
             The coefficients of the linear combination of basis functions.
         """
         self.set_solver(solver)
         self.set_coefficients(coef)
+        self._build_global_function()
 
     def set_solver(self, solver: Solver) -> None:
         """
@@ -78,13 +80,13 @@ class GlobalFunctionPlot:
             raise TypeError("solver must be of type Solver")
         self.solver = solver
 
-    def set_coefficients(self, coef: Optional[ndarray] = None) -> None:
+    def set_coefficients(self, coef: Optional[np.ndarray] = None) -> None:
         """
         Set the coefficients of the linear combination of basis functions.
 
         Parameters
         ----------
-        coef : ndarray, optional
+        coef : np.ndarray, optional
             The coefficients of the linear combination of basis functions.
             Default is None. If None, the solver object must have an attribute
             soln.
@@ -95,21 +97,49 @@ class GlobalFunctionPlot:
                     "solver must have attribute soln or u must be given"
                 )
             coef = self.solver.soln
-        if not isinstance(coef, ndarray):
-            raise TypeError("u must be of type ndarray")
+        if not isinstance(coef, np.ndarray):
+            raise TypeError("u must be of type np.ndarray")
         if coef.shape != (self.solver.glob_fun_sp.num_funs,):
             raise ValueError("u must have shape (solver.glob_fun_sp.num_funs,)")
         self.coef = coef
 
-    def _unpack_kwargs(self, kwargs: dict) -> None:
-        self.fill = kwargs.get("fill", True)
-        self.title = kwargs.get("title", "")
-        self.show_colorbar = kwargs.get("show_colorbar", True)
-        self.show_axis = kwargs.get("show_axis", True)
-        self.colormap = kwargs.get("colormap", None)
+    def _build_global_function(self) -> None:
+        self.global_function = []
+        self.global_range = (np.inf, -np.inf)
+        self.global_grad1_range = (np.inf, -np.inf)
+        self.global_grad2_range = (np.inf, -np.inf)
+        self.global_grad_norm_range = (np.inf, -np.inf)
+        for cell_idx in self.solver.glob_fun_sp.mesh.cell_idx_list:
+            local_fun = self.solver.compute_linear_combo_on_mesh_cell(
+                cell_idx, self.coef
+            )
+            self.global_function.append(local_fun)
+            self.global_range = _range_on_cell(
+                local_fun.int_vals, self.global_range[0], self.global_range[1]
+            )
+            self.global_grad1_range = _range_on_cell(
+                local_fun.int_grad1,
+                self.global_grad1_range[0],
+                self.global_grad1_range[1],
+            )
+            self.global_grad2_range = _range_on_cell(
+                local_fun.int_grad2,
+                self.global_grad2_range[0],
+                self.global_grad2_range[1],
+            )
+            grad_norm = np.sqrt(local_fun.int_grad1**2 + local_fun.int_grad2**2)
+            self.global_grad_norm_range = _range_on_cell(
+                grad_norm,
+                self.global_grad_norm_range[0],
+                self.global_grad_norm_range[1],
+            )
 
     def draw(
-        self, show_plot: bool = True, filename: str = "", **kwargs: Any
+        self,
+        plot_type: str = "values",
+        show_plot: bool = True,
+        filename: str = "",
+        **kwargs: Any,
     ) -> None:
         """
         Draw the plot.
@@ -135,92 +165,103 @@ class GlobalFunctionPlot:
         colormap : Optional[Colormap], optional
             The colormap used for the plot. Default is None.
         """
-        self._unpack_kwargs(kwargs)
-        _plot_linear_combo(
-            self.solver,
-            self.coef,
-            title=self.title,
-            show_fig=show_plot,
-            save_fig=(len(filename) > 0),
-            filename=filename,
-            fill=self.fill,
-            show_colorbar=self.show_colorbar,
-            colormap=self.colormap,
+        fill = kwargs.get("fill", True)
+        title = kwargs.get("title", "")
+        show_colorbar = kwargs.get("show_colorbar", False)
+        show_axis = kwargs.get("show_axis", False)
+        colormap = kwargs.get("colormap", None)
+        use_interp = kwargs.get("use_interp", True)
+
+        save_fig = len(filename) > 0
+        if not (show_plot or save_fig):
+            return
+
+        # determine axes and figure size
+        min_x, max_x, min_y, max_y = get_axis_limits(
+            self.solver.glob_fun_sp.mesh.edges
         )
+        w, h = get_figure_size(min_x, max_x, min_y, max_y)
 
+        # get figure object
+        fig = plt.figure(figsize=(w, h))
 
-def _plot_linear_combo(
-    solver: Solver,
-    u: ndarray,
-    title: str = "",
-    show_fig: bool = True,
-    save_fig: bool = False,
-    filename: str = "solution.pdf",
-    fill: bool = True,
-    show_colorbar: bool = True,
-    colormap: Optional[Colormap] = None,
-) -> None:
-    if not (show_fig or save_fig):
-        return
-    # compute linear combo on each MeshCell, determine range of global values
-    vals_arr = []
-    v_min = inf
-    v_max = -inf
-    for cell_idx in solver.glob_fun_sp.mesh.cell_idx_list:
-        coef = solver.get_coef_on_mesh(cell_idx, u)
-        vals = solver.compute_linear_combo_on_mesh(cell_idx, coef)
-        vals_arr.append(vals)
-        v_min = min(v_min, nanmin(vals))
-        v_max = max(v_max, nanmax(vals))
+        # determine global range
+        if plot_type == "values":
+            global_min, global_max = self.global_range
+        elif plot_type == "grad_x1":
+            global_min, global_max = self.global_grad1_range
+        elif plot_type == "grad_x2":
+            global_min, global_max = self.global_grad2_range
+        elif plot_type == "grad_norm":
+            global_min, global_max = self.global_grad_norm_range
+        else:
+            raise ValueError(
+                f"plot_type must be 'values', 'grad_x1', 'grad_x2', or 'grad_norm', not '{plot_type}'"
+            )
 
-    # determine axes and figure size
-    min_x, max_x, min_y, max_y = get_axis_limits(solver.glob_fun_sp.mesh.edges)
-    w, h = get_figure_size(min_x, max_x, min_y, max_y)
+        # plot linear combination on each MeshCell
+        for local_fun in self.global_function:
 
-    # get figure object
-    fig = plt.figure(figsize=(w, h))
+            # plot local function
+            plot = LocalFunctionPlot(local_fun, use_interp)
+            plot.draw(
+                plot_type=plot_type,
+                fill=fill,
+                new_figure=False,
+                close_plot=False,
+                show_plot=False,
+                fig_handle=fig,
+                show_colorbar=False,
+                show_triangulation=False,
+                show_axis=False,
+                show_boundary=False,
+                clim=(global_min, global_max),
+            )
 
-    # plot mesh edges
-    for e in solver.glob_fun_sp.mesh.edges:
-        plt.plot(e.x[0, :], e.x[1, :], "k")
+        # plot mesh edges
+        for e in self.solver.glob_fun_sp.mesh.edges:
+            plt.plot(e.x[0, :], e.x[1, :], "k")
 
-    vals = np.concatenate(vals_arr)
-    x1 = np.concatenate(solver.interior_x1)
-    x2 = np.concatenate(solver.interior_x2)
+        if fill and show_colorbar:
+            sm = ScalarMappable(
+                norm=plt.Normalize(vmin=global_min, vmax=global_max),
+                cmap=colormap,
+            )
+            plt.colorbar(
+                mappable=sm,
+                ax=plt.gca(),
+                fraction=0.046,
+                pad=0.04,
+            )
 
-    triang = tri.Triangulation(x1, x2)
-    plt.tricontourf(
-        triang,
-        vals,
-        vmin=v_min,
-        vmax=v_max,
-        levels=32,
-        cmap=colormap,
-    )
-    if fill and show_colorbar:
-        sm = ScalarMappable(
-            norm=plt.Normalize(vmin=v_min, vmax=v_max), cmap=colormap
+        plt.axis("equal")
+        plt.gca().set_aspect("equal")
+        plt.subplots_adjust(
+            left=0.0, right=1.0, bottom=0.0, top=1.0, wspace=0.0, hspace=0.0
         )
-        plt.colorbar(
-            mappable=sm,
-            ax=plt.gca(),
-            fraction=0.046,
-            pad=0.04,
-        )
-    plt.axis("equal")
-    plt.axis("off")
-    plt.gca().set_aspect("equal")
-    plt.subplots_adjust(
-        left=0.0, right=1.0, bottom=0.0, top=1.0, wspace=0.0, hspace=0.0
-    )
+        if not show_axis:
+            plt.axis("off")
 
-    if len(title) > 0:
-        plt.title(title)
+        if len(title) > 0:
+            plt.title(title)
 
-    if save_fig:
-        save_figure(filename)
+        if save_fig:
+            save_figure(filename)
 
-    if show_fig:
-        plt.show()
+        if show_plot:
+            plt.show()
 
-    plt.close(fig)
+        if show_plot or save_fig:
+            plt.close()
+
+
+def _range_on_cell(
+    vals: np.ndarray, current_min: float, current_max: float
+) -> tuple[float, float]:
+    local_min = np.min(vals)
+    local_max = np.max(vals)
+    if local_min < current_min:
+        current_min = local_min
+    if local_max > current_max:
+        current_max = local_max
+    return current_min, current_max
