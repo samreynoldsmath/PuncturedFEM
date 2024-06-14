@@ -164,6 +164,7 @@ def _get_edges(verts: list[Vert]) -> list[Edge]:
             verts[11],
             pos_cell_idx=2,
             neg_cell_idx=1,
+            quad_type="trap",
             curve_type="circle",
             radius=0.25 * PACMAN_SCALE,
         )
@@ -176,6 +177,7 @@ def _get_edges(verts: list[Vert]) -> list[Edge]:
             verts[12],
             pos_cell_idx=4,
             neg_cell_idx=3,
+            quad_type="trap",
             curve_type="circle",
             radius=0.1,
         )
@@ -186,6 +188,7 @@ def _get_edges(verts: list[Vert]) -> list[Edge]:
             verts[13],
             pos_cell_idx=5,
             neg_cell_idx=3,
+            quad_type="trap",
             curve_type="circle",
             radius=0.1,
         )
@@ -196,6 +199,7 @@ def _get_edges(verts: list[Vert]) -> list[Edge]:
             verts[14],
             pos_cell_idx=6,
             neg_cell_idx=3,
+            quad_type="trap",
             curve_type="circle",
             radius=0.1,
         )
@@ -231,6 +235,7 @@ def _get_edges(verts: list[Vert]) -> list[Edge]:
             verts[19],
             pos_cell_idx=9,
             neg_cell_idx=8,
+            quad_type="trap",
             curve_type="ellipse",
             a=0.15 * GHOST_SCALE,
             b=0.2 * GHOST_SCALE,
@@ -242,6 +247,7 @@ def _get_edges(verts: list[Vert]) -> list[Edge]:
             verts[20],
             pos_cell_idx=10,
             neg_cell_idx=8,
+            quad_type="trap",
             curve_type="ellipse",
             a=0.15 * GHOST_SCALE,
             b=0.2 * GHOST_SCALE,
