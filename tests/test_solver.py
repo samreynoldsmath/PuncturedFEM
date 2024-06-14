@@ -50,7 +50,7 @@ def test_solver_deg_1() -> None:
     examples/ex2.1-pacman-fem.ipynb
     """
     deg = 1
-    n = 16
+    n = 32
     filename = f"tests/data/pac_man_ghost_n{n}_deg{deg}.txt"
     x_exact = np.loadtxt(filename)
 
@@ -59,11 +59,14 @@ def test_solver_deg_1() -> None:
     x_computed = solver.soln
 
     x_error = x_exact - x_computed
+
+    norm_error = np.dot(x_error, x_error)
     h1_error = np.dot(solver.stiff_mat @ x_error, x_error)
     l2_error = np.dot(solver.mass_mat @ x_error, x_error)
 
-    assert h1_error >= -TOL
-    assert l2_error >= -TOL
+    assert h1_error > -TOL
+    assert l2_error > -TOL
+    assert norm_error < TOL
     assert h1_error + l2_error < TOL
 
 
@@ -76,7 +79,7 @@ def test_solver_deg_2() -> None:
     examples/ex2.1-pacman-fem.ipynb
     """
     deg = 2
-    n = 16
+    n = 32
     filename = f"tests/data/pac_man_ghost_n{n}_deg{deg}.txt"
     x_exact = np.loadtxt(filename)
 
@@ -85,11 +88,14 @@ def test_solver_deg_2() -> None:
     x_computed = solver.soln
 
     x_error = x_exact - x_computed
+
+    norm_error = np.dot(x_error, x_error)
     h1_error = np.dot(solver.stiff_mat @ x_error, x_error)
     l2_error = np.dot(solver.mass_mat @ x_error, x_error)
 
-    assert h1_error >= -TOL
-    assert l2_error >= -TOL
+    assert h1_error > -TOL
+    assert l2_error > -TOL
+    assert norm_error < TOL
     assert h1_error + l2_error < TOL
 
 
@@ -102,7 +108,7 @@ def test_solver_deg_3() -> None:
     examples/ex2.1-pacman-fem.ipynb
     """
     deg = 3
-    n = 16
+    n = 32
     filename = f"tests/data/pac_man_ghost_n{n}_deg{deg}.txt"
     x_exact = np.loadtxt(filename)
 
@@ -111,9 +117,12 @@ def test_solver_deg_3() -> None:
     x_computed = solver.soln
 
     x_error = x_exact - x_computed
+
+    norm_error = np.dot(x_error, x_error)
     h1_error = np.dot(solver.stiff_mat @ x_error, x_error)
     l2_error = np.dot(solver.mass_mat @ x_error, x_error)
 
-    assert h1_error >= -TOL
-    assert l2_error >= -TOL
+    assert h1_error > -TOL
+    assert l2_error > -TOL
+    assert norm_error < TOL
     assert h1_error + l2_error < TOL
