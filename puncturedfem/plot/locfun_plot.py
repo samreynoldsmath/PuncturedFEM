@@ -46,8 +46,6 @@ class LocalFunctionPlot:
     """
 
     v: LocalPoissonFunction
-    # triangulation: tri.Triangulation
-    # hole_mask: np.ndarray
     use_interp: bool
 
     def __init__(
@@ -61,11 +59,8 @@ class LocalFunctionPlot:
         v : LocalPoissonFunction
             The local function to be plotted.
         """
-        # v.mesh_cell.deparameterize()
-        # v.mesh_cell.parameterize(v.mesh_cell.quad_dict)
         self.set_local_function(v)
         self._set_use_interp(use_interp)
-        # self._build_triangulation()  # TODO: this should done in MeshCell
 
     def set_local_function(self, v: LocalPoissonFunction) -> None:
         """
