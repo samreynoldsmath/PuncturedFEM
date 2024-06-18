@@ -359,6 +359,8 @@ class TracePlot:
                 fmt_str = self.fmt
             elif isinstance(self.fmt, list):
                 fmt_str = self.fmt[0]
+            else:
+                raise TypeError("fmt must be a string or a list of strings")
             self._plot_single_trace(self.traces, fmt_str)
         elif isinstance(self.traces, list):
             if isinstance(self.fmt, str):
