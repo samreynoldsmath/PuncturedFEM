@@ -14,8 +14,7 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
 from tqdm import tqdm
 
-from ..locfun.local_space import LocalPoissonFunction
-from ..locfun.local_space import LocalFunctionSpace
+from ..locfun.local_space import LocalFunctionSpace, LocalPoissonFunction
 from ..util.print_color import Color, print_color
 from .bilinear_form import BilinearForm
 from .globfunsp import GlobalFunctionSpace
