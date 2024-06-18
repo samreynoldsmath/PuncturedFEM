@@ -27,7 +27,7 @@ def test_int_val_ghost() -> None:
     quad_dict = pf.get_quad_dict(n=64)
 
     # parameterize edges
-    K.parameterize(quad_dict)
+    K.parameterize(quad_dict, compute_interior_points=True)
 
     # set up Nyström solver
     nyst = pf.NystromSolver(K, verbose=True)

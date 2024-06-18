@@ -23,7 +23,7 @@ def compute_boundary_length(K: pf.MeshCell, quad_dict: pf.QuadDict) -> float:
     boundary.
     """
     # parameterize edges
-    K.parameterize(quad_dict)
+    K.parameterize(quad_dict, compute_interior_points=False)
 
     # calculate length of boundary by integrating 1 over boundary
     one = np.ones((K.num_pts,))
