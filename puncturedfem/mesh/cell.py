@@ -8,6 +8,8 @@ MeshCell
 """
 
 import numpy as np
+from matplotlib import tri
+from matplotlib.path import Path
 
 from ..util.types import Func_R2_R
 from .closed_contour import ClosedContour
@@ -63,6 +65,9 @@ class MeshCell:
     int_mesh_size: tuple[int, int]
     int_x1: np.ndarray
     int_x2: np.ndarray
+    triangulation: tri.Triangulation
+    hole_mask: np.ndarray
+    boundary_mask: np.ndarray
 
     def __init__(
         self,
@@ -291,7 +296,9 @@ class MeshCell:
         """
         return all(c.is_parameterized() for c in self.components)
 
-    def parameterize(self, quad_dict: QuadDict) -> None:
+    def parameterize(
+        self, quad_dict: QuadDict, compute_interior_points: bool
+    ) -> None:
         """Parameterize each edge."""
         for c in self.components:
             c.parameterize(quad_dict)
@@ -299,7 +306,8 @@ class MeshCell:
         self.find_outer_boundary()
         self.find_component_start_idx()
         self.find_closest_vert_idx()
-        self.generate_interior_points()
+        if compute_interior_points:
+            self.generate_interior_points()
         self.quad_dict = quad_dict
 
     def deparameterize(self) -> None:
@@ -507,6 +515,9 @@ class MeshCell:
         # delete points outside K
         self.int_x1 = self.int_x1[is_inside]
         self.int_x2 = self.int_x2[is_inside]
+
+        # build triangulation
+        self._build_triangulation()
 
     # FUNCTION EVALUATION ####################################################
     def evaluate_function_on_boundary(self, fun: Func_R2_R) -> np.ndarray:
@@ -738,3 +749,216 @@ class MeshCell:
             jp1 = self.component_start_idx[i + 1]
             y[j:jp1] = h * vals_dx_norm[j:jp1]
         return float(np.sum(y))
+
+    # TRIANGULATION ##########################################################
+
+    def _build_triangulation(self) -> None:
+        # interior points
+        x1 = self.int_x1
+        x2 = self.int_x2
+
+        # concatenate interior points with boundary points
+        y1, y2 = self.get_boundary_points()
+        x1 = np.concatenate((x1, y1))
+        x2 = np.concatenate((x2, y2))
+
+        # triangulate
+        crude_triangulation = tri.Triangulation(x1, x2)
+
+        # partition boundary into outer and hole edges
+        outer_x, outer_y = self.components[0].get_sampled_points()
+        hole_x = []
+        hole_y = []
+        for component in self.components[1:]:
+            x, y = component.get_sampled_points()
+            hole_x.append(x)
+            hole_y.append(y)
+
+        # remove triangles with all three vertices on a hole edge
+        self.hole_mask = _get_hole_mask(
+            crude_triangulation, outer_x, outer_y, hole_x, hole_y, radius=1e-6
+        )
+
+        # define a mask to remove boundary points
+        self.boundary_mask = _get_boundary_mask(
+            crude_triangulation, outer_x, outer_y, hole_x, hole_y
+        )
+
+        # set triangulation
+        self.triangulation = tri.Triangulation(
+            x1, x2, triangles=crude_triangulation.triangles, mask=self.hole_mask
+        )
+
+
+def _get_hole_mask(
+    triangulation: tri.Triangulation,
+    outer_x: np.ndarray,
+    outer_y: np.ndarray,
+    holes_x: list[np.ndarray],
+    holes_y: list[np.ndarray],
+    radius: float,
+) -> np.ndarray:
+    # Test if the midpoint of each edge lies inside the domain. If it lies
+    # outside the domain, the edge is removed.
+    mask = np.zeros(triangulation.triangles.shape[0], dtype=bool)
+    for t in range(triangulation.triangles.shape[0]):
+        for i in range(3):
+            if mask[t]:
+                continue
+            a = triangulation.triangles[t, i]
+            b = triangulation.triangles[t, (i + 1) % 3]
+
+            # if both points lie consecutively on the boundary, the edge is kept
+            if not _edge_is_on_boundary(
+                (triangulation.x[a], triangulation.x[b]),
+                (triangulation.y[a], triangulation.y[b]),
+                outer_x,
+                outer_y,
+                holes_x,
+                holes_y,
+                radius,
+            ):
+                mid_x = 0.5 * (triangulation.x[a] + triangulation.x[b])
+                mid_y = 0.5 * (triangulation.y[a] + triangulation.y[b])
+                mask[t] = not _point_is_inside(
+                    mid_x, mid_y, outer_x, outer_y, holes_x, holes_y, radius
+                )
+    return mask
+
+
+def _get_boundary_mask(
+    triangulation: tri.Triangulation,
+    outer_x: np.ndarray,
+    outer_y: np.ndarray,
+    holes_x: list[np.ndarray],
+    holes_y: list[np.ndarray],
+) -> np.ndarray:
+    # get a mask that removes all triangles with a vertex on the boundary
+    num_triangles = triangulation.triangles.shape[0]
+    mask = np.zeros(num_triangles, dtype=bool)
+    for t in range(num_triangles):
+        for i in range(3):
+            if mask[t]:
+                continue
+            a = triangulation.triangles[t, i]
+            mask[t] = _point_is_on_boundary(
+                triangulation.x[a],
+                triangulation.y[a],
+                outer_x,
+                outer_y,
+                holes_x,
+                holes_y,
+            )
+    return mask
+
+
+def _point_is_on_boundary(
+    point_x: float,
+    point_y: float,
+    outer_x: np.ndarray,
+    outer_y: np.ndarray,
+    holes_x: list[np.ndarray],
+    holes_y: list[np.ndarray],
+) -> bool:
+    # test if the point is on the boundary
+    if _point_is_on_boundary_simple(point_x, point_y, outer_x, outer_y):
+        return True
+    for hole_x, hole_y in zip(holes_x, holes_y):
+        if _point_is_on_boundary_simple(point_x, point_y, hole_x, hole_y):
+            return True
+    return False
+
+
+def _point_is_on_boundary_simple(
+    point_x: float,
+    point_y: float,
+    path_x: np.ndarray,
+    path_y: np.ndarray,
+) -> bool:
+    # return true if the point is on the boundary
+    return point_x in path_x and point_y in path_y
+
+
+def _edge_is_on_boundary(
+    edge_x: tuple[float, float],
+    edge_y: tuple[float, float],
+    outer_x: np.ndarray,
+    outer_y: np.ndarray,
+    holes_x: list[np.ndarray],
+    holes_y: list[np.ndarray],
+    radius: float,
+) -> bool:
+    # test if the edge is any of the boundary edges
+    if _edge_is_on_boundary_simple(edge_x, edge_y, outer_x, outer_y, radius):
+        return True
+    for hole_x, hole_y in zip(holes_x, holes_y):
+        if _edge_is_on_boundary_simple(edge_x, edge_y, hole_x, hole_y, radius):
+            return True
+    return False
+
+
+def _edge_is_on_boundary_simple(
+    edge_x: tuple[float, float],
+    edge_y: tuple[float, float],
+    path_x: np.ndarray,
+    path_y: np.ndarray,
+    radius: float,
+) -> bool:
+    # return true if the edge is on the boundary
+    # there are two cases: when the edge is parallel to the boundary and when
+    # the edge is oppositely oriented to the boundary
+    n = len(path_x)
+    for i in range(n):
+        x1, y1 = path_x[i], path_y[i]
+        x2, y2 = path_x[(i + 1) % n], path_y[(i + 1) % n]
+        if _edge_is_on_boundary_segment(edge_x, edge_y, x1, y1, x2, y2, radius):
+            return True
+    return False
+
+
+def _edge_is_on_boundary_segment(
+    edge_x: tuple[float, float],
+    edge_y: tuple[float, float],
+    x1: float,
+    y1: float,
+    x2: float,
+    y2: float,
+    radius: float,
+) -> bool:
+    a = np.array([x2 - x1, y2 - y1])
+    b = np.array([edge_x[1] - edge_x[0], edge_y[1] - edge_y[0]])
+    if np.linalg.norm(a - b) < radius:
+        return True
+    if np.linalg.norm(a + b) < radius:
+        return True
+    return False
+
+
+def _point_is_inside(
+    point_x: float,
+    point_y: float,
+    outer_x: np.ndarray,
+    outer_y: np.ndarray,
+    holes_x: list[np.ndarray],
+    holes_y: list[np.ndarray],
+    radius: float,
+) -> bool:
+    if not _point_is_inside_simple(point_x, point_y, outer_x, outer_y, radius):
+        return False
+    for hole_x, hole_y in zip(holes_x, holes_y):
+        if _point_is_inside_simple(point_x, point_y, hole_x, hole_y, radius):
+            return False
+    return True
+
+
+def _point_is_inside_simple(
+    point_x: float,
+    point_y: float,
+    path_x: np.ndarray,
+    path_y: np.ndarray,
+    radius: float,
+) -> bool:
+    polygon = np.zeros((len(path_x), 2))
+    polygon[:, 0] = np.array(path_x)
+    polygon[:, 1] = np.array(path_y)
+    return Path(polygon).contains_point((point_x, point_y), radius=radius)

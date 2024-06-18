@@ -172,7 +172,11 @@ class GlobalFunctionSpace:
         """
         abs_cell_idx = self.mesh.get_abs_cell_idx(cell_idx)
         mesh_cell = self.mesh.get_cell(cell_idx)
-        mesh_cell.parameterize(quad_dict=self.quad_dict)
+        mesh_cell.parameterize(
+            quad_dict=self.quad_dict,
+            compute_interior_points=compute_interior_values
+            or compute_interior_gradient,
+        )
         edge_spaces = []
         for e in mesh_cell.get_edges():
             b = self.edge_spaces[e.idx]

@@ -17,8 +17,8 @@ from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import tri
-from matplotlib.path import Path
+
+# from matplotlib.path import Path
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from ..locfun.local_poisson import LocalPoissonFunction
@@ -46,8 +46,8 @@ class LocalFunctionPlot:
     """
 
     v: LocalPoissonFunction
-    triangulation: tri.Triangulation
-    hole_mask: np.ndarray
+    # triangulation: tri.Triangulation
+    # hole_mask: np.ndarray
     use_interp: bool
 
     def __init__(
@@ -61,11 +61,11 @@ class LocalFunctionPlot:
         v : LocalPoissonFunction
             The local function to be plotted.
         """
-        v.mesh_cell.deparameterize()
-        v.mesh_cell.parameterize(v.mesh_cell.quad_dict)
+        # v.mesh_cell.deparameterize()
+        # v.mesh_cell.parameterize(v.mesh_cell.quad_dict)
         self.set_local_function(v)
         self._set_use_interp(use_interp)
-        self._build_triangulation()  # TODO: this should done in MeshCell
+        # self._build_triangulation()  # TODO: this should done in MeshCell
 
     def set_local_function(self, v: LocalPoissonFunction) -> None:
         """
@@ -84,39 +84,6 @@ class LocalFunctionPlot:
         if not isinstance(use_interp, bool):
             raise TypeError("use_interp must be a boolean")
         self.use_interp = use_interp
-
-    def _build_triangulation(self) -> None:
-        # interior points
-        x1 = self.v.mesh_cell.int_x1
-        x2 = self.v.mesh_cell.int_x2
-
-        # concatenate interior points with boundary points
-        if self.use_interp:
-            y1, y2 = self.v.mesh_cell.get_boundary_points()
-            x1 = np.concatenate((x1, y1))
-            x2 = np.concatenate((x2, y2))
-
-        # triangulate
-        crude_triangulation = tri.Triangulation(x1, x2)
-
-        # partition boundary into outer and hole edges
-        outer_x, outer_y = self.v.mesh_cell.components[0].get_sampled_points()
-        hole_x = []
-        hole_y = []
-        for component in self.v.mesh_cell.components[1:]:
-            x, y = component.get_sampled_points()
-            hole_x.append(x)
-            hole_y.append(y)
-
-        # remove triangles with all three vertices on a hole edge
-        self.hole_mask = _get_hole_mask(
-            crude_triangulation, outer_x, outer_y, hole_x, hole_y, radius=1e-6
-        )
-
-        # set triangulation
-        self.triangulation = tri.Triangulation(
-            x1, x2, triangles=crude_triangulation.triangles, mask=self.hole_mask
-        )
 
     def draw(
         self,
@@ -287,7 +254,7 @@ class LocalFunctionPlot:
 
         # plot mesh
         if show_triangulation:
-            plt.triplot(self.triangulation, "-k")
+            plt.triplot(self.v.mesh_cell.triangulation, "-k")
 
         # axis and shape
         plt.axis("equal")
@@ -324,19 +291,29 @@ class LocalFunctionPlot:
         pointwise_mask = np.logical_not(np.isfinite(vals))
 
         # get only the triangles that have no bad points
-        inf_mask = np.any(pointwise_mask[self.triangulation.triangles], axis=1)
+        inf_mask = np.any(
+            pointwise_mask[self.v.mesh_cell.triangulation.triangles], axis=1
+        )
 
         # remove triangles from holes and with bad points
-        mask = np.logical_or(self.hole_mask, inf_mask)
+        mask = np.logical_or(self.v.mesh_cell.hole_mask, inf_mask)
+
+        # optionally remove boundary triangles
+        if not self.use_interp:
+            mask[self.v.mesh_cell.boundary_mask] = True
 
         # apply mask
-        self.triangulation.set_mask(mask)
+        self.v.mesh_cell.triangulation.set_mask(mask)
 
         # plot interior values
         if fill:
-            contour = plt.tricontourf(self.triangulation, vals, levels=levels)
+            contour = plt.tricontourf(
+                self.v.mesh_cell.triangulation, vals, levels=levels
+            )
         else:
-            contour = plt.tricontour(self.triangulation, vals, levels=levels)
+            contour = plt.tricontour(
+                self.v.mesh_cell.triangulation, vals, levels=levels
+            )
 
         # set color limits
         if clim is not None:
@@ -415,124 +392,3 @@ def _construct_gradient_component_on_boundary(
     grad_xj[wgt < TOL] = np.nan
     grad_xj[grad_xj > MAX_GRAD] = np.nan
     return grad_xj
-
-
-def _get_hole_mask(
-    triangulation: tri.Triangulation,
-    outer_x: np.ndarray,
-    outer_y: np.ndarray,
-    holes_x: list[np.ndarray],
-    holes_y: list[np.ndarray],
-    radius: float,
-) -> np.ndarray:
-    # Test if the midpoint of each edge lies inside the domain. If it lies
-    # outside the domain, the edge is removed.
-    mask = np.zeros(triangulation.triangles.shape[0], dtype=bool)
-    for t in range(triangulation.triangles.shape[0]):
-        for i in range(3):
-            if mask[t]:
-                continue
-            a = triangulation.triangles[t, i]
-            b = triangulation.triangles[t, (i + 1) % 3]
-
-            # if both points lie consecutively on the boundary, the edge is kept
-            if not _edge_is_on_boundary(
-                (triangulation.x[a], triangulation.x[b]),
-                (triangulation.y[a], triangulation.y[b]),
-                outer_x,
-                outer_y,
-                holes_x,
-                holes_y,
-                radius,
-            ):
-                mid_x = 0.5 * (triangulation.x[a] + triangulation.x[b])
-                mid_y = 0.5 * (triangulation.y[a] + triangulation.y[b])
-                mask[t] = not _point_is_inside(
-                    mid_x, mid_y, outer_x, outer_y, holes_x, holes_y, radius
-                )
-    return mask
-
-
-def _edge_is_on_boundary(
-    edge_x: tuple[float, float],
-    edge_y: tuple[float, float],
-    outer_x: np.ndarray,
-    outer_y: np.ndarray,
-    holes_x: list[np.ndarray],
-    holes_y: list[np.ndarray],
-    radius: float,
-) -> bool:
-    # test if the edge is any of the boundary edges
-    if _edge_is_on_boundary_simple(edge_x, edge_y, outer_x, outer_y, radius):
-        return True
-    for hole_x, hole_y in zip(holes_x, holes_y):
-        if _edge_is_on_boundary_simple(edge_x, edge_y, hole_x, hole_y, radius):
-            return True
-    return False
-
-
-def _edge_is_on_boundary_simple(
-    edge_x: tuple[float, float],
-    edge_y: tuple[float, float],
-    path_x: np.ndarray,
-    path_y: np.ndarray,
-    radius: float,
-) -> bool:
-    # return true if the edge is on the boundary
-    # there are two cases: when the edge is parallel to the boundary and when
-    # the edge is oppositely oriented to the boundary
-    n = len(path_x)
-    for i in range(n):
-        x1, y1 = path_x[i], path_y[i]
-        x2, y2 = path_x[(i + 1) % n], path_y[(i + 1) % n]
-        if _edge_is_on_boundary_segment(edge_x, edge_y, x1, y1, x2, y2, radius):
-            return True
-    return False
-
-
-def _edge_is_on_boundary_segment(
-    edge_x: tuple[float, float],
-    edge_y: tuple[float, float],
-    x1: float,
-    y1: float,
-    x2: float,
-    y2: float,
-    radius: float,
-) -> bool:
-    a = np.array([x2 - x1, y2 - y1])
-    b = np.array([edge_x[1] - edge_x[0], edge_y[1] - edge_y[0]])
-    if np.linalg.norm(a - b) < radius:
-        return True
-    if np.linalg.norm(a + b) < radius:
-        return True
-    return False
-
-
-def _point_is_inside(
-    point_x: float,
-    point_y: float,
-    outer_x: np.ndarray,
-    outer_y: np.ndarray,
-    holes_x: list[np.ndarray],
-    holes_y: list[np.ndarray],
-    radius: float,
-) -> bool:
-    if not _point_is_inside_simple(point_x, point_y, outer_x, outer_y, radius):
-        return False
-    for hole_x, hole_y in zip(holes_x, holes_y):
-        if _point_is_inside_simple(point_x, point_y, hole_x, hole_y, radius):
-            return False
-    return True
-
-
-def _point_is_inside_simple(
-    point_x: float,
-    point_y: float,
-    path_x: np.ndarray,
-    path_y: np.ndarray,
-    radius: float,
-) -> bool:
-    polygon = np.zeros((len(path_x), 2))
-    polygon[:, 0] = np.array(path_x)
-    polygon[:, 1] = np.array(path_y)
-    return Path(polygon).contains_point((point_x, point_y), radius=radius)
