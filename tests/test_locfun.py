@@ -41,7 +41,7 @@ def get_l2_and_h1_errors(
     """
     Gets the L^2 and H^1 errors for the punctured square
     """
-    K.parameterize(quad_dict)
+    K.parameterize(quad_dict, compute_interior_points=False)
 
     # set up Nystrom solver
     nyst = pf.NystromSolver(K)
@@ -67,20 +67,22 @@ def get_l2_and_h1_errors(
     v_laplacian = pf.Polynomial([(12.0, 1, 1)])
 
     # create local function object
-    v = pf.LocalPoissonFunction(nyst, v_laplacian, v_trace)
+    v = pf.LocalPoissonFunction(
+        nyst, v_laplacian, v_trace, evaluate_interior=False
+    )
 
     # trace of w
     w_trace = (
-        (x1 - 0.5) / ((x1 - 0.5) ** 2 + (x2 - 0.5) ** 2)
-        + x1**3
-        + x1 * x2**2
+        (x1 - 0.5) / ((x1 - 0.5) ** 2 + (x2 - 0.5) ** 2) + x1**3 + x1 * x2**2
     )
 
     # define a monomial term by specifying its multi-index and coefficient
     w_laplacian = pf.Polynomial([(8.0, 1, 0)])
 
     # declare w as local function object
-    w = pf.LocalPoissonFunction(nyst, w_laplacian, w_trace)
+    w = pf.LocalPoissonFunction(
+        nyst, w_laplacian, w_trace, evaluate_interior=False
+    )
 
     # compute L^2 inner product
     l2_vw_exact = 1.39484950156676

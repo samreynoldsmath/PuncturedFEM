@@ -125,6 +125,11 @@ class GlobalFunctionSpace:
             raise TypeError("deg must be an integer")
         if deg < 1:
             raise ValueError("deg must be a positive integer")
+        if deg > 3:
+            print(
+                "Warning: deg > 3 is unstable and may result in a poorly "
+                + "conditioned system"
+            )
         self.deg = deg
 
     # BUILD LOCAL FUNCTION SPACES ############################################
@@ -171,8 +176,12 @@ class GlobalFunctionSpace:
             If True, compute the values of interior functions, by default True
         """
         abs_cell_idx = self.mesh.get_abs_cell_idx(cell_idx)
-        mesh_cell = self.mesh.get_cells(cell_idx)
-        mesh_cell.parameterize(quad_dict=self.quad_dict)
+        mesh_cell = self.mesh.get_cell(cell_idx)
+        mesh_cell.parameterize(
+            quad_dict=self.quad_dict,
+            compute_interior_points=compute_interior_values
+            or compute_interior_gradient,
+        )
         edge_spaces = []
         for e in mesh_cell.get_edges():
             b = self.edge_spaces[e.idx]

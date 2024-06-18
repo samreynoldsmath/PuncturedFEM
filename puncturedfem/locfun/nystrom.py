@@ -16,7 +16,6 @@ from ..mesh.cell import MeshCell
 from ..mesh.closed_contour import ClosedContour
 from ..mesh.edge import Edge
 from ..mesh.quad import Quad
-from . import precond
 from .fft_deriv import get_weighted_tangential_derivative_from_trace
 from .trace import DirichletTrace
 
@@ -349,13 +348,39 @@ class NystromSolver:
         - "jacobi": Jacobi preconditioner
         """
         if precond_type == "jacobi":
-            self.precond_simple = precond.jacobi_preconditioner(self.A_simple)
+            D = self._double_layer_diagonal()
+            self.precond_simple = LinearOperator(
+                dtype=float,
+                shape=(self.K.num_pts, self.K.num_pts),
+                matvec=lambda x: x / D[: self.K.num_pts],
+            )
             if self.K.num_holes > 0:
-                self.precond_augment = precond.jacobi_preconditioner(
-                    self.A_augment
+                N = self.K.num_pts + self.K.num_holes
+                self.precond_augment = LinearOperator(
+                    dtype=float,
+                    shape=(N, N),
+                    matvec=lambda x: x / D,
                 )
         else:
             raise ValueError("Invalid preconditioner type")
+
+    def _double_layer_diagonal(self) -> np.ndarray:
+        num_pts = self.K.num_pts
+        num_holes = self.K.num_holes
+        D = np.zeros((num_pts + num_holes,))
+        for j, comp in enumerate(self.K.components):
+            start = self.K.component_start_idx[j]
+            stop = self.K.component_start_idx[j]
+            for edge in comp.edges:
+                stop += edge.num_pts - 1
+                h = 1.0 / (edge.num_pts - 1)
+                D[start:stop] = (
+                    0.5 + 0.5 * edge.curvature[:-1] * edge.dx_norm[:-1] * h
+                )
+                start = stop
+        for i in range(num_holes):
+            D[num_pts + i] = self.Sn_lam[i, i]
+        return D
 
     # LOGARITHMIC TERMS #####################################################
     def compute_log_terms(self) -> None:

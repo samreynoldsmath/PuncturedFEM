@@ -12,6 +12,8 @@
   - [ ] curve type: quadratic Bézier
   - [ ] curve type: cubic Bézier
   - [ ] curve type: symbolic (using `sympy`)
+- [ ] preconditioning for FEM solver
+    - [ ] Jacobi
 
 ### Documentation
 - [ ] update examples and tutorials to reflect new edge system
@@ -38,9 +40,16 @@
   - [ ] use `Quadrature` class to store all three types of quadrature rules
   - [ ] deprecate `QuadDict` class and `get_quad_dict()` function
   - [ ] the casual user should not need to touch `Quadrature` objects directly
+- [ ] `MeshPlot` improvements:
+    - [ ] change: initialize with either a list of `Edge` objects, a `MeshCell`, or a `PlanarMesh`
+    - [ ] add: plot interior points with `draw_interior_points()` method
+    - [ ] add: plot interior point triangulation with `draw_interior_triangulation()` method
+  - [ ] `LocalFunctionPlot` improvements:
+    - [ ] add: 'skeleton' option to `draw()` method, which plots only values on the edges
 
 ### Project Management
 - [ ] add `sympy` to dependencies
+
 
 ## Other Planned Features and Improvements
 
@@ -84,8 +93,7 @@
   properties, not local to a cell)
   - [ ] use `set` instead of `list` for vertex and cell indices in `PlanarMesh`
   class
-  - [ ] eliminate redundant calls to parameterize in `ClosedContour.parameterize()`
-  separate module
+  - [ ] storing stiffness and mass matrices separately in `Solver` class is inefficient
 
 ### Project Management
 - [ ] add: `.github/workflows/` directory for CI/CD

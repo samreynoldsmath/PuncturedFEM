@@ -67,6 +67,12 @@ class LocalPoissonFunction:
     int_vals : np.ndarray
         Interior values of the local function, evaluated on the interior mesh
         defined by the mesh cell.
+    int_grad1 : np.ndarray
+        First component of the gradient of the local function, evaluated on the
+        interior mesh defined by the mesh cell.
+    int_grad2 : np.ndarray
+        Second component of the gradient of the local function, evaluated on the
+        interior mesh defined by the mesh cell.
     key : GlobalKey
         A unique tag that identifies the local function in the global space.
     """
@@ -74,15 +80,17 @@ class LocalPoissonFunction:
     harm: LocalHarmonic
     poly: LocalPolynomial
     mesh_cell: MeshCell
-    int_vals: np.ndarray
+    int_vals: Optional[np.ndarray]
+    int_grad1: Optional[np.ndarray]
+    int_grad2: Optional[np.ndarray]
     key: GlobalKey
 
     def __init__(
         self,
-        nyst: NystromSolver,
+        nyst: Optional[NystromSolver],
         laplacian: Polynomial = Polynomial(),
         trace: Union[DirichletTrace, FloatLike] = 0,
-        evaluate_interior: bool = False,
+        evaluate_interior: bool = True,
         evaluate_gradient: bool = False,
         key: Optional[GlobalKey] = None,
     ) -> None:
@@ -107,6 +115,11 @@ class LocalPoissonFunction:
         key : Optional[GlobalKey], optional
             A unique tag that identifies the local function in the global space.
         """
+        self.int_vals = None
+        self.int_grad1 = None
+        self.int_grad2 = None
+        if nyst is None:
+            return
         self._set_key(key)
         self._set_mesh_cell(nyst.K)
         P = laplacian.anti_laplacian()
@@ -120,6 +133,114 @@ class LocalPoissonFunction:
         self.harm = LocalHarmonic(harm_trace_vals, nyst)
         if evaluate_interior or evaluate_gradient:
             self.compute_interior_values(evaluate_gradient)
+
+    def __add__(self, other: LocalPoissonFunction) -> LocalPoissonFunction:
+        """
+        Add two local Poisson functions.
+
+        Parameters
+        ----------
+        other : LocalPoissonFunction
+            The other local Poisson function.
+
+        Returns
+        -------
+        LocalPoissonFunction
+            The sum of the two local Poisson functions.
+        """
+        if not isinstance(other, LocalPoissonFunction):
+            raise TypeError("other must be a LocalPoissonFunction")
+        new = LocalPoissonFunction(nyst=None)
+        new._set_mesh_cell(self.mesh_cell)
+        new.poly = self.poly + other.poly
+        new.harm = self.harm + other.harm
+        if self.int_vals is not None and other.int_vals is not None:
+            new.int_vals = self.int_vals + other.int_vals
+        if self.int_grad1 is not None and other.int_grad1 is not None:
+            new.int_grad1 = self.int_grad1 + other.int_grad1
+        if self.int_grad2 is not None and other.int_grad2 is not None:
+            new.int_grad2 = self.int_grad2 + other.int_grad2
+        return new
+
+    def __mul__(self, other: Union[int, float]) -> LocalPoissonFunction:
+        """
+        Multiply the local Poisson function by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalPoissonFunction
+            The product of the local Poisson function and the scalar.
+        """
+        if not isinstance(other, (int, float)):
+            raise TypeError("other must be an int or a float")
+        new = LocalPoissonFunction(nyst=None)
+        new._set_mesh_cell(self.mesh_cell)
+        new.poly = self.poly * other
+        new.harm = self.harm * other
+        if self.int_vals is not None:
+            new.int_vals = self.int_vals * other
+        if self.int_grad1 is not None:
+            new.int_grad1 = self.int_grad1 * other
+        if self.int_grad2 is not None:
+            new.int_grad2 = self.int_grad2 * other
+        return new
+
+    def __rmul__(self, other: Union[int, float]) -> LocalPoissonFunction:
+        """
+        Multiply the local Poisson function by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalPoissonFunction
+            The product of the local Poisson function and the scalar.
+        """
+        return self.__mul__(other)
+
+    def __sub__(self, other: LocalPoissonFunction) -> LocalPoissonFunction:
+        """
+        Subtract two local Poisson functions.
+
+        Parameters
+        ----------
+        other : LocalPoissonFunction
+            The other local Poisson function.
+
+        Returns
+        -------
+        LocalPoissonFunction
+            The difference of the two local Poisson functions.
+        """
+        return self + other * -1
+
+    def __truediv__(self, other: Union[int, float]) -> LocalPoissonFunction:
+        """
+        Divide the local Poisson function by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar.
+
+        Returns
+        -------
+        LocalPoissonFunction
+            The division of the local Poisson function by the scalar.
+        """
+        if not isinstance(other, (int, float)):
+            raise TypeError("other must be an int or a float")
+        if other == 0:
+            raise ValueError("Division by zero")
+        return self * (1 / other)
 
     def get_h1_semi_inner_prod(
         self, other: Union[LocalPoissonFunction, LocalHarmonic, LocalPolynomial]
@@ -205,23 +326,35 @@ class LocalPoissonFunction:
             Whether or not to compute the gradient, by default True.
         """
         # points for evaluation
-        y1 = self.mesh_cell.int_x1[self.mesh_cell.is_inside]
-        y2 = self.mesh_cell.int_x2[self.mesh_cell.is_inside]
+        y1 = self.mesh_cell.int_x1
+        y2 = self.mesh_cell.int_x2
 
         # initialize temporary arrays
         N = len(y1)
-        vals = np.zeros((N,))
-        grad1 = np.zeros((N,))
-        grad2 = np.zeros((N,))
+        self.int_vals = np.zeros((N,))
+        self.int_grad1 = np.zeros((N,))
+        self.int_grad2 = np.zeros((N,))
 
         # polynomial part
-        # TODO: fix type ignore
-        vals = self.poly.exact_form(y1, y2)  # type: ignore
+        int_vals = self.poly.exact_form(y1, y2)
+        if not isinstance(int_vals, np.ndarray):
+            raise TypeError("The polynomial part must be a numpy array")
+        self.int_vals += int_vals
 
         # gradient Polynomial part
         if compute_int_grad:
-            grad1 = self.poly.grad1(y1, y2)  # type: ignore
-            grad2 = self.poly.grad2(y1, y2)  # type: ignore
+            int_grad1 = self.poly.grad1(y1, y2)
+            int_grad2 = self.poly.grad2(y1, y2)
+            if not isinstance(int_grad1, np.ndarray):
+                raise TypeError(
+                    "The gradient of the polynomial part must be a numpy array"
+                )
+            if not isinstance(int_grad2, np.ndarray):
+                raise TypeError(
+                    "The gradient of the polynomial part must be a numpy array"
+                )
+            self.int_grad1 += int_grad1
+            self.int_grad2 += int_grad2
 
         # logarithmic part
         for k in range(self.mesh_cell.num_holes):
@@ -229,10 +362,10 @@ class LocalPoissonFunction:
             y_xi_1 = y1 - xi.x
             y_xi_2 = y2 - xi.y
             y_xi_norm_sq = y_xi_1**2 + y_xi_2**2
-            vals += 0.5 * self.harm.log_coef[k] * np.log(y_xi_norm_sq)
+            self.int_vals += 0.5 * self.harm.log_coef[k] * np.log(y_xi_norm_sq)
             if compute_int_grad:
-                grad1 += self.harm.log_coef[k] * y_xi_1 / y_xi_norm_sq
-                grad2 += self.harm.log_coef[k] * y_xi_2 / y_xi_norm_sq
+                self.int_grad1 += self.harm.log_coef[k] * y_xi_1 / y_xi_norm_sq
+                self.int_grad2 += self.harm.log_coef[k] * y_xi_2 / y_xi_norm_sq
 
         # conjugable part
         psi = self.harm.psi.values
@@ -269,25 +402,7 @@ class LocalPoissonFunction:
 
         # interior values and gradient of conjugable part via Cauchy's
         # integral formula
-        vals += np.sum(dx_norm * f, axis=1) * 0.5 / np.pi
+        self.int_vals += np.sum(dx_norm * f, axis=1) * 0.5 / np.pi
         if compute_int_grad:
-            grad1 += np.sum(dx_norm * g1, axis=1) * 0.5 / np.pi
-            grad2 += np.sum(dx_norm * g2, axis=1) * 0.5 / np.pi
-
-        # size of grid of evaluation points
-        rows, cols = self.mesh_cell.int_mesh_size
-
-        # initialize arrays with proper size
-        self.int_vals = np.empty((rows, cols))
-        self.int_grad1 = np.empty((rows, cols))
-        self.int_grad2 = np.empty((rows, cols))
-
-        # default to not-a-number
-        self.int_vals[:] = np.nan
-        self.int_grad1[:] = np.nan
-        self.int_grad2[:] = np.nan
-
-        # set values within cell interior
-        self.int_vals[self.mesh_cell.is_inside] = vals
-        self.int_grad1[self.mesh_cell.is_inside] = grad1
-        self.int_grad2[self.mesh_cell.is_inside] = grad2
+            self.int_grad1 += np.sum(dx_norm * g1, axis=1) * 0.5 / np.pi
+            self.int_grad2 += np.sum(dx_norm * g2, axis=1) * 0.5 / np.pi

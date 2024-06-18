@@ -6,6 +6,8 @@ Classes
 DirichletTrace
 """
 
+from __future__ import annotations
+
 from typing import Optional, Union
 
 import numpy as np
@@ -49,8 +51,8 @@ class DirichletTrace:
     num_edges: int
     num_pts: int
     values: np.ndarray
-    w_norm_deriv: np.ndarray
-    w_tang_deriv: np.ndarray
+    w_norm_deriv: Optional[np.ndarray]
+    w_tang_deriv: Optional[np.ndarray]
     funcs: list[Func_R2_R]
     edge_sampled_indices: list[tuple[int, int]]
 
@@ -82,6 +84,8 @@ class DirichletTrace:
         if self.edges_are_parametrized():
             self.find_num_pts()
             self.find_edge_sampled_indices()
+        self.w_norm_deriv = None
+        self.w_tang_deriv = None
         if custom:
             return
         if values is not None:
@@ -92,6 +96,118 @@ class DirichletTrace:
             self.set_funcs(funcs)
         else:
             self.funcs = [lambda x, y: 0 for _ in range(self.num_edges)]
+
+    def __add__(self, other: DirichletTrace) -> DirichletTrace:
+        """
+        Add two Dirichlet traces.
+
+        Parameters
+        ----------
+        other : DirichletTrace
+            The other Dirichlet trace.
+
+        Returns
+        -------
+        DirichletTrace
+            The sum of the two Dirichlet traces.
+        """
+        if not isinstance(other, DirichletTrace):
+            raise ValueError("The other trace must be a DirichletTrace")
+        if self.num_edges != other.num_edges:
+            raise ValueError("The number of edges must be the same")
+        new = DirichletTrace(self.edges, custom=True)
+        new.set_trace_values(self.values + other.values)
+        if self.w_norm_deriv is not None and other.w_norm_deriv is not None:
+            new.set_weighted_normal_derivative(
+                self.w_norm_deriv + other.w_norm_deriv
+            )
+        if self.w_tang_deriv is not None and other.w_tang_deriv is not None:
+            new.set_weighted_tangential_derivative(
+                self.w_tang_deriv + other.w_tang_deriv
+            )
+        return new
+
+    def __mul__(self, other: Union[int, float]) -> DirichletTrace:
+        """
+        Multiply the trace by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar to multiply the trace by.
+
+        Returns
+        -------
+        DirichletTrace
+            The trace multiplied by the scalar.
+        """
+        if not isinstance(other, (int, float)):
+            raise ValueError("The scalar must be an int or float")
+        new = DirichletTrace(self.edges, custom=True)
+        new.set_trace_values(self.values * other)
+        if self.w_norm_deriv is not None:
+            new.set_weighted_normal_derivative(self.w_norm_deriv * other)
+        if self.w_tang_deriv is not None:
+            new.set_weighted_tangential_derivative(self.w_tang_deriv * other)
+        return new
+
+    def __rmul__(self, other: Union[int, float]) -> DirichletTrace:
+        """
+        Multiply the trace by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar to multiply the trace by.
+
+        Returns
+        -------
+        DirichletTrace
+            The trace multiplied by the scalar.
+        """
+        return self.__mul__(other)
+
+    def __truediv__(self, other: Union[int, float]) -> DirichletTrace:
+        """
+        Divide the trace by a scalar.
+
+        Parameters
+        ----------
+        other : Union[int, float]
+            The scalar to divide the trace by.
+
+        Returns
+        -------
+        DirichletTrace
+            The trace divided by the scalar.
+        """
+        if not isinstance(other, (int, float)):
+            raise ValueError("The scalar must be an int or float")
+        if other == 0:
+            raise ValueError("The scalar must be non-zero")
+        new = DirichletTrace(self.edges, custom=True)
+        new.set_trace_values(self.values / other)
+        if self.w_norm_deriv is not None:
+            new.set_weighted_normal_derivative(self.w_norm_deriv / other)
+        if self.w_tang_deriv is not None:
+            new.set_weighted_tangential_derivative(self.w_tang_deriv / other)
+        return new
+
+    def __sub__(self, other: DirichletTrace) -> DirichletTrace:
+        """
+        Subtract two Dirichlet traces.
+
+        Parameters
+        ----------
+        other : DirichletTrace
+            The other Dirichlet trace.
+
+        Returns
+        -------
+        DirichletTrace
+            The difference of the two Dirichlet traces.
+        """
+        return self.__add__(other.__mul__(-1))
 
     def set_edges(self, edges: Union[MeshCell, list[Edge]]) -> None:
         """
@@ -303,7 +419,6 @@ class DirichletTrace:
             raise ValueError("'edge_index' must be of type int")
         if edge_index < 0 or edge_index >= self.num_edges:
             raise ValueError("The edge index is out of range")
-        # TODO: checking if a function is a map from R^2 to R is cursed
         # if not is_Func_R2_R(func):
         #     raise ValueError("The function must be a map from R^2 to R")
         self.funcs[edge_index] = func
