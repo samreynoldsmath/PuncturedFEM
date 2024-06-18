@@ -21,7 +21,7 @@
     - [x] `util`
 - [x] change: MkDocs theme to `material`
 - [x] add: site logo
-- [ ] update `doc/logo/pacman.svg`
+- [x] update `doc/logo/pacman.svg`
 - [ ] tutorials
     - [ ] Guide to tutorials
     - [ ] Meshes
@@ -34,6 +34,7 @@
 - [ ] link to notebook source on tutorial pages
 - [ ] link to tutorial pages from README
 - [ ] move installation instructions using `git` from CONTRIBUTING to INSTALLATION
+- [ ] change contributing guide: push to a development branch, rather than `main`
 ### Maintenance
 - [x] `DirichletTrace` improvements:
     - [x] add: weighted normal derivative
@@ -42,10 +43,11 @@
     - [x] BREAKING CHANGE: replace the handling of traces with `DirichletTrace`
     - [x] DEPRECATED: use `LocalPoissonFunction` instead
 - [x] add: `LocalPoissonFunction` class, built from `LocalHarmonic` and `LocalPolynomial` objects
+    - [x] add: arithmetic operations (addition, subtraction, scalar multiplication, scalar division) for `LocalHarmonic`, `LocalPolynomial`, and `LocalPoissonFunction` objects
 - [x] `NystromSolver` improvements:
     - [x] handle logarithmic functions as instances of `DirichletTrace` class
-    - [x] move `jacobi_preconditioner()` static method to a separate module
     - [x] `antilap_strategy` option to precompute "normal indicator functions" biharmonic function computation speedup
+    - [x] compute diagonal of Nystrom matrix directly for preconditioning
 - [x] `locfun` module improvements:
     - [x] use `DirichletTrace` objects for traces in `antilap` module
     - [x] move contents of `antilap` and `d2n` subpackages to `locfun` root
@@ -53,25 +55,25 @@
     - [x] deprecate `PiecewisePolynomial` class
 - [x] `Polynomial` improvements:
   - [x] deprecate `eval()` method, use `__call__()` method instead
-- [ ] replace `GlobalFunctionSpace` with `GlobalPoissionSpace`:
-    - [ ] deprecate `GlobalFunctionSpace`
-    - [ ] build from a collection of `GlobalFunction` objects, just like `LocalFunctionSpace` is built from a collection of `LocalFunction` objects
-    - [ ] precompute `LocalFunctionSpace` objects
-- [ ] `MeshPlot` improvements:
-    - [ ] change: initialize with either a list of `Edge` objects, a `MeshCell`, or a `PlanarMesh`
-    - [ ] add: plot interior points with `draw_interior_points()` method
-    - [ ] add: plot interior point triangulation with `draw_interior_triangulation()` method
-- [ ] `LocalFunctionPlot` improvements:
-    - [ ] treat plot of local function as a special case of global function with a single cell
-- [ ] `GlobalFunctionPlot` improvements:
-    - [ ] interior value interpolation for points close to the boundary
-    - [ ] consolidate the multiple draw methods into one, optional argument to specify what to draw (values, gradient, etc.)
+- [x] `LocalFunctionPlot` improvements:
+    - [x] change: don't store points and values outside of the cell
+    - [x] interior value interpolation for points close to the boundary
+    - [x] consolidate the multiple draw methods into one, optional argument to specify what to draw (values, gradient, etc.)
+    - [x] move generation of interior point triangulation to `MeshCell`
+- [x] `GlobalFunctionPlot` improvements:
+    - [x] stich together `LocalFunctionPlot` objects to plot a global function
+### Project Management
+- [x] change dev dependency: `black` to `black[jupyter]`
+- [x] add dev dependency: `nbconvert`
+- [ ] starting after v0.5.0, branch off of development branch, rather than `main`
 ### Bug Fixes
 - [x] fix: missing logo and favicon in MkDocs build
 - [ ] fix: broken links in examples
 - [ ] fix: broken links in tutorials
 - [ ] fix: `align*` blocks not rendering in tutorials when building documentation
 - [ ] fix: `DirichletTrace` does not recompute traces when function changes
+- [x] fix: blank images saved by `LocalFunctionPlot` class
+- [x] fix: edges on boundary of `MeshCell` being deleted from interior point triangulation
 
 ## [v0.4.5] - 2024 Apr 24
 ### Maintenance
