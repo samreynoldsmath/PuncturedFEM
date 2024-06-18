@@ -27,9 +27,12 @@
     - [ ] Meshes
         - [ ] 1.1 Vertices and edges (taken from Example 0.1)
         - [ ] 1.2 Mesh cells and planar meshes (taken from Example 0.1)
+        - [ ] 1.3 Heavy sampling of edges (taken from Example 1.5)
     - [ ] Local function spaces
+        - [ ] 2.1 Polynomials
         - [ ] 2.2 Traces (taken from Example 0.2)
-        - [ ] 2.5 Heavy sampling of edges (taken from Example 1.5)
+        - [ ] 2.2 Local Poisson functions
+        - [ ] 2.3 Local function spaces
 - [ ] run tutorial notebooks when building documentation
 - [ ] link to notebook source on tutorial pages
 - [ ] link to tutorial pages from README

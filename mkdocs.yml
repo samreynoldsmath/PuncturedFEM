@@ -71,15 +71,9 @@ nav:
     - 'Changelog': CHANGELOG.md
     - 'Contributing': CONTRIBUTING.md
   - 'Tutorials':
-      - src/examples/ex0.1-mesh-building.ipynb
-      - src/examples/ex0.2-trace.ipynb
-  - 'Examples':
-      - src/examples/ex1.1-square-hole.ipynb
-      - src/examples/ex1.2-pacman.ipynb
-      - src/examples/ex1.3-ghost.ipynb
-      - src/examples/ex1.4-hat-tile.ipynb
-      - src/examples/ex1.5-heavy-sampling.ipynb
-      - src/examples/ex2.1-pacman-fem.ipynb
+      - tutorials/1.1-vertices-edges.ipynb
+      - tutorials/1.3-heavy-sampling.ipynb
+      - tutorials/2.2-traces.ipynb
   - 'Mesh':
     - 'ClosedContour': src/mesh/closed_contour.md
     - 'Edge': src/mesh/edge.md
@@ -95,7 +89,7 @@ nav:
   - 'Local Poisson spaces':
     - 'DirichletTrace': src/locfun/dirichlet_trace.md
     - 'LocalFunction': src/locfun/locfun.md
-    - 'LocalFunctionSpace': src/locfun/locfunsp.md
+    - 'LocalFunctionSpace': src/locfun/local_space.md
     - 'Monomial': src/locfun/monomial.md
     - 'MultiIndex': src/locfun/multi_index.md
     - 'NystromSolver': src/locfun/nystrom_solver.md
