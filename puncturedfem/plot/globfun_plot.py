@@ -263,8 +263,8 @@ def _range_on_cell(
 ) -> tuple[float, float]:
     if vals is None:
         raise ValueError("vals not set")
-    local_min = np.min(vals)
-    current_min = np.min(current_min, local_min)
-    local_max = np.max(vals)
-    current_max = np.max(current_max, local_max)
+    local_min = min(vals)
+    current_min = min(current_min, local_min)
+    local_max = max(vals)
+    current_max = max(current_max, local_max)
     return current_min, current_max
