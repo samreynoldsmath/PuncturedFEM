@@ -47,8 +47,6 @@ class Solver:
         List of right-hand side values
     num_funs : int
         Number of global functions
-    # interior_values : list[list[np.ndarray]]
-    #     List of interior values on each MeshCell
     soln : np.ndarray
         Solution vector
     """
