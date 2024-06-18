@@ -125,6 +125,11 @@ class GlobalFunctionSpace:
             raise TypeError("deg must be an integer")
         if deg < 1:
             raise ValueError("deg must be a positive integer")
+        if deg > 3:
+            print(
+                "Warning: deg > 3 is unstable and may result in a poorly "
+                + "conditioned system"
+            )
         self.deg = deg
 
     # BUILD LOCAL FUNCTION SPACES ############################################
