@@ -336,12 +336,25 @@ class LocalPoissonFunction:
         self.int_grad2 = np.zeros((N,))
 
         # polynomial part
-        self.int_vals = self.poly.exact_form(y1, y2)
+        int_vals = self.poly.exact_form(y1, y2)
+        if not isinstance(int_vals, np.ndarray):
+            raise TypeError("The polynomial part must be a numpy array")
+        self.int_vals += int_vals
 
         # gradient Polynomial part
         if compute_int_grad:
-            self.int_grad1 = self.poly.grad1(y1, y2)
-            self.int_grad2 = self.poly.grad2(y1, y2)
+            int_grad1 = self.poly.grad1(y1, y2)
+            int_grad2 = self.poly.grad2(y1, y2)
+            if not isinstance(int_grad1, np.ndarray):
+                raise TypeError(
+                    "The gradient of the polynomial part must be a numpy array"
+                )
+            if not isinstance(int_grad2, np.ndarray):
+                raise TypeError(
+                    "The gradient of the polynomial part must be a numpy array"
+                )
+            self.int_grad1 += int_grad1
+            self.int_grad2 += int_grad2
 
         # logarithmic part
         for k in range(self.mesh_cell.num_holes):

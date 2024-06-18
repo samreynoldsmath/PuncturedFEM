@@ -214,12 +214,18 @@ class LocalHarmonic:
             nyst.K, self.conj_trace.values
         )
         for j in range(nyst.K.num_holes):
-            if nyst.lam_trace[j].w_norm_deriv is None:
+            wnd = nyst.lam_trace[j].w_norm_deriv
+            if wnd is None:
                 raise ValueError(
                     "The weighted normal derivative of logarithmic terms "
                     + "has not been set"
                 )
-            harm_part_wnd += self.log_coef[j] * nyst.lam_trace[j].w_norm_deriv
+            if not isinstance(wnd, np.ndarray):
+                raise TypeError(
+                    "The weighted normal derivative of logarithmic terms "
+                    + "must be a numpy array"
+                )
+            harm_part_wnd += self.log_coef[j] * wnd
         self.trace.set_weighted_normal_derivative(harm_part_wnd)
 
     def _compute_conjugable_part(self, nyst: NystromSolver) -> None:

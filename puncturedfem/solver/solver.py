@@ -277,8 +277,6 @@ class Solver:
         w: LocalPoissonFunction,
         apply_symmetry: bool,
     ) -> None:
-        # TODO: storing stiffness and mass matrices separately is inefficient
-
         # evaluate local bilinear form
         h1_ij = self.bilinear_form.eval_h1(v, w)
         l2_ij = self.bilinear_form.eval_l2(v, w)

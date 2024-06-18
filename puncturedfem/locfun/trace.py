@@ -419,7 +419,6 @@ class DirichletTrace:
             raise ValueError("'edge_index' must be of type int")
         if edge_index < 0 or edge_index >= self.num_edges:
             raise ValueError("The edge index is out of range")
-        # TODO: checking if a function is a map from R^2 to R is cursed
         # if not is_Func_R2_R(func):
         #     raise ValueError("The function must be a map from R^2 to R")
         self.funcs[edge_index] = func

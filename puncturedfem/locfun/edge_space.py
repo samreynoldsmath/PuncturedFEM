@@ -196,9 +196,11 @@ class EdgeSpace:
                 self.edge_fun_traces[j] -= a0 * ell[0] + a1 * ell[1]
 
                 # flip sign if necessary
-                avg_val = self.e.integrate_over_edge(  # TODO: fix types
-                    self.edge_fun_traces[j](x=self.e.x[0, :], y=self.e.x[1, :])
-                )
+                x1, x2 = self.e.get_sampled_points(ignore_endpoint=False)
+                vals = self.edge_fun_traces[j](x=x1, y=x2)
+                if not isinstance(vals, np.ndarray):
+                    raise ValueError("vals must be a numpy array")
+                avg_val = self.e.integrate_over_edge(vals)
                 if avg_val < 0:
                     self.edge_fun_traces[j] *= -1
 
@@ -295,12 +297,14 @@ class EdgeSpace:
         """
         m = len(self.edge_fun_traces)
         M = np.zeros((m, m))
+        x1, x2 = self.e.get_sampled_points(ignore_endpoint=False)
         for i in range(m):
             for j in range(i, m):
                 integrand = self.edge_fun_traces[i] * self.edge_fun_traces[j]
-                M[i, j] = self.e.integrate_over_edge(
-                    integrand(x=self.e.x[0, :], y=self.e.x[1, :])
-                )
+                vals = integrand(x=x1, y=x2)
+                if not isinstance(vals, np.ndarray):
+                    raise ValueError("vals must be a numpy array")
+                M[i, j] = self.e.integrate_over_edge(vals)
                 M[j, i] = M[i, j]
         return M
 
