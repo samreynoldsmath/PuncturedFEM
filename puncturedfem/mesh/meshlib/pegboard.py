@@ -1,16 +1,18 @@
-from numpy import sqrt
-
 from ..edge import Edge
 from ..planar_mesh import PlanarMesh
 from ..vert import Vert
 from .__builder__ import mesh_builder
 
 
-def pegboard(size: tuple[int, int], verbose: bool = True) -> PlanarMesh:
-    return mesh_builder(_get_verts, _get_edges, verbose=verbose, size=size)
+def pegboard(
+    size: tuple[int, int], radius: float = 0.25, verbose: bool = True
+) -> PlanarMesh:
+    return mesh_builder(
+        _get_verts, _get_edges, verbose=verbose, size=size, radius=radius
+    )
 
 
-def _get_verts(size: tuple[int, int]) -> list[Vert]:
+def _get_verts(size: tuple[int, int], radius: float) -> list[Vert]:
     verts: list[Vert] = []
 
     m = size[0] + 1
@@ -23,6 +25,10 @@ def _get_verts(size: tuple[int, int]) -> list[Vert]:
         for j in range(n):
             verts.append(Vert(x=h * j, y=h * i))  # index = i * n + j
 
+    # circular holes
+    if radius <= 0:
+        return verts
+
     for i in range(m - 1):
         for j in range(n - 1):
             verts.append(Vert(x=h * (j + 0.5), y=h * (i + 0.5)))
@@ -33,7 +39,9 @@ def _get_verts(size: tuple[int, int]) -> list[Vert]:
 # EDGES ######################################################################
 
 
-def _get_edges(verts: list[Vert], size: tuple[int, int]) -> list[Edge]:
+def _get_edges(
+    verts: list[Vert], size: tuple[int, int], radius: float
+) -> list[Edge]:
     edges: list[Edge] = []
 
     m = size[0] + 1
@@ -90,11 +98,11 @@ def _get_edges(verts: list[Vert], size: tuple[int, int]) -> list[Edge]:
         )
 
     # circular holes
-    counter = 0
-    radius = 0.25 * h
+    if radius <= 0:
+        return edges
+
     for i in range(m - 1):
         for j in range(n - 1):
-            counter += 1
             neg_cell_idx = i * (n - 1) + j
             pos_cell_idx = (m - 1) * (n - 1) + neg_cell_idx
             vert_idx = m * n + i * (n - 1) + j
@@ -106,7 +114,7 @@ def _get_edges(verts: list[Vert], size: tuple[int, int]) -> list[Edge]:
                     neg_cell_idx=neg_cell_idx,
                     quad_type="trap",
                     curve_type="circle",
-                    radius=radius,
+                    radius=radius * h,
                 )
             )
 
