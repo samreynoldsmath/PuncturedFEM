@@ -72,7 +72,7 @@ class EdgeSpace:
         self.set_edge(e)
         self.set_deg(deg)
         self.build_spanning_set()
-        self.reduce_to_basis()
+        self._reduce_to_basis()
         self.compute_num_vert_funs()
         self.compute_num_edge_funs()
         self.generate_vert_fun_global_keys()
@@ -178,8 +178,31 @@ class EdgeSpace:
             ]
         )
 
+        # find edge arc length
+        ones = np.ones((self.e.num_pts))
+        edge_arc_length = self.e.integrate_over_edge(ones)
+        self.arc_length = edge_arc_length
+
+        # find centroid of edge
+        x1, x2 = self.e.get_sampled_points(ignore_endpoint=False)
+        x1_avg = self.e.integrate_over_edge(x1) / edge_arc_length
+        x2_avg = self.e.integrate_over_edge(x2) / edge_arc_length
+
+        y1 = Polynomial([(1.0, 1, 0), (-x1_avg, 0, 0)])
+        y2 = Polynomial([(1.0, 0, 1), (-x2_avg, 0, 0)])
+
+        # center and rescale linear functions
+        for j in range(3):
+            self.edge_fun_traces[linear_fun_idx[j]] = self.edge_fun_traces[
+                linear_fun_idx[j]
+            ].compose(y1, y2)
+
         # transform coordinates to bounding box
-        self.transform_coordinates_to_bounding_box()
+        self._transform_coordinates_to_bounding_box()
+
+        # rescale edge functions
+        for fun in self.edge_fun_traces:
+            fun /= np.sqrt(edge_arc_length)
 
         # different cases for closed loops and edges with distinct endpoints
         if not self.e.is_loop:
@@ -216,14 +239,7 @@ class EdgeSpace:
             # add linear function vanishing at endpoints to Edge function list
             self.edge_fun_traces.append(ell[2])
 
-    def transform_coordinates_to_bounding_box(self) -> None:
-        """
-        Map the square [-1, 1] x [-1, 1] to the bounding box of the edge.
-
-        Transform the domain of the Legendre tensor products from the square
-        [-1, 1] x [-1, 1] to the bounding box of the Edge, by composing with
-        an affine change of coordinates (i.e. deg=1 Polynomials).
-        """
+    def _transform_coordinates_to_bounding_box(self) -> None:
         # get bounding box
         xmin, xmax, ymin, ymax = self.e.get_bounding_box()
 
@@ -236,49 +252,21 @@ class EdgeSpace:
         ty = (ymax + ymin) / 2
 
         # define affine change of coordinates
-        qx = Polynomial(
-            [
-                (-tx / sx, 0, 0),
-                (1 / sx, 1, 0),
-            ]
-        )
-
-        qy = Polynomial(
-            [
-                (-ty / sy, 0, 0),
-                (1 / sy, 0, 1),
-            ]
-        )
+        qx = Polynomial([(1, 1, 0), (-tx, 0, 0)]) / sx
+        qy = Polynomial([(1, 0, 1), (-ty, 0, 0)]) / sy
 
         # map Legendre tensor products from square to bounding box
         for j, f in enumerate(self.edge_fun_traces):
             self.edge_fun_traces[j] = f.compose(qx, qy)
 
-    def reduce_to_basis(self, tol: float = 1e-6) -> None:
-        """
-        Reduce spanning set to basis.
-
-        The pivot columns of the mass matrix M_ij = int_e phi_i phi_j ds are
-        identified and the corresponding edge functions are set as the basis.
-
-        Parameters
-        ----------
-        tol : float
-            Tolerance for low-rank approximation of the mass matrix.
-        """
-        M = self.get_gram_matrix()
+    def _reduce_to_basis(self) -> None:
+        M = self._get_gram_matrix()
 
         # replace M with a low-rank approximation
-        if np.shape(M)[0] > 0:
-            U, S, Vh = np.linalg.svd(M)
-            S_max = np.max(S)
-            S_low_rank = np.zeros_like(S)
-            S_idx = np.where(S > (tol * S_max))[0]
-            S_low_rank[S_idx] = S[S_idx]
-            M = U @ np.diag(S_low_rank) @ Vh
+        M = self._get_low_rank_approx(M, tol=1e-6)
 
         # find the index set of the pivot columns
-        idx = self.get_basis_index_set(M)
+        idx = self._get_basis_index_set(M, tol=1e-6)
 
         # set the linearly independent edge functions as the basis
         basis = []
@@ -286,15 +274,7 @@ class EdgeSpace:
             basis.append(self.edge_fun_traces[k])
         self.edge_fun_traces = basis
 
-    def get_gram_matrix(self) -> np.ndarray:
-        """
-        Compute the mass matrix M_ij = int_e phi_i phi_j ds.
-
-        Returns
-        -------
-        M : np.ndarray
-            Mass matrix.
-        """
+    def _get_gram_matrix(self) -> np.ndarray:
         m = len(self.edge_fun_traces)
         M = np.zeros((m, m))
         x1, x2 = self.e.get_sampled_points(ignore_endpoint=False)
@@ -308,49 +288,17 @@ class EdgeSpace:
                 M[j, i] = M[i, j]
         return M
 
-    @deprecated(version="0.4.3", reason="Causes numerical instability")
-    def diagonal_rescale(self, M: np.ndarray) -> np.ndarray:
-        """
-        Get the normalized mass matrix M_ij / sqrt(M_ii * M_jj).
+    def _get_low_rank_approx(self, M: np.ndarray, tol: float) -> np.ndarray:
+        if np.shape(M)[0] == 0:
+            return M
+        U, S, Vh = np.linalg.svd(M)
+        S_max = np.max(S)
+        S_low_rank = np.zeros_like(S)
+        S_idx = np.where(S > (tol * S_max))[0]
+        S_low_rank[S_idx] = S[S_idx]
+        return U @ np.diag(S_low_rank) @ Vh
 
-        Notes
-        -----
-        - This function is deprecated due to numerical instability.
-        """
-        m = np.shape(M)[0]
-        for i in range(m):
-            for j in range(i + 1, m):
-                M[i, j] /= np.sqrt(M[i, i] * M[j, j])
-                M[j, i] = M[i, j]
-        for i in range(m):
-            M[i, i] = 1
-        return M
-
-    @deprecated(version="0.4.3", reason="Causes numerical instability")
-    def eliminate_zeros(self, M: np.ndarray, tol: float = 1e-12) -> np.ndarray:
-        """
-        Return the matrix M with rows and columns with zero diagonals removed.
-
-        Notes
-        -----
-        - This function is deprecated due to numerical instability.
-        """
-        m = np.shape(M)[0]
-        idx = []
-        for i in range(m):
-            if M[i, i] > tol:
-                idx.append(i)
-        n = len(idx)
-        N = np.zeros((n, n))
-        for i in range(n):
-            for j in range(i, n):
-                N[i, j] = M[idx[i], idx[j]]
-                N[j, i] = N[i, j]
-        return N
-
-    def get_basis_index_set(
-        self, M: np.ndarray, tol: float = 1e-12
-    ) -> list[int]:
+    def _get_basis_index_set(self, M: np.ndarray, tol: float) -> list[int]:
         """
         Return the index set of the pivot columns of the matrix M.
 
