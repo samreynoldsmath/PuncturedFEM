@@ -29,7 +29,7 @@ theme:
 plugins:
   - search
   - mkdocs-jupyter:
-      execute: false
+      execute: true
       # include_source: True
       include: ["*.ipynb"]
       ignore: ["examples/Spacefilling.ipynb"]
@@ -67,13 +67,21 @@ nav:
   - 'About':
     - 'Home': index.md
     - 'Installation': src/quickstart/installation.md
+    - 'Mathematical Background': src/quickstart/background.md
     - 'Roadmap': ROADMAP.md
     - 'Changelog': CHANGELOG.md
     - 'Contributing': CONTRIBUTING.md
   - 'Tutorials':
-      - tutorials/1.1-vertices-edges.ipynb
-      - tutorials/1.3-heavy-sampling.ipynb
-      - tutorials/2.2-traces.ipynb
+    - tutorials/1.1-vertices-edges.ipynb
+    - tutorials/1.2-meshes.ipynb
+    - tutorials/2.1-polynomials.ipynb
+    - tutorials/2.2-traces.ipynb
+    - tutorials/2.3-local-functions.ipynb
+    - tutorials/2.4-local-spaces.ipynb
+    - tutorials/3.1-global-spaces.ipynb
+    - tutorials/3.2-global-bc.ipynb
+    - tutorials/4.1-nystrom.ipynb
+    - tutorials/4.2-heavy-sampling.ipynb
   - 'Mesh':
     - 'ClosedContour': src/mesh/closed_contour.md
     - 'Edge': src/mesh/edge.md
