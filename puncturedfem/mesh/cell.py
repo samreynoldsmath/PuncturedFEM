@@ -297,7 +297,7 @@ class MeshCell:
         return all(c.is_parameterized() for c in self.components)
 
     def parameterize(
-        self, quad_dict: QuadDict, compute_interior_points: bool
+        self, quad_dict: QuadDict, compute_interior_points: bool = False
     ) -> None:
         """Parameterize each edge."""
         for c in self.components:
