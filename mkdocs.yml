@@ -29,8 +29,8 @@ theme:
 plugins:
   - search
   - mkdocs-jupyter:
-      execute: true
-      # include_source: True
+      execute: false #true
+      include_source: True
       include: ["*.ipynb"]
       ignore: ["examples/Spacefilling.ipynb"]
   - mkdocstrings:
@@ -72,6 +72,7 @@ nav:
     - 'Changelog': CHANGELOG.md
     - 'Contributing': CONTRIBUTING.md
   - 'Tutorials':
+    - tutorials/0-guide.md
     - tutorials/1.1-vertices-edges.ipynb
     - tutorials/1.2-meshes.ipynb
     - tutorials/2.1-polynomials.ipynb
