@@ -109,7 +109,7 @@ class LocalPoissonFunction:
             the boundary.
         evaluate_interior : bool, optional
             Whether or not to compute the interior values, by default False.
-        evaluate_grad : bool, optional
+        evaluate_gradient : bool, optional
             Whether or not to compute the gradient, by default False. Takes
             precedence over evaluate_interior.
         key : Optional[GlobalKey], optional
