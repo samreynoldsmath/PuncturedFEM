@@ -9,9 +9,9 @@ LocalPoissonSpace
 
 from typing import Optional, Union
 
+import numpy as np
 from deprecated import deprecated
 from tqdm import tqdm
-import numpy as np
 
 from ..mesh.cell import MeshCell
 from ..solver.globkey import GlobalKey

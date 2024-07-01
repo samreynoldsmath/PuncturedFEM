@@ -241,7 +241,7 @@ class LocalPoissonFunction:
         if other == 0:
             raise ValueError("Division by zero")
         return self * (1 / other)
-    
+
     def get_trace_values(self):
         """
         Return the trace values along the boundary of the mesh cell.
@@ -249,7 +249,7 @@ class LocalPoissonFunction:
         Returns
         -------
         vals : numpy.ndarray
-            Values of the trace, traverse in the same order as the sampled 
+            Values of the trace, traverse in the same order as the sampled
             points on the boundary of the mesh cell.
         """
         return self.harm.trace.values + self.poly.trace.values

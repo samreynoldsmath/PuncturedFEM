@@ -12,8 +12,8 @@ square_circular_hole
 
 from .pacman import pacman
 from .pacman_subdiv import pacman_subdiv
-from .square_circular_hole import square_circular_hole
 from .pegboard import pegboard
+from .square_circular_hole import square_circular_hole
 
 __all__ = [
     "pacman",
