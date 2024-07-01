@@ -97,7 +97,9 @@ nav:
     - 'split_edge': src/mesh/split_edge.md
   - 'Local Poisson spaces':
     - 'DirichletTrace': src/locfun/dirichlet_trace.md
-    - 'LocalFunction': src/locfun/locfun.md
+    - 'LocalHarmonic': src/locfun/local_harmonic.md
+    - 'LocalPoissonFunction': src/locfun/local_poisson.md
+    - 'LocalPolynomial': src/locfun/local_poly.md
     - 'LocalFunctionSpace': src/locfun/local_space.md
     - 'Monomial': src/locfun/monomial.md
     - 'MultiIndex': src/locfun/multi_index.md
