@@ -5,6 +5,7 @@ edit_uri: edit/main/doc
 
 theme:
   name: material
+  custom_dir: doc/overrides
   logo: logo/ghost.png
   favicon: logo/ghost_180x180.png
   highlightjs: true
@@ -29,7 +30,7 @@ theme:
 plugins:
   - search
   - mkdocs-jupyter:
-      execute: false #true
+      execute: true
       include_source: True
       include: ["*.ipynb"]
       ignore: ["examples/Spacefilling.ipynb"]
