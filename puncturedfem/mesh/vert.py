@@ -9,6 +9,8 @@ Vert
 
 from __future__ import annotations
 
+import numpy as np
+
 
 class Vert:
     """
@@ -74,14 +76,6 @@ class Vert:
             The x-coordinate of the vertex.
         y : float
             The y-coordinate of the vertex.
-
-        Notes
-        -----
-        The following attributes are set:
-        x : float
-            The x-coordinate of the vertex.
-        y : float
-            The y-coordinate of the vertex.
         """
         if isinstance(x, int):
             x = float(x)
@@ -91,6 +85,30 @@ class Vert:
             raise TypeError("Coordinates x and y must be floats")
         self.x = x
         self.y = y
+
+    def get_coord(self) -> None:
+        """
+        Get the coordinates of the vertex.
+
+        Returns
+        -------
+        x : float
+            The x-coordinate of the vertex.
+        y : float
+            The y-coordinate of the vertex.
+        """
+        return self.x, self.y
+
+    def get_coord_array(self) -> None:
+        """
+        Get the coordinates of the vertex as a numpy.ndarray.
+
+        Returns
+        -------
+        coords : numpy.ndarray
+            Array of shape (2,) containing the vertex coordinates.
+        """
+        return np.array([self.x, self.y])
 
     def __str__(self) -> str:
         """Return a string representation of the vertex."""
