@@ -1,3 +1,8 @@
+# import puncturedfem package (and dependencies) to run tutorials
+git+https://github.com/samreynoldsmath/PuncturedFEM.git@main
+
+# import mkdocs and related packages to build documentation
+ipykernel
 lxml-html-clean
 mkdocs
 mkdocs-jupyter
