@@ -305,10 +305,10 @@ class MeshCell:
         Parameters
         ----------
         quad_dict : QuadDict
-            The quadrature dictionary, which specifies how the edges are to be 
+            The quadrature dictionary, which specifies how the edges are to be
             sampled.
         compute_interior_points : bool, optional
-            Whether to generate the interior points and triangulation. True by 
+            Whether to generate the interior points and triangulation. True by
             default.
         """
         for c in self.components:
