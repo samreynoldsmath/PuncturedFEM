@@ -18,7 +18,7 @@ theme:
       scheme: slate
       toggle:
         icon: material/weather-night
-        name: Switch to system preference
+        name: Switch to light mode
 
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
@@ -31,9 +31,9 @@ plugins:
   - search
   - mkdocs-jupyter:
       execute: true
-      include_source: True
+      include_source: true
       include: ["*.ipynb"]
-      ignore: ["examples/Spacefilling.ipynb"]
+      allow_errors: false
   - mkdocstrings:
       handlers:
         # See: https://mkdocstrings.github.io/python/usage/
