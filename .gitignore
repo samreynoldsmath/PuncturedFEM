@@ -17,7 +17,7 @@ pyvenv.cfg
 **/.VSCodeCounter/
 
 # FILE TYPES
-*.html
+# *.html
 
 # Output from examples
 examples/out/

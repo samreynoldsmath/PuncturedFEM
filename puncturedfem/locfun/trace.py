@@ -91,7 +91,6 @@ class DirichletTrace:
         if values is not None:
             self.set_trace_values(values)
             return
-        values = np.zeros(self.num_pts)
         if funcs is not None:
             self.set_funcs(funcs)
         else:
@@ -298,6 +297,11 @@ class DirichletTrace:
     def _convert_values_to_list_floatlike(
         self, values: Union[FloatLike, list[FloatLike]]
     ) -> list[FloatLike]:
+        if isinstance(values, list):
+            for item in values:
+                if not isinstance(item, np.ndarray):
+                    raise ValueError("item in list is not a numpy.ndarray")
+            return values
         if isinstance(values, (int, float)):
             return [values for _ in range(self.num_edges)]
         if isinstance(values, np.ndarray):

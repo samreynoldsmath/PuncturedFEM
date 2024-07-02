@@ -47,8 +47,6 @@ class Solver:
         List of right-hand side values
     num_funs : int
         Number of global functions
-    # interior_values : list[list[np.ndarray]]
-    #     List of interior values on each MeshCell
     soln : np.ndarray
         Solution vector
     """
@@ -129,8 +127,8 @@ class Solver:
 
         Parameters
         ----------
-        a : BilinearForm
-            Bilinear form
+        bilinear_form : BilinearForm
+            Bilinear form and right-hand side that defines the weak form.
         """
         if not isinstance(bilinear_form, BilinearForm):
             raise TypeError("bilinear_form must be a BilinearForm")
@@ -170,10 +168,10 @@ class Solver:
         ----------
         verbose : bool, optional
             Print progress, by default True
-        processes : int, optional
-            Number of processes to use, by default 1
         compute_interior_values : bool, optional
             Compute interior values, by default True
+        compute_interior_gradient : bool, optional
+            Compute interior gradient values, by default False
         """
         self._build_values_and_indexes(
             verbose=verbose,
@@ -382,9 +380,9 @@ class Solver:
         Parameters
         ----------
         cell_idx : int
-            MeshCell index
-        coef : np.ndarray
-            Coefficients
+            Index of the mesh cell on which to compute the linear combination.
+        global_coef : np.ndarray
+            Coefficients of the global basis functions.
         """
         abs_cell_idx = self.glob_fun_sp.mesh.get_abs_cell_idx(cell_idx)
         loc_fun_sp = self.local_function_spaces[abs_cell_idx]

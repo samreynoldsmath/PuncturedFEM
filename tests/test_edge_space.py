@@ -8,6 +8,7 @@ Tests for the edge_space module.
 import puncturedfem as pf
 
 MAX_DEG = 3
+SCALE = 1 / 32
 
 
 def get_edge_space_dim(p: int, m: int) -> int:
@@ -45,8 +46,8 @@ def test_edge_space_dim_line() -> None:
     (p + 2 choose 2) - (p + 1 choose 2) = p + 1.
     """
     m = 1
-    anchor = pf.Vert(1.0, 0.0)
-    endpnt = pf.Vert(2.0, 1.0)
+    anchor = SCALE * pf.Vert(1.0, 0.0)
+    endpnt = SCALE * pf.Vert(2.0, 1.0)
     edge = pf.Edge(anchor, endpnt, idx=0)
     quad_dict = pf.get_quad_dict(n=32)
     edge.parameterize(quad_dict)
@@ -60,8 +61,8 @@ def test_edge_space_dim_circular_arc() -> None:
     (p + 2 choose 2) - (p choose 2) = 2p + 1.
     """
     m = 2
-    anchor = pf.Vert(1.0, 0.0)
-    endpnt = pf.Vert(2.0, 1.0)
+    anchor = SCALE * pf.Vert(1.0, 0.0)
+    endpnt = SCALE * pf.Vert(2.0, 1.0)
     edge = pf.Edge(
         anchor, endpnt, idx=0, curve_type="circular_arc_deg", theta0=180
     )
@@ -78,7 +79,7 @@ def test_edge_space_dim_ellipse() -> None:
     """
     m = 2
     anchor = pf.Vert(1.0, 0.0)
-    edge = pf.Edge(anchor, anchor, idx=0, curve_type="ellipse", a=1.23, b=0.456)
+    edge = pf.Edge(anchor, anchor, idx=0, curve_type="ellipse", a=1.23 * SCALE, b=0.456 * SCALE)
     quad_dict = pf.get_quad_dict(n=32)
     edge.parameterize(quad_dict)
     for p in range(1, MAX_DEG + 1):
@@ -91,8 +92,8 @@ def test_edge_space_dim_sine_wave() -> None:
     (p + 2 choose 2).
     """
     m = -1
-    anchor = pf.Vert(1.0, 0.0)
-    endpnt = pf.Vert(2.0, 1.0)
+    anchor = SCALE * pf.Vert(1.0, 0.0)
+    endpnt = SCALE * pf.Vert(2.0, 1.0)
     edge = pf.Edge(
         anchor, endpnt, idx=0, curve_type="sine_wave", amp=1.23, freq=5
     )

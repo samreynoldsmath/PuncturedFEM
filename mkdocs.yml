@@ -5,6 +5,7 @@ edit_uri: edit/main/doc
 
 theme:
   name: material
+  custom_dir: doc/overrides
   logo: logo/ghost.png
   favicon: logo/ghost_180x180.png
   highlightjs: true
@@ -29,8 +30,8 @@ theme:
 plugins:
   - search
   - mkdocs-jupyter:
-      execute: false
-      # include_source: True
+      execute: true
+      include_source: True
       include: ["*.ipynb"]
       ignore: ["examples/Spacefilling.ipynb"]
   - mkdocstrings:
@@ -67,19 +68,22 @@ nav:
   - 'About':
     - 'Home': index.md
     - 'Installation': src/quickstart/installation.md
+    - 'Mathematical Background': src/quickstart/background.md
     - 'Roadmap': ROADMAP.md
     - 'Changelog': CHANGELOG.md
     - 'Contributing': CONTRIBUTING.md
   - 'Tutorials':
-      - src/examples/ex0.1-mesh-building.ipynb
-      - src/examples/ex0.2-trace.ipynb
-  - 'Examples':
-      - src/examples/ex1.1-square-hole.ipynb
-      - src/examples/ex1.2-pacman.ipynb
-      - src/examples/ex1.3-ghost.ipynb
-      - src/examples/ex1.4-hat-tile.ipynb
-      - src/examples/ex1.5-heavy-sampling.ipynb
-      - src/examples/ex2.1-pacman-fem.ipynb
+    - tutorials/0-guide.md
+    - tutorials/1.1-vertices-edges.ipynb
+    - tutorials/1.2-meshes.ipynb
+    - tutorials/2.1-polynomials.ipynb
+    - tutorials/2.2-traces.ipynb
+    - tutorials/2.3-local-functions.ipynb
+    - tutorials/2.4-local-spaces.ipynb
+    - tutorials/3.1-global-spaces.ipynb
+    - tutorials/3.2-global-bc.ipynb
+    - tutorials/4.1-nystrom.ipynb
+    - tutorials/4.2-heavy-sampling.ipynb
   - 'Mesh':
     - 'ClosedContour': src/mesh/closed_contour.md
     - 'Edge': src/mesh/edge.md
@@ -94,8 +98,10 @@ nav:
     - 'split_edge': src/mesh/split_edge.md
   - 'Local Poisson spaces':
     - 'DirichletTrace': src/locfun/dirichlet_trace.md
-    - 'LocalFunction': src/locfun/locfun.md
-    - 'LocalFunctionSpace': src/locfun/locfunsp.md
+    - 'LocalHarmonic': src/locfun/local_harmonic.md
+    - 'LocalPoissonFunction': src/locfun/local_poisson.md
+    - 'LocalPolynomial': src/locfun/local_poly.md
+    - 'LocalFunctionSpace': src/locfun/local_space.md
     - 'Monomial': src/locfun/monomial.md
     - 'MultiIndex': src/locfun/multi_index.md
     - 'NystromSolver': src/locfun/nystrom_solver.md

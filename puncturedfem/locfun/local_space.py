@@ -9,6 +9,7 @@ LocalPoissonSpace
 
 from typing import Optional, Union
 
+import numpy as np
 from deprecated import deprecated
 from tqdm import tqdm
 
@@ -66,6 +67,8 @@ class LocalPoissonSpace:
     edge_funs: list[LocalPoissonFunction]
     bubb_funs: list[LocalPoissonFunction]
     nyst: NystromSolver
+    centroid: tuple[float, float]
+    area: float
     compute_interior_values: bool
     compute_interior_gradient: bool
 
@@ -99,6 +102,9 @@ class LocalPoissonSpace:
 
         self.compute_interior_values = compute_interior_values
         self.compute_interior_gradient = compute_interior_gradient
+
+        self._build_centroid(K)
+        self._find_area(K)
 
         # construct edge spaces, if not provided
         if edge_spaces is None:
@@ -138,6 +144,17 @@ class LocalPoissonSpace:
         """
         return self.vert_funs + self.edge_funs + self.bubb_funs
 
+    def _build_centroid(self, K: MeshCell) -> None:
+        x1, x2 = K.get_boundary_points()
+        centroid_x = np.mean(x1)
+        centroid_y = np.mean(x2)
+        self.centroid = (centroid_x, centroid_y)
+
+    def _find_area(self, K: MeshCell) -> None:
+        x1, x2 = K.get_boundary_points()
+        xn = K.dot_with_normal(x1, x2)
+        self.area = 0.5 * K.integrate_over_boundary(xn)
+
     def _compute_num_funs(self) -> None:
         self.num_vert_funs = len(self.vert_funs)
         self.num_edge_funs = len(self.edge_funs)
@@ -172,8 +189,7 @@ class LocalPoissonSpace:
             range_num_bubb = range(num_bubb)
         for k in range_num_bubb:
             v_key = GlobalKey(fun_type="bubb", bubb_space_idx=k)
-            p = Polynomial()
-            p.add_monomial_with_idx(coef=-1.0, idx=k)
+            p = self._build_centered_monomial(k)
             self.bubb_funs.append(
                 LocalPoissonFunction(
                     nyst=self.nyst,
@@ -183,6 +199,14 @@ class LocalPoissonSpace:
                     evaluate_gradient=self.compute_interior_gradient,
                 )
             )
+
+    def _build_centered_monomial(self, idx: int) -> Polynomial:
+        m1 = Polynomial([(1.0, 1, 0)]) - self.centroid[0]
+        m2 = Polynomial([(1.0, 0, 1)]) - self.centroid[1]
+        p = Polynomial()
+        p.add_monomial_with_idx(coef=-1 / self.area**2, idx=idx)
+        p = p.compose(m1, m2)
+        return p
 
     def _build_vert_funs(
         self, edge_spaces: list[EdgeSpace], verbose: bool

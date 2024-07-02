@@ -109,7 +109,7 @@ class LocalPoissonFunction:
             the boundary.
         evaluate_interior : bool, optional
             Whether or not to compute the interior values, by default False.
-        evaluate_grad : bool, optional
+        evaluate_gradient : bool, optional
             Whether or not to compute the gradient, by default False. Takes
             precedence over evaluate_interior.
         key : Optional[GlobalKey], optional
@@ -241,6 +241,18 @@ class LocalPoissonFunction:
         if other == 0:
             raise ValueError("Division by zero")
         return self * (1 / other)
+
+    def get_trace_values(self):
+        """
+        Return the trace values along the boundary of the mesh cell.
+
+        Returns
+        -------
+        vals : numpy.ndarray
+            Values of the trace, traverse in the same order as the sampled
+            points on the boundary of the mesh cell.
+        """
+        return self.harm.trace.values + self.poly.trace.values
 
     def get_h1_semi_inner_prod(
         self, other: Union[LocalPoissonFunction, LocalHarmonic, LocalPolynomial]

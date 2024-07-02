@@ -11,7 +11,6 @@ Install the package with pip:
 ```bash
 pip install puncturedfem
 ```
-Check out some of the tutorials, such as the [Pac-Man mesh](src/examples/ex2.1-pacman-fem.ipynb).
 
 ## Links
 - [Documentation](https://puncturedfem.readthedocs.io)

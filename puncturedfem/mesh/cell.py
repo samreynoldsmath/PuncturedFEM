@@ -297,15 +297,26 @@ class MeshCell:
         return all(c.is_parameterized() for c in self.components)
 
     def parameterize(
-        self, quad_dict: QuadDict, compute_interior_points: bool
+        self, quad_dict: QuadDict, compute_interior_points: bool = True
     ) -> None:
-        """Parameterize each edge."""
+        """
+        Sample the boundary on each edge.
+
+        Parameters
+        ----------
+        quad_dict : QuadDict
+            The quadrature dictionary, which specifies how the edges are to be 
+            sampled.
+        compute_interior_points : bool, optional
+            Whether to generate the interior points and triangulation. True by 
+            default.
+        """
         for c in self.components:
             c.parameterize(quad_dict)
-        self.find_num_pts()
-        self.find_outer_boundary()
-        self.find_component_start_idx()
-        self.find_closest_vert_idx()
+        self._find_num_pts()
+        self._find_outer_boundary()
+        self._find_component_start_idx()
+        self._find_closest_vert_idx()
         if compute_interior_points:
             self.generate_interior_points()
         self.quad_dict = quad_dict
@@ -317,14 +328,12 @@ class MeshCell:
         self.num_pts = 0
         self.component_start_idx = []
 
-    def find_num_pts(self) -> None:
-        """Record the total number of sampled points on the boundary."""
+    def _find_num_pts(self) -> None:
         if not self.is_parameterized():
             raise NotParameterizedError("finding num_pts")
         self.num_pts = sum(c.num_pts for c in self.components)
 
-    def find_component_start_idx(self) -> None:
-        """Find the index of sampled points corresponding to each component."""
+    def _find_component_start_idx(self) -> None:
         if not self.is_parameterized():
             raise NotParameterizedError("finding component_start_idx")
         self.component_start_idx = []
@@ -334,8 +343,7 @@ class MeshCell:
             idx += c.num_pts
         self.component_start_idx.append(idx)
 
-    def find_outer_boundary(self) -> None:
-        """Find the outer boundary of the cell."""
+    def _find_outer_boundary(self) -> None:
         if not self.is_parameterized():
             raise NotParameterizedError("finding outer boundary")
         # find component that contains all other components
@@ -352,8 +360,7 @@ class MeshCell:
         self.components[0] = self.components[outer_boundary_idx]
         self.components[outer_boundary_idx] = temp
 
-    def find_closest_vert_idx(self) -> None:
-        """Find the closest vertex in the mesh to each sampled point."""
+    def _find_closest_vert_idx(self) -> None:
         if not self.is_parameterized():
             raise NotParameterizedError("finding closest_vert_idx")
         self.closest_vert_idx = np.zeros((self.num_pts,), dtype=int)

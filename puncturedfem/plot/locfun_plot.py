@@ -93,8 +93,8 @@ class LocalFunctionPlot:
         Parameters
         ----------
         plot_type : str
-            The type of plot. Must be one of "values", "grad_x1", "grad_x2",
-            or "grad_norm".
+            The type of plot. Must be one of "values", "grad_x1", "grad_x2", or
+            "grad_norm".
         show_plot : bool
             If True, the plot is shown.
         filename : str
@@ -119,6 +119,9 @@ class LocalFunctionPlot:
             If True, the boundary is shown. Default is True.
         show_triangulation : bool
             If True, the triangulation is shown. Default is False.
+        use_log10 : bool
+            If True, the log10 function is applied to interior and boundary
+            values. Default is False.
         """
         if plot_type == "values":
             self._draw_vals(show_plot=show_plot, filename=filename, **kwargs)
@@ -221,6 +224,7 @@ class LocalFunctionPlot:
         new_figure = kwargs.get("new_figure", True)
         fig_handle = kwargs.get("fig_handle", None)
         clim = kwargs.get("clim", None)
+        use_log10 = kwargs.get("use_log10", False)
 
         # create new figure if necessary
         if new_figure and fig_handle is None:
@@ -243,6 +247,11 @@ class LocalFunctionPlot:
             vals = np.concatenate((interior_values, boundary_values))
         else:
             vals = interior_values
+
+        # apply log10
+        if use_log10:
+            vals[vals < 1e-16] = 1e-16
+            vals = np.log10(vals)
 
         # plot values
         self._apply_masks_and_draw(vals, fill, levels, clim)
