@@ -86,7 +86,7 @@ class Vert:
         self.x = x
         self.y = y
 
-    def get_coord(self) -> None:
+    def get_coord(self) -> tuple[float, float]:
         """
         Get the coordinates of the vertex.
 
@@ -99,7 +99,7 @@ class Vert:
         """
         return self.x, self.y
 
-    def get_coord_array(self) -> None:
+    def get_coord_array(self) -> np.ndarray:
         """
         Get the coordinates of the vertex as a numpy.ndarray.
 
