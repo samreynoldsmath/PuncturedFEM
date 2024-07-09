@@ -13,8 +13,10 @@
     - [ ] curve type: quadratic Bézier
     - [ ] curve type: cubic Bézier
     - [ ] curve type: symbolic (using `sympy`)
-- [ ] preconditioning for FEM solver
-     - [ ] Jacobi
+- [ ] `Solver` improvments
+     - [ ] option to select preconditioner
+     - [ ] option to select verbosity level/depth
+     - [ ] construct global function space if none provided
 
 ### Examples
 - [ ] Example 3.1: Finding eigenmodes

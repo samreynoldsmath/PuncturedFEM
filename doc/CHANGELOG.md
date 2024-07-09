@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [v0.5.0] - 2024 Jul 08
 
 ### Examples
 
@@ -44,8 +44,6 @@
 - [x] run tutorial notebooks when building documentation
 - [x] link to notebook source on tutorial pages
 - [x] link to tutorial pages from README
-- [ ] move installation instructions using `git` from CONTRIBUTING to INSTALLATION
-- [ ] change contributing guide: push to a development branch, rather than `main`
 
 ### Maintenance
 
@@ -80,8 +78,7 @@
 ### Project Management
 
 - [x] change dev dependency: `black` to `black[jupyter]`
-- [x] add dev dependency: `nbconvert`
-- [ ] starting after v0.5.0, branch off of development branch, rather than `main`
+- [x] add dev dependency: `nbconvert``main`
 
 ### Bug Fixes
 
