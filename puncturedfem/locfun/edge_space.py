@@ -7,7 +7,6 @@ EdgeSpace
 """
 
 import numpy as np
-from deprecated import deprecated
 
 from ..mesh.edge import Edge
 from ..solver.globkey import GlobalKey

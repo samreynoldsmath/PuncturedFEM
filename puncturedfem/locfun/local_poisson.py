@@ -242,7 +242,7 @@ class LocalPoissonFunction:
             raise ValueError("Division by zero")
         return self * (1 / other)
 
-    def get_trace_values(self):
+    def get_trace_values(self) -> np.ndarray:
         """
         Return the trace values along the boundary of the mesh cell.
 

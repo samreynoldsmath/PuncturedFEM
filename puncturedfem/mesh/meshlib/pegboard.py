@@ -1,3 +1,7 @@
+"""
+Mesh of a rectangle, with the mesh cells being squares with circular holes.
+"""
+
 from ..edge import Edge
 from ..planar_mesh import PlanarMesh
 from ..vert import Vert
@@ -7,6 +11,29 @@ from .__builder__ import mesh_builder
 def pegboard(
     size: tuple[int, int], radius: float = 0.25, verbose: bool = True
 ) -> PlanarMesh:
+    """
+    Mesh consisting of squares each with a circular hole.
+
+    Parameters
+    ----------
+    size : tuple[int, int]
+        The number of cells in the x and y direction.
+    radius : float, optional
+        The radius of the inner circular boundary (relative to the side length
+        of the square). Default is 0.25.
+    verbose : bool, optional
+        Whether to display information about the mesh once it is constructed.
+        Default is True.
+
+    Returns
+    -------
+    planar_mesh : PlanarMesh
+        The planar mesh object.
+
+    Notes
+    -----
+    The domain is scaled so that the longest edge of the rectangle is 1.
+    """
     return mesh_builder(
         _get_verts, _get_edges, verbose=verbose, size=size, radius=radius
     )
